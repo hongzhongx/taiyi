@@ -1,0 +1,6 @@
+[submodule "libraries/fc"]
+	path = libraries/fc
+	url = https://github.com/hongzhongx/fc.git
+[submodule "libraries/mira"]
+	path = libraries/mira
+	url = https://github.com/hongzhongx/mira.git

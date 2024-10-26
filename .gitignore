@@ -1,0 +1,15 @@
+hardfork.hpp
+
+/build
+*.sdf
+*.suo
+*.user
+*.dir/
+*.opensdf
+
+node_modules
+
+/.vscode
+.DS_Store
+/build_xcode
+programs/build_helpers/taiyi_build_helpers/__pycache__
