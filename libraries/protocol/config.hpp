@@ -1,0 +1,157 @@
+#pragma once
+#include "hardfork.hpp"
+
+// WARNING!
+// Every symbol defined here needs to be handled appropriately in get_config.cpp
+// This is checked by get_config_check.sh called from Dockerfile
+
+#ifdef IS_TEST_NET
+
+#define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 0) )
+
+#define TAIYI_INIT_PRIVATE_KEY                  (fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key"))))
+#define TAIYI_INIT_PUBLIC_KEY_STR               (std::string( taiyi::protocol::public_key_type(TAIYI_INIT_PRIVATE_KEY.get_public_key()) ))
+#define TAIYI_CHAIN_ID                          (fc::sha256::hash("testnet"))
+
+#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1728747000))  //2024-10-12 23:30:00
+
+#define TAIYI_MIN_ACCOUNT_CREATION_FEE          int64_t(100)
+#define TAIYI_MAX_ACCOUNT_CREATION_FEE          int64_t(1000000000)
+
+#define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
+#define TAIYI_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
+#define TAIYI_OWNER_UPDATE_LIMIT                          fc::seconds(0)
+
+#define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
+
+#else // IS LIVE TAIYI NETWORK
+
+#define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 0) )
+
+#define TAIYI_INIT_PUBLIC_KEY_STR               "TAI8HpgpX6nXnqJcZCcUwDQpFeorz4ZHMegQA5Be4K88wzRSnxjeo"
+#define TAIYI_CHAIN_ID                          fc::sha256()
+
+#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1735732800))  //2025-1-1 20:00:00
+
+#define TAIYI_MIN_ACCOUNT_CREATION_FEE          1
+#define TAIYI_MAX_ACCOUNT_CREATION_FEE          int64_t(1000000000)
+
+#define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
+#define TAIYI_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
+#define TAIYI_OWNER_UPDATE_LIMIT                          fc::minutes(60)
+
+#define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
+
+#endif // END LIVE TAIYI NETWORK
+
+#define TAIYI_ADDRESS_PREFIX                  "TAI"
+
+#define QI_SYMBOL     (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_QI ) )
+#define YANG_SYMBOL   (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_YANG ) )
+#define YIN_SYMBOL    (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_YIN ) )
+
+#define TAIYI_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( TAIYI_BLOCKCHAIN_VERSION ) )
+
+#define TAIYI_100_PERCENT                     10000
+#define TAIYI_1_PERCENT                       (TAIYI_100_PERCENT/100)
+
+#define TAIYI_BLOCK_INTERVAL                  3
+#define TAIYI_BLOCKS_PER_YEAR                 (365*24*60*60/TAIYI_BLOCK_INTERVAL)
+#define TAIYI_BLOCKS_PER_DAY                  (24*60*60/TAIYI_BLOCK_INTERVAL)
+#define TAIYI_BLOCKS_PER_HOUR                 (60*60/TAIYI_BLOCK_INTERVAL)
+#define TAIYI_START_QI_BLOCK                  (TAIYI_BLOCKS_PER_DAY * 7)
+#define TAIYI_START_MINER_ADORING_BLOCK        (TAIYI_BLOCKS_PER_DAY * 30)
+
+#define TAIYI_INIT_MINER_NAME                 "initminer"
+#define TAIYI_NUM_INIT_MINERS                 1
+
+#define TAIYI_MAX_SIMINGS                   21
+
+#define TAIYI_HARDFORK_REQUIRED_SIMINGS     17 // 17 of the 21 dpos simings (20 elected and 1 virtual time) required for hardfork. This guarantees 75% participation on all subsequent rounds.
+#define TAIYI_MAX_TIME_UNTIL_EXPIRATION       (60*60) // seconds,  aka: 1 hour
+#define TAIYI_MAX_MEMO_SIZE                   2048
+#define TAIYI_MAX_PROXY_RECURSION_DEPTH       4
+#define TAIYI_QI_WITHDRAW_INTERVALS           4
+#define TAIYI_QI_WITHDRAW_INTERVAL_SECONDS (60*60*24*7) /// 1 week per interval
+#define TAIYI_MAX_WITHDRAW_ROUTES             10
+#define TAIYI_ADORING_MANA_REGENERATION_SECONDS (5*60*60*24) // 5 day
+
+#define TAIYI_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
+
+#define TAIYI_MAX_ACCOUNT_SIMING_ADORES       30
+
+#define TAIYI_MIN_REWARD_FUND                 (1000)
+#define TAIYI_INFLATION_RATE_START_PERCENT    (1000) // 10%
+#define TAIYI_INFLATION_RATE_STOP_PERCENT     (100)  // 1%
+#define TAIYI_INFLATION_NARROWING_PERIOD      (233600) // Narrow 0.01% every 233.6k blocks
+#define TAIYI_CONTENT_REWARD_PERCENT          (75*TAIYI_1_PERCENT) //75% of inflation
+#define TAIYI_QI_FUND_PERCENT                 (15*TAIYI_1_PERCENT) //15% of inflation
+#define TAIYI_PROPOSAL_FUND_PERCENT           (0)
+
+#define TAIYI_CONVERGENT_LINEAR_RECENT_CLAIMS (fc::uint128_t(0,503600561838938636ull))
+
+#define TAIYI_POST_REWARD_FUND_NAME           ("post")
+
+#define TAIYI_MIN_ACCOUNT_NAME_LENGTH          3
+#define TAIYI_MAX_ACCOUNT_NAME_LENGTH         16
+
+#define TAIYI_MIN_PERMLINK_LENGTH             0
+#define TAIYI_MAX_PERMLINK_LENGTH             256
+#define TAIYI_MAX_SIMING_URL_LENGTH          2048
+
+#define TAIYI_MAX_SATOSHIS                    int64_t(4611686018427387903ll)
+#define TAIYI_MAX_SIG_CHECK_DEPTH             2
+#define TAIYI_MAX_SIG_CHECK_ACCOUNTS          125
+
+#define TAIYI_MAX_TRANSACTION_SIZE            (1024*64)
+#define TAIYI_MIN_BLOCK_SIZE_LIMIT            (TAIYI_MAX_TRANSACTION_SIZE)
+#define TAIYI_MAX_BLOCK_SIZE                  (TAIYI_MAX_TRANSACTION_SIZE*TAIYI_BLOCK_INTERVAL*2000)
+#define TAIYI_SOFT_MAX_BLOCK_SIZE             (2*1024*1024)
+#define TAIYI_MIN_BLOCK_SIZE                  115
+
+#define TAIYI_MAX_UNDO_HISTORY                10000
+
+#define TAIYI_BLOCKCHAIN_PRECISION            uint64_t( 1000 )
+#define TAIYI_BLOCKCHAIN_PRECISION_DIGITS     3
+#define TAIYI_MAX_AUTHORITY_MEMBERSHIP        40
+
+#define TAIYI_IRREVERSIBLE_THRESHOLD          (75 * TAIYI_1_PERCENT)
+
+#define TAIYI_VIRTUAL_SCHEDULE_LAP_LENGTH     ( fc::uint128::max_value() )
+
+#define TAIYI_DELEGATION_RETURN_PERIOD       (TAIYI_ADORING_MANA_REGENERATION_SECONDS)
+
+#define TAIYI_RD_MIN_DECAY_BITS               6
+#define TAIYI_RD_MAX_DECAY_BITS              32
+#define TAIYI_RD_DECAY_DENOM_SHIFT           36
+#define TAIYI_RD_MAX_POOL_BITS               64
+#define TAIYI_RD_MAX_BUDGET_1                ((uint64_t(1) << (TAIYI_RD_MAX_POOL_BITS + TAIYI_RD_MIN_DECAY_BITS - TAIYI_RD_DECAY_DENOM_SHIFT))-1)
+#define TAIYI_RD_MAX_BUDGET_2                ((uint64_t(1) << (64-TAIYI_RD_DECAY_DENOM_SHIFT))-1)
+#define TAIYI_RD_MAX_BUDGET_3                (uint64_t( std::numeric_limits<int32_t>::max() ))
+#define TAIYI_RD_MAX_BUDGET                  (int32_t( std::min( { TAIYI_RD_MAX_BUDGET_1, TAIYI_RD_MAX_BUDGET_2, TAIYI_RD_MAX_BUDGET_3 } )) )
+#define TAIYI_RD_MIN_DECAY                   (uint32_t(1) << TAIYI_RD_MIN_DECAY_BITS)
+#define TAIYI_RD_MIN_BUDGET                  1
+#define TAIYI_RD_MAX_DECAY                   (uint32_t(0xFFFFFFFF))
+
+#define TAIYI_BLOCK_GENERATION_POSTPONED_TX_LIMIT 5
+#define TAIYI_PENDING_TRANSACTION_EXECUTION_LIMIT fc::milliseconds(200)
+
+#define TAIYI_CUSTOM_OP_ID_MAX_LENGTH        (32)
+#define TAIYI_CUSTOM_OP_DATA_MAX_LENGTH      (8192)
+
+/**
+ *  Reserved Account IDs with special meaning
+ */
+///@{
+/// Represents the canonical account with NO authority (nobody can access funds in null account)
+#define TAIYI_NULL_ACCOUNT                    "null"
+/// Represents the canonical account with WILDCARD authority (anybody can access funds in temp account)
+#define TAIYI_TEMP_ACCOUNT                    "temp"
+/// Represents the canonical account for specifying you will adore for directly (as opposed to a proxy)
+#define TAIYI_PROXY_TO_SELF_ACCOUNT           ""
+/// Represents the canonical root post parent account
+#define TAIYI_ROOT_POST_PARENT                (account_name_type())
+/// Represents the account with NO authority which holds resources for payouts according to given proposals
+#define TAIYI_TREASURY_ACCOUNT                "zuowang.dao"
+#define TAIYI_COMMITTEE_ACCOUNT               "sifu"
+///@}

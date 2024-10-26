@@ -1,0 +1,14 @@
+#include <stdint.h>
+#include <git_revision.hpp>
+
+#define TAIYI_GIT_REVISION_SHA "@TAIYI_GIT_REVISION_SHA@"
+#define TAIYI_GIT_REVISION_UNIX_TIMESTAMP @TAIYI_GIT_REVISION_UNIX_TIMESTAMP@
+#define TAIYI_GIT_REVISION_DESCRIPTION "@TAIYI_GIT_REVISION_DESCRIPTION@"
+
+namespace taiyi { namespace utilities {
+
+const char* const git_revision_sha = TAIYI_GIT_REVISION_SHA;
+const uint32_t git_revision_unix_timestamp = TAIYI_GIT_REVISION_UNIX_TIMESTAMP;
+const char* const git_revision_description = TAIYI_GIT_REVISION_DESCRIPTION;
+
+} } // end namespace taiyi::utilities

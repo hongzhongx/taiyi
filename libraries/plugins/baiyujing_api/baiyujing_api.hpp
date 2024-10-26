@@ -1,0 +1,399 @@
+#pragma once
+#include <chain/taiyi_fwd.hpp>
+
+#include <plugins/database_api/database_api.hpp>
+#include <plugins/block_api/block_api.hpp>
+#include <plugins/account_history_api/account_history_api.hpp>
+#include <plugins/account_by_key_api/account_by_key_api.hpp>
+#include <plugins/network_broadcast_api/network_broadcast_api.hpp>
+#include <plugins/baiyujing_api/baiyujing_api_legacy_objects.hpp>
+
+#include <fc/optional.hpp>
+#include <fc/variant.hpp>
+#include <fc/api.hpp>
+
+namespace taiyi { namespace plugins { namespace baiyujing_api {
+
+    using std::vector;
+    using fc::variant;
+    using fc::optional;
+    
+    using namespace chain;
+
+    namespace detail{ class baiyujing_api_impl; }
+
+    struct api_operation_object
+    {
+        api_operation_object() {}
+        api_operation_object( const account_history::api_operation_object& obj, const legacy_operation& l_op ) : trx_id( obj.trx_id ), block( obj.block ), trx_in_block( obj.trx_in_block ), virtual_op( obj.virtual_op ), timestamp( obj.timestamp ), op( l_op )
+        {}
+        
+        transaction_id_type  trx_id;
+        uint32_t             block = 0;
+        uint32_t             trx_in_block = 0;
+        uint32_t             op_in_trx = 0;
+        uint32_t             virtual_op = 0;
+        fc::time_point_sec   timestamp;
+        legacy_operation     op;
+    };
+
+    struct api_account_object
+    {
+        api_account_object( const database_api::api_account_object& a ) : id( a.id ), name( a.name ), owner( a.owner ), active( a.active ), posting( a.posting ), memo_key( a.memo_key ), json_metadata( a.json_metadata ), proxy( a.proxy ), last_owner_update( a.last_owner_update ), last_account_update( a.last_account_update ), created( a.created ), recovery_account( a.recovery_account ), last_account_recovery( a.last_account_recovery ), can_adore( a.can_adore ), balance( legacy_asset::from_asset( a.balance ) ), reward_yang_balance( legacy_asset::from_asset( a.reward_yang_balance ) ), reward_qi_balance( legacy_asset::from_asset( a.reward_qi_balance ) ), reward_qi_yang( legacy_asset::from_asset( a.reward_qi_yang ) ), qi_shares( legacy_asset::from_asset( a.qi_shares ) ), delegated_qi_shares( legacy_asset::from_asset( a.delegated_qi_shares ) ), received_qi_shares( legacy_asset::from_asset( a.received_qi_shares ) ), qi_withdraw_rate( legacy_asset::from_asset( a.qi_withdraw_rate ) ), next_qi_withdrawal_time( a.next_qi_withdrawal_time ), withdrawn( a.withdrawn ), to_withdraw( a.to_withdraw ), withdraw_routes( a.withdraw_routes ), simings_adored_for( a.simings_adored_for )
+        {
+            proxied_vsf_adores.insert( proxied_vsf_adores.end(), a.proxied_vsf_adores.begin(), a.proxied_vsf_adores.end() );
+        }
+        
+        api_account_object(){}
+        
+        account_id_type   id;
+        
+        account_name_type name;
+        authority         owner;
+        authority         active;
+        authority         posting;
+        public_key_type   memo_key;
+        string            json_metadata;
+        account_name_type proxy;
+        
+        time_point_sec    last_owner_update;
+        time_point_sec    last_account_update;
+        
+        time_point_sec    created;
+        account_name_type recovery_account;
+        time_point_sec    last_account_recovery;
+        
+        bool              can_adore = false;
+        
+        legacy_asset      balance;
+        
+        legacy_asset      reward_yang_balance;
+        legacy_asset      reward_qi_balance;
+        legacy_asset      reward_qi_yang;
+        
+        legacy_asset      qi_shares;
+        legacy_asset      delegated_qi_shares;
+        legacy_asset      received_qi_shares;
+        legacy_asset      qi_withdraw_rate;
+        time_point_sec    next_qi_withdrawal_time;
+        share_type        withdrawn;
+        share_type        to_withdraw;
+        uint16_t          withdraw_routes = 0;
+        
+        vector< share_type > proxied_vsf_adores;
+        
+        uint16_t          simings_adored_for = 0;
+    };
+
+    struct extended_account : public api_account_object
+    {
+        extended_account(){}
+        extended_account( const database_api::api_account_object& a ) : api_account_object( a ) {}
+        
+        legacy_asset                            qi_balance;  /// convert qi_shares to qi taiyi
+        map< uint64_t, api_operation_object >   transfer_history; /// transfer to/from qi
+        map< uint64_t, api_operation_object >   other_history;
+        set< string >                           siming_adores;
+    };
+
+    struct extended_dynamic_global_properties
+    {
+        extended_dynamic_global_properties() {}
+        extended_dynamic_global_properties( const database_api::api_dynamic_global_property_object& o ) : head_block_number( o.head_block_number ), head_block_id( o.head_block_id ), time( o.time ), current_siming( o.current_siming ), virtual_supply( legacy_asset::from_asset( o.virtual_supply ) ), current_supply( legacy_asset::from_asset( o.current_supply ) ), confidential_supply( legacy_asset::from_asset( o.confidential_supply ) ), total_qi_fund_yang( legacy_asset::from_asset( o.total_qi_fund_yang ) ), total_qi_shares( legacy_asset::from_asset( o.total_qi_shares ) ), total_reward_fund_yang( legacy_asset::from_asset( o.total_reward_fund_yang ) ), pending_rewarded_qi_shares( legacy_asset::from_asset( o.pending_rewarded_qi_shares ) ), pending_rewarded_qi_yang( legacy_asset::from_asset( o.pending_rewarded_qi_yang ) ), maximum_block_size( o.maximum_block_size ), current_aslot( o.current_aslot ), recent_slots_filled( o.recent_slots_filled ), participation_count( o.participation_count ), last_irreversible_block_num( o.last_irreversible_block_num ), delegation_return_period( o.delegation_return_period ), content_reward_percent( o.content_reward_percent ), qi_reward_percent( o.qi_reward_percent ), sps_fund_percent( o.sps_fund_percent )
+        {}
+        
+        uint32_t          head_block_number = 0;
+        block_id_type     head_block_id;
+        time_point_sec    time;
+        account_name_type current_siming;
+        
+        legacy_asset      virtual_supply;
+        legacy_asset      current_supply;
+        legacy_asset      confidential_supply;
+        legacy_asset      total_qi_fund_yang;
+        legacy_asset      total_qi_shares;
+        legacy_asset      total_reward_fund_yang;
+        legacy_asset      pending_rewarded_qi_shares;
+        legacy_asset      pending_rewarded_qi_yang;
+        
+        uint32_t          maximum_block_size = 0;
+        uint64_t          current_aslot = 0;
+        fc::uint128_t     recent_slots_filled;
+        uint8_t           participation_count = 0;
+        
+        uint32_t          last_irreversible_block_num = 0;
+        
+        uint32_t          delegation_return_period = TAIYI_DELEGATION_RETURN_PERIOD;
+        
+        uint16_t          content_reward_percent = TAIYI_CONTENT_REWARD_PERCENT;
+        uint16_t          qi_reward_percent = TAIYI_QI_FUND_PERCENT;
+        uint16_t          sps_fund_percent = TAIYI_PROPOSAL_FUND_PERCENT;                
+    };
+
+    struct api_siming_object
+    {
+        api_siming_object() {}
+        api_siming_object( const database_api::api_siming_object& w ) : id( w.id ), owner( w.owner ), created( w.created ), url( w.url ), total_missed( w.total_missed ), last_aslot( w.last_aslot ), last_confirmed_block_num( w.last_confirmed_block_num ), signing_key( w.signing_key ), props( w.props ), adores( w.adores ), virtual_last_update( w.virtual_last_update ), virtual_position( w.virtual_position ), virtual_scheduled_time( w.virtual_scheduled_time ), running_version( w.running_version ), hardfork_version_vote( w.hardfork_version_vote ), hardfork_time_vote( w.hardfork_time_vote )
+        {}
+        
+        siming_id_type  id;
+        account_name_type       owner;
+        time_point_sec          created;
+        string                  url;
+        uint32_t                total_missed = 0;
+        uint64_t                last_aslot = 0;
+        uint64_t                last_confirmed_block_num = 0;
+        public_key_type         signing_key;
+        api_chain_properties    props;
+        share_type              adores;
+        fc::uint128_t           virtual_last_update;
+        fc::uint128_t           virtual_position;
+        fc::uint128_t           virtual_scheduled_time = fc::uint128_t::max_value();
+        version                 running_version;
+        hardfork_version        hardfork_version_vote;
+        time_point_sec          hardfork_time_vote = TAIYI_GENESIS_TIME;
+    };
+
+    struct api_siming_schedule_object
+    {
+        api_siming_schedule_object() {}
+        api_siming_schedule_object( const database_api::api_siming_schedule_object& w ) : id( w.id ), current_virtual_time( w.current_virtual_time ), next_shuffle_block_num( w.next_shuffle_block_num ), num_scheduled_simings( w.num_scheduled_simings ), elected_weight( w.elected_weight ), timeshare_weight( w.timeshare_weight ), miner_weight( w.miner_weight ), siming_pay_normalization_factor( w.siming_pay_normalization_factor ), median_props( w.median_props ), majority_version( w.majority_version ), max_adored_simings( w.max_adored_simings ), hardfork_required_simings( w.hardfork_required_simings )
+        {
+            current_shuffled_simings.insert( current_shuffled_simings.begin(), w.current_shuffled_simings.begin(), w.current_shuffled_simings.end() );
+        }
+        
+        siming_schedule_id_type      id;
+        fc::uint128_t                 current_virtual_time;
+        uint32_t                      next_shuffle_block_num = 1;
+        vector< account_name_type >   current_shuffled_simings;
+        uint8_t                       num_scheduled_simings = 1;
+        uint8_t                       elected_weight = 1;
+        uint8_t                       timeshare_weight = 5;
+        uint8_t                       miner_weight = 1;
+        uint32_t                      siming_pay_normalization_factor = 25;
+        api_chain_properties          median_props;
+        version                       majority_version;
+        uint8_t                       max_adored_simings           = TAIYI_MAX_SIMINGS;
+        uint8_t                       hardfork_required_simings   = TAIYI_HARDFORK_REQUIRED_SIMINGS;        
+    };
+
+    struct api_reward_fund_object
+    {
+        api_reward_fund_object() {}
+        api_reward_fund_object( const database_api::api_reward_fund_object& r ) : id( r.id ), name( r.name ), reward_balance( legacy_asset::from_asset( r.reward_balance ) ), recent_claims( r.recent_claims ), last_update( r.last_update ), content_constant( r.content_constant ), percent_content_rewards( r.percent_content_rewards )
+        {}
+        
+        reward_fund_id_type     id;
+        reward_fund_name_type   name;
+        legacy_asset            reward_balance;
+        fc::uint128_t           recent_claims = 0;
+        time_point_sec          last_update;
+        uint128_t               content_constant = 0;
+        uint16_t                percent_content_rewards = 0;
+    };
+    
+    struct api_qi_delegation_object
+    {
+        api_qi_delegation_object() {}
+        api_qi_delegation_object( const database_api::api_qi_delegation_object& v ) : id( v.id ), delegator( v.delegator ), delegatee( v.delegatee ), qi_shares( legacy_asset::from_asset( v.qi_shares ) ), min_delegation_time( v.min_delegation_time )
+        {}
+        
+        qi_delegation_id_type id;
+        account_name_type delegator;
+        account_name_type delegatee;
+        legacy_asset      qi_shares;
+        time_point_sec    min_delegation_time;
+    };
+    
+    struct api_qi_delegation_expiration_object
+    {
+        api_qi_delegation_expiration_object() {}
+        api_qi_delegation_expiration_object( const database_api::api_qi_delegation_expiration_object& v ) : id( v.id ), delegator( v.delegator ), qi_shares( legacy_asset::from_asset( v.qi_shares ) ), expiration( v.expiration )
+        {}
+        
+        qi_delegation_expiration_id_type id;
+        account_name_type delegator;
+        legacy_asset      qi_shares;
+        time_point_sec    expiration;
+    };
+        
+    struct state
+    {
+        string                                              current_route;
+        
+        extended_dynamic_global_properties                  props;
+        
+        map< string, extended_account >                     accounts;
+        
+        map< string, api_siming_object >                    simings;
+        api_siming_schedule_object                          siming_schedule;
+        string                                              error;
+    };
+
+    struct scheduled_hardfork
+    {
+        hardfork_version     hf_version;
+        fc::time_point_sec   live_time;
+    };
+
+    enum withdraw_route_type
+    {
+        incoming,
+        outgoing,
+        all
+    };
+
+    typedef vector< variant > get_version_args;
+    struct get_version_return
+    {
+        get_version_return() {}
+        get_version_return( std::string bc_v, std::string s_v, std::string fc_v ) :blockchain_version( bc_v ), taiyi_revision( s_v ), fc_revision( fc_v ) {}
+        
+        std::string blockchain_version;
+        std::string taiyi_revision;
+        std::string fc_revision;
+    };
+
+    typedef map< uint32_t, api_operation_object > get_account_history_return_type;
+
+    typedef vector< variant > broadcast_transaction_synchronous_args;
+    struct broadcast_transaction_synchronous_return
+    {
+        broadcast_transaction_synchronous_return() {}
+        broadcast_transaction_synchronous_return( transaction_id_type txid, int32_t bn, int32_t tn, bool ex ) : id(txid), block_num(bn), trx_num(tn), expired(ex) {}
+        
+        transaction_id_type   id;
+        int32_t               block_num = 0;
+        int32_t               trx_num   = 0;
+        bool                  expired   = false;
+    };
+
+#define DEFINE_API_ARGS( api_name, arg_type, return_type )  \
+    typedef arg_type api_name ## _args;                     \
+    typedef return_type api_name ## _return;
+
+/*               API,                               args,              return */
+DEFINE_API_ARGS( get_state,                         vector< variant >, state )
+DEFINE_API_ARGS( get_active_simings,                vector< variant >, vector< account_name_type > )
+DEFINE_API_ARGS( get_block_header,                  vector< variant >, optional< block_header > )
+DEFINE_API_ARGS( get_block,                         vector< variant >, optional< legacy_signed_block > )
+DEFINE_API_ARGS( get_ops_in_block,                  vector< variant >, vector< api_operation_object > )
+DEFINE_API_ARGS( get_config,                        vector< variant >, fc::variant_object )
+DEFINE_API_ARGS( get_dynamic_global_properties,     vector< variant >, extended_dynamic_global_properties )
+DEFINE_API_ARGS( get_chain_properties,              vector< variant >, api_chain_properties )
+DEFINE_API_ARGS( get_siming_schedule,               vector< variant >, api_siming_schedule_object )
+DEFINE_API_ARGS( get_hardfork_version,              vector< variant >, hardfork_version )
+DEFINE_API_ARGS( get_next_scheduled_hardfork,       vector< variant >, scheduled_hardfork )
+DEFINE_API_ARGS( get_reward_fund,                   vector< variant >, api_reward_fund_object )
+DEFINE_API_ARGS( get_key_references,                vector< variant >, vector< vector< account_name_type > > )
+DEFINE_API_ARGS( get_accounts,                      vector< variant >, vector< extended_account > )
+DEFINE_API_ARGS( lookup_account_names,              vector< variant >, vector< optional< api_account_object > > )
+DEFINE_API_ARGS( lookup_accounts,                   vector< variant >, set< string > )
+DEFINE_API_ARGS( get_account_count,                 vector< variant >, uint64_t )
+DEFINE_API_ARGS( get_owner_history,                 vector< variant >, vector<database_api::api_owner_authority_history_object>)
+DEFINE_API_ARGS( get_recovery_request,              vector< variant >, optional<database_api::api_account_recovery_request_object>)
+DEFINE_API_ARGS( get_withdraw_routes,               vector< variant >, vector< database_api::api_withdraw_qi_route_object > )
+DEFINE_API_ARGS( get_qi_delegations,                vector< variant >, vector< api_qi_delegation_object > )
+DEFINE_API_ARGS( get_expiring_qi_delegations,       vector< variant >, vector< api_qi_delegation_expiration_object > )
+DEFINE_API_ARGS( get_simings,                       vector< variant >, vector< optional< api_siming_object > > )
+DEFINE_API_ARGS( get_siming_by_account,             vector< variant >, optional< api_siming_object > )
+DEFINE_API_ARGS( get_simings_by_adore,               vector< variant >, vector< api_siming_object > )
+DEFINE_API_ARGS( lookup_siming_accounts,            vector< variant >, vector< account_name_type > )
+DEFINE_API_ARGS( get_siming_count,                  vector< variant >, uint64_t )
+DEFINE_API_ARGS( get_transaction_hex,               vector< variant >, string )
+DEFINE_API_ARGS( get_transaction,                   vector< variant >, legacy_signed_transaction )
+DEFINE_API_ARGS( get_transaction_results,           vector< variant >, vector<operation_result> )
+DEFINE_API_ARGS( get_required_signatures,           vector< variant >, set< public_key_type > )
+DEFINE_API_ARGS( get_potential_signatures,          vector< variant >, set< public_key_type > )
+DEFINE_API_ARGS( verify_authority,                  vector< variant >, bool )
+DEFINE_API_ARGS( verify_account_authority,          vector< variant >, bool )
+DEFINE_API_ARGS( get_account_history,               vector< variant >, get_account_history_return_type )
+DEFINE_API_ARGS( broadcast_transaction,             vector< variant >, json_rpc::void_type )
+DEFINE_API_ARGS( broadcast_block,                   vector< variant >, json_rpc::void_type )
+
+#undef DEFINE_API_ARGS
+
+    class baiyujing_api
+    {
+    public:
+        baiyujing_api();
+        ~baiyujing_api();
+        
+        DECLARE_API(
+            (get_version)
+            (get_state)
+            (get_active_simings)
+            (get_block_header)
+            (get_block)
+            (get_ops_in_block)
+            (get_config)
+            (get_dynamic_global_properties)
+            (get_chain_properties)
+            (get_siming_schedule)
+            (get_hardfork_version)
+            (get_next_scheduled_hardfork)
+            (get_reward_fund)
+            (get_key_references)
+            (get_accounts)
+            (lookup_account_names)
+            (lookup_accounts)
+            (get_account_count)
+            (get_owner_history)
+            (get_recovery_request)
+            (get_withdraw_routes)
+            (get_qi_delegations)
+            (get_expiring_qi_delegations)
+            (get_simings)
+            (get_siming_by_account)
+            (get_simings_by_adore)
+            (lookup_siming_accounts)
+            (get_siming_count)
+            (get_transaction_hex)
+            (get_transaction)
+            (get_transaction_results)
+            (get_required_signatures)
+            (get_potential_signatures)
+            (verify_authority)
+            (verify_account_authority)
+            (get_account_history)
+            (broadcast_transaction)
+            (broadcast_transaction_synchronous)
+            (broadcast_block)
+        )
+        
+    private:
+        friend class baiyujing_api_plugin;
+        void api_startup();
+        
+        std::unique_ptr< detail::baiyujing_api_impl > my;
+    };
+
+} } } // taiyi::plugins::baiyujing_api
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::state, (current_route)(props)(accounts)(simings)(siming_schedule)(error) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_operation_object, (trx_id)(block)(trx_in_block)(op_in_trx)(virtual_op)(timestamp)(op) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_qi_yang)(qi_shares)(delegated_qi_shares)(received_qi_shares)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+
+FC_REFLECT_DERIVED( taiyi::plugins::baiyujing_api::extended_account, (taiyi::plugins::baiyujing_api::api_account_object),(qi_balance)(transfer_history)(other_history)(siming_adores) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::extended_dynamic_global_properties, (head_block_number)(head_block_id)(time)(current_siming)(virtual_supply)(current_supply)(confidential_supply)(total_qi_fund_yang)(total_qi_shares)(total_reward_fund_yang)(pending_rewarded_qi_shares)(pending_rewarded_qi_yang)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_percent)(qi_reward_percent)(sps_fund_percent) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_siming_object, (id)(owner)(created)(url)(adores)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)(last_aslot)(last_confirmed_block_num)(signing_key)(props)(running_version)(hardfork_version_vote)(hardfork_time_vote) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_siming_schedule_object, (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_simings)(num_scheduled_simings)(elected_weight)(timeshare_weight)(miner_weight)(siming_pay_normalization_factor)(median_props)(majority_version)(max_adored_simings)(hardfork_required_simings) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_reward_fund_object, (id)(name)(reward_balance)(recent_claims)(last_update)(content_constant)(percent_content_rewards) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_qi_delegation_object, (id)(delegator)(delegatee)(qi_shares)(min_delegation_time) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_qi_delegation_expiration_object, (id)(delegator)(qi_shares)(expiration) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::scheduled_hardfork, (hf_version)(live_time) )
+
+FC_REFLECT_ENUM( taiyi::plugins::baiyujing_api::withdraw_route_type, (incoming)(outgoing)(all) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::get_version_return, (blockchain_version)(taiyi_revision)(fc_revision) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::broadcast_transaction_synchronous_return, (id)(block_num)(trx_num)(expired) )

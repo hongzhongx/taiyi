@@ -1,0 +1,19 @@
+#include <appbase/application.hpp>
+#include <boost/preprocessor/seq/for_each.hpp>
+
+#include <manifest/plugins.hpp>
+
+{% for plugin in plugins %}
+#include <plugins/{{ plugin["plugin_name"] }}/{{ plugin["plugin_name"] }}_plugin.hpp>
+{% endfor %}
+
+namespace taiyi { namespace plugins {
+
+void register_plugins()
+{
+   {% for plugin in plugins %}
+   appbase::app().register_plugin< taiyi::plugins::{{ plugin["plugin_namespace"] }}::{{ plugin["plugin_name" ] }}_plugin >();
+   {% endfor %}
+}
+
+} }
