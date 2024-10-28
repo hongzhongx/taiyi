@@ -113,6 +113,8 @@ namespace taiyi { namespace plugins { namespace database_api {
              * using the existing authority structures in Taiyi
              */
             (verify_signatures)
+                    
+            (find_account_resources)
         )
         
     private:

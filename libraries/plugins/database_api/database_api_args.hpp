@@ -328,6 +328,24 @@ namespace taiyi { namespace plugins { namespace database_api {
         bool valid;
     };
 
+    struct resource_assets
+    {
+        asset gold = asset(0, GOLD_SYMBOL);
+        asset food = asset(0, FOOD_SYMBOL);
+        asset wood = asset(0, WOOD_SYMBOL);
+        asset fabric = asset(0, FABRIC_SYMBOL);
+        asset herb = asset(0, HERB_SYMBOL);
+    };
+
+    struct find_account_resources_args
+    {
+        vector< account_name_type > accounts;
+    };
+    struct find_account_resources_return
+    {
+        vector<resource_assets> resources;
+    };
+
 } } } // taiyi::database_api
 
 FC_REFLECT( taiyi::plugins::database_api::get_version_return, (blockchain_version)(taiyi_revision)(fc_revision)(chain_id) )
@@ -394,3 +412,7 @@ FC_REFLECT( taiyi::plugins::database_api::verify_account_authority_args, (accoun
 
 FC_REFLECT( taiyi::plugins::database_api::verify_signatures_args, (hash)(signatures)(required_owner)(required_active)(required_posting)(required_other) )
 FC_REFLECT( taiyi::plugins::database_api::verify_signatures_return, (valid) )
+
+FC_REFLECT( taiyi::plugins::database_api::resource_assets, (gold)(food)(wood)(fabric)(herb) )
+FC_REFLECT( taiyi::plugins::database_api::find_account_resources_args, (accounts) )
+FC_REFLECT( taiyi::plugins::database_api::find_account_resources_return, (resources) )

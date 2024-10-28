@@ -18,23 +18,53 @@
 #define TAIYI_PRECISION_YANG    (3)
 #define TAIYI_PRECISION_QI      (6)
 
+#define TAIYI_PRECISION_GOLD    (6)
+#define TAIYI_PRECISION_FOOD    (6)
+#define TAIYI_PRECISION_WOOD    (6)
+#define TAIYI_PRECISION_FABRIC  (6)
+#define TAIYI_PRECISION_HERB    (6)
+
 // One's place is used for check digit, which means NAI 0-9 all have NAI data of 0 which is invalid
 // This space is safe to use because it would alwasys result in failure to convert from NAI
 #define TAIYI_NAI_YIN       (1)
 #define TAIYI_NAI_YANG      (2)
 #define TAIYI_NAI_QI        (3)
 
+#define TAIYI_NAI_GOLD      (4)
+#define TAIYI_NAI_FOOD      (5)
+#define TAIYI_NAI_WOOD      (6)
+#define TAIYI_NAI_FABRIC    (7)
+#define TAIYI_NAI_HERB      (8)
+
 #define TAIYI_ASSET_NUM_YIN     (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YIN)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YIN))
 #define TAIYI_ASSET_NUM_YANG    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YANG) << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YANG))
 #define TAIYI_ASSET_NUM_QI      (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_QI) << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_QI))
+
+#define TAIYI_ASSET_NUM_GOLD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_GOLD)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_GOLD))
+#define TAIYI_ASSET_NUM_FOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FOOD)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FOOD))
+#define TAIYI_ASSET_NUM_WOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_WOOD)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_WOOD))
+#define TAIYI_ASSET_NUM_FABRIC  (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FABRIC)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FABRIC))
+#define TAIYI_ASSET_NUM_HERB    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_HERB)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_HERB))
 
 #define QI_SYMBOL_U64       (uint64_t('Q') | (uint64_t('I') << 8))
 #define YANG_SYMBOL_U64     (uint64_t('Y') | (uint64_t('A') << 8) | (uint64_t('N') << 16) | (uint64_t('G') << 24))
 #define YIN_SYMBOL_U64      (uint64_t('Y') | (uint64_t('I') << 8) | (uint64_t('N') << 16))
 
+#define GOLD_SYMBOL_U64     (uint64_t('G') | (uint64_t('O') << 8) | (uint64_t('L') << 16) | (uint64_t('D') << 24))
+#define FOOD_SYMBOL_U64     (uint64_t('F') | (uint64_t('O') << 8) | (uint64_t('O') << 16) | (uint64_t('D') << 24))
+#define WOOD_SYMBOL_U64     (uint64_t('W') | (uint64_t('O') << 8) | (uint64_t('O') << 16) | (uint64_t('D') << 24))
+#define FABRIC_SYMBOL_U64   (uint64_t('F') | (uint64_t('A') << 8) | (uint64_t('B') << 16) | (uint64_t('R') << 24))
+#define HERB_SYMBOL_U64     (uint64_t('H') | (uint64_t('E') << 8) | (uint64_t('R') << 16) | (uint64_t('B') << 24))
+
 #define QI_SYMBOL_SER       (uint64_t(6) | (QI_SYMBOL_U64 << 8)) ///< QI with 6 digits of precision
 #define YANG_SYMBOL_SER     (uint64_t(3) | (YANG_SYMBOL_U64 << 8)) ///< YANG with 3 digits of precision
 #define YIN_SYMBOL_SER      (uint64_t(3) | (YIN_SYMBOL_U64 << 8))   ///< YIN with 3 digits of precision
+
+#define GOLD_SYMBOL_SER     (uint64_t(6) | (GOLD_SYMBOL_U64 << 8)) ///< GOLD with 6 digits of precision
+#define FOOD_SYMBOL_SER     (uint64_t(6) | (FOOD_SYMBOL_U64 << 8)) ///< FOOD with 6 digits of precision
+#define WOOD_SYMBOL_SER     (uint64_t(6) | (WOOD_SYMBOL_U64 << 8)) ///< WOOD with 6 digits of precision
+#define FABRIC_SYMBOL_SER   (uint64_t(6) | (FABRIC_SYMBOL_U64 << 8)) ///< FABRIC with 6 digits of precision
+#define HERB_SYMBOL_SER     (uint64_t(6) | (HERB_SYMBOL_U64 << 8)) ///< HERB with 6 digits of precision
 
 #define TAIYI_ASSET_MAX_DECIMALS 12
 
@@ -53,7 +83,7 @@ namespace taiyi { namespace protocol {
         enum asset_symbol_space
         {
             legacy_space = 1,
-            sgt_nai_space = 2
+            nai_space = 2
         };
         
         explicit operator uint32_t() { return to_nai(); }
@@ -141,13 +171,28 @@ namespace fc {
                         case TAIYI_ASSET_NUM_QI:
                             ser = QI_SYMBOL_SER;
                             break;
+                        case TAIYI_ASSET_NUM_GOLD:
+                            ser = GOLD_SYMBOL_SER;
+                            break;
+                        case TAIYI_ASSET_NUM_FOOD:
+                            ser = FOOD_SYMBOL_SER;
+                            break;
+                        case TAIYI_ASSET_NUM_WOOD:
+                            ser = WOOD_SYMBOL_SER;
+                            break;
+                        case TAIYI_ASSET_NUM_FABRIC:
+                            ser = FABRIC_SYMBOL_SER;
+                            break;
+                        case TAIYI_ASSET_NUM_HERB:
+                            ser = HERB_SYMBOL_SER;
+                            break;
                         default:
                             FC_ASSERT( false, "Cannot serialize unknown asset symbol" );
                     }
                     pack( s, ser );
                     break;
                 }
-                case taiyi::protocol::asset_symbol_type::sgt_nai_space:
+                case taiyi::protocol::asset_symbol_type::nai_space:
                     pack( s, sym.asset_num );
                     break;
                 default:
@@ -177,6 +222,31 @@ namespace fc {
                     s.read( ((char*) &ser)+4, 4 );
                     FC_ASSERT( ser == QI_SYMBOL_SER, "invalid asset bits" );
                     sym.asset_num = TAIYI_ASSET_NUM_QI;
+                    break;
+                case GOLD_SYMBOL_SER & 0xFFFFFFFF:
+                    s.read( ((char*) &ser)+4, 4 );
+                    FC_ASSERT( ser == GOLD_SYMBOL_SER, "invalid asset bits" );
+                    sym.asset_num = TAIYI_ASSET_NUM_GOLD;
+                    break;
+                case FOOD_SYMBOL_SER & 0xFFFFFFFF:
+                    s.read( ((char*) &ser)+4, 4 );
+                    FC_ASSERT( ser == FOOD_SYMBOL_SER, "invalid asset bits" );
+                    sym.asset_num = TAIYI_ASSET_NUM_FOOD;
+                    break;
+                case WOOD_SYMBOL_SER & 0xFFFFFFFF:
+                    s.read( ((char*) &ser)+4, 4 );
+                    FC_ASSERT( ser == WOOD_SYMBOL_SER, "invalid asset bits" );
+                    sym.asset_num = TAIYI_ASSET_NUM_WOOD;
+                    break;
+                case FABRIC_SYMBOL_SER & 0xFFFFFFFF:
+                    s.read( ((char*) &ser)+4, 4 );
+                    FC_ASSERT( ser == FABRIC_SYMBOL_SER, "invalid asset bits" );
+                    sym.asset_num = TAIYI_ASSET_NUM_FABRIC;
+                    break;
+                case HERB_SYMBOL_SER & 0xFFFFFFFF:
+                    s.read( ((char*) &ser)+4, 4 );
+                    FC_ASSERT( ser == HERB_SYMBOL_SER, "invalid asset bits" );
+                    sym.asset_num = TAIYI_ASSET_NUM_HERB;
                     break;
                 default:
                     sym.asset_num = uint32_t( ser );

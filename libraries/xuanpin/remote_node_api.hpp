@@ -54,6 +54,7 @@ namespace taiyi { namespace xuanpin {
         void broadcast_transaction( baiyujing_api::legacy_signed_transaction ) { FC_ASSERT( false ); }
         baiyujing_api::broadcast_transaction_synchronous_return broadcast_transaction_synchronous( baiyujing_api::legacy_signed_transaction ) { FC_ASSERT( false ); }
         void broadcast_block( signed_block ) { FC_ASSERT( false ); }
+        vector< baiyujing_api::api_resource_assets > get_account_resources ( vector< account_name_type > ) { FC_ASSERT( false ); }
     };
 
 } } //taiyi::xuanpin
@@ -98,4 +99,5 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (broadcast_transaction)
     (broadcast_transaction_synchronous)
     (broadcast_block)
+    (get_account_resources)
 )

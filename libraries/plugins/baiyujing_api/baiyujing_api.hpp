@@ -267,6 +267,20 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         int32_t               trx_num   = 0;
         bool                  expired   = false;
     };
+    
+    struct api_resource_assets
+    {
+        api_resource_assets( const database_api::resource_assets& r ) : gold( legacy_asset::from_asset( r.gold ) ), food( legacy_asset::from_asset( r.food ) ), wood( legacy_asset::from_asset( r.wood ) ), fabric( legacy_asset::from_asset( r.fabric ) ), herb( legacy_asset::from_asset( r.herb ) )
+        {}
+
+        api_resource_assets() {}
+
+        legacy_asset      gold;
+        legacy_asset      food;
+        legacy_asset      wood;
+        legacy_asset      fabric;
+        legacy_asset      herb;
+    };
 
 #define DEFINE_API_ARGS( api_name, arg_type, return_type )  \
     typedef arg_type api_name ## _args;                     \
@@ -310,6 +324,7 @@ DEFINE_API_ARGS( verify_account_authority,          vector< variant >, bool )
 DEFINE_API_ARGS( get_account_history,               vector< variant >, get_account_history_return_type )
 DEFINE_API_ARGS( broadcast_transaction,             vector< variant >, json_rpc::void_type )
 DEFINE_API_ARGS( broadcast_block,                   vector< variant >, json_rpc::void_type )
+DEFINE_API_ARGS( get_account_resources,             vector< variant >, vector< api_resource_assets > )
 
 #undef DEFINE_API_ARGS
 
@@ -359,6 +374,7 @@ DEFINE_API_ARGS( broadcast_block,                   vector< variant >, json_rpc:
             (broadcast_transaction)
             (broadcast_transaction_synchronous)
             (broadcast_block)
+            (get_account_resources)
         )
         
     private:
@@ -397,3 +413,5 @@ FC_REFLECT_ENUM( taiyi::plugins::baiyujing_api::withdraw_route_type, (incoming)(
 FC_REFLECT( taiyi::plugins::baiyujing_api::get_version_return, (blockchain_version)(taiyi_revision)(fc_revision) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::broadcast_transaction_synchronous_return, (id)(block_num)(trx_num)(expired) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_resource_assets, (gold)(food)(wood)(fabric)(herb) )

@@ -112,7 +112,7 @@ namespace taiyi { namespace chain {
                         
         void operator()( const hardfork_operation& op )
         {
-            _impacted.insert( TAIYI_INIT_MINER_NAME );
+            _impacted.insert( TAIYI_INIT_SIMING_NAME );
         }
         
         //void operator()( const operation& op ){}

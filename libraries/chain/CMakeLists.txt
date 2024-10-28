@@ -1,4 +1,4 @@
-file(GLOB HEADERS "./*.hpp" "./util/*.hpp")
+file(GLOB HEADERS "./*.hpp" "./util/*.hpp" "./asset_objects/*.hpp")
 
 ## SORT .cpp by most likely to change / break compile
 add_library( taiyi_chain
@@ -6,6 +6,7 @@ add_library( taiyi_chain
              # As database takes the longest to compile, start it first
              database.cpp
              index.cpp
+             asset_index.cpp
 
              taiyi_evaluator.cpp
 

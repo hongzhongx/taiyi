@@ -54,6 +54,7 @@ namespace taiyi { namespace plugins { namespace database_api {
             (verify_authority)
             (verify_account_authority)
             (verify_signatures)
+            (find_account_resources)
         )
 
         template< typename ResultType >
@@ -896,6 +897,29 @@ namespace taiyi { namespace plugins { namespace database_api {
         
         return result;
     }
+    
+    DEFINE_API_IMPL( database_api_impl, find_account_resources )
+    {
+        find_account_resources_return result;
+        FC_ASSERT( args.accounts.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        for( auto& a : args.accounts )
+        {
+            auto acct = _db.find< chain::account_object, chain::by_name >( a );
+            if( acct != nullptr ) {
+                resource_assets res;
+                res.gold = _db.get_balance(*acct, GOLD_SYMBOL);
+                res.food = _db.get_balance(*acct, FOOD_SYMBOL);
+                res.wood = _db.get_balance(*acct, WOOD_SYMBOL);
+                res.fabric = _db.get_balance(*acct, FABRIC_SYMBOL);
+                res.herb = _db.get_balance(*acct, HERB_SYMBOL);
+
+                result.resources.push_back( res );
+            }
+        }
+
+        return result;
+    }
 
     DEFINE_LOCKLESS_APIS( database_api, (get_config)(get_version) )
     
@@ -930,6 +954,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         (verify_authority)
         (verify_account_authority)
         (verify_signatures)
+        (find_account_resources)
     )
     
 } } } // taiyi::plugins::database_api

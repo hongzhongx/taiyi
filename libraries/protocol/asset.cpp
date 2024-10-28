@@ -126,6 +126,21 @@ namespace taiyi { namespace protocol {
             case TAIYI_NAI_QI:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_QI );
                 return TAIYI_ASSET_NUM_QI;
+            case TAIYI_NAI_GOLD:
+                FC_ASSERT( decimal_places == TAIYI_PRECISION_GOLD );
+                return TAIYI_ASSET_NUM_GOLD;
+            case TAIYI_NAI_FOOD:
+                FC_ASSERT( decimal_places == TAIYI_PRECISION_FOOD );
+                return TAIYI_ASSET_NUM_FOOD;
+            case TAIYI_NAI_WOOD:
+                FC_ASSERT( decimal_places == TAIYI_PRECISION_WOOD );
+                return TAIYI_ASSET_NUM_WOOD;
+            case TAIYI_NAI_FABRIC:
+                FC_ASSERT( decimal_places == TAIYI_PRECISION_FABRIC );
+                return TAIYI_ASSET_NUM_FABRIC;
+            case TAIYI_NAI_HERB:
+                FC_ASSERT( decimal_places == TAIYI_PRECISION_HERB );
+                return TAIYI_ASSET_NUM_HERB;
             default:
                 FC_ASSERT( decimal_places <= TAIYI_ASSET_MAX_DECIMALS, "Invalid decimal_places" );
                 return (nai_data_digits << TAIYI_NAI_SHIFT) | SGT_ASSET_NUM_CONTROL_MASK | decimal_places;
@@ -148,8 +163,23 @@ namespace taiyi { namespace protocol {
             case TAIYI_ASSET_NUM_QI:
                 nai_data_digits = TAIYI_NAI_QI;
                 break;
+            case TAIYI_ASSET_NUM_GOLD:
+                nai_data_digits = TAIYI_NAI_GOLD;
+                break;
+            case TAIYI_ASSET_NUM_FOOD:
+                nai_data_digits = TAIYI_NAI_FOOD;
+                break;
+            case TAIYI_ASSET_NUM_WOOD:
+                nai_data_digits = TAIYI_NAI_WOOD;
+                break;
+            case TAIYI_ASSET_NUM_FABRIC:
+                nai_data_digits = TAIYI_NAI_FABRIC;
+                break;
+            case TAIYI_ASSET_NUM_HERB:
+                nai_data_digits = TAIYI_NAI_HERB;
+                break;
             default:
-                FC_ASSERT( space() == sgt_nai_space );
+                FC_ASSERT( space() == nai_space );
                 nai_data_digits = (asset_num >> TAIYI_NAI_SHIFT);
         }
         
@@ -171,11 +201,17 @@ namespace taiyi { namespace protocol {
                         return false;
                     case TAIYI_ASSET_NUM_QI:
                         return true;
+                    case TAIYI_ASSET_NUM_GOLD:
+                    case TAIYI_ASSET_NUM_FOOD:
+                    case TAIYI_ASSET_NUM_WOOD:
+                    case TAIYI_ASSET_NUM_FABRIC:
+                    case TAIYI_ASSET_NUM_HERB:
+                        return false;
                     default:
                         FC_ASSERT( false, "Unknown asset symbol" );
                 }
             }
-            case sgt_nai_space:
+            case nai_space:
                 // 6th bit of asset_num is used as qi/liquid variant indicator.
                 return asset_num & SGT_ASSET_NUM_QI_MASK;
             default:
@@ -197,11 +233,17 @@ namespace taiyi { namespace protocol {
                         return *this;
                     case TAIYI_ASSET_NUM_QI:
                         return from_asset_num( TAIYI_ASSET_NUM_YANG );
+                    case TAIYI_ASSET_NUM_GOLD:
+                    case TAIYI_ASSET_NUM_FOOD:
+                    case TAIYI_ASSET_NUM_WOOD:
+                    case TAIYI_ASSET_NUM_FABRIC:
+                    case TAIYI_ASSET_NUM_HERB:
+                        return *this;
                     default:
                         FC_ASSERT( false, "Unknown asset symbol" );
                 }
             }
-            case sgt_nai_space:
+            case nai_space:
             {
                 // Toggle 6th bit of this asset_num.
                 auto paired_asset_num = asset_num ^ ( SGT_ASSET_NUM_QI_MASK );
@@ -220,10 +262,15 @@ namespace taiyi { namespace protocol {
             case TAIYI_ASSET_NUM_YANG:
             case TAIYI_ASSET_NUM_YIN:
             case TAIYI_ASSET_NUM_QI:
+            case TAIYI_ASSET_NUM_GOLD:
+            case TAIYI_ASSET_NUM_FOOD:
+            case TAIYI_ASSET_NUM_WOOD:
+            case TAIYI_ASSET_NUM_FABRIC:
+            case TAIYI_ASSET_NUM_HERB:
                 s = legacy_space;
                 break;
             default:
-                s = sgt_nai_space;
+                s = nai_space;
         }
         return s;
     }
@@ -235,6 +282,11 @@ namespace taiyi { namespace protocol {
             case TAIYI_ASSET_NUM_YANG:
             case TAIYI_ASSET_NUM_YIN:
             case TAIYI_ASSET_NUM_QI:
+            case TAIYI_ASSET_NUM_GOLD:
+            case TAIYI_ASSET_NUM_FOOD:
+            case TAIYI_ASSET_NUM_WOOD:
+            case TAIYI_ASSET_NUM_FABRIC:
+            case TAIYI_ASSET_NUM_HERB:
                 break;
             default:
             {

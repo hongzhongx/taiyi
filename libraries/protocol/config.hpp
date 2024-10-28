@@ -50,6 +50,12 @@
 #define YANG_SYMBOL   (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_YANG ) )
 #define YIN_SYMBOL    (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_YIN ) )
 
+#define GOLD_SYMBOL   (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_GOLD ) )
+#define FOOD_SYMBOL   (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_FOOD ) )
+#define WOOD_SYMBOL   (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_WOOD ) )
+#define FABRIC_SYMBOL (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_FABRIC ) )
+#define HERB_SYMBOL   (taiyi::protocol::asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_HERB ) )
+
 #define TAIYI_BLOCKCHAIN_HARDFORK_VERSION     ( hardfork_version( TAIYI_BLOCKCHAIN_VERSION ) )
 
 #define TAIYI_100_PERCENT                     10000
@@ -62,8 +68,8 @@
 #define TAIYI_START_QI_BLOCK                  (TAIYI_BLOCKS_PER_DAY * 7)
 #define TAIYI_START_MINER_ADORING_BLOCK        (TAIYI_BLOCKS_PER_DAY * 30)
 
-#define TAIYI_INIT_MINER_NAME                 "initminer"
-#define TAIYI_NUM_INIT_MINERS                 1
+#define TAIYI_INIT_SIMING_NAME                 "initminer"
+#define TAIYI_NUM_INIT_SIMINGS                 1
 
 #define TAIYI_MAX_SIMINGS                   21
 

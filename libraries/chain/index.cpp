@@ -9,6 +9,8 @@
 
 namespace taiyi { namespace chain {
 
+    void initialize_asset_indexes( database& db );
+
     void initialize_core_indexes( database& db )
     {
         TAIYI_ADD_CORE_INDEX(db, dynamic_global_property_index);
@@ -29,6 +31,8 @@ namespace taiyi { namespace chain {
         TAIYI_ADD_CORE_INDEX(db, reward_fund_index);
         TAIYI_ADD_CORE_INDEX(db, qi_delegation_index);
         TAIYI_ADD_CORE_INDEX(db, qi_delegation_expiration_index);
+
+        initialize_asset_indexes(db);
     }
     
     index_info::index_info() {}

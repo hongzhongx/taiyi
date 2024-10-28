@@ -76,6 +76,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (broadcast_transaction)
                 (broadcast_transaction_synchronous)
                 (broadcast_block)
+                (get_account_resources)
             )
             
             void on_post_apply_block( const signed_block& b );
@@ -712,6 +713,19 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             
             return _network_broadcast_api->broadcast_block( { signed_block( args[0].as< legacy_signed_block >() ) } );
         }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, get_account_resources )
+        {
+            CHECK_ARG_SIZE(1)
+
+            const auto& resources = _database_api->find_account_resources( { args[0].as< vector< account_name_type > >() } ).resources;
+
+            get_account_resources_return result;
+            for( const auto& r : resources )
+                result.emplace_back( api_resource_assets( r ) );
+
+            return result;
+        }
 
         void baiyujing_api_impl::on_post_apply_block( const signed_block& b )
         { try {
@@ -846,6 +860,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (verify_authority)
         (verify_account_authority)
         (get_account_history)
+        (get_account_resources)
     )
 
 } } } // taiyi::plugins::baiyujing_api

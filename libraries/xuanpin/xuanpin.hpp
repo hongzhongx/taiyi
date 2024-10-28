@@ -639,6 +639,14 @@ namespace taiyi { namespace xuanpin {
         
         baiyujing_api::legacy_signed_transaction claim_reward_balance(string account, baiyujing_api::legacy_asset reward_yang, baiyujing_api::legacy_asset reward_qi, bool broadcast );
         
+        /** get resources of accounts
+         * This returns a list of all resource assets owned by account names.
+         *
+         * @param names the names of accounts.
+         * @returns a list of resources
+         */
+        vector< baiyujing_api::api_resource_assets > get_account_resources ( vector< account_name_type > names );
+                
     };
     
 } }
@@ -675,6 +683,7 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (get_account_history)
     (get_state)
     (get_withdraw_routes)
+    (get_account_resources)
 
     /// transaction api
     (create_account)

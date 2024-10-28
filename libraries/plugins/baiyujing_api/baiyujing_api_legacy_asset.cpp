@@ -54,6 +54,26 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                         FC_ASSERT( decimals == 6, "Incorrect decimal places" );
                         asset_num = TAIYI_ASSET_NUM_QI;
                         break;
+                    case GOLD_SYMBOL_U64:
+                        FC_ASSERT( decimals == 6, "Incorrect decimal places" );
+                        asset_num = TAIYI_ASSET_NUM_GOLD;
+                        break;
+                    case FOOD_SYMBOL_U64:
+                        FC_ASSERT( decimals == 6, "Incorrect decimal places" );
+                        asset_num = TAIYI_ASSET_NUM_FOOD;
+                        break;
+                    case WOOD_SYMBOL_U64:
+                        FC_ASSERT( decimals == 6, "Incorrect decimal places" );
+                        asset_num = TAIYI_ASSET_NUM_WOOD;
+                        break;
+                    case FABRIC_SYMBOL_U64:
+                        FC_ASSERT( decimals == 6, "Incorrect decimal places" );
+                        asset_num = TAIYI_ASSET_NUM_FABRIC;
+                        break;
+                    case HERB_SYMBOL_U64:
+                        FC_ASSERT( decimals == 6, "Incorrect decimal places" );
+                        asset_num = TAIYI_ASSET_NUM_HERB;
+                        break;
                     default:
                         FC_ASSERT( false, "Cannot parse asset symbol" );
                 }
@@ -90,6 +110,16 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 return "YANG";
             case TAIYI_ASSET_NUM_QI:
                 return "QI";
+            case TAIYI_ASSET_NUM_GOLD:
+                return "GOLD";
+            case TAIYI_ASSET_NUM_FOOD:
+                return "FOOD";
+            case TAIYI_ASSET_NUM_WOOD:
+                return "WOOD";
+            case TAIYI_ASSET_NUM_FABRIC:
+                return "FABR";
+            case TAIYI_ASSET_NUM_HERB:
+                return "HERB";
             default:
                 return "UNKN"; // SGTs will return this symbol if returned as a legacy asset
         }

@@ -1783,4 +1783,9 @@ namespace taiyi { namespace xuanpin {
         return my->_remote_api->get_transaction_results( trx_id );
     }    
     
+    vector< baiyujing_api::api_resource_assets > xuanpin_api::get_account_resources ( vector< account_name_type > names )
+    {
+        return my->_remote_api->get_account_resources( names );
+    }
+
 } } // taiyi::xuanpin

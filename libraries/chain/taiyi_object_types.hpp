@@ -73,7 +73,11 @@ namespace taiyi {
             block_stats_object_type,
             reward_fund_object_type,
             qi_delegation_object_type,
-            qi_delegation_expiration_object_type
+            qi_delegation_expiration_object_type,
+
+            //asset objects
+            account_regular_balance_object_type,
+            account_rewards_balance_object_type
         };
         
         class dynamic_global_property_object;
@@ -96,6 +100,10 @@ namespace taiyi {
         class qi_delegation_object;
         class qi_delegation_expiration_object;
                 
+        //asset objects
+        class account_regular_balance_object;
+        class account_rewards_balance_object;
+
         typedef oid< dynamic_global_property_object         > dynamic_global_property_id_type;
         typedef oid< account_object                         > account_id_type;
         typedef oid< account_metadata_object                > account_metadata_id_type;
@@ -116,6 +124,10 @@ namespace taiyi {
         typedef oid< qi_delegation_object                   > qi_delegation_id_type;
         typedef oid< qi_delegation_expiration_object        > qi_delegation_expiration_id_type;
                 
+        //asset objects
+        typedef oid< account_regular_balance_object         > account_regular_balance_id_type;
+        typedef oid< account_rewards_balance_object         > account_rewards_balance_id_type;
+
     } //chain
     
 } //taiyi
@@ -247,4 +259,8 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     (reward_fund_object_type)
     (qi_delegation_object_type)
     (qi_delegation_expiration_object_type)
+
+    //asset objects
+    (account_regular_balance_object_type)
+    (account_rewards_balance_object_type)
 )

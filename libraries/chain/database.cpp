@@ -9,6 +9,7 @@
 #include <chain/db_with.hpp>
 #include <chain/evaluator_registry.hpp>
 #include <chain/global_property_object.hpp>
+#include <chain/asset_objects/asset_objects.hpp>
 #include <chain/taiyi_evaluator.hpp>
 #include <chain/taiyi_objects.hpp>
 #include <chain/account_object.hpp>
@@ -1432,16 +1433,16 @@ void database::init_genesis(uint64_t init_supply)
     });
     
     public_key_type init_public_key(TAIYI_INIT_PUBLIC_KEY);
-    for( int i = 0; i < TAIYI_NUM_INIT_MINERS; ++i )
+    for( int i = 0; i < TAIYI_NUM_INIT_SIMINGS; ++i )
     {
         auto acc_rf = create< account_object >( [&]( account_object& a ) {
-            a.name = TAIYI_INIT_MINER_NAME + ( i ? fc::to_string( i ) : std::string() );
+            a.name = TAIYI_INIT_SIMING_NAME + ( i ? fc::to_string( i ) : std::string() );
             a.memo_key = init_public_key;
             a.balance  = asset( i ? 0 : init_supply, YANG_SYMBOL );
         } );
         
         create< account_authority_object >( [&]( account_authority_object& auth ) {
-            auth.account = TAIYI_INIT_MINER_NAME + ( i ? fc::to_string( i ) : std::string() );
+            auth.account = TAIYI_INIT_SIMING_NAME + ( i ? fc::to_string( i ) : std::string() );
             auth.owner.add_authority( init_public_key, 1 );
             auth.owner.weight_threshold = 1;
             auth.active  = auth.owner;
@@ -1449,14 +1450,14 @@ void database::init_genesis(uint64_t init_supply)
         });
         
         create< siming_object >( [&]( siming_object& w ) {
-            w.owner        = TAIYI_INIT_MINER_NAME + ( i ? fc::to_string(i) : std::string() );
+            w.owner        = TAIYI_INIT_SIMING_NAME + ( i ? fc::to_string(i) : std::string() );
             w.signing_key  = init_public_key;
             w.schedule = siming_object::miner;
         } );
     }
         
     create< dynamic_global_property_object >( [&]( dynamic_global_property_object& p ) {
-        p.current_siming = TAIYI_INIT_MINER_NAME;
+        p.current_siming = TAIYI_INIT_SIMING_NAME;
         p.time = TAIYI_GENESIS_TIME;
         p.recent_slots_filled = fc::uint128::max_value();
         p.participation_count = 128;
@@ -1474,7 +1475,7 @@ void database::init_genesis(uint64_t init_supply)
     
     // Create siming scheduler
     create< siming_schedule_object >( [&]( siming_schedule_object& wso ) {
-        wso.current_shuffled_simings[0] = TAIYI_INIT_MINER_NAME;
+        wso.current_shuffled_simings[0] = TAIYI_INIT_SIMING_NAME;
     } );
         
     auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo ) {
@@ -2270,6 +2271,53 @@ void database::clear_expired_delegations()
     }
 }
 
+template< typename asset_balance_object_type, class balance_operator_type >
+void database::adjust_asset_balance( const account_name_type& name, const asset& delta, bool check_account, balance_operator_type balance_operator )
+{
+    asset_symbol_type liquid_symbol = delta.symbol.is_qi() ? delta.symbol.get_paired_symbol() : delta.symbol;
+    const asset_balance_object_type* bo = find< asset_balance_object_type, by_owner_liquid_symbol >( boost::make_tuple( name, liquid_symbol ) );
+
+    if( bo == nullptr )
+    {
+        // No balance object related to the FA means '0' balance. Check delta to avoid creation of negative balance.
+        FC_ASSERT( delta.amount.value >= 0, "Insufficient FA ${a} funds", ("a", delta.symbol) );
+        // No need to create object with '0' balance (see comment above).
+        if( delta.amount.value == 0 )
+            return;
+
+        if( check_account )
+            get_account( name );
+
+        create< asset_balance_object_type >( [&]( asset_balance_object_type& asset_balance ) {
+            asset_balance.clear_balance( liquid_symbol );
+            asset_balance.owner = name;
+            balance_operator.add_to_balance( asset_balance );
+            asset_balance.validate();
+        } );
+    }
+    else
+    {
+        bool is_all_zero = false;
+        int64_t result = balance_operator.get_combined_balance( bo, &is_all_zero );
+        // Check result to avoid negative balance storing.
+        FC_ASSERT( result >= 0, "Insufficient FA ${a} funds", ( "a", delta.symbol ) );
+
+        // Exit if whole balance becomes zero.
+        if( is_all_zero )
+        {
+            // Zero balance is the same as non object balance at all.
+            // Remove balance object if both liquid and qi balances are zero.
+            remove( *bo );
+        }
+        else
+        {
+            modify( *bo, [&]( asset_balance_object_type& asset_balance ) {
+                balance_operator.add_to_balance( asset_balance );
+            } );
+        }
+    }
+}
+
 void database::modify_balance( const account_object& a, const asset& delta, bool check_balance )
 {
     modify( a, [&]( account_object& acnt ) {
@@ -2345,6 +2393,58 @@ const index_delegate_map& database::index_delegates()
     return _index_delegate_map;
 }
 
+struct asset_regular_balance_operator
+{
+    asset_regular_balance_operator( const asset& delta ) : delta(delta), is_qi(delta.symbol.is_qi()) {}
+
+    void add_to_balance( account_regular_balance_object& bo )
+    {
+        if( is_qi )
+            bo.qi += delta;
+        else
+            bo.liquid += delta;
+    }
+    int64_t get_combined_balance( const account_regular_balance_object* bo, bool* is_all_zero )
+    {
+        asset result = is_qi ? bo->qi + delta : bo->liquid + delta;
+        *is_all_zero = result.amount.value == 0 && (is_qi ? bo->liquid.amount.value : bo->qi.amount.value) == 0;
+        return result.amount.value;
+    }
+
+    asset delta;
+    bool  is_qi;
+};
+
+struct asset_reward_balance_operator
+{
+    asset_reward_balance_operator( const asset& liquid_delta, const asset& share_delta )
+      : liquid_delta(liquid_delta), share_delta(share_delta), is_qi(share_delta.amount.value != 0)
+    {
+        FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
+    }
+
+    void add_to_balance( account_rewards_balance_object& bo )
+    {
+        if( is_qi )
+        {
+            bo.pending_qi_liquid += liquid_delta;
+            bo.pending_qi_shares += share_delta;
+        }
+        else
+            bo.pending_liquid += liquid_delta;
+    }
+    int64_t get_combined_balance( const account_rewards_balance_object* bo, bool* is_all_zero )
+    {
+        asset result = is_qi ? bo->pending_qi_liquid + liquid_delta : bo->pending_liquid + liquid_delta;
+        *is_all_zero = result.amount.value == 0 && (is_qi ? bo->pending_liquid.amount.value : bo->pending_qi_liquid.amount.value) == 0;
+        return result.amount.value;
+    }
+
+    asset liquid_delta;
+    asset share_delta;
+    bool  is_qi;
+};
+
 void database::adjust_balance( const account_object& a, const asset& delta )
 {
     if ( delta.amount < 0 )
@@ -2355,7 +2455,19 @@ void database::adjust_balance( const account_object& a, const asset& delta )
                   ("acc", a.name)("r", delta)("a", available) );
     }
 
-    modify_balance( a, delta, true );
+    if( delta.symbol.space() == asset_symbol_type::nai_space
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_HERB )
+    {
+        // No account object modification for asset balance, hence separate handling here.
+        asset_regular_balance_operator balance_operator( delta );
+        adjust_asset_balance< account_regular_balance_object >( a.name, delta, false, balance_operator );
+    }
+    else
+        modify_balance( a, delta, true );
 }
 
 void database::adjust_balance( const account_name_type& name, const asset& delta )
@@ -2368,22 +2480,57 @@ void database::adjust_balance( const account_name_type& name, const asset& delta
                   ("acc", name)("r", delta)("a", available) );
     }
 
-    modify_balance( get_account( name ), delta, true );
+    if( delta.symbol.space() == asset_symbol_type::nai_space
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC
+        || delta.symbol.asset_num == TAIYI_ASSET_NUM_HERB )
+    {
+        // No account object modification for asset balance, hence separate handling here.
+        asset_regular_balance_operator balance_operator( delta );
+        adjust_asset_balance< account_regular_balance_object >( name, delta, true, balance_operator );
+    }
+    else
+        modify_balance( get_account( name ), delta, true );
 }
 
-void database::adjust_reward_balance( const account_object& a, const asset& value_delta, const asset& share_delta /*= asset(0,QI_SYMBOL)*/ )
+void database::adjust_reward_balance( const account_object& a, const asset& liquid_delta, const asset& share_delta )
 {
-    FC_ASSERT( value_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
+    FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
 
-    modify_reward_balance(a, value_delta, share_delta, true);
+    // No account object modification for asset balance, hence separate handling here.
+    if( liquid_delta.symbol.space() == asset_symbol_type::nai_space
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_HERB )
+    {
+        asset_reward_balance_operator balance_operator( liquid_delta, share_delta );
+        adjust_asset_balance< account_rewards_balance_object >( a.name, liquid_delta, false, balance_operator );
+    }
+    else
+        modify_reward_balance(a, liquid_delta, share_delta, true);
 }
 
-void database::adjust_reward_balance( const account_name_type& name, const asset& value_delta, const asset& share_delta /*= asset(0,QI_SYMBOL)*/ )
+void database::adjust_reward_balance( const account_name_type& name, const asset& liquid_delta, const asset& share_delta )
 {
-    FC_ASSERT( value_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
+    FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
 
-    const auto& a = get_account( name );
-    modify_reward_balance(a, value_delta, share_delta, true);
+    // No account object modification for asset balance, hence separate handling here.
+    if( liquid_delta.symbol.space() == asset_symbol_type::nai_space
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC
+        || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_HERB )
+    {
+        asset_reward_balance_operator balance_operator( liquid_delta, share_delta );
+        adjust_asset_balance< account_rewards_balance_object >( name, liquid_delta, true, balance_operator );
+    }
+    else
+        modify_reward_balance(get_account( name ), liquid_delta, share_delta, true);
 }
 
 void database::adjust_supply( const asset& delta, bool adjust_qi )
@@ -2417,7 +2564,25 @@ asset database::get_balance( const account_object& a, asset_symbol_type symbol )
         case TAIYI_ASSET_NUM_YANG:
             return a.balance;
         default:
-            return asset(0, symbol);
+        {
+            FC_ASSERT( symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
+                      symbol.asset_num == TAIYI_ASSET_NUM_FOOD ||
+                      symbol.asset_num == TAIYI_ASSET_NUM_WOOD ||
+                      symbol.asset_num == TAIYI_ASSET_NUM_FABRIC ||
+                      symbol.asset_num == TAIYI_ASSET_NUM_HERB ||
+                      symbol.space() == asset_symbol_type::nai_space,
+                      "Invalid symbol: ${s}", ("s", symbol) );
+            auto key = boost::make_tuple( a.name, symbol.is_qi() ? symbol.get_paired_symbol() : symbol );
+            const account_regular_balance_object* arbo = find< account_regular_balance_object, by_owner_liquid_symbol >( key );
+            if( arbo == nullptr )
+            {
+                return asset(0, symbol);
+            }
+            else
+            {
+                return symbol.is_qi() ? arbo->qi : arbo->liquid;
+            }
+        }
     }
 }
 
