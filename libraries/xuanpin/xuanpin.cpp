@@ -166,6 +166,26 @@ namespace taiyi { namespace xuanpin {
             return result;
         }
 
+        vector<lua_types> from_variants_to_lua_types(const vector<fc::variant>& value_list) {
+            vector<lua_types> result;
+            for(size_t i=0; i<value_list.size(); i++) {
+                const auto& v = value_list[i];
+                if(v.is_string())
+                    result.push_back(lua_string(v.as_string()));
+                else if(v.is_bool())
+                    result.push_back(lua_bool(v.as_bool()));
+                else if(v.is_double())
+                    result.push_back(lua_number(v.as_double()));
+                else if(v.is_int64())
+                    result.push_back(lua_int(v.as_int64()));
+                else if(v.is_uint64())
+                    result.push_back(lua_int(v.as_uint64()));
+                else
+                    FC_ASSERT(false, "#${i} value type in value list is not supported.", ("i", i));
+            }
+            return result;
+        }
+
         struct op_prototype_visitor
         {
             typedef void result_type;

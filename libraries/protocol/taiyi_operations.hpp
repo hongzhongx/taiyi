@@ -4,6 +4,7 @@
 #include <protocol/asset.hpp>
 #include <protocol/validation.hpp>
 #include <protocol/legacy_asset.hpp>
+#include <protocol/lua_types.hpp>
 
 namespace taiyi { namespace protocol {
 

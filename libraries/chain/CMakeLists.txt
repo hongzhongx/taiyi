@@ -24,10 +24,11 @@ add_library( taiyi_chain
              ${HEADERS}
            )
 
-target_link_libraries( taiyi_chain taiyi_protocol fc chainbase taiyi_schema appbase mira
+target_link_libraries( taiyi_chain taiyi_protocol fc chainbase taiyi_schema appbase mira lua
                        ${PATCH_MERGE_LIB} )
 target_include_directories( taiyi_chain
                             PUBLIC
+                            "${CMAKE_SOURCE_DIR}/libraries/lua/lib/inc"
                             "${CMAKE_CURRENT_SOURCE_DIR}"
                             "${CMAKE_SOURCE_DIR}/libraries" 
                             "${CMAKE_CURRENT_BINARY_DIR}"
