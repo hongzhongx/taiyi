@@ -646,6 +646,16 @@ namespace taiyi { namespace xuanpin {
          * @returns a list of resources
          */
         vector< baiyujing_api::api_resource_assets > get_account_resources ( vector< account_name_type > names );
+                    
+        //contracts
+        baiyujing_api::legacy_signed_transaction create_contract(const account_name_type& owner, const string& name, const public_key_type& contract_authority, const string& data, bool broadcast);
+        baiyujing_api::legacy_signed_transaction create_contract_from_file(const account_name_type& owner, const string& name, const public_key_type&  contract_authority, const string& filename, bool broadcast);
+        
+        baiyujing_api::legacy_signed_transaction revise_contract(const account_name_type& reviser, const string& name, const string& data, bool broadcast);
+        baiyujing_api::legacy_signed_transaction revise_contract_from_file(const account_name_type& reviser, const string& name, const string& filename, bool broadcast);
+        
+        //value_list 目前仅支持string, bool, double, int64
+        baiyujing_api::legacy_signed_transaction call_contract_function(const account_name_type& account, const string& contract_name, const string& function_name, const vector<fc::variant>& value_list, bool broadcast);
                 
     };
     
@@ -712,6 +722,14 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (decline_adoring_rights)
     (claim_reward_balance)
 
+       
+    //contracts
+    (create_contract)
+    (create_contract_from_file)
+    (revise_contract)
+    (revise_contract_from_file)
+    (call_contract_function)
+       
     /// helper api
     (get_prototype_operation)
     (serialize_transaction)

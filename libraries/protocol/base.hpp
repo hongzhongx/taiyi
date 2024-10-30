@@ -45,12 +45,66 @@ namespace taiyi { namespace protocol {
         asset affected_asset;
     } token_affected;
 
+    typedef struct contract_memo_message
+    {
+        account_name_type affected_account;
+        protocol::memo_data memo;
+    } contract_memo_message;
+
+    typedef struct contract_logger
+    {
+        account_name_type affected_account;
+        string message;
+        contract_logger() {}
+        contract_logger(account_name_type aft) : affected_account(aft) {}
+    } contract_logger;
+
+    struct contract_result;
+    typedef fc::static_variant<
+        token_affected,
+        contract_memo_message,
+        contract_logger,
+        contract_result
+    > contract_affected_type;
+
+    typedef struct contract_result : public base_result
+    {
+    public:
+        string contract_name;
+        vector<contract_affected_type> contract_affecteds;
+        bool existed_pv = false;
+        vector<char> process_value;
+        uint64_t relevant_datasize = 0;
+    } contract_result;
+
     typedef fc::static_variant<
         void_result,
         error_result,
         asset_result,
+        contract_result,
         logger_result
     > operation_result;
+
+    struct contract_affected_type_visitor
+    {
+        typedef vector<account_name_type> result_type;
+        template <typename contract_affected_type_op>
+        result_type operator()(contract_affected_type_op &op)
+        {
+            return vector<account_name_type>{op.affected_account};
+        }
+        result_type operator()(contract_result &op)
+        {
+            vector<account_name_type> result;
+            contract_affected_type_visitor visitor;
+            for (auto var : op.contract_affecteds)
+            {
+                auto temp = var.visit(visitor);
+                result.insert(result.end(), temp.begin(), temp.end());
+            }
+            return result;
+        }
+    };
 
     struct base_operation
     {
@@ -78,10 +132,14 @@ namespace taiyi { namespace protocol {
 } } // taiyi::protocol
 
 FC_REFLECT_TYPENAME(taiyi::protocol::operation_result)
+FC_REFLECT_TYPENAME(taiyi::protocol::contract_affected_type)
 FC_REFLECT_TYPENAME(taiyi::protocol::future_extensions)
 
 FC_REFLECT(taiyi::protocol::base_result, (fees))
 FC_REFLECT_DERIVED(taiyi::protocol::asset_result, (taiyi::protocol::base_result), (result))
 FC_REFLECT(taiyi::protocol::token_affected, (affected_account)(affected_asset))
+FC_REFLECT(taiyi::protocol::contract_memo_message, (affected_account)(memo))
+FC_REFLECT(taiyi::protocol::contract_logger, (affected_account)(message))
+FC_REFLECT_DERIVED(taiyi::protocol::contract_result, (taiyi::protocol::base_result), (contract_name)(contract_affecteds)(existed_pv)(process_value)(relevant_datasize))
 FC_REFLECT_DERIVED(taiyi::protocol::logger_result, (taiyi::protocol::base_result), (message))
 FC_REFLECT_DERIVED(taiyi::protocol::error_result, (taiyi::protocol::base_result), (error_code)(message))

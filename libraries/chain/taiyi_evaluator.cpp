@@ -312,7 +312,7 @@ namespace taiyi { namespace chain {
         const auto& from_account = _db.get_account(o.from);
         const auto& to_account = o.to.size() ? _db.get_account(o.to) : from_account;
         
-        FC_ASSERT( o.amount.symbol == YANG_SYMBOL || o.to != TAIYI_TREASURY_ACCOUNT, "Can only transfer YANG to ${s}", ("s", TAIYI_TREASURY_ACCOUNT) );
+        FC_ASSERT( o.to != TAIYI_TREASURY_ACCOUNT, "Can only transfer YANG to ${s}", ("s", TAIYI_TREASURY_ACCOUNT) );
         
         _db.adjust_balance( from_account, -o.amount );
         _db.create_qi( to_account, o.amount );

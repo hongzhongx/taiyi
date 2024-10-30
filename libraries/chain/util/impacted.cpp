@@ -114,7 +114,22 @@ namespace taiyi { namespace chain {
         {
             _impacted.insert( TAIYI_INIT_SIMING_NAME );
         }
-        
+
+        void operator()( const create_contract_operation& op )
+        {
+            _impacted.insert( op.owner );
+        }
+
+        void operator()( const call_contract_function_operation& op )
+        {
+            _impacted.insert( op.caller );
+        }
+
+        void operator()( const revise_contract_operation& op )
+        {
+            _impacted.insert( op.reviser );
+        }
+
         //void operator()( const operation& op ){}
     };
 

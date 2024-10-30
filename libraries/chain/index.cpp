@@ -10,6 +10,7 @@
 namespace taiyi { namespace chain {
 
     void initialize_asset_indexes( database& db );
+    void initialize_contract_indexes( database& db );
 
     void initialize_core_indexes( database& db )
     {
@@ -33,6 +34,7 @@ namespace taiyi { namespace chain {
         TAIYI_ADD_CORE_INDEX(db, qi_delegation_expiration_index);
 
         initialize_asset_indexes(db);
+        initialize_contract_indexes(db);
     }
     
     index_info::index_info() {}

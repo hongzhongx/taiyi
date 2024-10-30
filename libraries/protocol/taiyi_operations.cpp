@@ -211,4 +211,28 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( qi_shares >= asset( 0, QI_SYMBOL ), "Delegation cannot be negative" );
     }
     
+    void create_contract_operation::validate() const
+    {
+        validate_account_name( owner );
+        
+        FC_ASSERT(memcmp(name.data(), "contract.", 9) == 0);
+        FC_ASSERT( is_valid_contract_name( name ), "contract name ${n} is invalid", ("n", name) );
+    }
+    
+    void call_contract_function_operation::validate() const
+    {
+        validate_account_name( caller );
+        
+        FC_ASSERT(memcmp(contract_name.data(), "contract.", 9) == 0);
+        FC_ASSERT( is_valid_contract_name( contract_name ), "contract name ${n} is invalid", ("n", contract_name) );
+    }
+    
+    void revise_contract_operation::validate() const
+    {
+        validate_account_name( reviser );
+        
+        FC_ASSERT(memcmp(contract_name.data(), "contract.", 9) == 0);
+        FC_ASSERT( is_valid_contract_name( contract_name ), "contract name ${n} is invalid", ("n", contract_name) );
+    }    
+    
 } } // taiyi::protocol

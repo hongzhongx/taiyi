@@ -234,6 +234,30 @@ namespace taiyi {
                 }
             }
         };
+        
+        /** FNV-1a implementation https://en.wikipedia.org/wiki/Fowler-Noll-Vo_hash_function#FNV-1a_hash */
+        struct hasher
+        {
+           static int32_t hash( uint8_t byte, uint32_t _hash )
+           {
+              return ( byte ^ _hash ) * prime;
+           }
+              
+           static uint32_t hash( uint32_t four_bytes, uint32_t _hash = offset_basis )
+           {
+              uint8_t* ptr = (uint8_t*) &four_bytes;
+              _hash = hash( *ptr++, _hash );
+              _hash = hash( *ptr++, _hash );
+              _hash = hash( *ptr++, _hash );
+              return  hash( *ptr,   _hash );
+           }
+              
+        private:
+           // Recommended by http://isthe.com/chongo/tech/comp/fnv/
+           static const uint32_t prime         = 0x01000193; //   16777619
+           static const uint32_t offset_basis  = 0x811C9DC5; // 2166136261
+        };
+
     } //protocol
 } // taiyi
 

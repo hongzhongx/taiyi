@@ -412,6 +412,43 @@ namespace taiyi { namespace protocol {
         void validate() const;
     };
 
+    // contracts
+    struct create_contract_operation : public base_operation
+    {
+        account_name_type   owner;      // 合约创建者
+        string              name;       // 合约名字
+        string              data;       // 合约内容
+        public_key_type     contract_authority;//合约权限
+        vector<string>      extensions;
+       
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
+    };
+
+    struct revise_contract_operation : public base_operation
+    {
+        account_name_type   reviser;        // 合约创建者
+        string              contract_name;  // 合约名字
+        string              data;           // 合约内容
+        vector<string>      extensions;
+        
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(reviser); }
+    };
+
+    struct call_contract_function_operation : public base_operation
+    {
+        account_name_type   caller;        // 合约调用者
+        account_name_type   creator;
+        string              contract_name; // 合约名
+        string              function_name; // 目标函数名
+        vector<lua_types>   value_list;    // 参数列表
+        vector<string>      extensions;
+        
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(caller); }
+    };
+
 } } // taiyi::protocol
 
 FC_REFLECT( taiyi::protocol::legacy_chain_properties, (account_creation_fee)(maximum_block_size))
@@ -433,3 +470,7 @@ FC_REFLECT( taiyi::protocol::change_recovery_account_operation, (account_to_reco
 FC_REFLECT( taiyi::protocol::decline_adoring_rights_operation, (account)(decline) );
 FC_REFLECT( taiyi::protocol::claim_reward_balance_operation, (account)(reward_yang)(reward_qi) )
 FC_REFLECT( taiyi::protocol::delegate_qi_shares_operation, (delegator)(delegatee)(qi_shares) );
+
+FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(contract_authority)(extensions) )
+FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )
+FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)(contract_name)(function_name)(value_list)(extensions) )

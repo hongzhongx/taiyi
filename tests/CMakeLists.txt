@@ -1,0 +1,22 @@
+add_subdirectory(db_fixture)
+add_subdirectory(bmic_objects)
+
+find_package( Gperftools QUIET )
+if( GPERFTOOLS_FOUND )
+    message( STATUS "Found gperftools; compiling tests with TCMalloc")
+    list( APPEND PLATFORM_SPECIFIC_LIBS tcmalloc )
+endif()
+
+file(GLOB CHAIN_TESTS "chain_tests/*.cpp")
+add_executable( chain_test ${CHAIN_TESTS} )
+target_link_libraries( chain_test db_fixture chainbase taiyi_chain taiyi_protocol account_history_plugin siming_plugin debug_node_plugin fc ${PLATFORM_SPECIFIC_LIBS} )
+
+file(GLOB PLUGIN_TESTS "plugin_tests/*.cpp")
+add_executable( plugin_test ${PLUGIN_TESTS} )
+target_link_libraries( plugin_test db_fixture taiyi_chain taiyi_protocol account_history_plugin siming_plugin debug_node_plugin fc ${PLATFORM_SPECIFIC_LIBS} )
+
+if(MSVC)
+  set_source_files_properties( tests/serialization_tests.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
+endif(MSVC)
+
+#add_subdirectory( generate_empty_blocks )

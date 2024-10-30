@@ -36,15 +36,15 @@
 #define TAIYI_NAI_FABRIC    (7)
 #define TAIYI_NAI_HERB      (8)
 
-#define TAIYI_ASSET_NUM_YIN     (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YIN)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YIN))
-#define TAIYI_ASSET_NUM_YANG    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YANG) << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YANG))
-#define TAIYI_ASSET_NUM_QI      (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_QI) << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_QI))
+#define TAIYI_ASSET_NUM_YIN     (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YIN)    << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YIN))
+#define TAIYI_ASSET_NUM_YANG    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YANG)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YANG))
+#define TAIYI_ASSET_NUM_QI      (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_QI)     << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_QI))
 
-#define TAIYI_ASSET_NUM_GOLD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_GOLD)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_GOLD))
-#define TAIYI_ASSET_NUM_FOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FOOD)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FOOD))
-#define TAIYI_ASSET_NUM_WOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_WOOD)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_WOOD))
-#define TAIYI_ASSET_NUM_FABRIC  (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FABRIC)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FABRIC))
-#define TAIYI_ASSET_NUM_HERB    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_HERB)  << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_HERB))
+#define TAIYI_ASSET_NUM_GOLD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_GOLD)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_GOLD))
+#define TAIYI_ASSET_NUM_FOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FOOD)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FOOD))
+#define TAIYI_ASSET_NUM_WOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_WOOD)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_WOOD))
+#define TAIYI_ASSET_NUM_FABRIC  (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FABRIC) << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FABRIC))
+#define TAIYI_ASSET_NUM_HERB    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_HERB)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_HERB))
 
 #define QI_SYMBOL_U64       (uint64_t('Q') | (uint64_t('I') << 8))
 #define YANG_SYMBOL_U64     (uint64_t('Y') | (uint64_t('A') << 8) | (uint64_t('N') << 16) | (uint64_t('G') << 24))
@@ -56,9 +56,9 @@
 #define FABRIC_SYMBOL_U64   (uint64_t('F') | (uint64_t('A') << 8) | (uint64_t('B') << 16) | (uint64_t('R') << 24))
 #define HERB_SYMBOL_U64     (uint64_t('H') | (uint64_t('E') << 8) | (uint64_t('R') << 16) | (uint64_t('B') << 24))
 
-#define QI_SYMBOL_SER       (uint64_t(6) | (QI_SYMBOL_U64 << 8)) ///< QI with 6 digits of precision
+#define QI_SYMBOL_SER       (uint64_t(6) | (QI_SYMBOL_U64   << 8)) ///< QI with 6 digits of precision
 #define YANG_SYMBOL_SER     (uint64_t(3) | (YANG_SYMBOL_U64 << 8)) ///< YANG with 3 digits of precision
-#define YIN_SYMBOL_SER      (uint64_t(3) | (YIN_SYMBOL_U64 << 8))   ///< YIN with 3 digits of precision
+#define YIN_SYMBOL_SER      (uint64_t(3) | (YIN_SYMBOL_U64  << 8)) ///< YIN with 3 digits of precision
 
 #define GOLD_SYMBOL_SER     (uint64_t(6) | (GOLD_SYMBOL_U64 << 8)) ///< GOLD with 6 digits of precision
 #define FOOD_SYMBOL_SER     (uint64_t(6) | (FOOD_SYMBOL_U64 << 8)) ///< FOOD with 6 digits of precision

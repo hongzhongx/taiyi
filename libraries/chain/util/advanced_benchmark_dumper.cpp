@@ -20,7 +20,8 @@ namespace taiyi { namespace chain { namespace util {
 
     advanced_benchmark_dumper::~advanced_benchmark_dumper()
     {
-        dump();
+        if(flush_cnt > 0)
+            dump();
     }
 
     void advanced_benchmark_dumper::begin()

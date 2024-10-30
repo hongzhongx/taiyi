@@ -131,6 +131,21 @@ namespace taiyi { namespace protocol {
         return is_valid_RFC_1035(name);
     }
     
+    bool is_valid_contract_name( const string& name )
+    {
+#if TAIYI_MIN_CONTRACT_NAME_LENGTH < 9
+#error This is_valid_contract_name implementation implicitly enforces minimum name length of 9.
+#endif
+        const size_t len = name.size();
+        if( len < TAIYI_MIN_CONTRACT_NAME_LENGTH )
+            return false;
+        
+        if( len > TAIYI_MAX_CONTRACT_NAME_LENGTH )
+            return false;
+        
+        return is_valid_RFC_1035(name);
+    }
+
     bool operator == ( const authority& a, const authority& b )
     {
         return ( a.weight_threshold == b.weight_threshold ) &&

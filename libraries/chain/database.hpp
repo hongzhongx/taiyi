@@ -38,6 +38,7 @@ namespace taiyi { namespace chain {
     };
 
     class database;
+    class LuaContext;
 
     using set_index_type_func = std::function< void(database&, mira::index_type, const boost::filesystem::path&, const boost::any&) >;
     struct index_delegate
@@ -366,7 +367,6 @@ namespace taiyi { namespace chain {
         void validate_invariants()const;
 
         void set_flush_interval( uint32_t flush_blocks );
-        void check_free_memory( bool force_print, uint32_t current_block_num );
 
         void apply_transaction( const signed_transaction& trx, uint32_t skip = skip_nothing );
 
@@ -376,6 +376,15 @@ namespace taiyi { namespace chain {
         const index_delegate& get_index_delegate( const std::string& n );
         bool has_index_delegate( const std::string& n );
         const index_delegate_map& index_delegates();
+
+        // contracts
+        LuaContext& get_luaVM() { return *_luaVM; }
+        void create_VM();
+        void release_VM();
+        void initialize_VM_baseENV();
+
+        void create_basic_contract_objects();
+        void create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
 
     protected:
         //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
@@ -532,6 +541,9 @@ namespace taiyi { namespace chain {
           * Internal signal to execute deferred registration of plugin indexes.
           */
         fc::signal<void()>                                    _plugin_index_signal;
+
+        //vm
+        LuaContext*  _luaVM = 0;
     };
 
     struct reindex_notification

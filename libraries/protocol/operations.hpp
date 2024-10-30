@@ -36,6 +36,11 @@ namespace taiyi { namespace protocol {
             
         claim_reward_balance_operation,
     
+        /// contract
+        create_contract_operation,
+        revise_contract_operation,
+        call_contract_function_operation,
+
         // virtual operations below this point
         hardfork_operation,
         fill_qi_withdraw_operation,

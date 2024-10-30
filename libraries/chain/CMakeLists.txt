@@ -7,6 +7,7 @@ add_library( taiyi_chain
              database.cpp
              index.cpp
              asset_index.cpp
+             contract_index.cpp
 
              taiyi_evaluator.cpp
 
@@ -18,6 +19,16 @@ add_library( taiyi_chain
 
              generic_custom_operation_interpreter.cpp
              
+             lua_context.cpp
+             contract_evaluator.cpp
+             contract_objects.cpp
+             contract_handles.cpp
+             contract_context_handle.cpp
+             contract_asset_handle.cpp
+             contract_authority_handle.cpp
+             contract_worker.cpp
+             database_contract.cpp
+
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp
 

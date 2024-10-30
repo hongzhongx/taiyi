@@ -1808,4 +1808,75 @@ namespace taiyi { namespace xuanpin {
         return my->_remote_api->get_account_resources( names );
     }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_contract(const account_name_type& owner, const string& name, const public_key_type& contract_authority, const string& data, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+
+        create_contract_operation op;
+        op.owner = owner;
+        op.name = name;
+        op.contract_authority = contract_authority;
+        op.data = data;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (owner)(name)(contract_authority)(data) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_contract_from_file(const account_name_type& owner, const string& name, const public_key_type&  contract_authority, const string& filename, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+
+        FC_ASSERT(filename != "" && fc::exists(filename));
+        std::string contract_data;
+        fc::read_file_contents(filename, contract_data);
+
+        return create_contract(owner, name, contract_authority, contract_data, broadcast);
+    } FC_CAPTURE_AND_RETHROW( (owner)(name)(contract_authority)(filename) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::call_contract_function(const account_name_type& account, const string& contract_name, const string& function_name, const vector<fc::variant>& value_list, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+
+        call_contract_function_operation op;
+
+        op.caller = account;
+        op.contract_name = contract_name;
+        op.function_name = function_name;
+        op.value_list = detail::from_variants_to_lua_types(value_list);
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (account)(contract_name)(function_name)(value_list) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::revise_contract(const account_name_type& reviser, const string& name, const string& data, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+
+        revise_contract_operation op;
+
+        op.reviser = reviser;
+        op.contract_name = name;
+        op.data = data;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (reviser)(name)(data) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::revise_contract_from_file(const account_name_type& reviser, const string& name, const string& filename, bool broadcast)
+    { try {
+        FC_ASSERT(filename != "" && fc::exists(filename));
+        std::string contract_data;
+        fc::read_file_contents(filename, contract_data);
+        return revise_contract(reviser, name, contract_data, broadcast);
+    } FC_CAPTURE_AND_RETHROW( (reviser)(name)(filename) ) }
+
 } } // taiyi::xuanpin

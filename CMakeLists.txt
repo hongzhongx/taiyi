@@ -192,6 +192,10 @@ endif()
 add_subdirectory( libraries )
 add_subdirectory( programs )
 
+if( BUILD_TAIYI_TESTNET  )
+  add_subdirectory( tests )
+endif()
+
 #set (ENABLE_INSTALLER 1)
 if (ENABLE_INSTALLER)
     set(VERSION_MAJOR 0)

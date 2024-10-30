@@ -93,6 +93,13 @@ namespace taiyi { namespace protocol {
      * - Length is between (inclusive) TAIYI_MIN_ACCOUNT_NAME_LENGTH and TAIYI_MAX_ACCOUNT_NAME_LENGTH
      */
     bool is_valid_account_name( const string& name );
+
+    /**
+     * In addition we require the following:
+     *
+     * - Length is between (inclusive) TAIYI_MIN_CONTRACT_NAME_LENGTH and TAIYI_MAX_CONTRACT_NAME_LENGTH
+     */
+    bool is_valid_contract_name( const string& name );
     
 } } // namespace taiyi::protocol
 

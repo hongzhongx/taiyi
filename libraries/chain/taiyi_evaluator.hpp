@@ -27,6 +27,10 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( delegate_qi_shares )
     TAIYI_DEFINE_EVALUATOR( siming_set_properties )
         
+    TAIYI_DEFINE_EVALUATOR( create_contract )
+    TAIYI_DEFINE_EVALUATOR( revise_contract )
+    TAIYI_DEFINE_EVALUATOR( call_contract_function )
+
     inline void validate_permlink_0_1( const string& permlink );
 
 } } // taiyi::chain

@@ -77,7 +77,12 @@ namespace taiyi {
 
             //asset objects
             account_regular_balance_object_type,
-            account_rewards_balance_object_type
+            account_rewards_balance_object_type,
+
+            //contract objects
+            contract_object_type,
+            account_contract_data_object_type,
+            contract_bin_code_object_type
         };
         
         class dynamic_global_property_object;
@@ -104,6 +109,11 @@ namespace taiyi {
         class account_regular_balance_object;
         class account_rewards_balance_object;
 
+        //contract objects
+        class contract_object;
+        class account_contract_data_object;
+        class contract_bin_code_object;
+
         typedef oid< dynamic_global_property_object         > dynamic_global_property_id_type;
         typedef oid< account_object                         > account_id_type;
         typedef oid< account_metadata_object                > account_metadata_id_type;
@@ -128,6 +138,10 @@ namespace taiyi {
         typedef oid< account_regular_balance_object         > account_regular_balance_id_type;
         typedef oid< account_rewards_balance_object         > account_rewards_balance_id_type;
 
+        //contract objects
+        typedef oid< contract_object                        > contract_id_type;
+        typedef oid< account_contract_data_object           > account_contract_data_id_type;
+        typedef oid< contract_bin_code_object               > contract_bin_code_id_type;
     } //chain
     
 } //taiyi
@@ -263,4 +277,9 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     //asset objects
     (account_regular_balance_object_type)
     (account_rewards_balance_object_type)
+
+    //contract objects
+    (contract_object_type)
+    (account_contract_data_object_type)
+    (contract_bin_code_object_type)                
 )

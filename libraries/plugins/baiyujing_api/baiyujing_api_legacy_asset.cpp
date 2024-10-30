@@ -108,6 +108,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         {
             case TAIYI_ASSET_NUM_YANG:
                 return "YANG";
+            case TAIYI_ASSET_NUM_YIN:
+                return "YIN";
             case TAIYI_ASSET_NUM_QI:
                 return "QI";
             case TAIYI_ASSET_NUM_GOLD:

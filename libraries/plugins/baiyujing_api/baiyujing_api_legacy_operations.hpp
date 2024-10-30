@@ -39,6 +39,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef change_recovery_account_operation       legacy_change_recovery_account_operation;
     typedef decline_adoring_rights_operation        legacy_decline_adoring_rights_operation;
     typedef hardfork_operation                      legacy_hardfork_operation;
+    typedef create_contract_operation               legacy_create_contract_operation;
+    typedef revise_contract_operation               legacy_revise_contract_operation;
+    typedef call_contract_function_operation        legacy_call_contract_function_operation;
 
     struct api_chain_properties
     {
@@ -293,7 +296,11 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_claim_reward_balance_operation,
         legacy_delegate_qi_shares_operation,
         legacy_siming_set_properties_operation,
-        
+
+        legacy_create_contract_operation,
+        legacy_revise_contract_operation,
+        legacy_call_contract_function_operation,
+
         /// virtual operations below this point
         legacy_fill_qi_withdraw_operation,
         legacy_hardfork_operation,
@@ -312,15 +319,18 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const account_update_operation& op )const                  { l_op = op; return true; }
         bool operator()( const set_withdraw_qi_route_operation& op )const           { l_op = op; return true; }
         bool operator()( const siming_set_properties_operation& op )const           { l_op = op; return true; }
-        bool operator()( const account_siming_adore_operation& op )const             { l_op = op; return true; }
+        bool operator()( const account_siming_adore_operation& op )const            { l_op = op; return true; }
         bool operator()( const account_siming_proxy_operation& op )const            { l_op = op; return true; }
         bool operator()( const custom_operation& op )const                          { l_op = op; return true; }
         bool operator()( const custom_json_operation& op )const                     { l_op = op; return true; }
         bool operator()( const request_account_recovery_operation& op )const        { l_op = op; return true; }
         bool operator()( const recover_account_operation& op )const                 { l_op = op; return true; }
         bool operator()( const change_recovery_account_operation& op )const         { l_op = op; return true; }
-        bool operator()( const decline_adoring_rights_operation& op )const           { l_op = op; return true; }
+        bool operator()( const decline_adoring_rights_operation& op )const          { l_op = op; return true; }
         bool operator()( const hardfork_operation& op )const                        { l_op = op; return true; }
+        bool operator()( const create_contract_operation& op )const                 { l_op = op; return true; }
+        bool operator()( const revise_contract_operation& op )const                 { l_op = op; return true; }
+        bool operator()( const call_contract_function_operation& op )const          { l_op = op; return true; }
 
         bool operator()( const transfer_operation& op )const
         {
