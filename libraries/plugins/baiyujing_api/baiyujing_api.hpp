@@ -39,7 +39,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
     struct api_account_object
     {
-        api_account_object( const database_api::api_account_object& a ) : id( a.id ), name( a.name ), owner( a.owner ), active( a.active ), posting( a.posting ), memo_key( a.memo_key ), json_metadata( a.json_metadata ), proxy( a.proxy ), last_owner_update( a.last_owner_update ), last_account_update( a.last_account_update ), created( a.created ), recovery_account( a.recovery_account ), last_account_recovery( a.last_account_recovery ), can_adore( a.can_adore ), balance( legacy_asset::from_asset( a.balance ) ), reward_yang_balance( legacy_asset::from_asset( a.reward_yang_balance ) ), reward_qi_balance( legacy_asset::from_asset( a.reward_qi_balance ) ), reward_qi_yang( legacy_asset::from_asset( a.reward_qi_yang ) ), qi_shares( legacy_asset::from_asset( a.qi_shares ) ), delegated_qi_shares( legacy_asset::from_asset( a.delegated_qi_shares ) ), received_qi_shares( legacy_asset::from_asset( a.received_qi_shares ) ), qi_withdraw_rate( legacy_asset::from_asset( a.qi_withdraw_rate ) ), next_qi_withdrawal_time( a.next_qi_withdrawal_time ), withdrawn( a.withdrawn ), to_withdraw( a.to_withdraw ), withdraw_routes( a.withdraw_routes ), simings_adored_for( a.simings_adored_for )
+        api_account_object( const database_api::api_account_object& a ) : id( a.id ), name( a.name ), owner( a.owner ), active( a.active ), posting( a.posting ), memo_key( a.memo_key ), json_metadata( a.json_metadata ), proxy( a.proxy ), last_owner_update( a.last_owner_update ), last_account_update( a.last_account_update ), created( a.created ), recovery_account( a.recovery_account ), last_account_recovery( a.last_account_recovery ), can_adore( a.can_adore ), manabar( a.manabar ), balance( legacy_asset::from_asset( a.balance ) ), reward_yang_balance( legacy_asset::from_asset( a.reward_yang_balance ) ), reward_qi_balance( legacy_asset::from_asset( a.reward_qi_balance ) ), reward_qi_yang( legacy_asset::from_asset( a.reward_qi_yang ) ), qi_shares( legacy_asset::from_asset( a.qi_shares ) ), delegated_qi_shares( legacy_asset::from_asset( a.delegated_qi_shares ) ), received_qi_shares( legacy_asset::from_asset( a.received_qi_shares ) ), qi_withdraw_rate( legacy_asset::from_asset( a.qi_withdraw_rate ) ), next_qi_withdrawal_time( a.next_qi_withdrawal_time ), withdrawn( a.withdrawn ), to_withdraw( a.to_withdraw ), withdraw_routes( a.withdraw_routes ), simings_adored_for( a.simings_adored_for )
         {
             proxied_vsf_adores.insert( proxied_vsf_adores.end(), a.proxied_vsf_adores.begin(), a.proxied_vsf_adores.end() );
         }
@@ -64,7 +64,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         time_point_sec    last_account_recovery;
         
         bool              can_adore = false;
-        
+        util::manabar     manabar;
+
         legacy_asset      balance;
         
         legacy_asset      reward_yang_balance;
@@ -390,7 +391,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::state, (current_route)(props)(account
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_operation_object, (trx_id)(block)(trx_in_block)(op_in_trx)(virtual_op)(timestamp)(op) )
 
-FC_REFLECT( taiyi::plugins::baiyujing_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_qi_yang)(qi_shares)(delegated_qi_shares)(received_qi_shares)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(reward_qi_yang)(qi_shares)(delegated_qi_shares)(received_qi_shares)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
 
 FC_REFLECT_DERIVED( taiyi::plugins::baiyujing_api::extended_account, (taiyi::plugins::baiyujing_api::api_account_object),(qi_balance)(transfer_history)(other_history)(siming_adores) )
 

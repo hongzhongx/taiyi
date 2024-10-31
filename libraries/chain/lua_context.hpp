@@ -122,7 +122,7 @@ public:
         lua_atpanic(mState, [](lua_State* state) -> int {
             const std::string str = lua_tostring(state, -1);
             lua_pop(state, 1);
-            printf("lua_atpanic triggered:%s\r\n", str.c_str());
+            //printf("lua_atpanic triggered:%s\r\n", str.c_str());
             throw VMcollapseErrorException("lua_atpanic triggered:" + str);
             return 0;
         });

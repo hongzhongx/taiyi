@@ -19,6 +19,7 @@
 #include <chain/siming_schedule.hpp>
 
 #include <chain/util/uint256.hpp>
+#include <chain/util/manabar.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -889,6 +890,10 @@ namespace taiyi { namespace chain {
             db.adjust_reward_balance( to_account, liquid, new_qi );
         }
         else {
+            db.modify( to_account, [&]( account_object& a ) {
+                util::update_manabar(cprops, a, true, new_qi.amount.value );
+            });
+
             db.adjust_balance( to_account, new_qi );
         }
         
@@ -2259,6 +2264,7 @@ namespace taiyi { namespace chain {
                 pre_push_virtual_operation( vop );
                 
                 modify( get_account( itr->delegator ), [&]( account_object& a ) {
+                    util::update_manabar(gpo, a, true, itr->qi_shares.amount.value );
                     a.delegated_qi_shares -= itr->qi_shares;
                 });
                 

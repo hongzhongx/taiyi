@@ -2348,6 +2348,14 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         op.delegator = "alice";
         op.delegatee = "bob";
         
+        util::manabar old_manabar = db->get_account( "alice" ).manabar;
+        util::manabar_params params( util::get_effective_qi_shares( db->get_account( "alice" ) ), TAIYI_MANA_REGENERATION_SECONDS );
+        old_manabar.regenerate_mana( params, db->head_block_time() );
+
+        util::manabar old_bob_manabar = db->get_account( "bob" ).manabar;
+        params.max_mana = util::get_effective_qi_shares( db->get_account( "bob" ) );
+        old_bob_manabar.regenerate_mana( params, db->head_block_time() );
+
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         tx.operations.push_back( op );
         sign( tx, alice_private_key );
@@ -2357,8 +2365,10 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         const account_object& bob_acc = db->get_account( "bob" );
         
         BOOST_REQUIRE( alice_acc.delegated_qi_shares == ASSET( "10000.000000 QI" ) );
+        BOOST_REQUIRE( alice_acc.manabar.current_mana == old_manabar.current_mana - op.qi_shares.amount.value );
         BOOST_REQUIRE( bob_acc.received_qi_shares == ASSET( "10000.000000 QI" ) );
-        
+        BOOST_REQUIRE( bob_acc.manabar.current_mana == old_bob_manabar.current_mana + op.qi_shares.amount.value );
+
         BOOST_TEST_MESSAGE( "--- Test that the delegation object is correct. " );
         auto delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
         
@@ -2366,6 +2376,14 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         BOOST_REQUIRE( delegation->delegator == op.delegator);
         BOOST_REQUIRE( delegation->qi_shares  == ASSET( "10000.000000 QI"));
         
+        old_manabar = db->get_account( "alice" ).manabar;
+        params.max_mana = util::get_effective_qi_shares( db->get_account( "alice" ) );
+        old_manabar.regenerate_mana( params, db->head_block_time() );
+
+        old_bob_manabar = db->get_account( "bob" ).manabar;
+        params.max_mana = util::get_effective_qi_shares( db->get_account( "bob" ) );
+        old_bob_manabar.regenerate_mana( params, db->head_block_time() );
+
         int64_t delta = 10000000000;
         
         validate_database();
@@ -2377,12 +2395,16 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         db->push_transaction( tx, 0 );
         generate_blocks(1);
         
+        idump( (alice_acc.manabar)(old_manabar)(delta) );
+
         BOOST_REQUIRE( delegation != nullptr );
         BOOST_REQUIRE( delegation->delegator == op.delegator);
         BOOST_REQUIRE( delegation->qi_shares == ASSET( "20000.000000 QI"));
         BOOST_REQUIRE( alice_acc.delegated_qi_shares == ASSET( "20000.000000 QI"));
+        BOOST_REQUIRE( alice_acc.manabar.current_mana == old_manabar.current_mana - delta );
         BOOST_REQUIRE( bob_acc.received_qi_shares == ASSET( "20000.000000 QI"));
-        
+        BOOST_REQUIRE( bob_acc.manabar.current_mana == old_bob_manabar.current_mana + delta );
+
         BOOST_TEST_MESSAGE( "--- Test failure delegating delgated QI." );
         
         op.delegator = "bob";
@@ -2393,10 +2415,160 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
         
         
-        BOOST_TEST_MESSAGE( "--- Test that effective qi shares is accurate and being applied." );
+        //TODO: BOOST_TEST_MESSAGE( "--- Test that effective qi shares is accurate and being applied." );
         tx.operations.clear();
         tx.signatures.clear();
         
+        ACTORS( (sam)(dave) )
+        generate_block();
+
+        vest( TAIYI_INIT_SIMING_NAME, "sam", ASSET( "1000.000 YANG" ) );
+
+        generate_block();
+
+        auto sam_vest = db->get_account( "sam" ).qi_shares;
+
+        BOOST_TEST_MESSAGE( "--- Test failure when delegating 0 QI" );
+        tx.clear();
+        op.delegator = "sam";
+        op.delegatee = "dave";
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, sam_private_key );
+        TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
+
+        BOOST_TEST_MESSAGE( "--- Testing failure delegating more qi shares than account has." );
+        tx.clear();
+        op.qi_shares = asset( sam_vest.amount + 1, QI_SYMBOL );
+        tx.operations.push_back( op );
+        sign( tx, sam_private_key );
+        TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
+
+        BOOST_TEST_MESSAGE( "--- Testing failure delegating when there is not enough mana" );
+
+        generate_block();
+        db_plugin->debug_update( [=]( database& db ) {
+            db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
+                a.manabar.current_mana = a.manabar.current_mana * 3 / 4;
+                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+            });
+        });
+        
+        op.qi_shares = sam_vest;
+        tx.clear();
+        tx.operations.push_back( op );
+        sign( tx, sam_private_key );
+        TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
+
+        BOOST_TEST_MESSAGE( "--- Test failure delegating qi shares that are part of a power down" );
+        generate_block();
+        db_plugin->debug_update( [=]( database& db ) {
+            db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
+                a.manabar.current_mana = util::get_effective_qi_shares( a ) / 4;
+                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+            });
+        });
+        
+        tx.clear();
+        sam_vest = asset( sam_vest.amount / 2, QI_SYMBOL );
+        withdraw_qi_operation withdraw;
+        withdraw.account = "sam";
+        withdraw.qi_shares = sam_vest;
+        tx.operations.push_back( withdraw );
+        sign( tx, sam_private_key );
+        db->push_transaction( tx, 0 );
+        
+        tx.clear();
+        op.qi_shares = asset( sam_vest.amount + 2, QI_SYMBOL );
+        tx.operations.push_back( op );
+        sign( tx, sam_private_key );
+        TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
+        
+        tx.clear();
+        withdraw.qi_shares = ASSET( "0.000000 QI" );
+        tx.operations.push_back( withdraw );
+        sign( tx, sam_private_key );
+        db->push_transaction( tx, 0 );
+
+        BOOST_TEST_MESSAGE( "--- Test failure powering down qi shares that are delegated" );
+        db_plugin->debug_update( [=]( database& db ) {
+            db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
+                a.manabar.current_mana = sam_vest.amount.value * 2;
+                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+            });
+        });
+
+        sam_vest.amount += 1000;
+        op.qi_shares = sam_vest;
+        tx.clear();
+        tx.operations.push_back( op );
+        sign( tx, sam_private_key );
+        db->push_transaction( tx, 0 );
+
+        tx.clear();
+        withdraw.qi_shares = asset( sam_vest.amount, QI_SYMBOL );
+        tx.operations.push_back( withdraw );
+        sign( tx, sam_private_key );
+        TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
+
+        BOOST_TEST_MESSAGE( "--- Remove a delegation and ensure it is returned after 1 week" );
+
+        util::manabar old_sam_manabar = db->get_account( "sam" ).manabar;
+        util::manabar old_dave_manabar = db->get_account( "dave" ).manabar;
+
+        util::manabar_params sam_params( util::get_effective_qi_shares( db->get_account( "sam" ) ), TAIYI_MANA_REGENERATION_SECONDS );
+        util::manabar_params dave_params( util::get_effective_qi_shares( db->get_account( "dave" ) ), TAIYI_MANA_REGENERATION_SECONDS );
+
+        tx.clear();
+        op.qi_shares = ASSET( "0.000000 QI" );
+        tx.operations.push_back( op );
+        sign( tx, sam_private_key );
+        db->push_transaction( tx, 0 );
+
+        auto exp_obj = db->get_index< qi_delegation_expiration_index, by_id >().begin();
+        auto end = db->get_index< qi_delegation_expiration_index, by_id >().end();
+        auto gpo = db->get_dynamic_global_properties();
+
+        BOOST_REQUIRE( gpo.delegation_return_period == TAIYI_DELEGATION_RETURN_PERIOD );
+
+        BOOST_REQUIRE( exp_obj != end );
+        BOOST_REQUIRE( exp_obj->delegator == "sam" );
+        BOOST_REQUIRE( exp_obj->qi_shares == sam_vest );
+        BOOST_REQUIRE( exp_obj->expiration == db->head_block_time() + gpo.delegation_return_period );
+        BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi_shares == sam_vest );
+        BOOST_REQUIRE( db->get_account( "dave" ).received_qi_shares == ASSET( "0.000000 QI" ) );
+        delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
+        BOOST_REQUIRE( delegation == nullptr );
+
+        old_sam_manabar.regenerate_mana( sam_params, db->head_block_time() );
+        sam_params.max_mana /= 4;
+
+        old_dave_manabar.regenerate_mana( dave_params, db->head_block_time() );
+        dave_params.max_mana /= 4;
+
+        BOOST_REQUIRE( db->get_account( "sam" ).manabar.current_mana == old_sam_manabar.current_mana );
+        BOOST_REQUIRE( db->get_account( "dave" ).manabar.current_mana == old_dave_manabar.current_mana - sam_vest.amount.value );
+
+        old_sam_manabar = db->get_account( "sam" ).manabar;
+        old_dave_manabar = db->get_account( "dave" ).manabar;
+
+        sam_params.max_mana = util::get_effective_qi_shares( db->get_account( "sam" ) );
+        dave_params.max_mana = util::get_effective_qi_shares( db->get_account( "dave" ) );
+
+        generate_blocks( exp_obj->expiration + TAIYI_BLOCK_INTERVAL );
+
+        old_sam_manabar.regenerate_mana( sam_params, db->head_block_time() );
+        sam_params.max_mana /= 4;
+
+        old_dave_manabar.regenerate_mana( dave_params, db->head_block_time() );
+        dave_params.max_mana /= 4;
+
+        exp_obj = db->get_index< qi_delegation_expiration_index, by_id >().begin();
+        end = db->get_index< qi_delegation_expiration_index, by_id >().end();
+
+        BOOST_REQUIRE( exp_obj == end );
+        BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi_shares == ASSET( "0.000000 QI" ) );
+        BOOST_REQUIRE( db->get_account( "sam" ).manabar.current_mana == old_sam_manabar.current_mana + sam_vest.amount.value );
+        BOOST_REQUIRE( db->get_account( "dave" ).manabar.current_mana == old_dave_manabar.current_mana );
     }
     FC_LOG_AND_RETHROW()
 }
@@ -2755,5 +2927,239 @@ BOOST_AUTO_TEST_CASE( account_auth_tests )
     }
     FC_LOG_AND_RETHROW()
 }
+
+BOOST_AUTO_TEST_CASE( create_contract_apply )
+{ try {
+    string lua_code =   "function hello_world() \n \
+                            -- very important \n \
+                            print('hello world') \n \
+                        end";
+
+    BOOST_TEST_MESSAGE( "Testing: create_contract_apply" );
+
+    signed_transaction tx;
+    ACTORS( (alice)(bob)(charlie) )
+    generate_block();
+        
+    BOOST_TEST_MESSAGE( "--- Test failure name invalid" );
+    
+    create_contract_operation op;
+    op.owner = "alice";
+    op.name = "contract.tt"; //less than 3 letters
+    op.data = lua_code;
+
+    tx.operations.push_back( op );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+
+    BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
+
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+            a.manabar.current_mana = 100;
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    op.name = "contract.test";
+    tx.operations.push_back( op );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+
+    BOOST_TEST_MESSAGE( "--- Test use mana" );
+
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    generate_block();
+
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    util::manabar old_manabar = db->get_account( "alice" ).manabar;
+        
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( op );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    
+    const account_object& alice_acc = db->get_account( "alice" );
+    int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
+    //idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 1393 );
+    
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( revise_contract_apply )
+{ try {
+    string lua_code1 =  "function hello_world() \n \
+                            -- very important \n \
+                            print('hello world') \n \
+                        end";
+
+    string lua_code2 =  "function hello_world() \n \
+                            -- very important \n \
+                            print('better world') \n \
+                        end";
+
+    BOOST_TEST_MESSAGE( "Testing: revise_contract_apply" );
+
+    ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    generate_block();
+        
+    signed_transaction tx;
+
+    create_contract_operation op;
+    op.owner = "alice";
+    op.name = "contract.test";
+    op.data = lua_code1;
+
+    tx.operations.push_back( op );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    generate_block();
+
+    BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
+
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+            a.manabar.current_mana = 100;
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    revise_contract_operation rop;
+    rop.reviser = "alice";
+    rop.contract_name = "contract.test";
+    rop.data = lua_code2;
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( rop );
+    sign( tx, alice_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+
+    BOOST_TEST_MESSAGE( "--- Test use mana" );
+
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    util::manabar old_manabar = db->get_account( "alice" ).manabar;
+    
+    db->push_transaction( tx, 0 );
+    
+    const account_object& alice_acc = db->get_account( "alice" );
+    int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
+    //idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 1393 );
+    
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( call_contract_function_apply )
+{ try {
+    string lua_code1 =  "function hello_world() \n \
+                            -- very important \n \
+                            print('hello world') \n \
+                        end";
+
+    string lua_code2 =  "function hello_world() \n \
+                            -- very important \n \
+                            print('better world') \n \
+                        end";
+
+    BOOST_TEST_MESSAGE( "Testing: call_contract_function_apply" );
+
+    ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    generate_block();
+        
+    signed_transaction tx;
+
+    create_contract_operation op;
+    op.owner = "alice";
+    op.name = "contract.test";
+    op.data = lua_code1;
+
+    tx.operations.push_back( op );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    generate_block();
+
+    BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
+
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+            a.manabar.current_mana = 100;
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.test";
+    cop.function_name = "hello_world";
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( cop );
+    sign( tx, alice_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+
+    BOOST_TEST_MESSAGE( "--- Test use mana" );
+
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    util::manabar old_manabar = db->get_account( "alice" ).manabar;
+    
+    db->push_transaction( tx, 0 );
+    
+    int64_t used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
+    //idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 371 );
+
+    BOOST_TEST_MESSAGE( "--- Test again use same mana" );
+    generate_block();
+
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    old_manabar = db->get_account( "alice" ).manabar;
+    
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    
+    used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
+    //idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 371 );
+
+} FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

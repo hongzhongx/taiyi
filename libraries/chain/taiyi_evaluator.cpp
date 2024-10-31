@@ -8,6 +8,8 @@
 #include <chain/siming_objects.hpp>
 #include <chain/block_summary_object.hpp>
 
+#include <chain/util/manabar.hpp>
+
 #include <fc/macros.hpp>
 
 FC_TODO( "After we vendor fc, also vendor diff_match_patch and fix these warnings" )
@@ -716,7 +718,9 @@ namespace taiyi { namespace chain {
         _db.adjust_balance( acnt, op.reward_yang );
         
         _db.modify( acnt, [&]( account_object& a ) {            
+            util::update_manabar( _db.get_dynamic_global_properties(), a, true, op.reward_qi.amount.value );
             a.qi_shares += op.reward_qi;
+            
             a.reward_qi_balance -= op.reward_qi;
             a.reward_qi_yang -= reward_qi_yang_to_move;
         });
@@ -759,12 +763,16 @@ namespace taiyi { namespace chain {
         
         const auto& gpo = _db.get_dynamic_global_properties();
         
-        asset available_shares = asset( 0, QI_SYMBOL );
+        auto max_mana = util::get_effective_qi_shares( delegator );
         
-        auto max_mana = get_effective_qi_shares( delegator );
-                
+        _db.modify( delegator, [&]( account_object& a ) {
+            util::update_manabar( gpo, a, true );
+        });
+
+        asset available_shares = asset( delegator.manabar.current_mana, QI_SYMBOL );
+
         // Assume delegated QI are used first when consuming mana. You cannot delegate received qi shares
-        available_shares.amount = max_mana - delegator.received_qi_shares.amount;
+        available_shares.amount = std::min( available_shares.amount, max_mana - delegator.received_qi_shares.amount );
         
         if( delegator.next_qi_withdrawal_time < fc::time_point_sec::maximum() && (delegator.to_withdraw - delegator.withdrawn) > delegator.qi_withdraw_rate.amount )
         {
@@ -807,9 +815,11 @@ namespace taiyi { namespace chain {
             
             _db.modify( delegator, [&]( account_object& a ) {
                 a.delegated_qi_shares += op.qi_shares;
+                a.manabar.use_mana( op.qi_shares.amount.value );
             });
             
             _db.modify( delegatee, [&]( account_object& a ) {
+                util::update_manabar( gpo, a, true, op.qi_shares.amount.value );
                 a.received_qi_shares += op.qi_shares;
             });
         }
@@ -823,9 +833,11 @@ namespace taiyi { namespace chain {
             
             _db.modify( delegator, [&]( account_object& a ) {
                 a.delegated_qi_shares += delta;
+                a.manabar.use_mana( delta.amount.value );
             });
             
             _db.modify( delegatee, [&]( account_object& a ) {
+                util::update_manabar( gpo, a, true, delta.amount.value );
                 a.received_qi_shares += delta;
             });
             
@@ -855,7 +867,13 @@ namespace taiyi { namespace chain {
             });
             
             _db.modify( delegatee, [&]( account_object& a ) {
+                util::update_manabar( gpo, a, true );
+                
                 a.received_qi_shares -= delta;
+                a.manabar.use_mana( delta.amount.value );
+
+                if( a.manabar.current_mana < 0 )
+                    a.manabar.current_mana = 0;
             });
             
             if( op.qi_shares.amount > 0 )

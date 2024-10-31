@@ -17,7 +17,7 @@ extern "C" {
 
 namespace taiyi { namespace chain {
 
-    void contract_worker::do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, database &db)
+    void contract_worker::do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, database &db)
     { try {
         try
         {
@@ -31,6 +31,10 @@ namespace taiyi { namespace chain {
             FC_ASSERT(value_list.size()<=20,"value list is greater than 20 limit");
             
             LuaContext &context = db.get_luaVM();
+
+            int pre_drops_enable = lua_enabledrops(context.mState, 1);
+            lua_setdrops(context.mState, vm_drops);
+            
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
             contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
@@ -71,6 +75,10 @@ namespace taiyi { namespace chain {
             }
             lua_pop(context.mState, -1);
             context.close_sandbox(name);
+            
+            vm_drops = lua_getdrops(context.mState);
+            lua_enabledrops(context.mState, pre_drops_enable);
+
             if (err)
                 FC_THROW("Try the contract resolution execution failure,${message}", ("message", error_message));
             for(auto& temp : result.contract_affecteds) {
@@ -90,7 +98,7 @@ namespace taiyi { namespace chain {
         }
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
-    lua_table contract_worker::do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, database &db)
+    lua_table contract_worker::do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, database &db)
     { try {
         try
         {
@@ -106,6 +114,9 @@ namespace taiyi { namespace chain {
             LuaContext &context = db.get_luaVM();
             auto backup_current_contract_name = context.readVariable<string>("current_contract");
             
+            int pre_drops_enable = lua_enabledrops(context.mState, 1);
+            lua_setdrops(context.mState, vm_drops);
+
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
             contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
@@ -155,7 +166,10 @@ namespace taiyi { namespace chain {
             lua_pop(context.mState, -1);
             context.close_sandbox(name);
             context.writeVariable("current_contract", backup_current_contract_name); //restore current_contract
-            
+
+            vm_drops = lua_getdrops(context.mState);
+            lua_enabledrops(context.mState, pre_drops_enable);
+
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${m}", ("m", error_message));
             for(auto& temp : result.contract_affecteds) {

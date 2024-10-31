@@ -36,13 +36,24 @@ namespace taiyi { namespace chain {
 
     operation_result create_contract_evaluator::do_apply( const create_contract_operation& o )
     { try {
+        const auto& creator = _db.get_account(o.owner);
+        _db.modify( creator, [&]( account_object& a ) {
+            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
+        });
+        FC_ASSERT( creator.manabar.current_mana >= 0, "Creator account does not have enough mana to create contract." );
+
         lua_settop (_db.get_luaVM().mState, 0);
         
         if(o.name=="contract.blacklist")
             FC_ASSERT(o.owner == TAIYI_COMMITTEE_ACCOUNT);
         
-        long long vm_drops = 1000000; //TODO: fee
+        long long vm_drops = creator.manabar.current_mana;
         _db.create_contract_objects( o.owner, o.name, o.data, o.contract_authority, vm_drops );
+
+        int64_t used_mana = creator.manabar.current_mana - vm_drops;
+        _db.modify( creator, [&]( account_object& a ) {
+            a.manabar.use_mana( used_mana );
+        });
         
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -57,13 +68,25 @@ namespace taiyi { namespace chain {
         
         FC_ASSERT(!old_contract.is_release," The current contract is release version cannot be change ");
         FC_ASSERT(contract_owner.name == o.reviser, "You do not have the authority to modify the contract, the contract owner is ${owner}", ("owner", contract_owner.name));
-        
+
+        const auto& reviser = _db.get_account(o.reviser);
+        _db.modify( reviser, [&]( account_object& a ) {
+            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
+        });
+        FC_ASSERT( reviser.manabar.current_mana >= 0, "Reviser account does not have enough mana to revise contract." );
+
         lua_settop(_db.get_luaVM().mState, 0);
         
         vector<char> lua_code_b;
         contract_worker worker;
-        long long vm_drops = 1000000; //TODO: fee
+        long long vm_drops = reviser.manabar.current_mana;
         lua_table aco = worker.do_contract(old_contract.id, old_contract.name, o.data, lua_code_b, vm_drops, _db.get_luaVM().mState, _db);
+
+        int64_t used_mana = reviser.manabar.current_mana - vm_drops;
+        _db.modify( reviser, [&]( account_object& a ) {
+            a.manabar.use_mana( used_mana );
+        });
+
         const auto& old_code_bin_object = _db.get<contract_bin_code_object, by_id>(old_contract.lua_code_b_id);
         _db.modify(old_code_bin_object, [&](contract_bin_code_object&cbo) { cbo.lua_code_b = lua_code_b; });
         string previous_version = old_contract.current_version.str();
@@ -80,6 +103,11 @@ namespace taiyi { namespace chain {
         
         const auto& caller = _db.get<account_object, by_name>(o.caller);
         const auto& contract = _db.get<contract_object, by_name>(o.contract_name);
+        
+        _db.modify( caller, [&]( account_object& a ) {
+            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
+        });
+        FC_ASSERT( caller.manabar.current_mana >= 0, "Caller account does not have enough mana to call contract." );
         
         const auto* current_trx = _db.get_current_trx_ptr();
         FC_ASSERT(current_trx);
@@ -113,8 +141,14 @@ namespace taiyi { namespace chain {
         
         contract_result result;
         contract_worker worker;
-        worker.do_contract_function(caller, o.function_name, o.value_list, account_data, sigkeys, result, contract, _db);
+        long long vm_drops = caller.manabar.current_mana;
+        worker.do_contract_function(caller, o.function_name, o.value_list, account_data, sigkeys, result, contract, vm_drops, _db);
         
+        int64_t used_mana = caller.manabar.current_mana - vm_drops;
+        _db.modify( caller, [&]( account_object& a ) {
+            a.manabar.use_mana( used_mana );
+        });
+
         uint64_t contract_private_data_size    = 3L * 1024;
         uint64_t contract_total_data_size      = 10L * 1024 * 1024;
         uint64_t contract_max_data_size        = 2L * 1024 * 1024 * 1024;

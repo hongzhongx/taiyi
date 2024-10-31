@@ -668,7 +668,7 @@ FC_REFLECT( taiyi::xuanpin::plain_keys, (checksum)(keys) )
 FC_REFLECT_ENUM( taiyi::xuanpin::authority_type, (owner)(active)(posting) )
 
 FC_API( taiyi::xuanpin::xuanpin_api,
-    /// xuanpin api
+    /// app api
     (help)(gethelp)
     (about)(is_new)(is_locked)(lock)(unlock)(set_password)
     (load_xuanpin_file)(save_xuanpin_file)
@@ -694,6 +694,10 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (get_state)
     (get_withdraw_routes)
     (get_account_resources)
+    (get_owner_history)
+    (get_active_simings)
+    (get_transaction)
+    (get_transaction_results)
 
     /// transaction api
     (create_account)
@@ -712,16 +716,11 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (transfer_to_qi)
     (withdraw_qi)
     (set_withdraw_qi_route)
-    (set_transaction_expiration)
     (request_account_recovery)
     (recover_account)
     (change_recovery_account)
-    (get_owner_history)
-    (get_encrypted_memo)
-    (decrypt_memo)
     (decline_adoring_rights)
     (claim_reward_balance)
-
        
     //contracts
     (create_contract)
@@ -734,8 +733,7 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (get_prototype_operation)
     (serialize_transaction)
     (sign_transaction)
-
-    (get_active_simings)
-    (get_transaction)
-    (get_transaction_results)
+    (set_transaction_expiration)
+    (decrypt_memo)
+    (get_encrypted_memo)
 )

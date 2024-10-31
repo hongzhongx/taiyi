@@ -24,6 +24,8 @@
 
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
 
+#define TAIYI_MANA_REGENERATION_SECONDS         (60*60*1) // 1 hour
+
 #else // IS LIVE TAIYI NETWORK
 
 #define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 0) )
@@ -41,6 +43,8 @@
 #define TAIYI_OWNER_UPDATE_LIMIT                          fc::minutes(60)
 
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
+
+#define TAIYI_MANA_REGENERATION_SECONDS         (5*60*60*24) // 5 day
 
 #endif // END LIVE TAIYI NETWORK
 
@@ -80,7 +84,6 @@
 #define TAIYI_QI_WITHDRAW_INTERVALS             4
 #define TAIYI_QI_WITHDRAW_INTERVAL_SECONDS      (60*60*24*7) // 1 week per interval
 #define TAIYI_MAX_WITHDRAW_ROUTES               10
-#define TAIYI_ADORING_MANA_REGENERATION_SECONDS (5*60*60*24) // 5 day
 
 #define TAIYI_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
 
@@ -125,7 +128,7 @@
 
 #define TAIYI_VIRTUAL_SCHEDULE_LAP_LENGTH       ( fc::uint128::max_value() )
 
-#define TAIYI_DELEGATION_RETURN_PERIOD          (TAIYI_ADORING_MANA_REGENERATION_SECONDS)
+#define TAIYI_DELEGATION_RETURN_PERIOD          (TAIYI_MANA_REGENERATION_SECONDS)
 
 #define TAIYI_RD_MIN_DECAY_BITS                 6
 #define TAIYI_RD_MAX_DECAY_BITS                 32
