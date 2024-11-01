@@ -670,7 +670,6 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         BOOST_REQUIRE( alice.balance == ASSET( "10.000 YANG" ) );
         
         auto shares = asset( gpo.total_qi_shares.amount, QI_SYMBOL );
-        auto qi = asset( gpo.total_qi_fund_yang.amount, YANG_SYMBOL );
         auto alice_shares = alice.qi_shares;
         auto bob_shares = bob.qi_shares;
         
@@ -691,14 +690,12 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         sign( tx, alice_private_key );
         db->push_transaction( tx, 0 );
         
-        auto new_vest = op.amount * ( shares / qi );
+        auto new_vest = op.amount * TAIYI_QI_SHARE_PRICE;
         shares += new_vest;
-        qi += op.amount;
         alice_shares += new_vest;
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "2.500 YANG" ).amount.value );
         BOOST_REQUIRE( alice.qi_shares.amount.value == alice_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi_fund_yang.amount.value == qi.amount.value );
         BOOST_REQUIRE( gpo.total_qi_shares.amount.value == shares.amount.value );
         validate_database();
         
@@ -711,16 +708,14 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         sign( tx, alice_private_key );
         db->push_transaction( tx, 0 );
         
-        new_vest = asset( ( op.amount * ( shares / qi ) ).amount, QI_SYMBOL );
+        new_vest = asset( ( op.amount * TAIYI_QI_SHARE_PRICE ).amount, QI_SYMBOL );
         shares += new_vest;
-        qi += op.amount;
         bob_shares += new_vest;
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "0.500 YANG" ).amount.value );
         BOOST_REQUIRE( alice.qi_shares.amount.value == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
         BOOST_REQUIRE( bob.qi_shares.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi_fund_yang.amount.value == qi.amount.value );
         BOOST_REQUIRE( gpo.total_qi_shares.amount.value == shares.amount.value );
         validate_database();
         
@@ -730,7 +725,6 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         BOOST_REQUIRE( alice.qi_shares.amount.value == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
         BOOST_REQUIRE( bob.qi_shares.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi_fund_yang.amount.value == qi.amount.value );
         BOOST_REQUIRE( gpo.total_qi_shares.amount.value == shares.amount.value );
         validate_database();
     }
@@ -895,17 +889,9 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
         
         db_plugin->debug_update( [=]( database& db ) {
             auto& wso = db.get_siming_schedule_object();
-            
             db.modify( wso, [&]( siming_schedule_object& w ) {
                 w.median_props.account_creation_fee = ASSET( "10.000 YANG" );
             });
-            
-            db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
-                gpo.current_supply += wso.median_props.account_creation_fee - ASSET( "0.001 YANG" ) - gpo.total_qi_fund_yang;
-                gpo.total_qi_fund_yang = wso.median_props.account_creation_fee - ASSET( "0.001 YANG");
-            });
-            
-            db.update_virtual_supply();
         }, database::skip_siming_signature );
         
         withdraw_qi_operation op;
@@ -935,7 +921,7 @@ BOOST_AUTO_TEST_CASE( siming_update_validate )
 {
     try
     {
-        BOOST_TEST_MESSAGE( "Testing: withness_update_validate" );
+        BOOST_TEST_MESSAGE( "Testing: siming_update_validate" );
         
         validate_database();
     }
@@ -2190,14 +2176,11 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
             db.modify( db.get_account( "alice" ), []( account_object& a ) {
                 a.reward_yang_balance = ASSET( "10.000 YANG" );
                 a.reward_qi_balance = ASSET( "10.000000 QI" );
-                a.reward_qi_yang = ASSET( "10.000 YANG" );
             });
             
             db.modify( db.get_dynamic_global_properties(), []( dynamic_global_property_object& gpo ) {
                 gpo.current_supply += ASSET( "20.000 YANG" );
-                gpo.virtual_supply += ASSET( "20.000 YANG" );
                 gpo.pending_rewarded_qi_shares += ASSET( "10.000000 QI" );
-                gpo.pending_rewarded_qi_yang += ASSET( "10.000 YANG" );
             });
         });
         
@@ -2236,7 +2219,6 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         BOOST_REQUIRE( db->get_account( "alice" ).reward_yang_balance == ASSET( "10.000 YANG" ) );
         BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == alice_qi + op.reward_qi );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_balance == ASSET( "5.000000 QI" ) );
-        BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_yang == ASSET( "5.000 YANG" ) );
         validate_database();
         
         alice_qi += op.reward_qi;
@@ -2254,7 +2236,6 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         BOOST_REQUIRE( db->get_account( "alice" ).reward_yang_balance == ASSET( "0.000 YANG" ) );
         BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == alice_qi + op.reward_qi );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_balance == ASSET( "0.000000 QI" ) );
-        BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_yang == ASSET( "0.000 YANG" ) );
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -3086,19 +3067,22 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     ACTORS( (alice)(bob)(charlie) )
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
         
     signed_transaction tx;
 
     create_contract_operation op;
-    op.owner = "alice";
+    op.owner = "bob";
     op.name = "contract.test";
     op.data = lua_code1;
 
     tx.operations.push_back( op );
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    sign( tx, alice_private_key );
+    sign( tx, bob_private_key );
     db->push_transaction( tx, 0 );
+    validate_database();
+
     generate_block();
 
     BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
@@ -3132,12 +3116,18 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     });
 
     util::manabar old_manabar = db->get_account( "alice" ).manabar;
+    asset old_reward_qi = db->get_account("bob").reward_qi_balance;
     
     db->push_transaction( tx, 0 );
-    
+    validate_database();
+
     int64_t used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
     //idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 371 );
+    
+    asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
+    //idump( (reward_qi) );
+    BOOST_REQUIRE( reward_qi == asset(371, QI_SYMBOL) );
 
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     generate_block();
@@ -3150,15 +3140,21 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     });
 
     old_manabar = db->get_account( "alice" ).manabar;
-    
+    old_reward_qi = db->get_account("bob").reward_qi_balance;
+
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
-    
+    validate_database();
+
     used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
     //idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 371 );
+
+    reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
+    //idump( (reward_qi) );
+    BOOST_REQUIRE( reward_qi == asset(371, QI_SYMBOL) );
 
 } FC_LOG_AND_RETHROW() }
 

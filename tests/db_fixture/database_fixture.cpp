@@ -367,7 +367,6 @@ namespace taiyi { namespace chain {
                         gpo.current_supply += amount;
                 });
                 
-                db.update_virtual_supply();
             }, default_skip );
         }
         FC_CAPTURE_AND_RETHROW( (account_name)(amount) )

@@ -40,27 +40,10 @@ namespace taiyi { namespace chain {
         account_name_type current_siming;
 
 
-        asset       virtual_supply              = asset( 0, YANG_SYMBOL );
-        asset       current_supply              = asset( 0, YANG_SYMBOL );
-        asset       confidential_supply         = asset( 0, YANG_SYMBOL ); ///< total asset held in confidential balances
-        asset       total_qi_fund_yang          = asset( 0, YANG_SYMBOL );
-        asset       total_qi_shares             = asset( 0, QI_SYMBOL );
-        asset       total_reward_fund_yang      = asset( 0, YANG_SYMBOL );
-        asset       pending_rewarded_qi_shares  = asset( 0, QI_SYMBOL );
-        asset       pending_rewarded_qi_yang    = asset( 0, YANG_SYMBOL );
+        asset       current_supply              = asset( 0, YANG_SYMBOL );  ///当前总阳寿供应量（包含转换为真气的阳寿）
 
-        price get_qi_share_price() const
-        {
-            if ( total_qi_fund_yang.amount == 0 || total_qi_shares.amount == 0 )
-                return price ( asset( 1000, YANG_SYMBOL ), asset( 1000000, QI_SYMBOL ) );
-            
-            return price( total_qi_shares, total_qi_fund_yang );
-        }
-
-        price get_reward_qi_share_price() const
-        {
-            return price( total_qi_shares + pending_rewarded_qi_shares, total_qi_fund_yang + pending_rewarded_qi_yang );
-        }
+        asset       total_qi_shares             = asset( 0, QI_SYMBOL );    ///当前总的真气
+        asset       pending_rewarded_qi_shares  = asset( 0, QI_SYMBOL );    ///当前待领取真气奖励总量
         
         /**
          *  Maximum block size is decided by the set of active simings which change every round.
@@ -89,9 +72,8 @@ namespace taiyi { namespace chain {
                 
         uint32_t delegation_return_period = TAIYI_DELEGATION_RETURN_PERIOD;
                                 
-        uint16_t content_reward_percent = TAIYI_CONTENT_REWARD_PERCENT;
-        uint16_t qi_reward_percent = TAIYI_QI_FUND_PERCENT;
-        uint16_t sps_fund_percent = TAIYI_PROPOSAL_FUND_PERCENT;        
+        uint16_t content_reward_yang_percent = TAIYI_CONTENT_REWARD_YANG_PERCENT;
+        uint16_t content_reward_qi_fund_percent = TAIYI_CONTENT_REWARD_QI_FUND_PERCENT;
     };
 
     typedef multi_index_container<
@@ -108,5 +90,5 @@ namespace mira {
     template<> struct is_static_length< taiyi::chain::dynamic_global_property_object > : public boost::true_type {};
 } // mira
 
-FC_REFLECT( taiyi::chain::dynamic_global_property_object, (id)(head_block_number)(head_block_id)(time)(current_siming)(virtual_supply)(current_supply)(confidential_supply)(total_qi_fund_yang)(total_qi_shares)(total_reward_fund_yang)(pending_rewarded_qi_shares)(pending_rewarded_qi_yang)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_percent)(qi_reward_percent)(sps_fund_percent) )
+FC_REFLECT( taiyi::chain::dynamic_global_property_object, (id)(head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi_shares)(pending_rewarded_qi_shares)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::dynamic_global_property_object, taiyi::chain::dynamic_global_property_index )

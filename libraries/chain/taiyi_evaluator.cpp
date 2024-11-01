@@ -707,30 +707,19 @@ namespace taiyi { namespace chain {
         
         FC_ASSERT( op.reward_yang <= acnt.reward_yang_balance, "Cannot claim that much YANG. Claim: ${c} Actual: ${a}", ("c", op.reward_yang)("a", acnt.reward_yang_balance) );
         FC_ASSERT( op.reward_qi <= acnt.reward_qi_balance, "Cannot claim that much QI. Claim: ${c} Actual: ${a}", ("c", op.reward_qi)("a", acnt.reward_qi_balance) );
-        
-        asset reward_qi_yang_to_move = asset( 0, YANG_SYMBOL );
-        if( op.reward_qi == acnt.reward_qi_balance )
-            reward_qi_yang_to_move = acnt.reward_qi_yang;
-        else
-            reward_qi_yang_to_move = asset(((uint128_t(op.reward_qi.amount.value) * uint128_t(acnt.reward_qi_yang.amount.value)) / uint128_t(acnt.reward_qi_balance.amount.value)).to_uint64(), YANG_SYMBOL);
-        
+                
         _db.adjust_reward_balance( acnt, -op.reward_yang );
         _db.adjust_balance( acnt, op.reward_yang );
         
         _db.modify( acnt, [&]( account_object& a ) {            
             util::update_manabar( _db.get_dynamic_global_properties(), a, true, op.reward_qi.amount.value );
-            a.qi_shares += op.reward_qi;
-            
+            a.qi_shares += op.reward_qi;            
             a.reward_qi_balance -= op.reward_qi;
-            a.reward_qi_yang -= reward_qi_yang_to_move;
         });
         
         _db.modify( _db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
-            gpo.total_qi_shares += op.reward_qi;
-            gpo.total_qi_fund_yang += reward_qi_yang_to_move;
-            
+            gpo.total_qi_shares += op.reward_qi;            
             gpo.pending_rewarded_qi_shares -= op.reward_qi;
-            gpo.pending_rewarded_qi_yang -= reward_qi_yang_to_move;
         });
         
         _db.adjust_proxied_siming_adores( acnt, op.reward_qi.amount );
@@ -797,8 +786,8 @@ namespace taiyi { namespace chain {
         
         const auto& wso = _db.get_siming_schedule_object();
         
-        auto min_delegation = asset( wso.median_props.account_creation_fee.amount / 3, YANG_SYMBOL ) * gpo.get_qi_share_price();
-        auto min_update = asset( wso.median_props.account_creation_fee.amount / 30, YANG_SYMBOL ) * gpo.get_qi_share_price();
+        auto min_delegation = asset( wso.median_props.account_creation_fee.amount / 3, YANG_SYMBOL ) * TAIYI_QI_SHARE_PRICE;
+        auto min_update = asset( wso.median_props.account_creation_fee.amount / 30, YANG_SYMBOL ) * TAIYI_QI_SHARE_PRICE;
         
         // If delegation doesn't exist, create it
         if( delegation == nullptr )

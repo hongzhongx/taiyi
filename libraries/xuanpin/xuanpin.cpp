@@ -313,7 +313,7 @@ namespace taiyi { namespace xuanpin {
                                                                                     " old");
                 result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
                 result["account_creation_fee"] = _remote_api->get_chain_properties().account_creation_fee;
-                result["post_reward_fund"] = fc::variant(_remote_api->get_reward_fund( TAIYI_POST_REWARD_FUND_NAME )).get_object();
+                result["content_reward_fund"] = fc::variant(_remote_api->get_reward_fund( TAIYI_CONTENT_REWARD_FUND_NAME )).get_object();
                 return result;
             }
             

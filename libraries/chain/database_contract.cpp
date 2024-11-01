@@ -104,11 +104,38 @@ namespace taiyi { namespace chain {
             c.contract_ABI = aco.v;
         });
     }
-    //=============================================================================
+    //=========================================================================
     void database::create_basic_contract_objects()
     {
         long long vm_drops = 1000000;
         create_contract_objects(TAIYI_YEMING_ACCOUNT, "contract.baseENV", CONTRACT_BASE_ENV, public_key_type(), vm_drops);
+    }
+    //=========================================================================
+    void database::reward_contract_owner(const account_name_type& account_name, const asset& qi )
+    {
+        FC_ASSERT(qi.symbol == QI_SYMBOL);
+        FC_ASSERT(qi.amount.value > 0);
+        
+        const reward_fund_object& rf = get< reward_fund_object, by_name >( TAIYI_CONTENT_REWARD_FUND_NAME );
+        if(rf.reward_qi_balance.amount <= 0)
+            return; //no reward fund
+        
+        const account_object& account = get_account(account_name);
+        
+        if(qi > rf.reward_qi_balance) {
+            modify_reward_balance(account, asset(0, YANG_SYMBOL), rf.reward_qi_balance, true);
+
+            modify(rf, [&](reward_fund_object& rfo) {
+                rfo.reward_qi_balance.amount = 0;
+            });
+        }
+        else {
+            modify_reward_balance(account, asset(0, YANG_SYMBOL), qi, true);
+
+            modify(rf, [&](reward_fund_object& rfo) {
+                rfo.reward_qi_balance -= qi;
+            });
+        }
     }
 
 } } //taiyi::chain

@@ -148,6 +148,10 @@ namespace taiyi { namespace chain {
         _db.modify( caller, [&]( account_object& a ) {
             a.manabar.use_mana( used_mana );
         });
+        
+        //reward contract owner
+        const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
+        _db.reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
 
         uint64_t contract_private_data_size    = 3L * 1024;
         uint64_t contract_total_data_size      = 10L * 1024 * 1024;

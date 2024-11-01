@@ -322,7 +322,7 @@ namespace taiyi { namespace chain {
         void account_recovery_processing();
         void process_decline_adoring_rights();
 
-        share_type pay_reward_funds( share_type reward );
+        std::tuple<share_type, share_type> pay_reward_funds( share_type reward_yang, share_type reward_qi_fund );
        
         time_point_sec   head_block_time()const;
         uint32_t         head_block_num()const;
@@ -354,8 +354,6 @@ namespace taiyi { namespace chain {
         std::deque< signed_transaction >       _popped_tx;
         vector< signed_transaction >           _pending_tx;
 
-        void update_virtual_supply();
-
         bool has_hardfork( uint32_t hardfork )const;
 
         uint32_t get_hardfork()const;
@@ -385,6 +383,8 @@ namespace taiyi { namespace chain {
 
         void create_basic_contract_objects();
         void create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
+        
+        void reward_contract_owner(const account_name_type& account_name, const asset& qi );
 
     protected:
         //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead

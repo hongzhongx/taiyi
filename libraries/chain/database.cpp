@@ -856,33 +856,12 @@ namespace taiyi { namespace chain {
     template< typename Before >
     asset create_qi2( database& db, const account_object& to_account, asset liquid, bool to_reward_balance, Before&& before_qi_callback )
     { try {
-        
-        auto calculate_new_qi = [ liquid ] ( price qi_share_price ) -> asset {
-            /**
-             *  The ratio of total_qi_shares / total_qi_fund_yang should not
-             *  change as the result of the user adding funds
-             *
-             *  Q / Y  = (Q+Qn) / (Y+Yn)
-             *
-             *  Simplifies to Qn = (Q * Yn ) / Y
-             *
-             *  If Yn equals liquid, then we must solve for Qn to know how many new qi shares
-             *  the user should receive.
-             *
-             *  128 bit math is requred due to multiplying of 64 bit numbers. This is done in asset and price.
-             */
-            asset new_qi = liquid * ( qi_share_price );
-            return new_qi;
-        };
-        
+                
         FC_ASSERT( liquid.symbol == YANG_SYMBOL );
-        
-        // Get share price.
         const auto& cprops = db.get_dynamic_global_properties();
-        price qi_share_price = to_reward_balance ? cprops.get_reward_qi_share_price() : cprops.get_qi_share_price();
         
         // Calculate new qi from provided liquid using share price.
-        asset new_qi = calculate_new_qi( qi_share_price );
+        asset new_qi = liquid * TAIYI_QI_SHARE_PRICE;
         before_qi_callback( new_qi );
         
         // Add new qi to owner's balance.
@@ -901,10 +880,8 @@ namespace taiyi { namespace chain {
         db.modify( cprops, [&]( dynamic_global_property_object& props ) {
             if( to_reward_balance ) {
                 props.pending_rewarded_qi_shares += new_qi;
-                props.pending_rewarded_qi_yang += liquid;
             }
             else {
-                props.total_qi_fund_yang += liquid;
                 props.total_qi_shares += new_qi;
             }
         } );
@@ -1104,7 +1081,7 @@ namespace taiyi { namespace chain {
                     
                     share_type to_deposit = ( ( fc::uint128_t ( to_withdraw.value ) * itr->percent ) / TAIYI_100_PERCENT ).to_uint64();
                     qi_deposited_as_yang += to_deposit;
-                    auto converted_yang = asset( to_deposit, QI_SYMBOL ) * cprops.get_qi_share_price();
+                    auto converted_yang = asset( to_deposit, QI_SYMBOL ) * TAIYI_QI_SHARE_PRICE;
                     total_yang_converted += converted_yang;
                     
                     if( to_deposit > 0 )
@@ -1118,7 +1095,6 @@ namespace taiyi { namespace chain {
                         });
                         
                         modify( cprops, [&]( dynamic_global_property_object& o ) {
-                            o.total_qi_fund_yang -= converted_yang;
                             o.total_qi_shares.amount -= to_deposit;
                         });
                         
@@ -1130,7 +1106,7 @@ namespace taiyi { namespace chain {
             share_type to_convert = to_withdraw - qi_deposited_as_yang - qi_deposited_as_qi;
             FC_ASSERT( to_convert >= 0, "Deposited more qi than were supposed to be withdrawn" );
             
-            auto converted_yang = asset( to_convert, QI_SYMBOL ) * cprops.get_qi_share_price();
+            auto converted_yang = asset( to_convert, QI_SYMBOL ) * TAIYI_QI_SHARE_PRICE;
             operation vop = fill_qi_withdraw_operation( from_account.name, from_account.name, asset( to_convert, QI_SYMBOL ), converted_yang );
             pre_push_virtual_operation( vop );
             
@@ -1151,7 +1127,6 @@ namespace taiyi { namespace chain {
             });
             
             modify( cprops, [&]( dynamic_global_property_object& o ) {
-                o.total_qi_fund_yang -= converted_yang;
                 o.total_qi_shares.amount -= to_convert;
             });
             
@@ -1181,14 +1156,14 @@ namespace taiyi { namespace chain {
         int64_t current_inflation_rate = std::max( start_inflation_rate - inflation_rate_adjustment, inflation_rate_floor );
         
         // 年化率转为块化率来计算每个块的新增
-        auto new_yang = ( props.virtual_supply.amount * current_inflation_rate ) / ( int64_t( TAIYI_100_PERCENT ) * int64_t( TAIYI_BLOCKS_PER_YEAR ) );
+        share_type new_yang = ( props.current_supply.amount * current_inflation_rate ) / ( int64_t( TAIYI_100_PERCENT ) * int64_t( TAIYI_BLOCKS_PER_YEAR ) );
         new_yang = std::max(new_yang, share_type(TAIYI_MIN_REWARD_FUND));
         
-        auto content_reward = ( new_yang * props.content_reward_percent ) / TAIYI_100_PERCENT;
-        content_reward = pay_reward_funds( content_reward );
-        auto qi_reward = ( new_yang * props.qi_reward_percent ) / TAIYI_100_PERCENT;
-        auto sps_fund = ( new_yang * props.sps_fund_percent ) / TAIYI_100_PERCENT;
-        auto siming_reward = new_yang - content_reward - qi_reward - sps_fund;
+        share_type content_reward_yang = ( new_yang * props.content_reward_yang_percent ) / TAIYI_100_PERCENT;
+        share_type content_reward_qi_fund = ( new_yang * props.content_reward_qi_fund_percent ) / TAIYI_100_PERCENT;
+        std::tie(content_reward_yang, content_reward_qi_fund) = pay_reward_funds( content_reward_yang, content_reward_qi_fund );
+
+        auto siming_reward = new_yang - content_reward_yang - content_reward_qi_fund;
         
         const auto& csiming = get_siming( props.current_siming );
         siming_reward *= TAIYI_MAX_SIMINGS;
@@ -1204,14 +1179,10 @@ namespace taiyi { namespace chain {
         
         siming_reward /= wso.siming_pay_normalization_factor;
         
-        new_yang = content_reward /*+ qi_reward*/ + siming_reward;
+        new_yang = content_reward_yang + content_reward_qi_fund + siming_reward;
         
-        modify( props, [&]( dynamic_global_property_object& p )
-               {
-            // not used this qi_reward now
-            // p.total_qi_fund_yang  += asset( qi_reward, YANG_SYMBOL );
-            p.current_supply      += asset( new_yang, YANG_SYMBOL );
-            p.virtual_supply      += asset( new_yang + sps_fund, YANG_SYMBOL );
+        modify( props, [&]( dynamic_global_property_object& p ) {
+            p.current_supply += asset( new_yang, YANG_SYMBOL );
         });
         
         // pay siming in qi shares
@@ -1233,27 +1204,38 @@ namespace taiyi { namespace chain {
         }
     }
     
-    share_type database::pay_reward_funds( share_type reward )
+    std::tuple<share_type, share_type> database::pay_reward_funds( share_type reward_yang, share_type reward_qi_fund )
     {
+        auto gpo = get_dynamic_global_properties();
         const auto& reward_idx = get_index< reward_fund_index, by_id >();
-        share_type used_rewards = 0;
+        share_type used_rewards_yang = 0;
+        share_type used_rewards_qi_fund = 0;
         
         for( auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr )
         {
             // reward is a per block reward and the percents are 16-bit. This should never overflow
-            auto r = ( reward * itr->percent_content_rewards ) / TAIYI_100_PERCENT;
+            auto ryang = ( reward_yang * itr->percent_content_rewards ) / TAIYI_100_PERCENT;
+            auto rqiyang = ( reward_qi_fund * itr->percent_content_rewards ) / TAIYI_100_PERCENT;
+            asset reward_qi = asset( rqiyang, YANG_SYMBOL ) * TAIYI_QI_SHARE_PRICE;;
             
             modify( *itr, [&]( reward_fund_object& rfo ) {
-                rfo.reward_balance += asset( r, YANG_SYMBOL );
+                rfo.reward_balance += asset( ryang, YANG_SYMBOL );
+                rfo.reward_qi_balance += reward_qi;
             });
             
-            used_rewards += r;
+            modify( gpo, [&]( dynamic_global_property_object& o ) {
+                o.pending_rewarded_qi_shares += reward_qi;
+            });
+            
+            used_rewards_yang += ryang;
+            used_rewards_qi_fund += rqiyang;
             
             // Sanity check to ensure we aren't printing more YANG than has been allocated through inflation
-            FC_ASSERT( used_rewards <= reward );
+            FC_ASSERT( used_rewards_yang <= reward_yang );
+            FC_ASSERT( used_rewards_qi_fund <= reward_qi_fund );
         }
         
-        return used_rewards;
+        return std::make_tuple(used_rewards_yang, used_rewards_qi_fund);
     }
     
     void database::account_recovery_processing()
@@ -1482,7 +1464,6 @@ namespace taiyi { namespace chain {
             p.recent_slots_filled = fc::uint128::max_value();
             p.participation_count = 128;
             p.current_supply = asset( init_supply, YANG_SYMBOL );
-            p.virtual_supply = p.current_supply;
             p.maximum_block_size = TAIYI_MAX_BLOCK_SIZE;
         } );
         
@@ -1498,8 +1479,8 @@ namespace taiyi { namespace chain {
             wso.current_shuffled_simings[0] = TAIYI_INIT_SIMING_NAME;
         } );
         
-        auto post_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo ) {
-            rfo.name = TAIYI_POST_REWARD_FUND_NAME;
+        auto content_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo ) {
+            rfo.name = TAIYI_CONTENT_REWARD_FUND_NAME;
             rfo.last_update = head_block_time();
             rfo.percent_content_rewards = TAIYI_100_PERCENT;
 #ifndef  IS_TEST_NET
@@ -1508,7 +1489,7 @@ namespace taiyi { namespace chain {
         });
         // As a shortcut in payout processing, we use the id as an array index.
         // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
-        FC_ASSERT( post_rf.id._id == 0 );
+        FC_ASSERT( content_rf.id._id == 0 );
         
         // Create basic contracts such as THE first contract baseENV
         create_basic_contract_objects();
@@ -1725,12 +1706,9 @@ namespace taiyi { namespace chain {
         clear_expired_delegations();
         
         update_siming_schedule(*this);
-        
-        update_virtual_supply();
-        
+                
         process_funds();
         process_qi_withdrawals();
-        update_virtual_supply();
         
         account_recovery_processing();
         process_decline_adoring_rights();
@@ -2117,14 +2095,7 @@ namespace taiyi { namespace chain {
             TAIYI_ASSERT( _dgp.head_block_number - _dgp.last_irreversible_block_num  < TAIYI_MAX_UNDO_HISTORY, undo_database_exception, "The database does not have enough undo history to support a blockchain with so many missed blocks. Please add a checkpoint if you would like to continue applying blocks beyond this point.", ("last_irreversible_block_num",_dgp.last_irreversible_block_num)("head", _dgp.head_block_number)("max_undo",TAIYI_MAX_UNDO_HISTORY) );
         }
     } FC_CAPTURE_AND_RETHROW() }
-    
-    void database::update_virtual_supply()
-    { try {
-        modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& dgp ) {
-            dgp.virtual_supply = dgp.current_supply + asset( 0, YANG_SYMBOL );
-        });
-    } FC_CAPTURE_AND_RETHROW() }
-    
+        
     void database::update_signing_siming(const siming_object& signing_siming, const signed_block& new_block)
     { try {
         const dynamic_global_property_object& dpo = get_dynamic_global_properties();
@@ -2331,16 +2302,12 @@ namespace taiyi { namespace chain {
                 case TAIYI_ASSET_NUM_YANG:
                     acnt.balance += delta;
                     if( check_balance )
-                    {
                         FC_ASSERT( acnt.balance.amount.value >= 0, "Insufficient YANG funds" );
-                    }
                     break;
                 case TAIYI_ASSET_NUM_QI:
                     acnt.qi_shares += delta;
                     if( check_balance )
-                    {
                         FC_ASSERT( acnt.qi_shares.amount.value >= 0, "Insufficient QI funds" );
-                    }
                     break;
                 default:
                     FC_ASSERT( false, "invalid symbol" );
@@ -2358,18 +2325,13 @@ namespace taiyi { namespace chain {
                     {
                         acnt.reward_yang_balance += value_delta;
                         if( check_balance )
-                        {
                             FC_ASSERT( acnt.reward_yang_balance.amount.value >= 0, "Insufficient reward YANG funds" );
-                        }
                     }
                     else
                     {
-                        acnt.reward_qi_yang += value_delta;
                         acnt.reward_qi_balance += share_delta;
                         if( check_balance )
-                        {
                             FC_ASSERT( acnt.reward_qi_balance.amount.value >= 0, "Insufficient reward QI funds" );
-                        }
                     }
                     break;
                 default:
@@ -2431,17 +2393,14 @@ namespace taiyi { namespace chain {
         void add_to_balance( account_rewards_balance_object& bo )
         {
             if( is_qi )
-            {
-                bo.pending_qi_liquid += liquid_delta;
                 bo.pending_qi_shares += share_delta;
-            }
             else
                 bo.pending_liquid += liquid_delta;
         }
         int64_t get_combined_balance( const account_rewards_balance_object* bo, bool* is_all_zero )
         {
-            asset result = is_qi ? bo->pending_qi_liquid + liquid_delta : bo->pending_liquid + liquid_delta;
-            *is_all_zero = result.amount.value == 0 && (is_qi ? bo->pending_liquid.amount.value : bo->pending_qi_liquid.amount.value) == 0;
+            asset result = is_qi ? (bo->pending_qi_shares * TAIYI_QI_SHARE_PRICE + liquid_delta) : (bo->pending_liquid + liquid_delta);
+            *is_all_zero = result.amount.value == 0 && (is_qi ? bo->pending_liquid.amount.value : bo->pending_qi_shares.amount.value) == 0;
             return result.amount.value;
         }
         
@@ -2551,8 +2510,6 @@ namespace taiyi { namespace chain {
                 {
                     asset new_qi( (adjust_qi && delta.amount > 0) ? delta.amount * 9 : 0, YANG_SYMBOL );
                     props.current_supply += delta + new_qi;
-                    props.virtual_supply += delta + new_qi;
-                    props.total_qi_fund_yang += new_qi;
                     FC_ASSERT( props.current_supply.amount.value >= 0 );
                     break;
                 }
@@ -2682,7 +2639,6 @@ namespace taiyi { namespace chain {
         const auto& account_idx = get_index< account_index, by_name >();
         asset total_supply = asset( 0, YANG_SYMBOL );
         asset total_qi = asset( 0, QI_SYMBOL );
-        asset pending_qi_yang = asset( 0, YANG_SYMBOL );
         share_type total_vsf_adores = share_type( 0 );
         
         auto gpo = get_dynamic_global_properties();
@@ -2698,29 +2654,23 @@ namespace taiyi { namespace chain {
             total_supply += itr->reward_yang_balance;
             total_qi += itr->qi_shares;
             total_qi += itr->reward_qi_balance;
-            pending_qi_yang += itr->reward_qi_yang;
             total_vsf_adores += ( itr->proxy == TAIYI_PROXY_TO_SELF_ACCOUNT ?
-                                 itr->siming_adore_weight() :
-                                 ( TAIYI_MAX_PROXY_RECURSION_DEPTH > 0 ?
-                                  itr->proxied_vsf_adores[TAIYI_MAX_PROXY_RECURSION_DEPTH - 1] :
-                                  itr->qi_shares.amount ) );
+                itr->siming_adore_weight() :
+                ( TAIYI_MAX_PROXY_RECURSION_DEPTH > 0 ? itr->proxied_vsf_adores[TAIYI_MAX_PROXY_RECURSION_DEPTH - 1] : itr->qi_shares.amount ) );
         }
         
-        const auto& reward_idx = get_index< reward_fund_index, by_id >();
-        
-        for( auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr )
-        {
+        const auto& reward_idx = get_index< reward_fund_index, by_id >();        
+        for( auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr ) {
             total_supply += itr->reward_balance;
+            total_qi += itr->reward_qi_balance;
         }
         
-        total_supply += gpo.total_qi_fund_yang + gpo.total_reward_fund_yang + gpo.pending_rewarded_qi_yang;
+        total_supply += (gpo.total_qi_shares + gpo.pending_rewarded_qi_shares) * TAIYI_QI_SHARE_PRICE;
         
         FC_ASSERT( gpo.current_supply == total_supply, "", ("gpo.current_supply",gpo.current_supply)("total_supply",total_supply) );
         FC_ASSERT( gpo.total_qi_shares + gpo.pending_rewarded_qi_shares == total_qi, "", ("gpo.total_qi_shares",gpo.total_qi_shares)("total_qi",total_qi) );
         FC_ASSERT( gpo.total_qi_shares.amount == total_vsf_adores, "", ("total_qi_shares",gpo.total_qi_shares)("total_vsf_adores",total_vsf_adores) );
-        FC_ASSERT( gpo.pending_rewarded_qi_yang == pending_qi_yang, "", ("pending_rewarded_qi_yang",gpo.pending_rewarded_qi_yang)("pending_qi_yang", pending_qi_yang));
         
-        FC_ASSERT( gpo.virtual_supply >= gpo.current_supply );
     } FC_CAPTURE_LOG_AND_RETHROW( (head_block_num()) ); }
 
     namespace {

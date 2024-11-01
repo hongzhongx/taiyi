@@ -85,6 +85,8 @@
 #define TAIYI_QI_WITHDRAW_INTERVAL_SECONDS      (60*60*24*7) // 1 week per interval
 #define TAIYI_MAX_WITHDRAW_ROUTES               10
 
+#define TAIYI_QI_SHARE_PRICE                    price(asset(1000, YANG_SYMBOL), asset(1000000, QI_SYMBOL))
+
 #define TAIYI_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
 
 #define TAIYI_MAX_ACCOUNT_SIMING_ADORES         30
@@ -93,13 +95,12 @@
 #define TAIYI_INFLATION_RATE_START_PERCENT      (1000) // 10%
 #define TAIYI_INFLATION_RATE_STOP_PERCENT       (100)  // 1%
 #define TAIYI_INFLATION_NARROWING_PERIOD        (233600) // Narrow 0.01% every 233.6k blocks
-#define TAIYI_CONTENT_REWARD_PERCENT            (75*TAIYI_1_PERCENT) //75% of inflation
-#define TAIYI_QI_FUND_PERCENT                   (15*TAIYI_1_PERCENT) //15% of inflation
-#define TAIYI_PROPOSAL_FUND_PERCENT             (0)
+#define TAIYI_CONTENT_REWARD_YANG_PERCENT       (75*TAIYI_1_PERCENT) //75% of inflation
+#define TAIYI_CONTENT_REWARD_QI_FUND_PERCENT    (15*TAIYI_1_PERCENT) //15% of inflation
 
 #define TAIYI_CONVERGENT_LINEAR_RECENT_CLAIMS   (fc::uint128_t(0,503600561838938636ull))
 
-#define TAIYI_POST_REWARD_FUND_NAME             ("post")
+#define TAIYI_CONTENT_REWARD_FUND_NAME          ("content")
 
 #define TAIYI_MIN_ACCOUNT_NAME_LENGTH           3
 #define TAIYI_MAX_ACCOUNT_NAME_LENGTH           16
