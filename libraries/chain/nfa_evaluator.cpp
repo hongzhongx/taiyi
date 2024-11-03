@@ -20,8 +20,11 @@ namespace taiyi { namespace chain {
 operation_result create_nfa_symbol_evaluator::do_apply( const create_nfa_symbol_operation& o )
 { try {
     const auto& creator = _db.get_account( o.creator );
-    FC_UNUSED(creator);
-    
+
+    _db.modify( creator, [&]( account_object& a ) {
+        util::update_manabar( _db.get_dynamic_global_properties(), a, true );
+    });
+
     const auto* nfa_symbol = _db.find<nfa_symbol_object, by_symbol>(o.symbol);
     FC_ASSERT(nfa_symbol == nullptr, "NFA symbol named \"${n}\" is already exist.", ("n", o.symbol));
 
@@ -29,12 +32,19 @@ operation_result create_nfa_symbol_evaluator::do_apply( const create_nfa_symbol_
     auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
     FC_ASSERT(abi_itr != contract.contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract.name)("i", TAIYI_NFA_INIT_FUNC_NAME));
     
-    _db.create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
+    const auto& nfa_symbol_obj = _db.create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
         obj.creator = creator.name;
         obj.symbol = o.symbol;
         obj.describe = o.describe;
         obj.default_contract = contract.id;
         obj.count = 0;
+    });
+    
+    size_t new_state_size = fc::raw::pack_size(nfa_symbol_obj);
+    int64_t used_mana = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
+    FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create nfa symbol." );
+    _db.modify( creator, [&]( account_object& a ) {
+        a.manabar.use_mana( used_mana );
     });
     
     return void_result();

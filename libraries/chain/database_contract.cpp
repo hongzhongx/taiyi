@@ -75,7 +75,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void database::create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops)
+    size_t database::create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops)
     {
         const auto& owner_account = get_account( owner );
         
@@ -103,6 +103,8 @@ namespace taiyi { namespace chain {
             c.lua_code_b_id = code_bin_object.id;
             c.contract_ABI = aco.v;
         });
+        
+        return fc::raw::pack_size(contract) + fc::raw::pack_size(code_bin_object);
     }
     //=========================================================================
     void database::create_basic_contract_objects()

@@ -37,6 +37,11 @@ namespace taiyi { namespace chain {
 //=============================================================================
 const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys)
 {
+    const auto& caller = creator;
+    modify( caller, [&]( account_object& a ) {
+        util::update_manabar( get_dynamic_global_properties(), a, true );
+    });
+
     const auto& nfa = create<nfa_object>([&](nfa_object& obj) {
         obj.creator_account = creator.id;
         obj.owner_account = creator.id;
@@ -49,12 +54,6 @@ const nfa_object& database::create_nfa(const account_object& creator, const nfa_
     
     //运行主合约初始化nfa数据
     const auto& contract = get<contract_object, by_id>(nfa.main_contract);
-    const auto& caller = creator;
-
-    modify( caller, [&]( account_object& a ) {
-        util::update_manabar( get_dynamic_global_properties(), a, true );
-    });
-    FC_ASSERT( caller.manabar.current_mana >= 0, "Caller account does not have enough mana to call contract." );
 
     //evaluate contract authority
     if (contract.check_contract_authority)
@@ -85,8 +84,11 @@ const nfa_object& database::create_nfa(const account_object& creator, const nfa_
     vector<lua_types> value_list;
     long long vm_drops = caller.manabar.current_mana;
     lua_table result_table = worker.do_contract_function_return_table(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, account_data, sigkeys, result, contract, vm_drops, *this);
+    int64_t used_drops = caller.manabar.current_mana - vm_drops;
 
-    int64_t used_mana = caller.manabar.current_mana - vm_drops;
+    size_t new_state_size = fc::raw::pack_size(nfa);
+    int64_t used_mana = used_drops + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
+    FC_ASSERT( caller.manabar.has_mana(used_mana), "Creator account does not have enough mana to create nfa." );
     modify( caller, [&]( account_object& a ) {
         a.manabar.use_mana( used_mana );
     });

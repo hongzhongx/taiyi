@@ -384,7 +384,7 @@ namespace taiyi { namespace chain {
         void initialize_VM_baseENV();
 
         void create_basic_contract_objects();
-        void create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
+        size_t create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
         
         void reward_contract_owner(const account_name_type& account_name, const asset& qi );
 
