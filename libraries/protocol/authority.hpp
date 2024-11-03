@@ -101,6 +101,13 @@ namespace taiyi { namespace protocol {
      */
     bool is_valid_contract_name( const string& name );
     
+    /**
+     * In addition we require the following:
+     *
+     * - Length is between (inclusive) TAIYI_MIN_NFA_SYMBOL_LENGTH and TAIYI_MAX_NFA_SYMBOL_LENGTH
+     */
+    bool is_valid_nfa_symbol( const string& name );
+    
 } } // namespace taiyi::protocol
 
 

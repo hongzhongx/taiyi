@@ -1,0 +1,107 @@
+#pragma once
+#include <chain/taiyi_fwd.hpp>
+
+#include <protocol/authority.hpp>
+#include <protocol/taiyi_operations.hpp>
+
+#include <chain/taiyi_object_types.hpp>
+
+namespace taiyi { namespace chain {
+
+    class nfa_symbol_object : public object < nfa_symbol_object_type, nfa_symbol_object >
+    {
+        TAIYI_STD_ALLOCATOR_CONSTRUCTOR(nfa_symbol_object)
+        
+    public:
+        template< typename Constructor, typename Allocator >
+        nfa_symbol_object(Constructor&& c, allocator< Allocator > a)
+            : symbol(a), describe(a)
+        {
+            c(*this);
+        }
+        
+        id_type                     id;
+
+        account_name_type           creator;
+        string                      symbol;
+        string                      describe;
+        contract_id_type            default_contract = std::numeric_limits<contract_id_type>::max();
+        uint64_t                    count = 0;
+    };
+
+    struct by_symbol;
+    typedef multi_index_container<
+        nfa_symbol_object,
+        indexed_by<
+            ordered_unique< tag< by_id >, member< nfa_symbol_object, nfa_symbol_id_type, &nfa_symbol_object::id > >,
+            ordered_unique< tag< by_symbol >, member< nfa_symbol_object, string, &nfa_symbol_object::symbol > >
+        >,
+        allocator< nfa_symbol_object >
+    > nfa_symbol_index;
+
+
+    //=========================================================================
+    class nfa_object : public object < nfa_object_type, nfa_object >
+    {
+        TAIYI_STD_ALLOCATOR_CONSTRUCTOR(nfa_object)
+
+    public:
+        template< typename Constructor, typename Allocator >
+        nfa_object(Constructor&& c, allocator< Allocator > a)
+            : parents(a), children(a), data(a)
+        {
+            c(*this);
+        }
+
+        id_type                     id;
+        
+        account_id_type             creator_account;
+        account_id_type             owner_account;
+
+        nfa_symbol_id_type          symbol_id;
+        
+        vector<nfa_id_type>         parents;
+        vector<nfa_id_type>         children;
+        
+        contract_id_type            main_contract = std::numeric_limits<contract_id_type>::max();
+        lua_map                     data;
+        
+        time_point_sec              created_time;
+    };
+
+    struct by_nfa_symbol;
+    struct by_owner;
+    struct by_creator;
+    typedef multi_index_container<
+        nfa_object,
+        indexed_by<
+            ordered_unique< tag< by_id >, member< nfa_object, nfa_id_type, &nfa_object::id > >,
+            ordered_unique< tag< by_nfa_symbol >, 
+                composite_key< nfa_object,
+                    member< nfa_object, nfa_symbol_id_type, &nfa_object::symbol_id >,
+                    member< nfa_object, nfa_id_type, &nfa_object::id >
+                >
+            >,
+            ordered_unique< tag< by_owner >,
+                composite_key< nfa_object,
+                    member< nfa_object, account_id_type, &nfa_object::owner_account >,
+                    member< nfa_object, nfa_id_type, &nfa_object::id >
+                >
+            >,
+            ordered_unique< tag< by_creator >,
+                composite_key< nfa_object,
+                    member< nfa_object, account_id_type, &nfa_object::creator_account >,
+                    member< nfa_object, nfa_id_type, &nfa_object::id >
+                >
+            >
+        >,
+        allocator< nfa_object >
+    > nfa_index;
+
+} } // taiyi::chain
+
+FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count))
+CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
+
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(symbol_id)(parents)(children)(main_contract)(data)(created_time))
+CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)

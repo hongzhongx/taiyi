@@ -41,6 +41,11 @@ namespace taiyi { namespace protocol {
         revise_contract_operation,
         call_contract_function_operation,
 
+        /// nfa (non fungible asset)
+        create_nfa_symbol_operation,
+        create_nfa_operation,
+        transfer_nfa_operation,
+
         // virtual operations below this point
         hardfork_operation,
         fill_qi_withdraw_operation,

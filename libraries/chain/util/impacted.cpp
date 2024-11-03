@@ -130,6 +130,22 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.reviser );
         }
 
+        void operator()( const create_nfa_symbol_operation& op )
+        {
+            _impacted.insert( op.creator );
+        }
+        
+        void operator()( const create_nfa_operation& op )
+        {
+            _impacted.insert( op.creator );
+        }
+
+        void operator()( const transfer_nfa_operation& op )
+        {
+            _impacted.insert( op.from );
+            _impacted.insert( op.to );
+        }
+
         //void operator()( const operation& op ){}
     };
 

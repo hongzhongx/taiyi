@@ -449,6 +449,37 @@ namespace taiyi { namespace protocol {
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(caller); }
     };
 
+    struct create_nfa_symbol_operation : public base_operation
+    {
+        account_name_type   creator;
+        string              symbol;
+        string              describe;
+        string              default_contract;
+
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
+    };
+
+    struct create_nfa_operation : public base_operation
+    {
+        account_name_type   creator;
+        string              symbol;
+        
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
+    };
+
+    struct transfer_nfa_operation : public base_operation
+    {
+        account_name_type       from;
+        account_name_type       to;
+
+        int64_t                 id;
+        
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(from); }
+    };
+
 } } // taiyi::protocol
 
 FC_REFLECT( taiyi::protocol::legacy_chain_properties, (account_creation_fee)(maximum_block_size))
@@ -474,3 +505,7 @@ FC_REFLECT( taiyi::protocol::delegate_qi_shares_operation, (delegator)(delegatee
 FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(contract_authority)(extensions) )
 FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)(contract_name)(function_name)(value_list)(extensions) )
+
+FC_REFLECT( taiyi::protocol::create_nfa_symbol_operation, (creator)(symbol)(describe)(default_contract) )
+FC_REFLECT( taiyi::protocol::create_nfa_operation, (creator)(symbol) )
+FC_REFLECT( taiyi::protocol::transfer_nfa_operation, (from)(to)(id) )

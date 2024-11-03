@@ -112,7 +112,12 @@ namespace taiyi { namespace chain {
             FC_ASSERT(value_list.size()<=20,"value list is greater than 20 limit");
             
             LuaContext &context = db.get_luaVM();
-            auto backup_current_contract_name = context.readVariable<string>("current_contract");
+
+            string backup_current_contract_name;
+            lua_getglobal(context.mState, "current_contract");
+            if( !lua_isnil(context.mState, -1) )
+                backup_current_contract_name = string(lua_tostring(context.mState, -1));
+            lua_pop(context.mState, 1);
             
             int pre_drops_enable = lua_enabledrops(context.mState, 1);
             lua_setdrops(context.mState, vm_drops);
@@ -165,7 +170,10 @@ namespace taiyi { namespace chain {
             }
             lua_pop(context.mState, -1);
             context.close_sandbox(name);
-            context.writeVariable("current_contract", backup_current_contract_name); //restore current_contract
+            
+            //restore current_contract
+            if(backup_current_contract_name != "")
+                context.writeVariable("current_contract", backup_current_contract_name);
 
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable);

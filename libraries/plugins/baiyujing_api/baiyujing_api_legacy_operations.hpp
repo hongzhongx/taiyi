@@ -42,6 +42,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef create_contract_operation               legacy_create_contract_operation;
     typedef revise_contract_operation               legacy_revise_contract_operation;
     typedef call_contract_function_operation        legacy_call_contract_function_operation;
+    typedef create_nfa_symbol_operation              legacy_create_nfa_symbol_operation;
+    typedef create_nfa_operation                    legacy_create_nfa_operation;
+    typedef transfer_nfa_operation                  legacy_transfer_nfa_operation;
 
     struct api_chain_properties
     {
@@ -301,11 +304,16 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_revise_contract_operation,
         legacy_call_contract_function_operation,
 
+        legacy_create_nfa_symbol_operation,
+        legacy_create_nfa_operation,
+        legacy_transfer_nfa_operation,
+    
         /// virtual operations below this point
         legacy_fill_qi_withdraw_operation,
         legacy_hardfork_operation,
         legacy_return_qi_delegation_operation,
         legacy_producer_reward_operation
+
     > legacy_operation;
 
     struct legacy_operation_conversion_visitor
@@ -331,6 +339,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const create_contract_operation& op )const                 { l_op = op; return true; }
         bool operator()( const revise_contract_operation& op )const                 { l_op = op; return true; }
         bool operator()( const call_contract_function_operation& op )const          { l_op = op; return true; }
+        bool operator()( const create_nfa_symbol_operation& op )const                { l_op = op; return true; }
+        bool operator()( const create_nfa_operation& op )const                      { l_op = op; return true; }
+        bool operator()( const transfer_nfa_operation& op )const                    { l_op = op; return true; }
 
         bool operator()( const transfer_operation& op )const
         {

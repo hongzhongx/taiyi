@@ -146,6 +146,21 @@ namespace taiyi { namespace protocol {
         return is_valid_RFC_1035(name);
     }
 
+    bool is_valid_nfa_symbol( const string& name )
+    {
+#if TAIYI_MIN_NFA_SYMBOL_LENGTH < 4
+#error This is_valid_nfa_symbol implementation implicitly enforces minimum name length of 4.
+#endif
+        const size_t len = name.size();
+        if( len < TAIYI_MIN_NFA_SYMBOL_LENGTH )
+            return false;
+        
+        if( len > TAIYI_MAX_NFA_SYMBOL_LENGTH )
+            return false;
+        
+        return is_valid_RFC_1035(name);
+    }
+
     bool operator == ( const authority& a, const authority& b )
     {
         return ( a.weight_threshold == b.weight_threshold ) &&

@@ -9,6 +9,24 @@
 
 namespace taiyi { namespace protocol {
 
+    enum nfa_affected_type
+    {
+        transfer_from = 0,
+        transfer_to = 1,
+        modified = 2,
+        create_by=3,
+        create_for = 4,
+        relate_nfa_symbol = 5
+    };
+
+    typedef struct nfa_affected
+    {
+        account_name_type affected_account;
+        int64_t affected_item;
+        nfa_affected_type action;
+        optional<std::pair<string, string>> modified;
+    } nfa_affected;
+
     struct base_result
     {
         optional<vector<asset>> fees;
@@ -39,11 +57,11 @@ namespace taiyi { namespace protocol {
         logger_result() {}
     } logger_result;
 
-    typedef struct token_affected
+    typedef struct asset_affected
     {
         account_name_type affected_account;
         asset affected_asset;
-    } token_affected;
+    } asset_affected;
 
     typedef struct contract_memo_message
     {
@@ -61,7 +79,8 @@ namespace taiyi { namespace protocol {
 
     struct contract_result;
     typedef fc::static_variant<
-        token_affected,
+        asset_affected,
+        nfa_affected,
         contract_memo_message,
         contract_logger,
         contract_result
@@ -131,13 +150,16 @@ namespace taiyi { namespace protocol {
 
 } } // taiyi::protocol
 
+FC_REFLECT_ENUM(taiyi::protocol::nfa_affected_type, (transfer_from)(transfer_to)(modified)(create_by)(create_for)(relate_nfa_symbol))
+FC_REFLECT(taiyi::protocol::nfa_affected, (affected_account)(affected_item)(action)(modified))
+
 FC_REFLECT_TYPENAME(taiyi::protocol::operation_result)
 FC_REFLECT_TYPENAME(taiyi::protocol::contract_affected_type)
 FC_REFLECT_TYPENAME(taiyi::protocol::future_extensions)
 
 FC_REFLECT(taiyi::protocol::base_result, (fees))
 FC_REFLECT_DERIVED(taiyi::protocol::asset_result, (taiyi::protocol::base_result), (result))
-FC_REFLECT(taiyi::protocol::token_affected, (affected_account)(affected_asset))
+FC_REFLECT(taiyi::protocol::asset_affected, (affected_account)(affected_asset))
 FC_REFLECT(taiyi::protocol::contract_memo_message, (affected_account)(memo))
 FC_REFLECT(taiyi::protocol::contract_logger, (affected_account)(message))
 FC_REFLECT_DERIVED(taiyi::protocol::contract_result, (taiyi::protocol::base_result), (contract_name)(contract_affecteds)(existed_pv)(process_value)(relevant_datasize))

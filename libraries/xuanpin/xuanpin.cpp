@@ -1879,4 +1879,48 @@ namespace taiyi { namespace xuanpin {
         return revise_contract(reviser, name, contract_data, broadcast);
     } FC_CAPTURE_AND_RETHROW( (reviser)(name)(filename) ) }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        create_nfa_symbol_operation op;
+        op.creator = creator;
+        op.symbol = symbol;
+        op.describe = describe;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (creator)(symbol)(describe)(broadcast) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_nfa( const account_name_type& creator, const string& symbol, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        create_nfa_operation op;
+        op.creator = creator;
+        op.symbol = symbol;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (creator)(symbol)(broadcast) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::transfer_nfa( const account_name_type& from, const account_name_type& to, int64_t nfa_id, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        transfer_nfa_operation op;
+        op.from = from;
+        op.to = to;
+        op.id = nfa_id;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (from)(to)(nfa_id)(broadcast) ) }
+
 } } // taiyi::xuanpin

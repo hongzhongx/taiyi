@@ -31,6 +31,10 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( revise_contract )
     TAIYI_DEFINE_EVALUATOR( call_contract_function )
 
+    TAIYI_DEFINE_EVALUATOR( create_nfa_symbol )
+    TAIYI_DEFINE_EVALUATOR( create_nfa )
+    TAIYI_DEFINE_EVALUATOR( transfer_nfa )
+
     inline void validate_permlink_0_1( const string& permlink );
 
 } } // taiyi::chain

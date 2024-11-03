@@ -82,7 +82,10 @@ namespace taiyi {
             //contract objects
             contract_object_type,
             account_contract_data_object_type,
-            contract_bin_code_object_type
+            contract_bin_code_object_type,
+
+            nfa_symbol_object_type,
+            nfa_object_type
         };
         
         class dynamic_global_property_object;
@@ -114,6 +117,9 @@ namespace taiyi {
         class account_contract_data_object;
         class contract_bin_code_object;
 
+        class nfa_symbol_object;
+        class nfa_object;
+
         typedef oid< dynamic_global_property_object         > dynamic_global_property_id_type;
         typedef oid< account_object                         > account_id_type;
         typedef oid< account_metadata_object                > account_metadata_id_type;
@@ -142,6 +148,10 @@ namespace taiyi {
         typedef oid< contract_object                        > contract_id_type;
         typedef oid< account_contract_data_object           > account_contract_data_id_type;
         typedef oid< contract_bin_code_object               > contract_bin_code_id_type;
+
+        typedef oid< nfa_symbol_object                      > nfa_symbol_id_type;
+        typedef oid< nfa_object                             > nfa_id_type;
+
     } //chain
     
 } //taiyi
@@ -282,4 +292,7 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     (contract_object_type)
     (account_contract_data_object_type)
     (contract_bin_code_object_type)                
+
+    (nfa_symbol_object_type)
+    (nfa_object_type)
 )

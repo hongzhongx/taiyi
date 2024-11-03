@@ -171,3 +171,8 @@
 
 #define TAIYI_MIN_CONTRACT_NAME_LENGTH          9
 #define TAIYI_MAX_CONTRACT_NAME_LENGTH          128
+
+#define TAIYI_MIN_NFA_SYMBOL_LENGTH             4
+#define TAIYI_MAX_NFA_SYMBOL_LENGTH             128
+
+#define TAIYI_NFA_INIT_FUNC_NAME                "init_data"

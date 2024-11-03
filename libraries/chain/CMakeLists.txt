@@ -29,6 +29,9 @@ add_library( taiyi_chain
              contract_worker.cpp
              database_contract.cpp
 
+             nfa_evaluator.cpp
+             database_nfa.cpp
+
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp
 
