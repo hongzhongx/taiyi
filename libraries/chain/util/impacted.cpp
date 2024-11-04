@@ -146,6 +146,16 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.to );
         }
 
+        void operator()( const deposit_qi_to_nfa_operation& op )
+        {
+            _impacted.insert( op.account );
+        }
+
+        void operator()( const withdraw_qi_from_nfa_operation& op )
+        {
+            _impacted.insert( op.owner );
+        }
+
         //void operator()( const operation& op ){}
     };
 

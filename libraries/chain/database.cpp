@@ -1351,6 +1351,8 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< create_nfa_symbol_evaluator              >();
         _my->_evaluator_registry.register_evaluator< create_nfa_evaluator                     >();
         _my->_evaluator_registry.register_evaluator< transfer_nfa_evaluator                   >();
+        _my->_evaluator_registry.register_evaluator< deposit_qi_to_nfa_evaluator             >();
+        _my->_evaluator_registry.register_evaluator< withdraw_qi_from_nfa_evaluator           >();
     }
     
     void database::register_custom_operation_interpreter( std::shared_ptr< custom_operation_interpreter > interpreter )
@@ -2524,6 +2526,8 @@ namespace taiyi { namespace chain {
         {
             case TAIYI_ASSET_NUM_YANG:
                 return a.balance;
+            case TAIYI_ASSET_NUM_QI:
+                return a.qi_shares;
             default:
             {
                 FC_ASSERT( symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||

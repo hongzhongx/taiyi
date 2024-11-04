@@ -109,15 +109,15 @@ namespace taiyi { namespace chain { namespace util {
         return effective_qi_shares;
     }
 
-    template< typename PropType, typename AccountType >
-    void update_manabar( const PropType& gpo, AccountType& account, bool check_overflow = true, int64_t new_mana = 0 )
+    template< typename PropType, typename ObjType >
+    void update_manabar( const PropType& gpo, ObjType& obj, bool check_overflow = true, int64_t new_mana = 0 )
     {
-        auto effective_qi = util::get_effective_qi_shares( account );
+        auto effective_qi = util::get_effective_qi_shares( obj );
         try {
             manabar_params params( effective_qi, TAIYI_MANA_REGENERATION_SECONDS );
-            account.manabar.regenerate_mana( params, gpo.time );
-            account.manabar.use_mana( -new_mana );
-        } FC_CAPTURE_LOG_AND_RETHROW( (account)(effective_qi) )        
+            obj.manabar.regenerate_mana( params, gpo.time );
+            obj.manabar.use_mana( -new_mana );
+        } FC_CAPTURE_LOG_AND_RETHROW( (obj)(effective_qi) )        
     }
 
 } } } // taiyi::chain::util

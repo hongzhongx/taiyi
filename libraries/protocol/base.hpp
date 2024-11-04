@@ -16,7 +16,9 @@ namespace taiyi { namespace protocol {
         modified = 2,
         create_by=3,
         create_for = 4,
-        relate_nfa_symbol = 5
+        relate_nfa_symbol = 5,
+        deposit_qi = 6,
+        withdraw_qi = 7
     };
 
     typedef struct nfa_affected
@@ -150,7 +152,7 @@ namespace taiyi { namespace protocol {
 
 } } // taiyi::protocol
 
-FC_REFLECT_ENUM(taiyi::protocol::nfa_affected_type, (transfer_from)(transfer_to)(modified)(create_by)(create_for)(relate_nfa_symbol))
+FC_REFLECT_ENUM(taiyi::protocol::nfa_affected_type, (transfer_from)(transfer_to)(modified)(create_by)(create_for)(relate_nfa_symbol)(deposit_qi)(withdraw_qi))
 FC_REFLECT(taiyi::protocol::nfa_affected, (affected_account)(affected_item)(action)(modified))
 
 FC_REFLECT_TYPENAME(taiyi::protocol::operation_result)

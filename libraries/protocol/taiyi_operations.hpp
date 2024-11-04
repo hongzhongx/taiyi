@@ -474,10 +474,30 @@ namespace taiyi { namespace protocol {
         account_name_type       from;
         account_name_type       to;
 
-        int64_t                 id;
+        int64_t                 id; ///nfa id
         
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(from); }
+    };
+    
+    struct deposit_qi_to_nfa_operation : public base_operation
+    {
+        account_name_type account;
+        int64_t           id;       ///nfa id
+        asset             amount;   ///< must be QI
+
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(account); }
+    };
+
+    struct withdraw_qi_from_nfa_operation : public base_operation
+    {
+        account_name_type owner;    ///nfa owner
+        int64_t           id;       ///nfa id
+        asset             amount;   ///< must be QI
+
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
     };
 
 } } // taiyi::protocol
@@ -509,3 +529,5 @@ FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)
 FC_REFLECT( taiyi::protocol::create_nfa_symbol_operation, (creator)(symbol)(describe)(default_contract) )
 FC_REFLECT( taiyi::protocol::create_nfa_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::transfer_nfa_operation, (from)(to)(id) )
+FC_REFLECT( taiyi::protocol::deposit_qi_to_nfa_operation, (account)(id)(amount) )
+FC_REFLECT( taiyi::protocol::withdraw_qi_from_nfa_operation, (owner)(id)(amount) )

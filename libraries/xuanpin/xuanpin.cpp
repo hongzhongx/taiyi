@@ -1923,4 +1923,34 @@ namespace taiyi { namespace xuanpin {
         return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (from)(to)(nfa_id)(broadcast) ) }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::deposit_qi_to_nfa(const account_name_type& account, int64_t nfa_id, baiyujing_api::legacy_asset amount, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+        deposit_qi_to_nfa_operation op;
+        op.account = account;
+        op.id = nfa_id;
+        op.amount = amount.to_asset();
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (account)(nfa_id)(amount)(broadcast) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::withdraw_qi_from_nfa(const account_name_type& owner, int64_t nfa_id, baiyujing_api::legacy_asset amount, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+        withdraw_qi_from_nfa_operation op;
+        op.owner = owner;
+        op.id = nfa_id;
+        op.amount = amount.to_asset();
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(amount)(broadcast) ) }
+
 } } // taiyi::xuanpin

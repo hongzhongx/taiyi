@@ -15,8 +15,8 @@ namespace taiyi { namespace plugins { namespace database_api {
     typedef block_summary_object                    api_block_summary_object;
     typedef dynamic_global_property_object          api_dynamic_global_property_object;
     typedef withdraw_qi_route_object                api_withdraw_qi_route_object;
-    typedef decline_adoring_rights_request_object    api_decline_adoring_rights_request_object;
-    typedef siming_adore_object                      api_siming_adore_object;
+    typedef decline_adoring_rights_request_object   api_decline_adoring_rights_request_object;
+    typedef siming_adore_object                     api_siming_adore_object;
     typedef qi_delegation_object                    api_qi_delegation_object;
     typedef qi_delegation_expiration_object         api_qi_delegation_expiration_object;
     typedef reward_fund_object                      api_reward_fund_object;

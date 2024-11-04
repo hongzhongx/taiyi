@@ -42,7 +42,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef create_contract_operation               legacy_create_contract_operation;
     typedef revise_contract_operation               legacy_revise_contract_operation;
     typedef call_contract_function_operation        legacy_call_contract_function_operation;
-    typedef create_nfa_symbol_operation              legacy_create_nfa_symbol_operation;
+    typedef create_nfa_symbol_operation             legacy_create_nfa_symbol_operation;
     typedef create_nfa_operation                    legacy_create_nfa_operation;
     typedef transfer_nfa_operation                  legacy_transfer_nfa_operation;
 
@@ -279,6 +279,46 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         account_name_type producer;
         legacy_asset      qi_shares;
     };
+    
+    struct legacy_deposit_qi_to_nfa_operation
+    {
+        legacy_deposit_qi_to_nfa_operation() {}
+        legacy_deposit_qi_to_nfa_operation( const deposit_qi_to_nfa_operation& op ) : account( op.account ), id( op.id ), amount(legacy_asset::from_asset( op.amount ))
+        {}
+
+        operator deposit_qi_to_nfa_operation()const
+        {
+            deposit_qi_to_nfa_operation op;
+            op.account = account;
+            op.id = id;
+            op.amount = amount;
+            return op;
+        }
+
+        account_name_type account;
+        int64_t           id;
+        legacy_asset      amount;
+    };
+
+    struct legacy_withdraw_qi_from_nfa_operation
+    {
+        legacy_withdraw_qi_from_nfa_operation() {}
+        legacy_withdraw_qi_from_nfa_operation( const withdraw_qi_from_nfa_operation& op ) : owner( op.owner ), id( op.id ), amount(legacy_asset::from_asset( op.amount ))
+        {}
+
+        operator withdraw_qi_from_nfa_operation()const
+        {
+            withdraw_qi_from_nfa_operation op;
+            op.owner = owner;
+            op.id = id;
+            op.amount = amount;
+            return op;
+        }
+
+        account_name_type owner;
+        int64_t           id;
+        legacy_asset      amount;
+    };
 
     typedef fc::static_variant<
         legacy_transfer_operation,
@@ -307,7 +347,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_create_nfa_symbol_operation,
         legacy_create_nfa_operation,
         legacy_transfer_nfa_operation,
-    
+        legacy_deposit_qi_to_nfa_operation,
+        legacy_withdraw_qi_from_nfa_operation,
+
         /// virtual operations below this point
         legacy_fill_qi_withdraw_operation,
         legacy_hardfork_operation,
@@ -403,6 +445,18 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return true;
         }
         
+        bool operator()( const deposit_qi_to_nfa_operation& op )const
+        {
+            l_op = legacy_deposit_qi_to_nfa_operation( op );
+            return true;
+        }
+
+        bool operator()( const withdraw_qi_from_nfa_operation& op )const
+        {
+            l_op = legacy_withdraw_qi_from_nfa_operation( op );
+            return true;
+        }
+
         // Should only be SGT ops
         template< typename T >
         bool operator()( const T& )const { return false; }
@@ -464,6 +518,16 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return operation( producer_reward_operation( op ) );
         }
         
+        operation operator()( const legacy_deposit_qi_to_nfa_operation& op )const
+        {
+            return operation( deposit_qi_to_nfa_operation( op ) );
+        }
+
+        operation operator()( const legacy_withdraw_qi_from_nfa_operation& op )const
+        {
+            return operation( withdraw_qi_from_nfa_operation( op ) );
+        }
+
         template< typename T >
         operation operator()( const T& t )const
         {
@@ -535,5 +599,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_delegate_qi_shares_operation, 
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_fill_qi_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_return_qi_delegation_operation, (account)(qi_shares) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_producer_reward_operation, (producer)(qi_shares) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_deposit_qi_to_nfa_operation, (account)(id)(amount) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_withdraw_qi_from_nfa_operation, (owner)(id)(amount) )
 
 FC_REFLECT_TYPENAME( taiyi::plugins::baiyujing_api::legacy_operation )
