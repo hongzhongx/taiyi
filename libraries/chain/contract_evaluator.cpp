@@ -40,9 +40,7 @@ namespace taiyi { namespace chain {
         _db.modify( creator, [&]( account_object& a ) {
             util::update_manabar( _db.get_dynamic_global_properties(), a, true );
         });
-        
-        lua_settop (_db.get_luaVM().mState, 0);
-        
+                
         if(o.name=="contract.blacklist")
             FC_ASSERT(o.owner == TAIYI_COMMITTEE_ACCOUNT);
         
@@ -50,7 +48,7 @@ namespace taiyi { namespace chain {
         size_t new_state_size = _db.create_contract_objects( o.owner, o.name, o.data, o.contract_authority, vm_drops );
         int64_t used_drops = creator.manabar.current_mana - vm_drops;
         
-        int64_t used_mana = used_drops + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create contract." );
         _db.modify( creator, [&]( account_object& a ) {
             a.manabar.use_mana( used_mana );
@@ -74,17 +72,15 @@ namespace taiyi { namespace chain {
         _db.modify( reviser, [&]( account_object& a ) {
             util::update_manabar( _db.get_dynamic_global_properties(), a, true );
         });
-
-        lua_settop(_db.get_luaVM().mState, 0);
         
         vector<char> lua_code_b;
         contract_worker worker;
         long long vm_drops = reviser.manabar.current_mana;
-        lua_table aco = worker.do_contract(old_contract.id, old_contract.name, o.data, lua_code_b, vm_drops, _db.get_luaVM().mState, _db);
+        lua_table aco = worker.do_contract(old_contract.id, old_contract.name, o.data, lua_code_b, vm_drops, _db);
         int64_t used_drops = reviser.manabar.current_mana - vm_drops;
 
         size_t new_state_size = fc::raw::pack_size(aco);
-        int64_t used_mana = used_drops + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( reviser.manabar.has_mana(used_mana), "Creator account does not have enough mana to revise contract." );
         _db.modify( reviser, [&]( account_object& a ) {
             a.manabar.use_mana( used_mana );
@@ -128,9 +124,6 @@ namespace taiyi { namespace chain {
             }
         }
         
-        //run contract function
-        lua_settop (_db.get_luaVM().mState, 0);
-        
         const auto* op_acd = _db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract.id));
         if(op_acd == nullptr) {
             _db.create<account_contract_data_object>([&](account_contract_data_object &a) {
@@ -143,10 +136,15 @@ namespace taiyi { namespace chain {
         
         contract_result result;
         contract_worker worker;
-        long long vm_drops = caller.manabar.current_mana;
-        worker.do_contract_function(caller, o.function_name, o.value_list, account_data, sigkeys, result, contract, vm_drops, _db);
         
-        int64_t used_mana = caller.manabar.current_mana - vm_drops;
+        LuaContext context;
+        _db.initialize_VM_baseENV(context);
+        
+        long long vm_drops = caller.manabar.current_mana;
+        worker.do_contract_function(caller, o.function_name, o.value_list, account_data, sigkeys, result, contract, vm_drops, true,  context, _db);
+        int64_t used_drops = caller.manabar.current_mana - vm_drops;
+
+        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;// + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( caller.manabar.has_mana(used_mana), "Creator account does not have enough mana to call contract." );
         _db.modify( caller, [&]( account_object& a ) {
             a.manabar.use_mana( used_mana );

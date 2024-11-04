@@ -7,6 +7,7 @@
 #include <chain/block_summary_object.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/contract_objects.hpp>
+#include <chain/lua_context.hpp>
 
 #include <chain/util/manabar.hpp>
 
@@ -60,7 +61,10 @@ operation_result create_nfa_evaluator::do_apply( const create_nfa_operation& o )
     FC_ASSERT(current_trx);
     const flat_set<public_key_type>& sigkeys = current_trx->get_signature_keys(_db.get_chain_id(), fc::ecc::fc_canonical);
 
-    const auto& nfa = _db.create_nfa(creator, *nfa_symbol, sigkeys);
+    LuaContext context;
+    _db.initialize_VM_baseENV(context);
+
+    const auto& nfa = _db.create_nfa(creator, *nfa_symbol, sigkeys, true, context);
     
     contract_result result;
     

@@ -184,7 +184,7 @@ namespace taiyi { namespace chain {
         const account_object&  get_account(  const account_name_type& name )const;
         const account_object*  find_account( const account_name_type& name )const;
 
-        const nfa_object& create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys);
+        const nfa_object& create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context);
         
         const dynamic_global_property_object&  get_dynamic_global_properties()const;
         const node_property_object&            get_node_properties()const;
@@ -378,10 +378,7 @@ namespace taiyi { namespace chain {
         const index_delegate_map& index_delegates();
 
         // contracts
-        LuaContext& get_luaVM() { return *_luaVM; }
-        void create_VM();
-        void release_VM();
-        void initialize_VM_baseENV();
+        void initialize_VM_baseENV(LuaContext& context);
 
         void create_basic_contract_objects();
         size_t create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
@@ -543,9 +540,6 @@ namespace taiyi { namespace chain {
           * Internal signal to execute deferred registration of plugin indexes.
           */
         fc::signal<void()>                                    _plugin_index_signal;
-
-        //vm
-        LuaContext*  _luaVM = 0;
     };
 
     struct reindex_notification

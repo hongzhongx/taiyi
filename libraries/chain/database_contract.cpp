@@ -45,33 +45,16 @@
 
 namespace taiyi { namespace chain {
 
-    void database::create_VM()
+    void database::initialize_VM_baseENV(LuaContext& context)
     {
-        if(_luaVM)
-            delete _luaVM;
-        _luaVM = new LuaContext(true);
-    }
-    //=============================================================================
-    void database::release_VM()
-    {
-        if(_luaVM) {
-            delete _luaVM;
-            _luaVM = 0;
-        }
-    }
-    //=============================================================================
-    void database::initialize_VM_baseENV()
-    {
-        assert(_luaVM);
-        
         const auto &contract_base = get<contract_object, by_id>(contract_id_type());
         const auto &contract_base_code = get<contract_bin_code_object, by_id>(contract_base.lua_code_b_id);
-        lua_getglobal(_luaVM->mState, "baseENV");
-        if (lua_isnil(_luaVM->mState, -1))
+        lua_getglobal(context.mState, "baseENV");
+        if (lua_isnil(context.mState, -1))
         {
-            lua_pop(_luaVM->mState, 1);
-            luaL_loadbuffer(_luaVM->mState, contract_base_code.lua_code_b.data(), contract_base_code.lua_code_b.size(), contract_base.name.data());
-            lua_setglobal(_luaVM->mState, "baseENV");
+            lua_pop(context.mState, 1);
+            luaL_loadbuffer(context.mState, contract_base_code.lua_code_b.data(), contract_base_code.lua_code_b.size(), contract_base.name.data());
+            lua_setglobal(context.mState, "baseENV");
         }
     }
     //=============================================================================
@@ -93,7 +76,7 @@ namespace taiyi { namespace chain {
         
         vector<char> lua_code_b;
         contract_worker worker;
-        lua_table aco = worker.do_contract(contract.id, contract.name, contract_data, lua_code_b, vm_drops, get_luaVM().mState, *this);
+        lua_table aco = worker.do_contract(contract.id, contract.name, contract_data, lua_code_b, vm_drops, *this);
         const auto& code_bin_object = create<contract_bin_code_object>([&](contract_bin_code_object& cbo) {
             cbo.contract_id = contract.id;
             cbo.lua_code_b = lua_code_b;

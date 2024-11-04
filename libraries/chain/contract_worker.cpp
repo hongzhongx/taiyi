@@ -17,10 +17,13 @@ extern "C" {
 
 namespace taiyi { namespace chain {
 
-    void contract_worker::do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, database &db)
+    void contract_worker::do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
-        try
-        {
+
+        int pre_drops_enable = lua_enabledrops(context.mState, 1, reset_vm_memused?1:0);
+        lua_setdrops(context.mState, vm_drops);
+        
+        try {
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
             FC_ASSERT(abi_itr != contract.contract_ABI.end(), "${function_name} maybe a internal function", ("function_name", function_name));
@@ -29,12 +32,7 @@ namespace taiyi { namespace chain {
                           "input values count is ${n}, but ${function_name}`s parameter list is ${plist}...",
                           ("n", value_list.size())("function_name", function_name)("plist", abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size()<=20,"value list is greater than 20 limit");
-            
-            LuaContext &context = db.get_luaVM();
-
-            int pre_drops_enable = lua_enabledrops(context.mState, 1);
-            lua_setdrops(context.mState, vm_drops);
-            
+                        
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
             contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
@@ -75,10 +73,7 @@ namespace taiyi { namespace chain {
             }
             lua_pop(context.mState, -1);
             context.close_sandbox(name);
-            
-            vm_drops = lua_getdrops(context.mState);
-            lua_enabledrops(context.mState, pre_drops_enable);
-
+                        
             if (err)
                 FC_THROW("Try the contract resolution execution failure,${message}", ("message", error_message));
             for(auto& temp : result.contract_affecteds) {
@@ -91,112 +86,109 @@ namespace taiyi { namespace chain {
         }
         catch (LuaContext::VMcollapseErrorException e)
         {
-            db.release_VM();
-            db.create_VM();
-            db.initialize_VM_baseENV();
+            vm_drops = lua_getdrops(context.mState);
+            lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
             throw e;
         }
+        catch(fc::exception e)
+        {
+            vm_drops = lua_getdrops(context.mState);
+            lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
+            throw e;
+        }
+        
+        vm_drops = lua_getdrops(context.mState);
+        lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
+
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
-    lua_table contract_worker::do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, database &db)
+    lua_table contract_worker::do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext &context, database &db)
     { try {
+        
+        const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
+        auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
+        FC_ASSERT(abi_itr != contract.contract_ABI.end(), "${function_name} maybe a internal function", ("function_name", function_name));
+        if(!abi_itr->second.get<lua_function>().is_var_arg)
+            FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(),
+                      "input values count is ${n}, but ${function_name}`s parameter list is ${plist}...",
+                      ("n", value_list.size())("function_name", function_name)("plist", abi_itr->second.get<lua_function>().arglist));
+        FC_ASSERT(value_list.size()<=20,"value list is greater than 20 limit");
+        
+        string backup_current_contract_name;
+        lua_getglobal(context.mState, "current_contract");
+        if( !lua_isnil(context.mState, -1) )
+            backup_current_contract_name = string(lua_tostring(context.mState, -1));
+        lua_pop(context.mState, 1);
+        
+        int pre_drops_enable = lua_enabledrops(context.mState, 1, reset_vm_memused?1:0);
+        lua_setdrops(context.mState, vm_drops);
+        
+        const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
+        contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
+        contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
+        
+        const auto& name = contract.name;
+        context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
+        
+        const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+        FC_ASSERT(contract_code.lua_code_b.size()>0);
+        context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+        context.writeVariable("current_contract", name);
+        context.writeVariable(name, "_G", "protected");
+        context.writeVariable(name, "chainhelper", &ch);
+        context.writeVariable(name, "contract_base_info", &cbi);
+        context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
+        context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
+        context.writeVariable(name, "read_list", "private_data", LuaContext::EmptyArray);
+        context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
+        context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
+        context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
+        
+        bool bOK = context.get_function(name, function_name);
+        FC_ASSERT(bOK);
+        //push function actual parameters
+        for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
+            LuaContext::Pusher<lua_types>::push(context.mState, *itr).release();
+        
+        int err = lua_pcall(context.mState, value_list.size(), 1, 0);
+        lua_types error_message;
+        lua_table result_table;
         try
         {
-            const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
-            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
-            FC_ASSERT(abi_itr != contract.contract_ABI.end(), "${function_name} maybe a internal function", ("function_name", function_name));
-            if(!abi_itr->second.get<lua_function>().is_var_arg)
-                FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(),
-                          "input values count is ${n}, but ${function_name}`s parameter list is ${plist}...",
-                          ("n", value_list.size())("function_name", function_name)("plist", abi_itr->second.get<lua_function>().arglist));
-            FC_ASSERT(value_list.size()<=20,"value list is greater than 20 limit");
-            
-            LuaContext &context = db.get_luaVM();
-
-            string backup_current_contract_name;
-            lua_getglobal(context.mState, "current_contract");
-            if( !lua_isnil(context.mState, -1) )
-                backup_current_contract_name = string(lua_tostring(context.mState, -1));
-            lua_pop(context.mState, 1);
-            
-            int pre_drops_enable = lua_enabledrops(context.mState, 1);
-            lua_setdrops(context.mState, vm_drops);
-
-            const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
-            contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
-            
-            const auto& name = contract.name;
-            context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
-            FC_ASSERT(contract_code.lua_code_b.size()>0);
-            context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
-            context.writeVariable("current_contract", name);
-            context.writeVariable(name, "_G", "protected");
-            context.writeVariable(name, "chainhelper", &ch);
-            context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
-            context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
-            context.writeVariable(name, "read_list", "private_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
-            
-            bool bOK = context.get_function(name, function_name);
-            FC_ASSERT(bOK);
-            //push function actual parameters
-            for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
-                LuaContext::Pusher<lua_types>::push(context.mState, *itr).release();
-            
-            int err = lua_pcall(context.mState, value_list.size(), 1, 0);
-            lua_types error_message;
-            lua_table result_table;
-            try
-            {
-                if (err)
-                    error_message = LuaContext::readTopAndPop<lua_types>(context.mState, -1);
-                else {
-                    if(!lua_istable(context.mState, -1))
-                        error_message = lua_string(FORMAT_MESSAGE("function \"${f}\" not return a table.", ("f", function_name)));
-                    else {
-                        result_table = LuaContext::readTopAndPop<lua_table>(context.mState, -1);
-                    }
-                }
-            }
-            catch (...)
-            {
-                error_message = lua_string(" Unexpected errors ");
-            }
-            lua_pop(context.mState, -1);
-            context.close_sandbox(name);
-            
-            //restore current_contract
-            if(backup_current_contract_name != "")
-                context.writeVariable("current_contract", backup_current_contract_name);
-
-            vm_drops = lua_getdrops(context.mState);
-            lua_enabledrops(context.mState, pre_drops_enable);
-
             if (err)
-                FC_THROW("Try the contract resolution execution failure, ${m}", ("m", error_message));
-            for(auto& temp : result.contract_affecteds) {
-                if(temp.which() == contract_affected_type::tag<contract_result>::value)
-                    result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
+                error_message = LuaContext::readTopAndPop<lua_types>(context.mState, -1);
+            else {
+                if(!lua_istable(context.mState, -1))
+                    error_message = lua_string(FORMAT_MESSAGE("function \"${f}\" not return a table.", ("f", function_name)));
+                else
+                    result_table = LuaContext::readTopAndPop<lua_table>(context.mState, -1);
             }
-            result.relevant_datasize += fc::raw::pack_size(contract.contract_data) + fc::raw::pack_size(account_data) + fc::raw::pack_size(result.contract_affecteds);
-            
-            apply_result = result;
-            return result_table;
         }
-        catch (LuaContext::VMcollapseErrorException e)
+        catch (...)
         {
-            db.release_VM();
-            db.create_VM();
-            db.initialize_VM_baseENV();
-            throw e;
-            return lua_table();
+            error_message = lua_string(" Unexpected errors ");
         }
+        lua_pop(context.mState, -1);
+        context.close_sandbox(name);
+        
+        //restore current_contract
+        if(backup_current_contract_name != "")
+            context.writeVariable("current_contract", backup_current_contract_name);
+        
+        vm_drops = lua_getdrops(context.mState);
+        lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
+        
+        if (err)
+            FC_THROW("Try the contract resolution execution failure, ${m}", ("m", error_message));
+        for(auto& temp : result.contract_affecteds) {
+            if(temp.which() == contract_affected_type::tag<contract_result>::value)
+                result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
+        }
+        result.relevant_datasize += fc::raw::pack_size(contract.contract_data) + fc::raw::pack_size(account_data) + fc::raw::pack_size(result.contract_affecteds);
+        
+        apply_result = result;
+        return result_table;
+            
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
     int compiling_contract_writer(lua_State *L, const void *p, size_t size, void *u)
@@ -278,12 +270,14 @@ namespace taiyi { namespace chain {
         return v_table;
     }
     
-    lua_table contract_worker::do_contract(contract_id_type id, const string& name, const string& lua_code, vector<char>& lua_code_b, long long& vm_drops, lua_State *L, database &db)
+    lua_table contract_worker::do_contract(contract_id_type id, const string& name, const string& lua_code, vector<char>& lua_code_b, long long& vm_drops, database &db)
     { try {
-        if (L != nullptr && id == contract_id_type())
+        if (id == contract_id_type())
         {
-            int pre_drop_flag = lua_enabledrops(L, 0);
-            
+            LuaContext context;
+            lua_State *L = context.mState;
+            FC_ASSERT(L != nullptr);
+                        
             //load code as A function
             int err = luaL_loadbuffer(L, lua_code.data(), lua_code.size(), name.c_str());
             FC_ASSERT(err == 0, "Try the contract resolution compile failure, ${m}", ("m", string(lua_tostring(L, -1))));
@@ -307,16 +301,14 @@ namespace taiyi { namespace chain {
                 lua_setglobal(L, "baseENV");
                 FC_THROW("Not a legitimate basic contract");
             }
-            auto ret = parse_base_contract_summary(L, lua_gettop(L))->get<lua_table>();
-            
-            lua_enabledrops(L, pre_drop_flag);
-            return ret;
+
+            return parse_base_contract_summary(L, lua_gettop(L))->get<lua_table>();
         }
         else
         {
             LuaContext context;
             
-            lua_enabledrops(context.mState, 1);
+            lua_enabledrops(context.mState, 1, 1);
             lua_setdrops(context.mState, vm_drops);
             
             //check name existence

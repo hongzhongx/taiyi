@@ -177,5 +177,5 @@
 
 #define TAIYI_NFA_INIT_FUNC_NAME                "init_data"
 
-#define TAIYI_USEMANA_STATE_BYTES_SCALE         1
-#define TAIYI_USEMANA_EXECUTION_SCALE           1
+#define TAIYI_USEMANA_STATE_BYTES_SCALE         1000
+#define TAIYI_USEMANA_EXECUTION_SCALE           1000

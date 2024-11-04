@@ -56,14 +56,11 @@ namespace taiyi { namespace chain {
     
     database::database()
         : _my( new database_impl(*this) )
-    {
-        create_VM();
-    }
+    {}
 
     database::~database()
     {
         clear_pending();
-        release_VM();
     }
 
     void database::open( const open_args& args )
@@ -121,9 +118,7 @@ namespace taiyi { namespace chain {
             auto last_block_num = _block_log.head()->block_num();
             args.benchmark.second(last_block_num, get_abstract_index_cntr());
         }
-        
-        initialize_VM_baseENV();
-        
+                
     } FC_CAPTURE_LOG_AND_RETHROW( (args.data_dir)(args.state_storage_dir) ) }
 
     void reindex_set_index_helper( database& db, mira::index_type type, const boost::filesystem::path& p, const boost::any& cfg, std::vector< std::string > indices )

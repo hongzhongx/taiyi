@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( lua_vm )
     
     LuaContext context;
     
-    lua_enabledrops(context.mState, 1);
+    lua_enabledrops(context.mState, 1, true);
     lua_setdrops(context.mState, 2000);
     
     string lua_code =   "function hello_world() \n \
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE( native_functions )
         }
     };
     
-    LuaContext &context = db->get_luaVM();
+    LuaContext context;
     
     context.writeVariable("f", &Foo::increment);
     context.writeFunction<int (int)>("g", &Foo::increment);
@@ -204,8 +204,7 @@ BOOST_AUTO_TEST_CASE( callback_functions )
                     return a \
                    end";
     
-    LuaContext &context = db->get_luaVM();
-    //LuaContext context;
+    LuaContext context;
     string space_name = "test_space";
     
     const contract_object& contract = db->get<contract_object, by_id>(0);
@@ -505,7 +504,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
     //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 1860 );
+    BOOST_REQUIRE( used_mana == 876000 );
     
 } FC_LOG_AND_RETHROW() }
 
@@ -577,7 +576,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
     //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 1460 );
+    BOOST_REQUIRE( used_mana == 476000 );
     
 } FC_LOG_AND_RETHROW() }
 
@@ -653,39 +652,48 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     int64_t used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
     //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 371 );
+    BOOST_REQUIRE( used_mana == 371000 );
     
     asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
     //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(371, QI_SYMBOL) );
+    BOOST_REQUIRE( reward_qi == asset(371000, QI_SYMBOL) );
 
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
-    generate_block();
+    
+    for(int i = 0; i<3; i++) {
 
-    db_plugin->debug_update( [=]( database& db ) {
-        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi_shares(a);
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        generate_block();
+
+        db_plugin->debug_update( [=]( database& db ) {
+            db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
+                a.manabar.current_mana = util::get_effective_qi_shares(a);
+                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+            });
         });
-    });
-
-    old_manabar = db->get_account( "alice" ).manabar;
-    old_reward_qi = db->get_account("bob").reward_qi_balance;
-
-    tx.signatures.clear();
-    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    sign( tx, alice_private_key );
-    db->push_transaction( tx, 0 );
-    validate_database();
-
-    used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
-    //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 371 );
-
-    reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
-    //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(371, QI_SYMBOL) );
-
+        
+        old_manabar = db->get_account( "alice" ).manabar;
+        old_reward_qi = db->get_account("bob").reward_qi_balance;
+        
+        tx.signatures.clear();
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, alice_private_key );
+        db->push_transaction( tx, 0 );
+        validate_database();
+        
+        used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
+        //idump( (used_mana) );
+        BOOST_REQUIRE( used_mana == 371000 );
+        
+        reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
+        //idump( (reward_qi) );
+        if(i == 0)
+            BOOST_REQUIRE( reward_qi == asset(371000, QI_SYMBOL) );
+        else if(i == 1)
+            BOOST_REQUIRE( reward_qi == asset(158000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
+        else //i == 2
+            BOOST_REQUIRE( reward_qi == asset(150000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
+    }
+    
 } FC_LOG_AND_RETHROW() }
 
 

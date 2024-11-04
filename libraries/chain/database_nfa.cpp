@@ -35,7 +35,7 @@
 namespace taiyi { namespace chain {
 
 //=============================================================================
-const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys)
+const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context)
 {
     const auto& caller = creator;
     modify( caller, [&]( account_object& a ) {
@@ -65,9 +65,6 @@ const nfa_object& database::create_nfa(const account_object& creator, const nfa_
             FC_ASSERT(key_itr != sigkeys.end(), "No contract related permissions were found in the signature, contract_authority:${c}", ("c", contract.contract_authority));
         }
     }
-
-    //run contract function
-    lua_settop (get_luaVM().mState, 0);
     
     const auto* op_acd = find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract.id));
     if(op_acd == nullptr) {
@@ -81,13 +78,14 @@ const nfa_object& database::create_nfa(const account_object& creator, const nfa_
     
     contract_result result;
     contract_worker worker;
+    
     vector<lua_types> value_list;
     long long vm_drops = caller.manabar.current_mana;
-    lua_table result_table = worker.do_contract_function_return_table(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, account_data, sigkeys, result, contract, vm_drops, *this);
+    lua_table result_table = worker.do_contract_function_return_table(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, account_data, sigkeys, result, contract, vm_drops, reset_vm_memused, context, *this);
     int64_t used_drops = caller.manabar.current_mana - vm_drops;
 
     size_t new_state_size = fc::raw::pack_size(nfa);
-    int64_t used_mana = used_drops + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
+    int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
     FC_ASSERT( caller.manabar.has_mana(used_mana), "Creator account does not have enough mana to create nfa." );
     modify( caller, [&]( account_object& a ) {
         a.manabar.use_mana( used_mana );

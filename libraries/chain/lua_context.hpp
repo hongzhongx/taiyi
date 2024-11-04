@@ -897,7 +897,7 @@ public:
      * All objects are passed by copy and destroyed by the garbage collector if necessary.
      */
     template<typename... TData>
-    void writeVariable(TData&&... data) noexcept {
+    void writeVariable(TData&&... data) {
         static_assert(sizeof...(TData) >= 2, "You must pass at least a variable name and a value to writeVariable");
         typedef typename std::decay<typename std::tuple_element<sizeof...(TData) - 1,std::tuple<TData...>>::type>::type
             RealDataType;
@@ -911,7 +911,7 @@ public:
      * This version is more efficient than writeVariable if you want to write functions
      */
     template<typename TFunctionType, typename... TData>
-    void writeFunction(TData&&... data) noexcept {
+    void writeFunction(TData&&... data) {
         static_assert(sizeof...(TData) >= 2, "You must pass at least a variable name and a value to writeFunction");
         
         setTable<TFunctionType>(mState, Globals, std::forward<TData>(data)...);
@@ -922,7 +922,7 @@ public:
      * This only works if the data is either a native function pointer, or contains one operator() (this is the case for lambdas)
      */
     template<typename... TData>
-    void writeFunction(TData&&... data) noexcept {
+    void writeFunction(TData&&... data) {
         static_assert(sizeof...(TData) >= 2, "You must pass at least a variable name and a value to writeFunction");
         typedef typename std::decay<typename std::tuple_element<sizeof...(TData) - 1,std::tuple<TData...>>::type>::type
             RealDataType;
@@ -1009,7 +1009,7 @@ public:
     // the dataPusher MUST push only one thing on the stack
     // TTableIndex must be either LUA_REGISTRYINDEX, LUA_GLOBALSINDEX, LUA_ENVINDEX, or the position of the element on the stack
     template<typename TDataType, typename TIndex, typename TData>
-    static void setTable(lua_State* state, const PushedObject&, TIndex&& index, TData&& data) noexcept
+    static void setTable(lua_State* state, const PushedObject&, TIndex&& index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TIndex>::type>::minSize == 1 && Pusher<typename std::decay<TIndex>::type>::maxSize == 1, "Impossible to have a multiple-values index");
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
@@ -1023,7 +1023,7 @@ public:
     }
 
     template<typename TDataType, typename TData>
-    static void setTable(lua_State* state, const PushedObject&, const std::string& index, TData&& data) noexcept
+    static void setTable(lua_State* state, const PushedObject&, const std::string& index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
 
@@ -1033,7 +1033,7 @@ public:
     }
 
     template<typename TDataType, typename TData>
-    static void setTable(lua_State* state, const PushedObject&, const char* index, TData&& data) noexcept
+    static void setTable(lua_State* state, const PushedObject&, const char* index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
         
@@ -1043,7 +1043,7 @@ public:
     }
 
     template<typename TDataType, typename TData>
-    static void setTable(lua_State* state, const PushedObject&, Metatable_t, TData&& data) noexcept
+    static void setTable(lua_State* state, const PushedObject&, Metatable_t, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
         
@@ -1053,7 +1053,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex1, typename TIndex2, typename TIndex3, typename... TIndices>
-    static auto setTable(lua_State* state, PushedObject&, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static auto setTable(lua_State* state, PushedObject&, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
         -> typename std::enable_if<!std::is_same<typename std::decay<TIndex1>::type, Metatable_t>::value>::type
     {
         static_assert(Pusher<typename std::decay<TIndex1>::type>::minSize == 1 && Pusher<typename std::decay<TIndex1>::type>::maxSize == 1, "Impossible to have a multiple-values index");
@@ -1065,7 +1065,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex1, typename TIndex2, typename TIndex3, typename... TIndices>
-    static auto setTable(lua_State* state, PushedObject&& pushedTable, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static auto setTable(lua_State* state, PushedObject&& pushedTable, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
         -> typename std::enable_if<!std::is_same<typename std::decay<TIndex1>::type, Metatable_t>::value>::type
     {
         static_assert(Pusher<typename std::decay<TIndex1>::type>::minSize == 1 && Pusher<typename std::decay<TIndex1>::type>::maxSize == 1, "Impossible to have a multiple-values index");
@@ -1085,7 +1085,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex2, typename TIndex3, typename... TIndices>
-    static void setTable(lua_State* state, PushedObject& pushedObject, Metatable_t, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static void setTable(lua_State* state, PushedObject& pushedObject, Metatable_t, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
     {
         if (lua_getmetatable(state, -1) == 0)
         {
@@ -1104,7 +1104,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex2, typename TIndex3, typename... TIndices>
-    static void setTable(lua_State* state, PushedObject&& pushedObject, Metatable_t, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static void setTable(lua_State* state, PushedObject&& pushedObject, Metatable_t, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
     {
         if (lua_getmetatable(state, -1) == 0)
         {
@@ -1123,7 +1123,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex, typename TData>
-    static void setTable(lua_State* state, RegistryTag, TIndex&& index, TData&& data) noexcept
+    static void setTable(lua_State* state, RegistryTag, TIndex&& index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TIndex>::type>::minSize == 1 && Pusher<typename std::decay<TIndex>::type>::maxSize == 1, "Impossible to have a multiple-values index");
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
@@ -1137,7 +1137,7 @@ public:
     }
 
     template<typename TDataType, typename TData>
-    static void setTable(lua_State* state, RegistryTag, const std::string& index, TData&& data) noexcept
+    static void setTable(lua_State* state, RegistryTag, const std::string& index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
 
@@ -1147,7 +1147,7 @@ public:
     }
 
     template<typename TDataType, typename TData>
-    static void setTable(lua_State* state, RegistryTag, const char* index, TData&& data) noexcept
+    static void setTable(lua_State* state, RegistryTag, const char* index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
 
@@ -1157,7 +1157,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex1, typename TIndex2, typename TIndex3, typename... TIndices>
-    static void setTable(lua_State* state, RegistryTag, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static void setTable(lua_State* state, RegistryTag, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
     {
         static_assert(Pusher<typename std::decay<TIndex1>::type>::minSize == 1 && Pusher<typename std::decay<TIndex1>::type>::maxSize == 1, "Impossible to have a multiple-values index");
         
@@ -1168,7 +1168,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex, typename TData>
-    static void setTable(lua_State* state, Globals_t, TIndex&& index, TData&& data) noexcept
+    static void setTable(lua_State* state, Globals_t, TIndex&& index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TIndex>::type>::minSize == 1 && Pusher<typename std::decay<TIndex>::type>::maxSize == 1, "Impossible to have a multiple-values index");
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
@@ -1195,7 +1195,7 @@ public:
     }
 
     template<typename TDataType, typename TData>
-    static void setTable(lua_State* state, Globals_t, const std::string& index, TData&& data) noexcept
+    static void setTable(lua_State* state, Globals_t, const std::string& index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
 
@@ -1205,7 +1205,7 @@ public:
     }
 
     template<typename TDataType, typename TData>
-    static void setTable(lua_State* state, Globals_t, const char* index, TData&& data) noexcept
+    static void setTable(lua_State* state, Globals_t, const char* index, TData&& data)
     {
         static_assert(Pusher<typename std::decay<TDataType>::type>::minSize == 1 && Pusher<typename std::decay<TDataType>::type>::maxSize == 1, "Impossible to have a multiple-values data");
 
@@ -1215,7 +1215,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex1, typename TIndex2, typename TIndex3, typename... TIndices>
-    static void setTable(lua_State* state, Globals_t, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static void setTable(lua_State* state, Globals_t, TIndex1&& index1, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
     {
         static_assert(Pusher<typename std::decay<TIndex1>::type>::minSize == 1 && Pusher<typename std::decay<TIndex1>::type>::maxSize == 1, "Impossible to have a multiple-values index");
         
@@ -1237,7 +1237,7 @@ public:
 
     // TODO: g++ reports "ambiguous overload"
     /*template<typename TDataType, typename TIndex2, typename TIndex3, typename... TIndices>
-    static void setTable(lua_State* state, Globals_t, const char* index, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static void setTable(lua_State* state, Globals_t, const char* index, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
     {
         lua_getglobal(state, index);
         PushedObject p1{state, 1};
@@ -1246,7 +1246,7 @@ public:
     }
 
     template<typename TDataType, typename TIndex2, typename TIndex3, typename... TIndices>
-    static void setTable(lua_State* state, Globals_t, const std::string& index, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices) noexcept
+    static void setTable(lua_State* state, Globals_t, const std::string& index, TIndex2&& index2, TIndex3&& index3, TIndices&&... indices)
     {
         lua_getglobal(state, index.c_str());
         PushedObject p1{state, 1};

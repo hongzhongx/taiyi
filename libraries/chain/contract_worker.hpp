@@ -20,10 +20,10 @@ namespace taiyi { namespace chain {
     class contract_worker
     {
     public:
-        protocol::lua_table do_contract(contract_id_type id, const string& name, const string& lua_code, vector<char>& lua_code_b, long long& vm_drops, lua_State *L, database &db);
+        protocol::lua_table do_contract(contract_id_type id, const string& name, const string& lua_code, vector<char>& lua_code_b, long long& vm_drops, database &db);
         
-        void do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, database &db);
-        protocol::lua_table do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, database &db);
+        void do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db);
+        protocol::lua_table do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db);
         
         contract_result get_result() { return result; }
         

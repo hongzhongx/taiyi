@@ -906,10 +906,12 @@ LUA_API int lua_setdrops (lua_State *L, long long drops) {
   return L->drops < 0 ? 0 : 1;
 }
 
-LUA_API int lua_enabledrops (lua_State *L, int enable) {
+LUA_API int lua_enabledrops (lua_State *L, int enable, int reset_memused) {
     int pre_enable = L->enable_drops;
     lua_lock(L);
     L->enable_drops = enable;
+    if(reset_memused)
+        L->memUsed = 0;
     lua_unlock(L);
     return pre_enable;
 }
