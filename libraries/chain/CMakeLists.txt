@@ -31,6 +31,7 @@ add_library( taiyi_chain
 
              nfa_evaluator.cpp
              database_nfa.cpp
+             contract_nfa_handle.cpp
 
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp

@@ -39,6 +39,48 @@ namespace taiyi { namespace chain {
         
         const contract_object& get_contract(string name);
     };
+    
+    struct contract_nfa_base_info
+    {
+        int64_t id;
+        bool is_nfa = true;
+        string symbol;
+        string owner_account;
+        
+        lua_map data;
+        
+        contract_nfa_base_info(const nfa_object& nfa, database& db);
+        
+        lua_table to_lua_table() const
+        {
+            lua_table t;
+            t.v[lua_types(lua_string("id"))] = lua_int(id);
+            t.v[lua_types(lua_string("is_nfa"))] = lua_bool(is_nfa);
+            t.v[lua_types(lua_string("symbol"))] = lua_string(symbol);
+            t.v[lua_types(lua_string("owner_account"))] = lua_string(owner_account);
+            t.v[lua_types(lua_string("data"))] = lua_table(data);
+            return t;
+        }
+    };
+
+    //=========================================================================
+    struct contract_nfa_handler
+    {
+        const account_object&               _caller;
+        LuaContext&                         _context;
+        database&                           _db;
+
+        contract_nfa_handler(const account_object& caller, LuaContext &context, database &db)
+            : _caller(caller), _context(context), _db(db)
+        {}
+        
+        void eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        void do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        string get_nfa_contract(int64_t nfa_id);
+
+        void enable_tick(int64_t nfa_id);
+        contract_nfa_base_info get_nfa(int64_t nfa_id);
+    };
 
     struct contract_handler
     {

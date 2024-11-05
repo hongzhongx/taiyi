@@ -47,6 +47,7 @@ namespace taiyi { namespace protocol {
         transfer_nfa_operation,
         deposit_qi_to_nfa_operation,
         withdraw_qi_from_nfa_operation,
+        action_nfa_operation,
 
         // virtual operations below this point
         hardfork_operation,

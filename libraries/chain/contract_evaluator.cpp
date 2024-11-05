@@ -44,9 +44,9 @@ namespace taiyi { namespace chain {
         if(o.name=="contract.blacklist")
             FC_ASSERT(o.owner == TAIYI_COMMITTEE_ACCOUNT);
         
-        long long vm_drops = creator.manabar.current_mana;
+        long long vm_drops = creator.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         size_t new_state_size = _db.create_contract_objects( o.owner, o.name, o.data, o.contract_authority, vm_drops );
-        int64_t used_drops = creator.manabar.current_mana - vm_drops;
+        int64_t used_drops = creator.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
         
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create contract." );
@@ -75,9 +75,9 @@ namespace taiyi { namespace chain {
         
         vector<char> lua_code_b;
         contract_worker worker;
-        long long vm_drops = reviser.manabar.current_mana;
+        long long vm_drops = reviser.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         lua_table aco = worker.do_contract(old_contract.id, old_contract.name, o.data, lua_code_b, vm_drops, _db);
-        int64_t used_drops = reviser.manabar.current_mana - vm_drops;
+        int64_t used_drops = reviser.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
 
         size_t new_state_size = fc::raw::pack_size(aco);
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
@@ -140,11 +140,11 @@ namespace taiyi { namespace chain {
         LuaContext context;
         _db.initialize_VM_baseENV(context);
         
-        long long vm_drops = caller.manabar.current_mana;
+        long long vm_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         worker.do_contract_function(caller, o.function_name, o.value_list, account_data, sigkeys, result, contract, vm_drops, true,  context, _db);
-        int64_t used_drops = caller.manabar.current_mana - vm_drops;
+        int64_t used_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
 
-        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;// + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( caller.manabar.has_mana(used_mana), "Creator account does not have enough mana to call contract." );
         _db.modify( caller, [&]( account_object& a ) {
             a.manabar.use_mana( used_mana );

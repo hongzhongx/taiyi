@@ -186,7 +186,8 @@ namespace taiyi { namespace chain {
         registerMember("creation_date", &contract_base_info::creation_date);
         registerMember("contract_authority", &contract_base_info::contract_authority);
         registerMember("invoker_contract_name", &contract_base_info::invoker_contract_name);
-                        
+        
+        //contract handler
         registerFunction("log", &contract_handler::log);
         registerFunction("number_max", &contract_handler::nummax);
         registerFunction("number_min", &contract_handler::nummin);
@@ -217,6 +218,20 @@ namespace taiyi { namespace chain {
         registerFunction<contract_handler, void(string, double, string, bool)>("transfer_from_caller", [](contract_handler &handler, string to, double amount, string symbol, bool enable_logger = false) {
             handler.transfer_from(handler.caller.id, to, amount, symbol, enable_logger);
         });
+        
+        //nfa base info
+        registerMember("id", &contract_nfa_base_info::id);
+        registerMember("is_nfa", &contract_nfa_base_info::is_nfa);
+        registerMember("symbol", &contract_nfa_base_info::symbol);
+        registerMember("owner_account", &contract_nfa_base_info::owner_account);
+        registerMember("data", &contract_nfa_base_info::data);
+
+        //nfa handler
+        registerFunction("get_nfa_contract", &contract_nfa_handler::get_nfa_contract);
+        registerFunction("eval_nfa_action", &contract_nfa_handler::eval_nfa_action);
+        registerFunction("do_nfa_action", &contract_nfa_handler::do_nfa_action);
+        registerFunction("enable_tick", &contract_nfa_handler::enable_tick);
+        registerFunction("get_nfa", &contract_nfa_handler::get_nfa);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

@@ -10,6 +10,8 @@
 
 namespace taiyi { namespace chain {
 
+    using protocol::lua_map;
+
     class nfa_symbol_object : public object < nfa_symbol_object_type, nfa_symbol_object >
     {
         TAIYI_STD_ALLOCATOR_CONSTRUCTOR(nfa_symbol_object)
@@ -72,11 +74,13 @@ namespace taiyi { namespace chain {
         util::manabar               manabar;
 
         time_point_sec              created_time;
+        time_point_sec              next_tick_time = time_point_sec::maximum();
     };
 
     struct by_nfa_symbol;
     struct by_owner;
     struct by_creator;
+    struct by_tick_time;
     typedef multi_index_container<
         nfa_object,
         indexed_by<
@@ -98,6 +102,12 @@ namespace taiyi { namespace chain {
                     member< nfa_object, account_id_type, &nfa_object::creator_account >,
                     member< nfa_object, nfa_id_type, &nfa_object::id >
                 >
+            >,
+            ordered_unique< tag< by_tick_time >,
+                composite_key< nfa_object,
+                    member< nfa_object, time_point_sec, &nfa_object::next_tick_time >,
+                    member< nfa_object, nfa_id_type, &nfa_object::id >
+                >
             >
         >,
         allocator< nfa_object >
@@ -113,5 +123,5 @@ namespace taiyi { namespace chain {
 FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
-FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(symbol_id)(parents)(children)(main_contract)(data)(qi_shares)(manabar)(created_time))
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(symbol_id)(parents)(children)(main_contract)(data)(qi_shares)(manabar)(created_time)(next_tick_time))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)

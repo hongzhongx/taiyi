@@ -156,6 +156,11 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.owner );
         }
 
+        void operator()( const action_nfa_operation& op )
+        {
+            _impacted.insert( op.owner );
+        }
+
         //void operator()( const operation& op ){}
     };
 

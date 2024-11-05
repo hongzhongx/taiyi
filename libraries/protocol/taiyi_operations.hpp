@@ -499,6 +499,17 @@ namespace taiyi { namespace protocol {
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
     };
+    
+    struct action_nfa_operation : public base_operation
+    {
+        account_name_type   owner;      ///nfa owner
+        int64_t             id;         ///nfa id
+        string              action;     ///action name
+        vector<lua_types>   value_list; ///action function parameter value list
+        
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
+    };
 
 } } // taiyi::protocol
 
@@ -531,3 +542,4 @@ FC_REFLECT( taiyi::protocol::create_nfa_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::transfer_nfa_operation, (from)(to)(id) )
 FC_REFLECT( taiyi::protocol::deposit_qi_to_nfa_operation, (account)(id)(amount) )
 FC_REFLECT( taiyi::protocol::withdraw_qi_from_nfa_operation, (owner)(id)(amount) )
+FC_REFLECT( taiyi::protocol::action_nfa_operation, (owner)(id)(action)(value_list) )

@@ -279,4 +279,9 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( amount.amount > 0,  "Must withdraw a nonzero amount" );
     }
 
+    void action_nfa_operation::validate() const
+    {
+        validate_account_name( owner );
+    }
+
 } } // taiyi::protocol

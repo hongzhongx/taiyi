@@ -390,6 +390,8 @@ namespace taiyi { namespace chain {
         //void pop_undo() { object_database::pop_undo(); }
         void notify_changed_objects();
 
+        void process_nfa_tick();
+
     private:
         optional< chainbase::database::session > _pending_tx_session;
 

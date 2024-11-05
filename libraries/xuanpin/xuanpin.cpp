@@ -1952,5 +1952,50 @@ namespace taiyi { namespace xuanpin {
 
         return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(amount)(broadcast) ) }
+    
+    vector<string> xuanpin_api::action_nfa(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list)
+    {
+#if 0
+        auto info = get_nfa_action_info(nfa_id, action);
+        if(!info.consequence)
+        {
+            vector<lua_types> lua_value_list = detail::from_variants_to_lua_types(value_list);
+            return my->_remote_api->eval_nfa_action( nfa_id, action, lua_value_list );
+        }
+        else
+#endif
+        {
+            auto transaction = action_nfa_consequence(owner, nfa_id, action, value_list, true);
+            auto transaction_results = get_transaction_results(transaction.transaction_id);
+            vector<string> logs;
+            for(const auto& result : transaction_results) {
+                if(result.which() == operation_result::tag<contract_result>::value) {
+                    auto cresult = result.get<contract_result>();
+                    for(auto& temp : cresult.contract_affecteds) {
+                        if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
+                            logs.push_back(temp.get<contract_logger>().message);
+                        }
+                    }
+                }
+            }
+            return logs;
+        }
+    }
+    
+    baiyujing_api::legacy_signed_transaction xuanpin_api::action_nfa_consequence(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+        action_nfa_operation op;
+        op.owner = owner;
+        op.id = nfa_id;
+        op.action = action;
+        op.value_list = detail::from_variants_to_lua_types(value_list);
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(action)(value_list) ) }
 
 } } // taiyi::xuanpin

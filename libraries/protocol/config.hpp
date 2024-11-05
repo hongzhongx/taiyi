@@ -26,6 +26,8 @@
 
 #define TAIYI_MANA_REGENERATION_SECONDS         (60*60*1) // 1 hour
 
+#define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (20) // about 60 seconds
+
 #else // IS LIVE TAIYI NETWORK
 
 #define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 0) )
@@ -45,6 +47,8 @@
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
 
 #define TAIYI_MANA_REGENERATION_SECONDS         (5*60*60*24) // 5 day
+
+#define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
 
 #endif // END LIVE TAIYI NETWORK
 

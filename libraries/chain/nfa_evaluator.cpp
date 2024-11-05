@@ -7,7 +7,9 @@
 #include <chain/block_summary_object.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/contract_objects.hpp>
+
 #include <chain/lua_context.hpp>
+#include <chain/contract_worker.hpp>
 
 #include <chain/util/manabar.hpp>
 
@@ -172,6 +174,51 @@ namespace taiyi { namespace chain {
 
         return result;
     }
+    //=============================================================================
+    operation_result action_nfa_evaluator::do_apply( const action_nfa_operation& o )
+    { try {
+        
+        const auto& owner = _db.get_account( o.owner );
+
+        const auto* nfa = _db.find<nfa_object, by_id>(o.id);
+        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
+        FC_ASSERT(owner.id == nfa->owner_account, "Can not action NFA not ownd by you.");
+
+        _db.modify( owner, [&]( account_object& a ) {
+            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
+        });
+
+        //重整规范参数，使得最终传入合约参数为[me, params]
+        lua_table params;
+        for(size_t i=0; i<o.value_list.size(); i++)
+            params.v[lua_types(lua_int(i+1))] = o.value_list[i]; //lua中数组下标在table中用key是从1开始的
+        vector<lua_types> value_list;
+        value_list.emplace_back(params);
+        
+        contract_result cresult;
+        contract_worker worker;
+
+        LuaContext context;
+        _db.initialize_VM_baseENV(context);
+        
+        long long vm_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        bool bOK = worker.do_nfa_contract_action(*nfa, o.action, value_list, cresult, vm_drops, true, context, _db);
+        FC_ASSERT(bOK, "NFA do contract action fail.");
+        int64_t used_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
+
+        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( owner.manabar.has_mana(used_mana), "caller account does not have enough mana to action nfa." );
+        _db.modify( owner, [&]( account_object& a ) {
+            a.manabar.use_mana( used_mana );
+        });
+        
+        //reward contract owner
+        const auto& contract = _db.get<contract_object, by_id>(nfa->main_contract);
+        const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
+        _db.reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+
+        return cresult;
+    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 } } // taiyi::chain
 
