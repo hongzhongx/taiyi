@@ -22,16 +22,13 @@ add_library( taiyi_chain
              lua_context.cpp
              contract_evaluator.cpp
              contract_objects.cpp
-             contract_handles.cpp
-             contract_context_handle.cpp
-             contract_asset_handle.cpp
-             contract_authority_handle.cpp
+             contract_handler.cpp
+             contract_nfa_handler.cpp
              contract_worker.cpp
              database_contract.cpp
 
              nfa_evaluator.cpp
              database_nfa.cpp
-             contract_nfa_handle.cpp
 
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp

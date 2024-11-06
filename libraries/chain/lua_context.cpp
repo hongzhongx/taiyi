@@ -27,9 +27,9 @@ namespace taiyi { namespace chain {
             auto name_or_id = LuaContext::readTopAndPop<string>(L, -2);
             auto read_list = LuaContext::readTopAndPop<lua_table>(L, -1);
             auto current_contract_name = context.readVariable<string>("current_contract");
-            auto chainhelper = context.readVariable<contract_handler *>(current_contract_name, "chainhelper");
-            auto &temp_account = chainhelper->get_account(name_or_id);
-            const auto* contract_udata = chainhelper->db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(temp_account.id, chainhelper->contract.id));
+            auto ch = context.readVariable<contract_handler *>(current_contract_name, "contract_helper");
+            auto &temp_account = ch->get_account(name_or_id);
+            const auto* contract_udata = ch->db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(temp_account.id, ch->contract.id));
             optional<account_contract_data_object> op_acd;
             if (contract_udata != nullptr)
                 op_acd = *contract_udata;
@@ -92,8 +92,8 @@ namespace taiyi { namespace chain {
                 context.new_sandbox(contract->name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
                 
                 context.writeVariable(contract->name, "contract_base_info", cbi);
-                auto ch = context.readVariable<contract_handler*>(current_contract_name, "chainhelper");
-                if(ch) context.writeVariable(contract->name, "chainhelper", ch);
+                auto ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
+                if(ch) context.writeVariable(contract->name, "contract_helper", ch);
                 
                 FC_ASSERT(lua_getglobal(context.mState, current_contract_name.c_str()) == LUA_TTABLE);
                 FC_ASSERT(lua_getfield(context.mState, -1, contract->name.c_str()) == LUA_TNIL); //just check
@@ -207,7 +207,11 @@ namespace taiyi { namespace chain {
         registerFunction("invoke_contract_function", &contract_handler::invoke_contract_function);
         registerFunction("change_contract_authority", &contract_handler::change_contract_authority);
         registerFunction("get_contract_public_data", &contract_handler::get_contract_public_data);
-        
+        registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);
+        registerFunction("eval_nfa_action", &contract_handler::eval_nfa_action);
+        registerFunction("do_nfa_action", &contract_handler::do_nfa_action);
+        registerFunction("get_nfa_info", &contract_handler::get_nfa_info);
+
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
         lua_register(mState, "format_vector_with_table", &format_vector_with_table);
@@ -227,11 +231,8 @@ namespace taiyi { namespace chain {
         registerMember("data", &contract_nfa_base_info::data);
 
         //nfa handler
-        registerFunction("get_nfa_contract", &contract_nfa_handler::get_nfa_contract);
-        registerFunction("eval_nfa_action", &contract_nfa_handler::eval_nfa_action);
-        registerFunction("do_nfa_action", &contract_nfa_handler::do_nfa_action);
         registerFunction("enable_tick", &contract_nfa_handler::enable_tick);
-        registerFunction("get_nfa", &contract_nfa_handler::get_nfa);
+        registerFunction("disable_tick", &contract_nfa_handler::disable_tick);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

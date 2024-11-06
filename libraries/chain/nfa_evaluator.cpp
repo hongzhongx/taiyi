@@ -201,10 +201,12 @@ namespace taiyi { namespace chain {
         LuaContext context;
         _db.initialize_VM_baseENV(context);
         
-        long long vm_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+        long long old_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long vm_drops = old_drops;
         bool bOK = worker.do_nfa_contract_action(*nfa, o.action, value_list, cresult, vm_drops, true, context, _db);
         FC_ASSERT(bOK, "NFA do contract action fail.");
-        int64_t used_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
+        int64_t used_drops = old_drops - vm_drops;
 
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( owner.manabar.has_mana(used_mana), "caller account does not have enough mana to action nfa." );

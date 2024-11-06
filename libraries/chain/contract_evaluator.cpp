@@ -44,9 +44,11 @@ namespace taiyi { namespace chain {
         if(o.name=="contract.blacklist")
             FC_ASSERT(o.owner == TAIYI_COMMITTEE_ACCOUNT);
         
-        long long vm_drops = creator.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+        long long old_drops = creator.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long vm_drops = old_drops;
         size_t new_state_size = _db.create_contract_objects( o.owner, o.name, o.data, o.contract_authority, vm_drops );
-        int64_t used_drops = creator.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
+        int64_t used_drops = old_drops - vm_drops;
         
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create contract." );
@@ -75,9 +77,12 @@ namespace taiyi { namespace chain {
         
         vector<char> lua_code_b;
         contract_worker worker;
-        long long vm_drops = reviser.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+
+        //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+        long long old_drops = reviser.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long vm_drops = old_drops;
         lua_table aco = worker.do_contract(old_contract.id, old_contract.name, o.data, lua_code_b, vm_drops, _db);
-        int64_t used_drops = reviser.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
+        int64_t used_drops = old_drops - vm_drops;
 
         size_t new_state_size = fc::raw::pack_size(aco);
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
@@ -140,9 +145,11 @@ namespace taiyi { namespace chain {
         LuaContext context;
         _db.initialize_VM_baseENV(context);
         
-        long long vm_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+        long long old_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long vm_drops = old_drops;
         worker.do_contract_function(caller, o.function_name, o.value_list, account_data, sigkeys, result, contract, vm_drops, true,  context, _db);
-        int64_t used_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
+        int64_t used_drops = old_drops - vm_drops;
 
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( caller.manabar.has_mana(used_mana), "Creator account does not have enough mana to call contract." );

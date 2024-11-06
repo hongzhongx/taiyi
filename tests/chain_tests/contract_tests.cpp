@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE( callback_functions )
     contract_handler ch(*db, caller, contract, result, context, sigkeys, result, account_data);
     
     context.new_sandbox(space_name, envcode.c_str(), envcode.size()); //sandbox
-    context.writeVariable(space_name, "chainhelper", &ch);
+    context.writeVariable(space_name, "contract_helper", &ch);
     context.writeVariable(space_name, "contract_base_info", &cbi);
     context.writeVariable(space_name, "actorhelper", &ca);
     context.writeVariable(space_name, "zonehelper", &cz);
@@ -652,11 +652,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     int64_t used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
     //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 431000 );
+    BOOST_REQUIRE( used_mana == 421000 );
     
     asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
     //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(431000, QI_SYMBOL) );
+    BOOST_REQUIRE( reward_qi == asset(421000, QI_SYMBOL) );
 
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     
@@ -682,12 +682,12 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
         
         used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
         //idump( (used_mana) );
-        BOOST_REQUIRE( used_mana == 431000 );
+        BOOST_REQUIRE( used_mana == 421000 );
         
         reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
         //idump( (reward_qi) );
         if(i == 0)
-            BOOST_REQUIRE( reward_qi == asset(319000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
+            BOOST_REQUIRE( reward_qi == asset(329000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
         else if(i == 1)
             BOOST_REQUIRE( reward_qi == asset(150000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
         else //i == 2

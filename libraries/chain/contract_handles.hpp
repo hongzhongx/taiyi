@@ -64,24 +64,22 @@ namespace taiyi { namespace chain {
     };
 
     //=========================================================================
+    //NFA绑定合约被调用的角度来处理事务，隐含了发起这个调用相关的NFA对象
     struct contract_nfa_handler
     {
-        const account_object&               _caller;
+        const nfa_object&                   _caller;
         LuaContext&                         _context;
         database&                           _db;
 
-        contract_nfa_handler(const account_object& caller, LuaContext &context, database &db)
+        contract_nfa_handler(const nfa_object& caller, LuaContext &context, database &db)
             : _caller(caller), _context(context), _db(db)
         {}
         
-        void eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
-        void do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
-        string get_nfa_contract(int64_t nfa_id);
-
-        void enable_tick(int64_t nfa_id);
-        contract_nfa_base_info get_nfa(int64_t nfa_id);
+        void enable_tick();
+        void disable_tick();
     };
 
+    //合约本身被账号直接调用的角度来处理事务，隐含了合约调用账号
     struct contract_handler
     {
         database&                           db;
@@ -118,7 +116,7 @@ namespace taiyi { namespace chain {
         void read_context(lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
         void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
         int64_t get_account_balance(account_id_type account, asset_symbol_type symbol);
-        void transfer_from(account_id_type from, account_name_type to, double amount, string symbol_or_id, bool enable_logger=false);
+        void transfer_from(account_id_type from, account_name_type to, double amount, string symbol_name, bool enable_logger=false);
         void change_contract_authority(string authority);
         memo_data make_memo(string receiver_id_or_name, string key, string value, uint64_t ss, bool enable_logger=false);
         void invoke_contract_function(string contract_id_or_name, string function_name, string value_list_json);
@@ -129,6 +127,13 @@ namespace taiyi { namespace chain {
         
         static void filter_context(const lua_map &data_table, lua_map keys,vector<lua_types>&stacks, lua_map *result_table);
         static std::pair<bool, lua_types *> find_luaContext(lua_map* context, vector<lua_types> keys, int start=0, bool is_clean=false);
+        
+        //NFA
+        string get_nfa_contract(int64_t nfa_id);
+        contract_nfa_base_info get_nfa_info(int64_t nfa_id);
+
+        void eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        void do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
     };
 
 } } //taiyi::chain

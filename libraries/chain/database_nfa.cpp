@@ -77,11 +77,13 @@ namespace taiyi { namespace chain {
         
         contract_result result;
         contract_worker worker;
-        
         vector<lua_types> value_list;
-        long long vm_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        
+        //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+        long long old_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long vm_drops = old_drops;
         lua_table result_table = worker.do_contract_function_return_table(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, account_data, sigkeys, result, contract, vm_drops, reset_vm_memused, context, *this);
-        int64_t used_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
+        int64_t used_drops = old_drops - vm_drops;
         
         size_t new_state_size = fc::raw::pack_size(nfa);
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
@@ -156,7 +158,9 @@ namespace taiyi { namespace chain {
             LuaContext context;
             initialize_VM_baseENV(context);
             
-            long long vm_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+            //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+            long long old_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+            long long vm_drops = old_drops;
             bool beat_fail = false;
             try {
                 worker.do_nfa_contract_action(nfa, "heart_beat", value_list, cresult, vm_drops, true, context, *this);
@@ -166,7 +170,7 @@ namespace taiyi { namespace chain {
                 beat_fail = true;
                 wlog("NFA (${i}) process heart beat fail.", ("i", nfa.id));
             }
-            int64_t used_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE - vm_drops;
+            int64_t used_drops = old_drops - vm_drops;
 
             int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
             modify( nfa, [&]( nfa_object& obj ) {

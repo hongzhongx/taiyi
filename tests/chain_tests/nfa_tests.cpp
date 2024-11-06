@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     string nfa_code_lua = " hello_nfa = { consequence = true }  \n \
                             function init_data() return {} end  \n \
                             function do_hello_nfa(me, params)   \n \
-                                chainhelper:log('hello nfa')    \n \
+                                contract_helper:log('hello nfa')    \n \
                             end";
 
     signed_transaction tx;
@@ -684,10 +684,10 @@ BOOST_AUTO_TEST_CASE( heart_beat )
                             function init_data() return {} end  \n \
                                                                 \n \
                             function do_active(me, params)      \n \
-                                nfahelper:enable_tick(me.id)    \n \
+                                nfa_helper:enable_tick()         \n \
                             end                                 \n \
                             function do_heart_beat(me, params)  \n \
-                                chainhelper:log('beat')         \n \
+                                contract_helper:log('beat')         \n \
                             end";
 
     signed_transaction tx;
@@ -855,6 +855,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
     generate_block();
     
+    idump( (nfa.manabar.current_mana)(old_mana) );
     BOOST_REQUIRE( nfa.manabar.current_mana == old_mana - 542000 );
     BOOST_REQUIRE( nfa.next_tick_time == (db->head_block_time() + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL) );
 

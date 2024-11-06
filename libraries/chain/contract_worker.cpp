@@ -37,7 +37,6 @@ namespace taiyi { namespace chain {
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
             contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
-            contract_nfa_handler nh(caller, context, db);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -47,8 +46,7 @@ namespace taiyi { namespace chain {
             context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
             context.writeVariable("current_contract", name);
             context.writeVariable(name, "_G", "protected");
-            context.writeVariable(name, "chainhelper", &ch);
-            context.writeVariable(name, "nfahelper", &nh);
+            context.writeVariable(name, "contract_helper", &ch);
             context.writeVariable(name, "contract_base_info", &cbi);
             context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
             context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
@@ -129,7 +127,6 @@ namespace taiyi { namespace chain {
         const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
         contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
         contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
-        contract_nfa_handler nh(caller, context, db);
 
         const auto& name = contract.name;
         context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -139,8 +136,7 @@ namespace taiyi { namespace chain {
         context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
         context.writeVariable("current_contract", name);
         context.writeVariable(name, "_G", "protected");
-        context.writeVariable(name, "chainhelper", &ch);
-        context.writeVariable(name, "nfahelper", &nh);
+        context.writeVariable(name, "contract_helper", &ch);
         context.writeVariable(name, "contract_base_info", &cbi);
         context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
         context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
@@ -333,7 +329,7 @@ namespace taiyi { namespace chain {
             
             context.writeVariable("current_contract", name);
             context.writeVariable(name, "_G", "protected");
-            context.writeVariable(name, "chainhelper", (contract_handler*)0);
+            context.writeVariable(name, "contract_helper", (contract_handler*)0);
             context.writeVariable(name, "contract_base_info", &cbi);
             
             //load code as A function
@@ -431,7 +427,7 @@ namespace taiyi { namespace chain {
             
             contract_base_info cbi(db, context, contract_owner, contract.name, caller_account.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
             contract_handler ch(db, caller_account, contract, result, context, sigkeys, apply_result, account_data);
-            contract_nfa_handler nh(caller_account, context, db);
+            contract_nfa_handler cnh(caller_nfa, context, db);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -441,8 +437,8 @@ namespace taiyi { namespace chain {
             context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
             context.writeVariable("current_contract", name);
             context.writeVariable(name, "_G", "protected");
-            context.writeVariable(name, "chainhelper", &ch);
-            context.writeVariable(name, "nfahelper", &nh);
+            context.writeVariable(name, "contract_helper", &ch);
+            context.writeVariable(name, "nfa_helper", &cnh);
             context.writeVariable(name, "contract_base_info", &cbi);
             context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
             context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
