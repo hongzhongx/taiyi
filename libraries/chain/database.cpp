@@ -1150,16 +1150,20 @@ namespace taiyi { namespace chain {
         // below subtraction cannot underflow int64_t because inflation_rate_adjustment is <2^32
         int64_t current_inflation_rate = std::max( start_inflation_rate - inflation_rate_adjustment, inflation_rate_floor );
         
-        // 年化率转为块化率来计算每个块的新增
+        // 年化率转为块化率来计算每个块的新增阳寿
         share_type new_yang = ( props.current_supply.amount * current_inflation_rate ) / ( int64_t( TAIYI_100_PERCENT ) * int64_t( TAIYI_BLOCKS_PER_YEAR ) );
-        new_yang = std::max(new_yang, share_type(TAIYI_MIN_REWARD_FUND));
         
         share_type content_reward_yang = ( new_yang * props.content_reward_yang_percent ) / TAIYI_100_PERCENT;
+        content_reward_yang = std::max(content_reward_yang, share_type(TAIYI_MIN_REWARD_FUND));
+        
         share_type content_reward_qi_fund = ( new_yang * props.content_reward_qi_fund_percent ) / TAIYI_100_PERCENT;
+        content_reward_qi_fund = std::max(content_reward_qi_fund, share_type(TAIYI_MIN_REWARD_FUND));
+
         std::tie(content_reward_yang, content_reward_qi_fund) = pay_reward_funds( content_reward_yang, content_reward_qi_fund );
 
         auto siming_reward = new_yang - content_reward_yang - content_reward_qi_fund;
-        
+        siming_reward = std::max(siming_reward, share_type(TAIYI_MIN_REWARD_FUND));
+
         const auto& csiming = get_siming( props.current_siming );
         siming_reward *= TAIYI_MAX_SIMINGS;
         
@@ -1210,7 +1214,10 @@ namespace taiyi { namespace chain {
         {
             // reward is a per block reward and the percents are 16-bit. This should never overflow
             auto ryang = ( reward_yang * itr->percent_content_rewards ) / TAIYI_100_PERCENT;
+            ryang = std::max(ryang, share_type(TAIYI_MIN_REWARD_FUND));
+            
             auto rqiyang = ( reward_qi_fund * itr->percent_content_rewards ) / TAIYI_100_PERCENT;
+            rqiyang = std::max(rqiyang, share_type(TAIYI_MIN_REWARD_FUND));
             asset reward_qi = asset( rqiyang, YANG_SYMBOL ) * TAIYI_QI_SHARE_PRICE;;
             
             modify( *itr, [&]( reward_fund_object& rfo ) {

@@ -90,14 +90,19 @@
 #define TAIYI_MAX_WITHDRAW_ROUTES               10
 
 #define TAIYI_QI_SHARE_PRICE                    price(asset(1000, YANG_SYMBOL), asset(1000000, QI_SYMBOL))
+#define TAIYI_GOLD_QI_PRICE                     price(asset(5000000, QI_SYMBOL), asset(1000000, GOLD_SYMBOL))
+#define TAIYI_FOOD_QI_PRICE                     price(asset(3000000, QI_SYMBOL), asset(1000000, FOOD_SYMBOL))
+#define TAIYI_WOOD_QI_PRICE                     price(asset(2000000, QI_SYMBOL), asset(1000000, WOOD_SYMBOL))
+#define TAIYI_FABRIC_QI_PRICE                   price(asset(3000000, QI_SYMBOL), asset(1000000, FABRIC_SYMBOL))
+#define TAIYI_HERB_QI_PRICE                     price(asset(4000000, QI_SYMBOL), asset(1000000, HERB_SYMBOL))
 
 #define TAIYI_OWNER_AUTH_HISTORY_TRACKING_START_BLOCK_NUM 1
 
 #define TAIYI_MAX_ACCOUNT_SIMING_ADORES         30
 
-#define TAIYI_MIN_REWARD_FUND                   (1000)
-#define TAIYI_INFLATION_RATE_START_PERCENT      (1000) // 10%
-#define TAIYI_INFLATION_RATE_STOP_PERCENT       (100)  // 1%
+#define TAIYI_MIN_REWARD_FUND                   (1)     // 通胀后激励各基金的最小阳寿
+#define TAIYI_INFLATION_RATE_START_PERCENT      (1000)  // 10%
+#define TAIYI_INFLATION_RATE_STOP_PERCENT       (100)   // 1%
 #define TAIYI_INFLATION_NARROWING_PERIOD        (233600) // Narrow 0.01% every 233.6k blocks
 #define TAIYI_CONTENT_REWARD_YANG_PERCENT       (75*TAIYI_1_PERCENT) //75% of inflation
 #define TAIYI_CONTENT_REWARD_QI_FUND_PERCENT    (15*TAIYI_1_PERCENT) //15% of inflation
@@ -181,5 +186,5 @@
 
 #define TAIYI_NFA_INIT_FUNC_NAME                "init_data"
 
-#define TAIYI_USEMANA_STATE_BYTES_SCALE         1000
-#define TAIYI_USEMANA_EXECUTION_SCALE           1000
+#define TAIYI_USEMANA_STATE_BYTES_SCALE         1
+#define TAIYI_USEMANA_EXECUTION_SCALE           1

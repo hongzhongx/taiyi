@@ -328,6 +328,56 @@ BOOST_AUTO_TEST_CASE( var )
     
 } FC_LOG_AND_RETHROW() }
 //=============================================================================
+
+BOOST_AUTO_TEST_CASE( drops )
+{ try {
+    ACTORS( (alice)(bob)(charlie) )
+
+    BOOST_TEST_MESSAGE( "--- Test same memory drops" );
+        
+    const auto &baseENV = db->get<contract_bin_code_object, by_id>(0);
+
+    int64_t first_drops;
+    for(int r=0; r<1000; r++) {
+        string name = FORMAT_MESSAGE("abc${i}", ("i", r));
+
+        LuaContext context;
+        lua_enabledrops(context.mState, 1, 1);
+        lua_setdrops(context.mState, 1000);
+
+        //BOOST_TEST_MESSAGE( FORMAT_MESSAGE("----- start check name ${a}", ("a", name)) );
+
+        context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
+        
+        context.writeVariable(name, "A", "aabbccddeeff");
+        context.writeVariable(name, "B", "aabbccddeeff");
+        context.writeVariable(name, "C", "aabbccddeeff");
+        context.writeVariable(name, "D", "aabbccddeeff");
+        context.writeVariable(name, "E", "aabbccddeeff");
+        context.writeVariable(name, "F", "aabbccddeeff");
+        context.writeVariable(name, "G", "aabbccddeeff");
+
+        context.writeVariable(name, "H", 32983);
+        context.writeVariable(name, "I", 32983);
+        context.writeVariable(name, "J", 32983);
+        context.writeVariable(name, "K", 32983);
+        context.writeVariable(name, "L", 32983);
+        context.writeVariable(name, "M", 32983);
+        context.writeVariable(name, "N", 32983);
+        
+        auto vm_drops = lua_getdrops(context.mState);
+        if(r == 0)
+            first_drops = vm_drops;
+        
+        //BOOST_TEST_MESSAGE( FORMAT_MESSAGE("----- end check name ${a}", ("a", name)) );
+
+        //idump( (vm_drops) );
+        BOOST_REQUIRE_EQUAL(vm_drops, first_drops);
+    }
+    
+} FC_LOG_AND_RETHROW() }
+
+//=============================================================================
 namespace contract_test_case_code
 {
     template<typename Vector, std::size_t... I>
@@ -504,7 +554,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
     //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 876000 );
+    BOOST_REQUIRE( used_mana == 876 );
     
 } FC_LOG_AND_RETHROW() }
 
@@ -576,7 +626,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
     //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 476000 );
+    BOOST_REQUIRE( used_mana == 476 );
     
 } FC_LOG_AND_RETHROW() }
 
@@ -652,11 +702,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     int64_t used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
     //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 421000 );
+    BOOST_REQUIRE( used_mana == 421 );
     
     asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
     //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(421000, QI_SYMBOL) );
+    BOOST_REQUIRE( reward_qi == asset(421, QI_SYMBOL) );
 
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     
@@ -682,16 +732,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
         
         used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
         //idump( (used_mana) );
-        BOOST_REQUIRE( used_mana == 421000 );
+        BOOST_REQUIRE( used_mana == 421 );
         
         reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
         //idump( (reward_qi) );
-        if(i == 0)
-            BOOST_REQUIRE( reward_qi == asset(329000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
-        else if(i == 1)
-            BOOST_REQUIRE( reward_qi == asset(150000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
-        else //i == 2
-            BOOST_REQUIRE( reward_qi == asset(150000, QI_SYMBOL) ); //通胀后给到的奖励基金中的气只有这么多
+        BOOST_REQUIRE( reward_qi == asset(421, QI_SYMBOL) );
     }
     
 } FC_LOG_AND_RETHROW() }

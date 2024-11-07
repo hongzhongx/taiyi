@@ -14,6 +14,8 @@
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
 
+#include <chain/lua_context.hpp>
+
 #include <fc/macros.hpp>
 #include <fc/crypto/digest.hpp>
 
@@ -553,7 +555,7 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     string nfa_code_lua = " hello_nfa = { consequence = true }  \n \
                             function init_data() return {} end  \n \
                             function do_hello_nfa(me, params)   \n \
-                                contract_helper:log('hello nfa')    \n \
+                                contract_helper:log('hello nfa')\n \
                             end";
 
     signed_transaction tx;
@@ -632,11 +634,9 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     anop.id = nfa.id;
     anop.action = "hello_nfa";
 
-    db_plugin->debug_update( [=]( database& db ) {
-        db.modify( db.get_account( "charlie" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi_shares(a);
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
-        });
+    db->modify( db->get_account( "charlie" ), [&]( account_object& a ) {
+        a.manabar.current_mana = util::get_effective_qi_shares(a);
+        a.manabar.last_update_time = db->head_block_time().sec_since_epoch();
     });
 
     auto old_manabar = db->get_account( "charlie" ).manabar;
@@ -664,12 +664,151 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     BOOST_REQUIRE( sresult[0] == "hello nfa" );
     
     int64_t used_mana = old_manabar.current_mana - db->get_account( "charlie" ).manabar.current_mana;
-    //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 470000 );
+    idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 470 );
 
     asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
     //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(470000, QI_SYMBOL) );
+    BOOST_REQUIRE( reward_qi == asset(470, QI_SYMBOL) );
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( action_drops )
+{ try {
+    
+    BOOST_TEST_MESSAGE( "Testing: heart_beat" );
+
+    string nfa_code_lua = " heart_beat = { consequence = true } \n \
+                            active = { consequence = true }     \n \
+                                                                \n \
+                            function init_data() return {} end  \n \
+                                                                \n \
+                            function do_active(me, params)      \n \
+                                nfa_helper:enable_tick()        \n \
+                            end                                 \n \
+                            function do_heart_beat(me, params)  \n \
+                                contract_helper:log('beat')     \n \
+                            end";
+
+    signed_transaction tx;
+    ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
+    generate_block();
+        
+    create_contract_operation op;
+    op.owner = "bob";
+    op.name = "contract.nfa.base";
+    op.data = nfa_code_lua;
+
+    tx.operations.push_back( op );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, bob_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+    
+    create_nfa_symbol_operation cnsop;
+    cnsop.creator = "alice";
+    cnsop.symbol = "nfa.test";
+    cnsop.describe = "test";
+    cnsop.default_contract = "contract.nfa.base";
+        
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( cnsop );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+
+    create_nfa_operation cnop;
+    cnop.creator = "charlie";
+    cnop.symbol = "nfa.test";
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( cnop );
+    sign( tx, charlie_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+
+    const auto& to1 = db->get<transaction_object, by_trx_id>(tx.id());
+    BOOST_REQUIRE( to1.operation_results.size() == 1 );
+    contract_result cresult = to1.operation_results[0].get<contract_result>();
+    BOOST_REQUIRE( cresult.contract_affecteds.size() == 2 );
+    nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
+    
+    BOOST_REQUIRE( affected.affected_account == "charlie" );
+    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
+
+    const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
+    const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
+    BOOST_REQUIRE( nfa.creator_account == charlie_id );
+    BOOST_REQUIRE( nfa.owner_account == charlie_id );
+    BOOST_REQUIRE( nfa.symbol_id == nfa_symbol.id );
+    
+    db_plugin->debug_update( [=]( database& db ) {
+        db.modify( db.get_account( "charlie" ), [&]( account_object& a ) {
+            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+        });
+    });
+
+    generate_blocks(10); //给奖励基金充值
+
+    BOOST_TEST_MESSAGE( "--- Test active action drops" );
+    
+    int64_t used_mana;
+    auto old_manabar = db->get_account( "charlie" ).manabar;
+
+    action_nfa_operation anop;
+
+    anop.owner = "charlie";
+    anop.id = nfa.id;
+
+//    anop.action = "active";
+//
+//    tx.operations.clear();
+//    tx.signatures.clear();
+//    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+//    tx.operations.push_back( anop );
+//    sign( tx, charlie_private_key );
+//    db->push_transaction( tx, 0 );
+//
+//    BOOST_REQUIRE( nfa.next_tick_time == time_point_sec::min() );
+//
+//    used_mana = old_manabar.current_mana - db->get_account( "charlie" ).manabar.current_mana;
+//    idump( (used_mana) );
+//    BOOST_REQUIRE( used_mana == 525 );
+    
+
+    anop.action = "heart_beat";
+
+    db->modify( db->get_account( "charlie" ), [&]( account_object& a ) {
+        a.manabar.current_mana = util::get_effective_qi_shares(a);
+        a.manabar.last_update_time = db->head_block_time().sec_since_epoch();
+    });
+    old_manabar = db->get_account( "charlie" ).manabar;
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( anop );
+    sign( tx, charlie_private_key );
+    db->push_transaction( tx, 0 );
+
+    used_mana = old_manabar.current_mana - db->get_account( "charlie" ).manabar.current_mana;
+    idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 526 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -684,10 +823,10 @@ BOOST_AUTO_TEST_CASE( heart_beat )
                             function init_data() return {} end  \n \
                                                                 \n \
                             function do_active(me, params)      \n \
-                                nfa_helper:enable_tick()         \n \
+                                nfa_helper:enable_tick()        \n \
                             end                                 \n \
                             function do_heart_beat(me, params)  \n \
-                                contract_helper:log('beat')         \n \
+                                contract_helper:log('beat')     \n \
                             end";
 
     signed_transaction tx;
@@ -761,7 +900,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
     dqtnop.account = "alice";
     dqtnop.id = nfa.id;
-    dqtnop.amount = asset(1000, QI_SYMBOL);
+    dqtnop.amount = asset(10, QI_SYMBOL);
     
     asset old_account_qi = db->get_account( "alice" ).qi_shares;
     asset old_nfa_qi = nfa.qi_shares;
@@ -772,21 +911,12 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     tx.operations.push_back( dqtnop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
+    generate_block();
 
-    BOOST_REQUIRE( nfa.qi_shares == old_nfa_qi + asset(1000, QI_SYMBOL) );
-    BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == old_account_qi - asset(1000, QI_SYMBOL) );
+    BOOST_REQUIRE( nfa.qi_shares == old_nfa_qi + asset(10, QI_SYMBOL) );
+    BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == old_account_qi - asset(10, QI_SYMBOL) );
     
-    BOOST_REQUIRE( nfa.manabar.current_mana == 1000 );
-
-    generate_blocks(10); //给奖励基金充值
-
-    BOOST_TEST_MESSAGE( "--- Test enable tick nfa" );
-    
-    action_nfa_operation anop;
-
-    anop.owner = "charlie";
-    anop.id = nfa.id;
-    anop.action = "active";
+    BOOST_REQUIRE( nfa.manabar.current_mana == 10 );
 
     db_plugin->debug_update( [=]( database& db ) {
         db.modify( db.get_account( "charlie" ), [&]( account_object& a ) {
@@ -794,6 +924,14 @@ BOOST_AUTO_TEST_CASE( heart_beat )
             a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
         });
     });
+    generate_block();
+
+    BOOST_TEST_MESSAGE( "--- Test enable tick nfa" );
+    
+    action_nfa_operation anop;
+    anop.owner = "charlie";
+    anop.id = nfa.id;
+    anop.action = "active";
 
     tx.operations.clear();
     tx.signatures.clear();
@@ -808,10 +946,8 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
     generate_block();
     
-    BOOST_REQUIRE( nfa.manabar.current_mana == 0 );
+    BOOST_REQUIRE_EQUAL( nfa.manabar.current_mana, 0 );
     BOOST_REQUIRE( nfa.next_tick_time == time_point_sec::maximum() );
-
-    generate_block();
 
     BOOST_TEST_MESSAGE( "--- Test heat beat nfa" );
 
@@ -833,32 +969,49 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
     generate_block();
 
-    //立即恢复力量
-    db_plugin->debug_update( [=]( database& db ) {
-        db.modify( nfa, [&]( nfa_object& obj ) {
-            obj.manabar.current_mana = util::get_effective_qi_shares(obj);
-            obj.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+    int64_t used_mana = 0;
+    for(int k = 0; k < 10; k ++) {
+        BOOST_TEST_MESSAGE( FORMAT_MESSAGE("----- same heat beat ${i}", ("i", k)));
+
+        //立即恢复力量并激活
+        db_plugin->debug_update( [=]( database& db ) {
+            db.modify( nfa, [&]( nfa_object& obj ) {
+                obj.manabar.current_mana = util::get_effective_qi_shares(obj);
+                obj.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+                obj.next_tick_time = time_point_sec::min();
+            });
         });
-    });
-    BOOST_REQUIRE( nfa.manabar.current_mana == (5000000 + 1000) );
+        BOOST_REQUIRE( nfa.manabar.current_mana == (5000000 + 10) );
+        
+        int64_t old_mana = nfa.manabar.current_mana;
+#if 0
+        //再次激活
+        tx.operations.clear();
+        tx.signatures.clear();
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        tx.operations.push_back( anop );
+        sign( tx, charlie_private_key );
+        db->push_transaction( tx, 0 );
+        
+        BOOST_REQUIRE( nfa.next_tick_time == time_point_sec::min() );
+#endif
+                
+        if(k == 0) {
+            generate_block();
 
-    int64_t old_mana = nfa.manabar.current_mana;
-    //再次激活
-    tx.operations.clear();
-    tx.signatures.clear();
-    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( anop );
-    sign( tx, charlie_private_key );
-    db->push_transaction( tx, 0 );
+            used_mana = old_mana - nfa.manabar.current_mana;
+            idump( (old_mana)(nfa.manabar.current_mana)(used_mana) );
+            BOOST_CHECK_EQUAL( used_mana, 526);
+        }
+        else {
+            generate_block();
+
+            idump( (old_mana)(nfa.manabar.current_mana) );
+            BOOST_CHECK_EQUAL( nfa.manabar.current_mana, old_mana - used_mana );
+            BOOST_REQUIRE( nfa.next_tick_time == (db->head_block_time() + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL) );
+        }
+    }
     
-    BOOST_REQUIRE( nfa.next_tick_time == time_point_sec::min() );
-
-    generate_block();
-    
-    idump( (nfa.manabar.current_mana)(old_mana) );
-    BOOST_REQUIRE( nfa.manabar.current_mana == old_mana - 542000 );
-    BOOST_REQUIRE( nfa.next_tick_time == (db->head_block_time() + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL) );
-
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

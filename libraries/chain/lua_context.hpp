@@ -78,6 +78,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <protocol/lua_types.hpp>
 
+//debug memory
+struct Tracker { size_t m_usage; };
+void* Allocator(void* ud, void* ptr, size_t osize, size_t nsize);
+
 namespace taiyi { namespace chain {
 
 using protocol::lua_string;
@@ -114,7 +118,13 @@ public:
     explicit LuaContext(bool openDefaultLibs = true)
     {
         // luaL_newstate can return null if allocation failed
+#if 1
         mState = luaL_newstate();
+#else
+        // for debug memory allocate
+        Tracker *tk = new Tracker;
+        mState = lua_newstate(Allocator, tk);
+#endif
         if (mState == nullptr)
             FC_THROW("bad alloc");
 

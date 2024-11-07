@@ -351,6 +351,20 @@ void luaH_resize (lua_State *L, Table *t, unsigned int nasize,
   AuxsetnodeT asn;
   unsigned int oldasize = t->sizearray;
   int oldhsize = allocsizenode(t);
+    
+  /* added by hongzhong
+    目前不知为何上层LuaContext类在相同情况下writeVariable写入相同值会偶然触发这个情况，导致不同环境运行相同代码的确定性被破坏。
+    这种情况下后面代码会申请分配和释放相同内存，导致内存消耗的drops多一次扣除
+  */
+  int unstable_mem_drop_trigger = 0;
+  int old_enable_drops = L->enable_drops;
+  size_t old_memUsed = L->memUsed;
+  if(nhsize > 0 && nhsize == (unsigned int)oldhsize) {
+    //printf("%u, %i, %u \n", oldasize, nasize, nhsize);
+      unstable_mem_drop_trigger = 1;
+      L->enable_drops = 0;
+  }
+    
   Node *nold = t->node;  /* save old hash ... */
   if (nasize > oldasize)  /* array part must grow? */
     setarrayvector(L, t, nasize);
@@ -358,6 +372,7 @@ void luaH_resize (lua_State *L, Table *t, unsigned int nasize,
   asn.t = t; asn.nhsize = nhsize;
   if (luaD_rawrunprotected(L, auxsetnode, &asn) != LUA_OK) {  /* mem. error? */
     setarrayvector(L, t, oldasize);  /* array back to its original size */
+    L->enable_drops = old_enable_drops; /* added by hongzhong */
     luaD_throw(L, LUA_ERRMEM);  /* rethrow memory error */
   }
   if (nasize < oldasize) {  /* array part must shrink? */
@@ -381,6 +396,12 @@ void luaH_resize (lua_State *L, Table *t, unsigned int nasize,
   }
   if (oldhsize > 0)  /* not the dummy node? */
     luaM_freearray(L, nold, cast(size_t, oldhsize)); /* free old hash */
+    
+  /* added by hongzhong */
+  if(unstable_mem_drop_trigger) {
+    L->enable_drops = old_enable_drops;
+    L->memUsed = old_memUsed;
+  }
 }
 
 

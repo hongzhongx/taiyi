@@ -15,6 +15,30 @@ extern "C" {
 #include "lstate.h"
 }
 
+//debug allocator
+void* Allocator(void* ud, void* ptr, size_t osize, size_t nsize)
+{
+    Tracker* pTracker = (Tracker*)ud;
+    void* pRet = NULL;
+    if( nsize == 0 )
+    {
+        pTracker->m_usage -= osize;
+        printf("Free %zu bytes; ", osize);
+        free(ptr);
+    }
+    else
+    {
+        pTracker->m_usage -= osize;
+        printf("first Free %zu bytes; ", osize);
+        pTracker->m_usage += nsize;
+        printf("then alloc %zu bytes; ", nsize);
+        pRet = realloc(ptr, nsize);
+    }
+
+    printf("current usage: %zu bytes\n", pTracker->m_usage);
+    return pRet;
+}
+
 namespace taiyi { namespace chain {
 
     static int get_account_contract_data(lua_State *L)
