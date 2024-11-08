@@ -70,7 +70,7 @@
 - [ ] [【司命】](https://github.com/users/hongzhongx/projects/1)集结最多二十一个司命启动因果天道网络————太乙网络，建立基础的因果历史信息序列
     * 司命天道共识，建立一息约为3秒钟的因果链式信息结构   
     * 实现[白玉京APIs](libraries/plugins/baiyujing_api/)，统一对天道网络的访问请求
-    * 实现可执行程序“[太阴（taiyin）](programs/taiyin/)”来运行天道节点
+    * 实现可执行程序“[太阴（taiyin）](programs/taiyin/)”来运行太乙节点
     * 实现可执行程序“[玄牝（xuanpin）](programs/xuanpin/)”来和白玉京交互
 
 - [ ] [【阳寿】](https://github.com/users/hongzhongx/projects/2)同质化游戏资产（FA，一种同质化资产）的原生实现
@@ -99,9 +99,11 @@
 
 ## 阶段二
 
-本阶段用于启动一个基于太乙网络的社交系统，用于天道的普遍开发、应用和讨论。
+本阶段将启动一个基于太乙网络的社交系统（名为`坐忘道`），用于天道的普遍开发、应用和讨论。
 
-包含如下两个计划节点：
+NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方式发行配方和图谱（届时将不再支持阶段一的直接创建方式）。而铁匠铺的发行判定，则由所有账号用真气来投票决定，这些操作均在坐忘道平台上完成。
+
+包含如下三个计划节点：
 
 - [ ] 【牦之门】社交型文本发布系统的原生实现
     * 无准入的文本数据发布、点赞、评论等操作，支撑游戏逻辑和内容的社交化创建
@@ -110,6 +112,9 @@
 
 - [ ] 【坐忘】实现访问白玉京的一个前端，提供Web界面的文本社区实现
     * 项目名为[坐忘道（ZuowangDAO）](https://)
+
+- [ ] 【舞狮】实现NFA的去中心化`铁匠铺`发行判定，铁匠铺在坐忘道平台上组织
+    * 账号对新NFA（物品/角色/区域/道具等等）配方或者图谱的点赞和踩，凭净胜真气来判定
 
 ## 阶段三
 
@@ -153,6 +158,85 @@
     * 普通玩家在不接触白玉京的情况下，开始进入大傩世界
         <div align='center'><a href='./doc/imgs/mud.jpg'><img src='./doc/imgs/mud.jpg' width=50%></a></div>
         <div align='center'><i>普通玩家操作的Mud界面</i></div>
+
+# 安装说明
+
+接入太乙网络还算简单，你要么直接选择 Docker 映象，要么手动编译 Docker 环境，或者直接从源代码编译。所有步骤都有适合不同操作系统的文档说明，其中最简单的方式建议使用 Ubuntu 18.04
+
+## 如何快速开始
+
+如果想快速接入太乙网络，这里提供了方便的预编译好的Docker映象。更多说明请参阅[快速启动指南](doc/quickstart.md)。
+
+## 编译项目
+
+**强烈**建议使用这里提供的预编译 Docker映象或者使用Docker来编译太乙系统，这些过程都在[快速启动指南](doc/quickstart.md)中有说明。
+
+但是假如你需要从源代码编译系统，这里也有一个[编译说明](doc/building.md)来讲解在 Linux (Ubuntu LTS) 和 MacOS 操作系统下的方法。
+
+## 通过Docker启动点对点节点（P2P Node）
+
+启动一个P2P节点（目前需要2GB内存）：
+
+    docker run \
+        -d -p 2001:2001 -p 8090:8090 --name taiyin-default \
+        zuowangdao/taiyi
+
+    docker logs -f taiyin-default  # follow along
+
+## 通过Docker启动全节点（Full Node）
+
+启动一个提供*所有*可查询数据的节点（例如用来支撑一个内容网站前端，目前需要14GB的内存，这个内存量在不断增长中）：
+
+    docker run \
+        --env USE_WAY_TOO_MUCH_RAM=1 --env USE_FULL_WEB_NODE=1 \
+        -d -p 2001:2001 -p 8090:8090 --name taiyin-full \
+        zuowangdao/taiyi
+
+    docker logs -f taiyin-full
+
+## 使用玄牝之门（xuanpin）
+
+为了和节点服务程序`太阴（taiyin）`交互，这里提供了一个基础的客户端程序，叫做`玄牝（xuanpin）`。这个客户端程序自带文档，可以通过help命令查看。玄牝所连接到的节点，必须启用了`account_by_key_api`和`baiyujing_api`两个插件，而且是通过`webserver-ws-endpoint`参数配置了能接受WebSocket连接的。
+
+## 测试
+
+要构建测试项目，请参考文档[doc/devs/testing.md](doc/devs/testing.md)，关于测试用例的一些说明可以参考[tests/README.md](./tests/README.md)。
+
+# 配置太乙节点
+
+## 配置文件说明
+
+首次启动程序`taiyin`可以自动生成默认的数据目录和配置文件，这些文件默认存放在目录`siming_node_data_dir`中。由于默认配置下没有指明任何种子节点，太阴程序什么都不会做，因此你只能强行关闭（杀掉）`taiyin`进程。如果你要修改配置，这里有两个用于Docker映象的配置示例可供参考（ [共识节点](contrib/config-for-docker.ini)和[全节点](contrib/fullnode.config.ini) ）。默认的配置包含了所有的选项，一些选项会根据Docker的配置来改变（一些映象中使用的选项可以由命令行来设置）。
+
+## 种子节点
+
+这里有个列表列出了一些种子节点，你可以用这些节点来开始加入网络。
+[doc/seednodes.txt](doc/seednodes.txt).
+
+这个文件已经被打包到了Docker的映像中。在启动`doker run`时，容器环境变量`TAIYI_SEED_NODES`可以以空白分割的种子节点（包括端口号）信息来覆盖设置这个。
+
+## 环境变量
+
+这里有一些环境变量设置，使得以不同方式运行太乙节点：
+
+* `USE_WAY_TOO_MUCH_RAM` - 如果设置为true，太乙系统将启动一个‘全节点’
+* `USE_FULL_WEB_NODE` - 如果设置为true，默认配置文件将打开完全API访问选项和启动一些相关的插件。
+* `USE_NGINX_FRONTEND` - 如果设置为true，将在太乙节点外层启用一个NGINX反向代理，这个代理会先处理接收到的WebSocket太乙请求。这也会启动一个自定义的健康检查，在路径'/health'下将列出你的节点离当前网络最新的块还差多长时间。如果离同步最新的块差距在60秒钟以内，这个健康检查会返回'200'代码。
+* `USE_MULTICORE_READONLY` - 如果设置为true，太乙系统将会启动多人读取模式，这在多核系统上能提供更好性能。所有的读取请求将被多个只读节点处理，而所有写请求被自动转发到一个单一的‘写’节点。NGINX对只读节点请求进行负载均衡处理，每个CPU核平均处理4个请求。目前这个设计还处在实验阶段，在某些API调用的情况下还有问题，这些问题有待未来的开发来解决。
+* `HOME` - 设置你要太乙系统存储数据文件的路径（包括块数据、状态数据和配置文件等等）。默认情况下，这个路径是`/var/lib/taiyi`，这个路径在docker容器中也要存在。如果需要使用另外的载入位置（比如内存磁盘，或者另外一个磁盘驱动器），你可以设置这个变量来指向你的docker容器上的映射卷。
+
+## 系统需求说明
+
+对于一个全功能的Web用太乙节点，目前需要至少110GB的磁盘空间，而区块数据本身只占27GB多。强烈建议在一个快速磁盘系统上运行太乙系统，比如SSD硬盘或者干脆将状态文件放进内存磁盘，在命令行上可以使用`--state-storage-dir=/path`选项来设置这些位置。对一个全功能Web服务型节点，其状态数据至少有16GB大，一个种子节点（p2p模式）一般消耗低至4G的内存和24GB的状态数据文件空间，基本上当前的单核CPU都能满足性能要求。太乙系统一直在持续增长中，以上数字是截止到2024年11月的实测，然而你可能会发现运行全节点一般都需要更多的磁盘空间。未来我们会持续不断地优化太乙系统使用的磁盘空间。
+
+在Linux系统上，初始同步或者重演（replay）太乙节点可以使用如下的虚拟内存（Virtual Memory）设置。当然，通常情况下是不需要这样做的。
+
+```
+echo    75 | sudo tee /proc/sys/vm/dirty_background_ratio
+echo  1000 | sudo tee /proc/sys/vm/dirty_expire_centisecs
+echo    80 | sudo tee /proc/sys/vm/dirty_ratio
+echo 30000 | sudo tee /proc/sys/vm/dirty_writeback_centisecs
+```
 
 # 责任和权益
 
