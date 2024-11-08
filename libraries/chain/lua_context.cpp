@@ -235,6 +235,7 @@ namespace taiyi { namespace chain {
         registerFunction("eval_nfa_action", &contract_handler::eval_nfa_action);
         registerFunction("do_nfa_action", &contract_handler::do_nfa_action);
         registerFunction("get_nfa_info", &contract_handler::get_nfa_info);
+        registerFunction("get_nfa_resources", &contract_handler::get_nfa_resources);
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
@@ -254,9 +255,19 @@ namespace taiyi { namespace chain {
         registerMember("owner_account", &contract_nfa_base_info::owner_account);
         registerMember("data", &contract_nfa_base_info::data);
 
+        //nfa resources
+        registerMember("gold", &contract_asset_resources::gold);
+        registerMember("food", &contract_asset_resources::food);
+        registerMember("wood", &contract_asset_resources::wood);
+        registerMember("fabric", &contract_asset_resources::fabric);
+        registerMember("herb", &contract_asset_resources::herb);
+
         //nfa handler
         registerFunction("enable_tick", &contract_nfa_handler::enable_tick);
         registerFunction("disable_tick", &contract_nfa_handler::disable_tick);
+        registerFunction("get_info", &contract_nfa_handler::get_info);
+        registerFunction("get_resources", &contract_nfa_handler::get_resources);
+        registerFunction("convert_qi_to_resource", &contract_nfa_handler::convert_qi_to_resource);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

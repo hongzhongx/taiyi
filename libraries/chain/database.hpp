@@ -302,6 +302,10 @@ namespace taiyi { namespace chain {
         asset get_balance( const account_object& a, asset_symbol_type symbol )const;
         asset get_balance( const account_name_type& aname, asset_symbol_type symbol )const;
 
+        asset get_nfa_balance( const nfa_object& nfa, asset_symbol_type symbol )const;
+
+        void adjust_nfa_balance( const nfa_object& nfa, const asset& delta );
+
         /** this updates the adores for simings as a result of account adoring proxy changing */
         void adjust_proxied_siming_adores( const account_object& a, const std::array< share_type, TAIYI_MAX_PROXY_RECURSION_DEPTH+1 >& delta, int depth = 0 );
 
@@ -424,6 +428,9 @@ namespace taiyi { namespace chain {
         void adjust_asset_balance(const account_name_type& name, const asset& delta, bool check_account, balance_operator_type balance_operator);
         void modify_balance(const account_object& a, const asset& delta, bool check_balance);
         void modify_reward_balance(const account_object& a, const asset& value_delta, const asset& share_delta, bool check_balance);
+
+        template< typename nfa_balance_object_type, class balance_operator_type >
+        void adjust_nfa_balance(const nfa_id_type& nfa_id, const asset& delta, balance_operator_type balance_operator);
 
         operation_notification create_operation_notification( const operation& op )const
         {

@@ -52,5 +52,70 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
+    //=============================================================================
+    contract_nfa_base_info contract_nfa_handler::get_info()
+    {
+        try
+        {
+            return contract_nfa_base_info(_caller, _db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    contract_asset_resources contract_nfa_handler::get_resources()
+    {
+        try
+        {
+            return contract_asset_resources(_caller, _db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    void contract_nfa_handler::convert_qi_to_resource(int64_t amount, string resource_symbol_name)
+    {
+        try
+        {
+            asset qi(amount, QI_SYMBOL);
+            FC_ASSERT(_db.get_nfa_balance(_caller, QI_SYMBOL) >= qi, "NFA not have enough qi to convert.");
+            
+            asset_symbol_type symbol = s_get_symbol_type_from_string(resource_symbol_name);
+            price p;
+            switch (symbol.asset_num) {
+                case TAIYI_ASSET_NUM_GOLD:
+                    p = TAIYI_GOLD_QI_PRICE;
+                    break;
+                case TAIYI_ASSET_NUM_FOOD:
+                    p = TAIYI_FOOD_QI_PRICE;
+                    break;
+                case TAIYI_ASSET_NUM_WOOD:
+                    p = TAIYI_WOOD_QI_PRICE;
+                    break;
+                case TAIYI_ASSET_NUM_FABRIC:
+                    p = TAIYI_FABRIC_QI_PRICE;
+                    break;
+                case TAIYI_ASSET_NUM_HERB:
+                    p = TAIYI_HERB_QI_PRICE;
+                    break;
+                default:
+                    FC_ASSERT(false, "NFA can not convert qi to asset (${a}) which is not resource.", ("a", resource_symbol_name));
+                    break;
+            }
+            asset new_resource = qi * p;
+            
+            _db.adjust_nfa_balance(_caller, -qi);
+            _db.adjust_nfa_balance(_caller, new_resource);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
 
 } } // namespace taiyi::chain

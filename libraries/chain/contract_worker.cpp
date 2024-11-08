@@ -446,7 +446,7 @@ namespace taiyi { namespace chain {
             context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
             context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
             context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
-            
+
             context.get_function(name, function_name);
             //push function actual parameters
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)

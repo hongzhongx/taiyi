@@ -10,6 +10,7 @@
 #include <chain/account_object.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
+#include <chain/asset_objects/nfa_balance_object.hpp>
 
 #include <chain/lua_context.hpp>
 #include <chain/contract_worker.hpp>
@@ -186,6 +187,109 @@ namespace taiyi { namespace chain {
             //reward contract owner
             const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
             reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+        }
+    }
+    //=========================================================================
+    asset database::get_nfa_balance( const nfa_object& nfa, asset_symbol_type symbol ) const
+    {
+        if(symbol.asset_num == TAIYI_ASSET_NUM_QI) {
+            return nfa.qi_shares;
+        }
+        else {
+            auto key = boost::make_tuple( nfa.id, symbol );
+            const nfa_regular_balance_object* rbo = find< nfa_regular_balance_object, by_nfa_liquid_symbol >( key );
+            if( rbo == nullptr )
+            {
+                return asset(0, symbol);
+            }
+            else
+            {
+                return rbo->liquid;
+            }
+        }
+    }
+    //=============================================================================
+    template< typename nfa_balance_object_type, class balance_operator_type >
+    void database::adjust_nfa_balance( const nfa_id_type& nfa_id, const asset& delta, balance_operator_type balance_operator )
+    {
+        FC_ASSERT(!delta.symbol.is_qi(), "Qi is not go there.");
+        
+        asset_symbol_type liquid_symbol = delta.symbol;
+        const nfa_balance_object_type* bo = find< nfa_balance_object_type, by_nfa_liquid_symbol >( boost::make_tuple( nfa_id, liquid_symbol ) );
+
+        if( bo == nullptr )
+        {
+            // No balance object related to the FA means '0' balance. Check delta to avoid creation of negative balance.
+            FC_ASSERT( delta.amount.value >= 0, "Insufficient FA ${a} funds", ("a", delta.symbol) );
+            // No need to create object with '0' balance (see comment above).
+            if( delta.amount.value == 0 )
+                return;
+
+            create< nfa_balance_object_type >( [&]( nfa_balance_object_type& nfa_balance ) {
+                nfa_balance.clear_balance( liquid_symbol );
+                nfa_balance.nfa = nfa_id;
+                balance_operator.add_to_balance( nfa_balance );
+            } );
+        }
+        else
+        {
+            bool is_all_zero = false;
+            int64_t result = balance_operator.get_combined_balance( bo, &is_all_zero );
+            // Check result to avoid negative balance storing.
+            FC_ASSERT( result >= 0, "Insufficient Assets ${as} funds", ( "as", delta.symbol ) );
+
+            // Exit if whole balance becomes zero.
+            if( is_all_zero )
+            {
+                // Zero balance is the same as non object balance at all.
+                // Remove balance object if liquid balances is zero.
+                remove( *bo );
+            }
+            else
+            {
+                modify( *bo, [&]( nfa_balance_object_type& nfa_balance ) {
+                    balance_operator.add_to_balance( nfa_balance );
+                } );
+            }
+        }
+    }
+    //=========================================================================
+    struct nfa_regular_balance_operator
+    {
+        nfa_regular_balance_operator( const asset& delta ) : delta(delta) {}
+
+        void add_to_balance( nfa_regular_balance_object& balance )
+        {
+            balance.liquid += delta;
+        }
+        int64_t get_combined_balance( const nfa_regular_balance_object* bo, bool* is_all_zero )
+        {
+            asset result = bo->liquid + delta;
+            *is_all_zero = result.amount.value == 0;
+            return result.amount.value;
+        }
+
+        asset delta;
+    };
+
+    void database::adjust_nfa_balance( const nfa_object& nfa, const asset& delta )
+    {
+        if ( delta.amount < 0 )
+        {
+            asset available = get_nfa_balance( nfa, delta.symbol );
+            FC_ASSERT( available >= -delta,
+                      "NFA ${id} does not have sufficient assets for balance adjustment. Required: ${r}, Available: ${a}",
+                      ("id", nfa.id)("r", delta)("a", available) );
+        }
+        
+        if( delta.symbol.asset_num == TAIYI_ASSET_NUM_QI) {
+            modify(nfa, [&](nfa_object& obj) {
+                obj.qi_shares += delta;
+            });
+        }
+        else {
+            nfa_regular_balance_operator balance_operator( delta );
+            adjust_nfa_balance< nfa_regular_balance_object >( nfa.id, delta, balance_operator );
         }
     }
 

@@ -724,13 +724,12 @@ BOOST_FIXTURE_TEST_CASE( hardfork_test, database_fixture )
             init_account_pub_key = init_account_priv_key.get_public_key();
             
             appbase::app().initialize<
-            taiyi::plugins::account_history::account_history_plugin,
-            taiyi::plugins::debug_node::debug_node_plugin
+                taiyi::plugins::account_history::account_history_plugin,
+                taiyi::plugins::debug_node::debug_node_plugin
             >( argc, argv );
             
             db = &appbase::app().get_plugin< taiyi::plugins::chain::chain_plugin >().db();
             BOOST_REQUIRE( db );
-            
             
             open_database();
             

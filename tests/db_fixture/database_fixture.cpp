@@ -347,13 +347,11 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            db_plugin->debug_update( [=]( database& db)
-                                    {
+            db_plugin->debug_update( [=]( database& db) {
                 if( amount.symbol.space() == asset_symbol_type::nai_space )
                 {
                     db.adjust_balance(account_name, amount);
                     db.adjust_supply(amount);
-                    // Note that SGT have no equivalent of TAIYI, hence no virtual supply, hence no need to update it.
                     return;
                 }
                 

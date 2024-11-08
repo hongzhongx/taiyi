@@ -14,7 +14,45 @@
 #include <chain/contract_handles.hpp>
 
 namespace taiyi { namespace chain {
-
+    
+    asset_symbol_type s_get_symbol_type_from_string(const string name)
+    {
+        if(name.size() == (TAIYI_ASSET_SYMBOL_NAI_STRING_LENGTH - 1) && name[0] == '@' && name[1] == '@') {
+            //NAI string
+            return asset_symbol_type::from_nai_string(name.c_str(), 3); //自定义创建的资产仅支持3位精度
+        }
+        else {
+            //legacy symbol
+            if(name == "YANG")
+                return YANG_SYMBOL;
+            else if(name == "QI")
+                return QI_SYMBOL;
+            else if(name == "GOLD")
+                return GOLD_SYMBOL;
+            else if(name == "FOOD")
+                return FOOD_SYMBOL;
+            else if(name == "WOOD")
+                return WOOD_SYMBOL;
+            else if(name == "FABR")
+                return FABRIC_SYMBOL;
+            else if(name == "HERB")
+                return HERB_SYMBOL;
+            else {
+                FC_ASSERT(false, "invalid asset symbol name string '${n}'", ("n", name));
+                return asset_symbol_type();
+            }
+        }
+    }
+    //=============================================================================
+    contract_asset_resources::contract_asset_resources(const nfa_object & nfa, database& db)
+    {
+        gold = db.get_nfa_balance(nfa, GOLD_SYMBOL).amount.value;
+        food = db.get_nfa_balance(nfa, FOOD_SYMBOL).amount.value;
+        wood = db.get_nfa_balance(nfa, WOOD_SYMBOL).amount.value;
+        fabric = db.get_nfa_balance(nfa, FABRIC_SYMBOL).amount.value;
+        herb = db.get_nfa_balance(nfa, HERB_SYMBOL).amount.value;
+    }
+    //=============================================================================
     bool contract_handler::is_owner()
     {
         return caller.id == contract.owner;
@@ -304,35 +342,6 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    asset_symbol_type s_get_symbol_type_from_string(const string name)
-    {
-        if(name.size() == (TAIYI_ASSET_SYMBOL_NAI_STRING_LENGTH - 1) && name[0] == '@' && name[1] == '@') {
-            //NAI string
-            return asset_symbol_type::from_nai_string(name.c_str(), 3); //自定义创建的资产仅支持3位精度
-        }
-        else {
-            //legacy symbol
-            if(name == "YANG")
-                return YANG_SYMBOL;
-            else if(name == "QI")
-                return QI_SYMBOL;
-            else if(name == "GOLD")
-                return GOLD_SYMBOL;
-            else if(name == "FOOD")
-                return FOOD_SYMBOL;
-            else if(name == "WOOD")
-                return WOOD_SYMBOL;
-            else if(name == "FABR")
-                return FABRIC_SYMBOL;
-            else if(name == "HERB")
-                return HERB_SYMBOL;
-            else {
-                FC_ASSERT(false, "invalid asset symbol name string '${n}'", ("n", name));
-                return asset_symbol_type();
-            }
-        }
-    }
-
     void contract_handler::transfer_from(account_id_type from, account_name_type to, double amount, string symbol_name, bool enable_logger)
     {
         try
@@ -893,6 +902,19 @@ namespace taiyi { namespace chain {
                     result->erase(key);
                 stacks.pop_back();
             }
+        }
+    }
+    //=============================================================================
+    contract_asset_resources contract_handler::get_nfa_resources(int64_t id)
+    {
+        try
+        {
+            const auto& nfa = db.get<nfa_object, by_id>(id);
+            return contract_asset_resources(nfa, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
         }
     }
 

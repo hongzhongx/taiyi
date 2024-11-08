@@ -40,6 +40,17 @@ namespace taiyi { namespace chain {
         const contract_object& get_contract(string name);
     };
     
+    struct contract_asset_resources
+    {
+        int64_t               gold;
+        int64_t               food;
+        int64_t               wood;
+        int64_t               fabric;
+        int64_t               herb;
+
+        contract_asset_resources(const nfa_object& nfa, database& db);
+    };
+
     struct contract_nfa_base_info
     {
         int64_t id;
@@ -74,9 +85,14 @@ namespace taiyi { namespace chain {
         contract_nfa_handler(const nfa_object& caller, LuaContext &context, database &db)
             : _caller(caller), _context(context), _db(db)
         {}
+
+        contract_nfa_base_info get_info();
+        contract_asset_resources get_resources();
         
+
         void enable_tick();
         void disable_tick();
+        void convert_qi_to_resource(int64_t amount, string resource_symbol_name);
     };
 
     //合约本身被账号直接调用的角度来处理事务，隐含了合约调用账号
@@ -131,9 +147,12 @@ namespace taiyi { namespace chain {
         //NFA
         string get_nfa_contract(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
+        contract_asset_resources get_nfa_resources(int64_t id);
 
         void eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
     };
+    
+    asset_symbol_type s_get_symbol_type_from_string(const string name);
 
 } } //taiyi::chain

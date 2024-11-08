@@ -13,7 +13,8 @@ namespace taiyi { namespace chain {
     {
         TAIYI_ADD_CORE_INDEX(db, account_regular_balance_index);
         TAIYI_ADD_CORE_INDEX(db, account_rewards_balance_index);
-        
+        TAIYI_ADD_CORE_INDEX(db, nfa_regular_balance_index);
+
         TAIYI_ADD_CORE_INDEX(db, nfa_symbol_index);
         TAIYI_ADD_CORE_INDEX(db, nfa_index);
     }
