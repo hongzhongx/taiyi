@@ -394,16 +394,16 @@ BOOST_AUTO_TEST_CASE( undo_generate_blocks )
         {
             account_name_type delegator;
             account_name_type delegatee;
-            asset             qi_shares;
+            asset             qi;
 
             _data( account_name_type dr, account_name_type de, asset q )
-            : delegator( dr ), delegatee( de ), qi_shares( q ){}
+            : delegator( dr ), delegatee( de ), qi( q ){}
             
-            void fill( delegate_qi_shares_operation& qqo )
+            void fill( delegate_qi_operation& qqo )
             {
                 qqo.delegator = delegator;
                 qqo.delegatee = delegatee;
-                qqo.qi_shares = qi_shares;
+                qqo.qi = qi;
             }
         };
         _data data[4]=
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE( undo_generate_blocks )
         
         generate_blocks( 1 );
         
-        delegate_qi_shares_operation op;
+        delegate_qi_operation op;
         
         undo_db udb( *db );
         undo_scenario< qi_delegation_object > co( *db );

@@ -80,8 +80,8 @@ namespace taiyi { namespace protocol {
      * qi shares. A user may change the number of shares they wish to
      * cash out at any time between 0 and their total qi stake.
      *
-     * After applying this operation, qi_shares will be withdrawn
-     * at a rate of qi_shares/104 per week for two years starting
+     * After applying this operation, qi will be withdrawn
+     * at a rate of qi/104 per week for two years starting
      * one week after this operation is included in the blockchain.
      *
      * This operation is not valid if the user has no qi shares.
@@ -89,7 +89,7 @@ namespace taiyi { namespace protocol {
     struct withdraw_qi_operation : public base_operation
     {
         account_name_type account;
-        asset             qi_shares;
+        asset             qi;
 
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(account); }
@@ -396,17 +396,17 @@ namespace taiyi { namespace protocol {
     /**
     * Delegate qi shares from one account to the other. The qi shares are still owned
     * by the original account, but content voting rights and bandwidth allocation are transferred
-    * to the receiving account. This sets the delegation to `qi_shares`, increasing it or
+    * to the receiving account. This sets the delegation to `qi`, increasing it or
     * decreasing it as needed. (i.e. a delegation of 0 removes the delegation)
     *
     * When a delegation is removed the shares are placed in limbo for a week to prevent a satoshi
     * of QI from voting on the same content twice.
     */
-    struct delegate_qi_shares_operation : public base_operation
+    struct delegate_qi_operation : public base_operation
     {
         account_name_type delegator;        ///< The account delegating qi shares
         account_name_type delegatee;        ///< The account receiving qi shares
-        asset             qi_shares;   ///< The amount of qi shares delegated
+        asset             qi;   ///< The amount of qi shares delegated
 
         void get_required_active_authorities( flat_set< account_name_type >& a ) const { a.insert( delegator ); }
         void validate() const;
@@ -518,7 +518,7 @@ FC_REFLECT( taiyi::protocol::account_create_operation, (fee)(creator)(new_accoun
 FC_REFLECT( taiyi::protocol::account_update_operation, (account)(owner)(active)(posting)(memo_key)(json_metadata) )
 FC_REFLECT( taiyi::protocol::transfer_operation, (from)(to)(amount)(memo) )
 FC_REFLECT( taiyi::protocol::transfer_to_qi_operation, (from)(to)(amount) )
-FC_REFLECT( taiyi::protocol::withdraw_qi_operation, (account)(qi_shares) )
+FC_REFLECT( taiyi::protocol::withdraw_qi_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::set_withdraw_qi_route_operation, (from_account)(to_account)(percent)(auto_vest) )
 FC_REFLECT( taiyi::protocol::siming_update_operation, (owner)(url)(block_signing_key)(props)(fee) )
 FC_REFLECT( taiyi::protocol::siming_set_properties_operation, (owner)(props)(extensions) )
@@ -531,7 +531,7 @@ FC_REFLECT( taiyi::protocol::recover_account_operation, (account_to_recover)(new
 FC_REFLECT( taiyi::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
 FC_REFLECT( taiyi::protocol::decline_adoring_rights_operation, (account)(decline) );
 FC_REFLECT( taiyi::protocol::claim_reward_balance_operation, (account)(reward_yang)(reward_qi) )
-FC_REFLECT( taiyi::protocol::delegate_qi_shares_operation, (delegator)(delegatee)(qi_shares) );
+FC_REFLECT( taiyi::protocol::delegate_qi_operation, (delegator)(delegatee)(qi) );
 
 FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(contract_authority)(extensions) )
 FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )

@@ -385,8 +385,8 @@ BOOST_AUTO_TEST_CASE( deposit_qi_to_nfa_apply )
     dqtnop.id = nfa.id;
     dqtnop.amount = asset(1000, QI_SYMBOL);
     
-    asset old_account_qi = db->get_account( "alice" ).qi_shares;
-    asset old_nfa_qi = nfa.qi_shares;
+    asset old_account_qi = db->get_account( "alice" ).qi;
+    asset old_nfa_qi = nfa.qi;
     
     tx.operations.clear();
     tx.signatures.clear();
@@ -395,8 +395,8 @@ BOOST_AUTO_TEST_CASE( deposit_qi_to_nfa_apply )
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
 
-    BOOST_REQUIRE( nfa.qi_shares == old_nfa_qi + asset(1000, QI_SYMBOL) );
-    BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == old_account_qi - asset(1000, QI_SYMBOL) );
+    BOOST_REQUIRE( nfa.qi == old_nfa_qi + asset(1000, QI_SYMBOL) );
+    BOOST_REQUIRE( db->get_account( "alice" ).qi == old_account_qi - asset(1000, QI_SYMBOL) );
     
     BOOST_REQUIRE( nfa.manabar.current_mana == 1000 );
 
@@ -481,8 +481,8 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_from_nfa_apply )
     dqtnop.id = nfa.id;
     dqtnop.amount = asset(1000, QI_SYMBOL);
     
-    asset old_account_qi = db->get_account( "alice" ).qi_shares;
-    asset old_nfa_qi = nfa.qi_shares;
+    asset old_account_qi = db->get_account( "alice" ).qi;
+    asset old_nfa_qi = nfa.qi;
     
     tx.operations.clear();
     tx.signatures.clear();
@@ -491,8 +491,8 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_from_nfa_apply )
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
 
-    BOOST_REQUIRE( nfa.qi_shares == old_nfa_qi + asset(1000, QI_SYMBOL) );
-    BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == old_account_qi - asset(1000, QI_SYMBOL) );
+    BOOST_REQUIRE( nfa.qi == old_nfa_qi + asset(1000, QI_SYMBOL) );
+    BOOST_REQUIRE( db->get_account( "alice" ).qi == old_account_qi - asset(1000, QI_SYMBOL) );
     
     BOOST_REQUIRE( nfa.manabar.current_mana == 1000 );
     
@@ -530,8 +530,8 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_from_nfa_apply )
     wqfnop.id = nfa.id;
     wqfnop.amount = asset(1000, QI_SYMBOL);
     
-    old_account_qi = db->get_account( "charlie" ).qi_shares;
-    old_nfa_qi = nfa.qi_shares;
+    old_account_qi = db->get_account( "charlie" ).qi;
+    old_nfa_qi = nfa.qi;
     
     tx.operations.clear();
     tx.signatures.clear();
@@ -540,8 +540,8 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_from_nfa_apply )
     sign( tx, charlie_private_key );
     db->push_transaction( tx, 0 );
 
-    BOOST_REQUIRE( nfa.qi_shares == old_nfa_qi - asset(1000, QI_SYMBOL) );
-    BOOST_REQUIRE( db->get_account( "charlie" ).qi_shares == old_account_qi + asset(1000, QI_SYMBOL) );
+    BOOST_REQUIRE( nfa.qi == old_nfa_qi - asset(1000, QI_SYMBOL) );
+    BOOST_REQUIRE( db->get_account( "charlie" ).qi == old_account_qi + asset(1000, QI_SYMBOL) );
     
     BOOST_REQUIRE( nfa.manabar.current_mana == 0 );
 
@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     anop.action = "hello_nfa";
 
     db->modify( db->get_account( "charlie" ), [&]( account_object& a ) {
-        a.manabar.current_mana = util::get_effective_qi_shares(a);
+        a.manabar.current_mana = util::get_effective_qi(a);
         a.manabar.last_update_time = db->head_block_time().sec_since_epoch();
     });
 
@@ -758,7 +758,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
     
     db_plugin->debug_update( [=]( database& db ) {
         db.modify( db.get_account( "charlie" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.current_mana = util::get_effective_qi(a);
             a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
         });
     });
@@ -794,7 +794,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
     anop.action = "heart_beat";
 
     db->modify( db->get_account( "charlie" ), [&]( account_object& a ) {
-        a.manabar.current_mana = util::get_effective_qi_shares(a);
+        a.manabar.current_mana = util::get_effective_qi(a);
         a.manabar.last_update_time = db->head_block_time().sec_since_epoch();
     });
     old_manabar = db->get_account( "charlie" ).manabar;
@@ -902,8 +902,8 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     dqtnop.id = nfa.id;
     dqtnop.amount = asset(10, QI_SYMBOL);
     
-    asset old_account_qi = db->get_account( "alice" ).qi_shares;
-    asset old_nfa_qi = nfa.qi_shares;
+    asset old_account_qi = db->get_account( "alice" ).qi;
+    asset old_nfa_qi = nfa.qi;
     
     tx.operations.clear();
     tx.signatures.clear();
@@ -913,14 +913,14 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     db->push_transaction( tx, 0 );
     generate_block();
 
-    BOOST_REQUIRE( nfa.qi_shares == old_nfa_qi + asset(10, QI_SYMBOL) );
-    BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == old_account_qi - asset(10, QI_SYMBOL) );
+    BOOST_REQUIRE( nfa.qi == old_nfa_qi + asset(10, QI_SYMBOL) );
+    BOOST_REQUIRE( db->get_account( "alice" ).qi == old_account_qi - asset(10, QI_SYMBOL) );
     
     BOOST_REQUIRE( nfa.manabar.current_mana == 10 );
 
     db_plugin->debug_update( [=]( database& db ) {
         db.modify( db.get_account( "charlie" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.current_mana = util::get_effective_qi(a);
             a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
         });
     });
@@ -954,8 +954,8 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     //给nfa充足量真气
     dqtnop.amount = asset(5000000, QI_SYMBOL);
     
-    old_account_qi = db->get_account( "alice" ).qi_shares;
-    old_nfa_qi = nfa.qi_shares;
+    old_account_qi = db->get_account( "alice" ).qi;
+    old_nfa_qi = nfa.qi;
     
     tx.operations.clear();
     tx.signatures.clear();
@@ -964,8 +964,8 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
 
-    BOOST_REQUIRE( nfa.qi_shares == old_nfa_qi + asset(5000000, QI_SYMBOL) );
-    BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == old_account_qi - asset(5000000, QI_SYMBOL) );
+    BOOST_REQUIRE( nfa.qi == old_nfa_qi + asset(5000000, QI_SYMBOL) );
+    BOOST_REQUIRE( db->get_account( "alice" ).qi == old_account_qi - asset(5000000, QI_SYMBOL) );
 
     generate_block();
 
@@ -976,7 +976,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
         //立即恢复力量并激活
         db_plugin->debug_update( [=]( database& db ) {
             db.modify( nfa, [&]( nfa_object& obj ) {
-                obj.manabar.current_mana = util::get_effective_qi_shares(obj);
+                obj.manabar.current_mana = util::get_effective_qi(obj);
                 obj.manabar.last_update_time = db.head_block_time().sec_since_epoch();
                 obj.next_tick_time = time_point_sec::min();
             });

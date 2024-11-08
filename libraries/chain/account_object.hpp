@@ -48,11 +48,11 @@ namespace taiyi { namespace chain {
         asset             reward_yang_balance = asset( 0, YANG_SYMBOL );
         asset             reward_qi_balance = asset( 0, QI_SYMBOL );
         
-        asset             qi_shares = asset( 0, QI_SYMBOL ); ///< total qi shares held by this account, controls its voting or adoring power
-        asset             delegated_qi_shares = asset( 0, QI_SYMBOL );
-        asset             received_qi_shares = asset( 0, QI_SYMBOL );
+        asset             qi = asset( 0, QI_SYMBOL ); ///< total qi shares held by this account, controls its voting or adoring power
+        asset             delegated_qi = asset( 0, QI_SYMBOL );
+        asset             received_qi = asset( 0, QI_SYMBOL );
         
-        asset             qi_withdraw_rate = asset( 0, QI_SYMBOL ); ///< at the time this is updated it can be at most qi_shares/104
+        asset             qi_withdraw_rate = asset( 0, QI_SYMBOL ); ///< at the time this is updated it can be at most qi/104
         time_point_sec    next_qi_withdrawal_time = fc::time_point_sec::maximum(); ///< after every withdrawal this is incremented by 1 week
         share_type        withdrawn = 0; /// Track how many shares have been withdrawn
         share_type        to_withdraw = 0; /// Might be able to look this up with operation history.
@@ -63,7 +63,7 @@ namespace taiyi { namespace chain {
         uint16_t          simings_adored_for = 0;
                 
         /// This function should be used only when the account adores for a siming directly
-        share_type        siming_adore_weight()const { return std::accumulate( proxied_vsf_adores.begin(), proxied_vsf_adores.end(), qi_shares.amount ); }
+        share_type        siming_adore_weight()const { return std::accumulate( proxied_vsf_adores.begin(), proxied_vsf_adores.end(), qi.amount ); }
         share_type        proxied_vsf_adores_total()const { return std::accumulate( proxied_vsf_adores.begin(), proxied_vsf_adores.end(), share_type() ); }
     };
     
@@ -186,7 +186,7 @@ namespace taiyi { namespace chain {
         id_type           id;
         account_name_type delegator;
         account_name_type delegatee;
-        asset             qi_shares;
+        asset             qi;
         time_point_sec    min_delegation_time;
     };
 
@@ -223,7 +223,7 @@ namespace taiyi { namespace chain {
         
         id_type           id;
         account_name_type delegator;
-        asset             qi_shares;
+        asset             qi;
         time_point_sec    expiration;
     };
     
@@ -377,7 +377,7 @@ namespace mira {
 
 } // mira
 
-FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(qi_shares)(delegated_qi_shares)(received_qi_shares)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_object, taiyi::chain::account_index )
 
 FC_REFLECT( taiyi::chain::account_metadata_object, (id)(account)(json_metadata) )
@@ -386,10 +386,10 @@ CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_metadata_object, taiyi::chain::a
 FC_REFLECT( taiyi::chain::account_authority_object, (id)(account)(owner)(active)(posting)(last_owner_update) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_authority_object, taiyi::chain::account_authority_index )
 
-FC_REFLECT( taiyi::chain::qi_delegation_object, (id)(delegator)(delegatee)(qi_shares)(min_delegation_time) )
+FC_REFLECT( taiyi::chain::qi_delegation_object, (id)(delegator)(delegatee)(qi)(min_delegation_time) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::qi_delegation_object, taiyi::chain::qi_delegation_index )
 
-FC_REFLECT( taiyi::chain::qi_delegation_expiration_object, (id)(delegator)(qi_shares)(expiration) )
+FC_REFLECT( taiyi::chain::qi_delegation_expiration_object, (id)(delegator)(qi)(expiration) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::qi_delegation_expiration_object, taiyi::chain::qi_delegation_expiration_index )
 
 FC_REFLECT( taiyi::chain::owner_authority_history_object, (id)(account)(previous_owner_authority)(last_valid_time) )

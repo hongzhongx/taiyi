@@ -93,26 +93,26 @@ namespace taiyi { namespace chain { namespace util {
     };
 
     template< typename T >
-    int64_t get_effective_qi_shares( const T& account )
+    int64_t get_effective_qi( const T& account )
     {
-        int64_t effective_qi_shares = account.qi_shares.amount.value            // base qi shares
-                                    + account.received_qi_shares.amount.value   // incoming delegations
-                                    - account.delegated_qi_shares.amount.value; // outgoing delegations
+        int64_t effective_qi = account.qi.amount.value            // base qi shares
+                                    + account.received_qi.amount.value   // incoming delegations
+                                    - account.delegated_qi.amount.value; // outgoing delegations
         
         // If there is a power down occuring, also reduce effective qi shares by this week's power down amount
         if( account.next_qi_withdrawal_time != fc::time_point_sec::maximum() )
         {
-            effective_qi_shares -= std::min(account.qi_withdraw_rate.amount.value,                  // Weekly amount
+            effective_qi -= std::min(account.qi_withdraw_rate.amount.value,                  // Weekly amount
                                             account.to_withdraw.value - account.withdrawn.value);   // Or remainder
         }
         
-        return effective_qi_shares;
+        return effective_qi;
     }
 
     template< typename PropType, typename ObjType >
     void update_manabar( const PropType& gpo, ObjType& obj, bool check_overflow = true, int64_t new_mana = 0 )
     {
-        auto effective_qi = util::get_effective_qi_shares( obj );
+        auto effective_qi = util::get_effective_qi( obj );
         try {
             manabar_params params( effective_qi, TAIYI_MANA_REGENERATION_SECONDS );
             obj.manabar.regenerate_mana( params, gpo.time );

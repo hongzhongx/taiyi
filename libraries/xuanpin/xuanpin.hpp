@@ -419,10 +419,10 @@ namespace taiyi { namespace xuanpin {
          *
          * @param delegator The name of the account delegating QI
          * @param delegatee The name of the account receiving QI
-         * @param qi_shares The amount of QI to delegate
+         * @param qi The amount of QI to delegate
          * @param broadcast true if you wish to broadcast the transaction
          */
-        baiyujing_api::legacy_signed_transaction delegate_qi_shares(string delegator, string delegatee, baiyujing_api::legacy_asset qi_shares, bool broadcast );
+        baiyujing_api::legacy_signed_transaction delegate_qi(string delegator, string delegatee, baiyujing_api::legacy_asset qi, bool broadcast );
         
         /**
          *  This method is used to convert a JSON transaction to its transaction ID.
@@ -518,11 +518,11 @@ namespace taiyi { namespace xuanpin {
          * Set up a qi withdraw request. The request is fulfilled once a week over the next two year (104 weeks).
          *
          * @param from The account the QI are withdrawn from
-         * @param qi_shares The amount of QI to withdraw over the next two years. Each week (amount/104) shares are
+         * @param qi The amount of QI to withdraw over the next two years. Each week (amount/104) shares are
          *    withdrawn and deposited back as TAIYI. i.e. "10.000000 QI"
          * @param broadcast true if you wish to broadcast the transaction
          */
-        baiyujing_api::legacy_signed_transaction withdraw_qi(string from, baiyujing_api::legacy_asset qi_shares, bool broadcast = false );
+        baiyujing_api::legacy_signed_transaction withdraw_qi(string from, baiyujing_api::legacy_asset qi, bool broadcast = false );
         
         /**
          * Set up a qi withdraw route. When qi shares are withdrawn, they will be routed to these accounts
@@ -657,7 +657,7 @@ namespace taiyi { namespace xuanpin {
         //value_list 目前仅支持string, bool, double, int64
         baiyujing_api::legacy_signed_transaction call_contract_function(const account_name_type& account, const string& contract_name, const string& function_name, const vector<fc::variant>& value_list, bool broadcast);
                 
-        baiyujing_api::legacy_signed_transaction create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, bool broadcast );
+        baiyujing_api::legacy_signed_transaction create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, const string& contract, bool broadcast );
         baiyujing_api::legacy_signed_transaction create_nfa( const account_name_type& creator, const string& symbol, bool broadcast );
         baiyujing_api::legacy_signed_transaction transfer_nfa( const account_name_type& from, const account_name_type& to, int64_t nfa_id, bool broadcast );
         
@@ -667,6 +667,26 @@ namespace taiyi { namespace xuanpin {
         //value_list 目前仅支持string, bool, double, int64
         vector<string> action_nfa(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list);
         baiyujing_api::legacy_signed_transaction action_nfa_consequence(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast);
+
+        /**
+         * Find nfas with given ids
+         * @param ids - array with ids of wanted nfas to be founded.
+         */
+        baiyujing_api::find_nfas_return find_nfas( vector< int64_t > ids );
+        baiyujing_api::find_nfa_return find_nfa( const int64_t& id );
+        
+        /** Lists nfas owned by accounts
+         * This returns a list of all nfa objects owned by account names.
+         *
+         * Use the \c owner and limit parameters to page through the list.
+         *
+         * @param owner the name of the owner account.
+         * @param limit the maximum number of nfas to return (max: 1000)
+         * @returns a list of nfa objects
+         */
+        vector< baiyujing_api::api_nfa_object > list_nfas(const account_name_type& owner, uint32_t limit);
+
+        map< uint32_t, baiyujing_api::api_operation_object > get_nfa_history( const int64_t& nfa_id, uint32_t from, uint32_t limit );
     };
     
 } }
@@ -718,7 +738,7 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (update_account_auth_threshold)
     (update_account_meta)
     (update_account_memo_key)
-    (delegate_qi_shares)
+    (delegate_qi)
     (update_siming)
     (set_adoring_proxy)
     (adore_for_siming)
@@ -747,6 +767,10 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (withdraw_qi_from_nfa)
     (action_nfa)
     (action_nfa_consequence)
+    (list_nfas)
+    (find_nfa)
+    (find_nfas)
+    (get_nfa_history)
        
     /// helper api
     (get_prototype_operation)

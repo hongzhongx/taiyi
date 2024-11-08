@@ -12,8 +12,9 @@ namespace taiyi { namespace chain {
     struct get_impacted_account_visitor
     {
         flat_set<account_name_type>& _impacted;
+        flat_set<int64_t>& _impacted_nfas;
         
-        get_impacted_account_visitor( flat_set<account_name_type>& impact ):_impacted( impact ) {}
+        get_impacted_account_visitor( flat_set<account_name_type>& impact, flat_set<int64_t>& impact_nfas ):_impacted( impact ), _impacted_nfas(impact_nfas) {}
         typedef void result_type;
         
         template<typename T>
@@ -81,7 +82,7 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.account_to_recover );
         }
         
-        void operator()( const delegate_qi_shares_operation& op )
+        void operator()( const delegate_qi_operation& op )
         {
             _impacted.insert( op.delegator );
             _impacted.insert( op.delegatee );
@@ -144,21 +145,35 @@ namespace taiyi { namespace chain {
         {
             _impacted.insert( op.from );
             _impacted.insert( op.to );
+
+            _impacted_nfas.insert( op.id );
         }
 
         void operator()( const deposit_qi_to_nfa_operation& op )
         {
             _impacted.insert( op.account );
+
+            _impacted_nfas.insert( op.id );
         }
 
         void operator()( const withdraw_qi_from_nfa_operation& op )
         {
             _impacted.insert( op.owner );
+
+            _impacted_nfas.insert( op.id );
         }
 
         void operator()( const action_nfa_operation& op )
         {
             _impacted.insert( op.owner );
+
+            _impacted_nfas.insert( op.id );
+        }
+
+        void operator()( const nfa_convert_qi_to_resources_operation& op )
+        {
+            _impacted.insert( op.owner ); //至少要有一个受影响的账号，否则历史记录不会记录
+            _impacted_nfas.insert( op.nfa );
         }
 
         //void operator()( const operation& op ){}
@@ -166,10 +181,18 @@ namespace taiyi { namespace chain {
 
     void operation_get_impacted_accounts( const operation& op, flat_set<account_name_type>& result )
     {
-        get_impacted_account_visitor vtor = get_impacted_account_visitor( result );
+        fc::flat_set<int64_t> impact_nfas;
+        get_impacted_account_visitor vtor = get_impacted_account_visitor( result, impact_nfas );
         op.visit( vtor );
     }
     
+    void operation_get_impacted_nfas(const taiyi::protocol::operation& op, fc::flat_set<int64_t>& result )
+    {
+        flat_set<account_name_type> impact_accounts;
+        get_impacted_account_visitor vtor = get_impacted_account_visitor( impact_accounts, result );
+        op.visit( vtor );
+    }
+
     void transaction_get_impacted_accounts( const transaction& tx, flat_set<account_name_type>& result )
     {
         for( const auto& op : tx.operations )

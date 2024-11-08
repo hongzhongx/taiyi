@@ -69,7 +69,7 @@ namespace taiyi { namespace protocol {
     void withdraw_qi_operation::validate() const
     {
         validate_account_name( account );
-        FC_ASSERT( is_asset_type( qi_shares, QI_SYMBOL), "Amount must be QI"  );
+        FC_ASSERT( is_asset_type( qi, QI_SYMBOL), "Amount must be QI"  );
     }
     
     void set_withdraw_qi_route_operation::validate() const
@@ -202,13 +202,13 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( reward_yang.amount > 0 || reward_qi.amount > 0, "Must claim something." );
     }
         
-    void delegate_qi_shares_operation::validate()const
+    void delegate_qi_operation::validate()const
     {
         validate_account_name( delegator );
         validate_account_name( delegatee );
         FC_ASSERT( delegator != delegatee, "You cannot delegate QI to yourself" );
-        FC_ASSERT( is_asset_type( qi_shares, QI_SYMBOL ), "Delegation must be QI" );
-        FC_ASSERT( qi_shares >= asset( 0, QI_SYMBOL ), "Delegation cannot be negative" );
+        FC_ASSERT( is_asset_type( qi, QI_SYMBOL ), "Delegation must be QI" );
+        FC_ASSERT( qi >= asset( 0, QI_SYMBOL ), "Delegation cannot be negative" );
     }
     
     void create_contract_operation::validate() const

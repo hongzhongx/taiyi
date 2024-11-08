@@ -193,7 +193,7 @@ namespace taiyi { namespace chain {
     asset database::get_nfa_balance( const nfa_object& nfa, asset_symbol_type symbol ) const
     {
         if(symbol.asset_num == TAIYI_ASSET_NUM_QI) {
-            return nfa.qi_shares;
+            return nfa.qi;
         }
         else {
             auto key = boost::make_tuple( nfa.id, symbol );
@@ -284,7 +284,7 @@ namespace taiyi { namespace chain {
         
         if( delta.symbol.asset_num == TAIYI_ASSET_NUM_QI) {
             modify(nfa, [&](nfa_object& obj) {
-                obj.qi_shares += delta;
+                obj.qi += delta;
             });
         }
         else {

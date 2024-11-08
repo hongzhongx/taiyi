@@ -70,14 +70,14 @@ namespace taiyi { namespace chain {
         contract_id_type            main_contract = std::numeric_limits<contract_id_type>::max();
         lua_map                     data;
         
-        asset                       qi_shares = asset( 0, QI_SYMBOL ); ///< total qi shares held by this nfa, controls its heart_beat power
+        asset                       qi = asset( 0, QI_SYMBOL ); ///< total qi shares held by this nfa, controls its heart_beat power
         util::manabar               manabar;
 
         time_point_sec              created_time;
         time_point_sec              next_tick_time = time_point_sec::maximum();
     };
 
-    struct by_nfa_symbol;
+    struct by_symbol;
     struct by_owner;
     struct by_creator;
     struct by_tick_time;
@@ -85,7 +85,7 @@ namespace taiyi { namespace chain {
         nfa_object,
         indexed_by<
             ordered_unique< tag< by_id >, member< nfa_object, nfa_id_type, &nfa_object::id > >,
-            ordered_unique< tag< by_nfa_symbol >, 
+            ordered_unique< tag< by_symbol >, 
                 composite_key< nfa_object,
                     member< nfa_object, nfa_symbol_id_type, &nfa_object::symbol_id >,
                     member< nfa_object, nfa_id_type, &nfa_object::id >
@@ -114,8 +114,8 @@ namespace taiyi { namespace chain {
     > nfa_index;
     
     namespace util {
-        //对get_effective_qi_shares模版函数的特化
-        template<> int64_t get_effective_qi_shares<nfa_object>( const nfa_object& obj );
+        //对get_effective_qi模版函数的特化
+        template<> int64_t get_effective_qi<nfa_object>( const nfa_object& obj );
     }
 
 } } // taiyi::chain
@@ -123,5 +123,5 @@ namespace taiyi { namespace chain {
 FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
-FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(symbol_id)(parents)(children)(main_contract)(data)(qi_shares)(manabar)(created_time)(next_tick_time))
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(symbol_id)(parents)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)

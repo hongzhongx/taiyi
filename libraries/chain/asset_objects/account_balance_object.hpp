@@ -25,7 +25,7 @@ namespace taiyi { namespace chain {
         /// Name of the account, the balance is held for.
         account_name_type   owner;
         asset               liquid;     /// 'balance' for resource asset
-        asset               qi;         /// 'qi_shares' for QI
+        asset               qi;         /// 'qi' for QI
 
         /** Set of simple methods that allow unification of
          *  regular and rewards balance manipulation code.
@@ -74,7 +74,7 @@ namespace taiyi { namespace chain {
         /// Name of the account, the balance is held for.
         account_name_type   owner;
         asset               pending_liquid;     /// 'reward_yang_balance' for pending resource asset
-        asset               pending_qi_shares;  /// 'reward_qi_balance' for pending QI
+        asset               pending_qi;  /// 'reward_qi_balance' for pending QI
         
         /** Set of simple methods that allow unification of
          *  regular and rewards balance manipulation code.
@@ -89,18 +89,18 @@ namespace taiyi { namespace chain {
         {
             owner = "";
             pending_liquid = asset( 0, liquid_symbol);
-            pending_qi_shares = asset( 0, liquid_symbol.get_paired_symbol() );
+            pending_qi = asset( 0, liquid_symbol.get_paired_symbol() );
         }
         
-        void add_qi( const asset& qi_shares, const asset& qi_liquid )
+        void add_qi( const asset& qi, const asset& qi_liquid )
         {
-            pending_qi_shares += qi_shares;
+            pending_qi += qi;
         }
         ///@}
         
         bool validate() const
         {
-            return pending_liquid.symbol == pending_qi_shares.symbol.get_paired_symbol();
+            return pending_liquid.symbol == pending_qi.symbol.get_paired_symbol();
         }
     };
     
@@ -150,5 +150,5 @@ namespace mira {
 FC_REFLECT( taiyi::chain::account_regular_balance_object, (id)(owner)(liquid)(qi) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_regular_balance_object, taiyi::chain::account_regular_balance_index )
 
-FC_REFLECT( taiyi::chain::account_rewards_balance_object, (id)(owner)(pending_liquid)(pending_qi_shares) )
+FC_REFLECT( taiyi::chain::account_rewards_balance_object, (id)(owner)(pending_liquid)(pending_qi) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_rewards_balance_object, taiyi::chain::account_rewards_balance_index )

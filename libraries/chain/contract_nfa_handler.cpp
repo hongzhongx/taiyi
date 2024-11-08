@@ -16,7 +16,7 @@
 namespace taiyi { namespace chain {
 
     contract_nfa_base_info::contract_nfa_base_info(const nfa_object& nfa, database& db)
-        : id(nfa.id), data(nfa.data)
+        : id(nfa.id), qi(nfa.qi.amount.value), data(nfa.data)
     {
         const auto& nfa_symbol = db.get<nfa_symbol_object, by_id>(nfa.symbol_id);
         symbol = nfa_symbol.symbol;
@@ -108,8 +108,14 @@ namespace taiyi { namespace chain {
             }
             asset new_resource = qi * p;
             
+            const auto& caller_owner = _db.get<account_object, by_id>(_caller.owner_account);
+            operation vop = nfa_convert_qi_to_resources_operation( _caller.id, caller_owner.name, qi, new_resource );
+            _db.pre_push_virtual_operation( vop );
+
             _db.adjust_nfa_balance(_caller, -qi);
             _db.adjust_nfa_balance(_caller, new_resource);
+            
+            _db.post_push_virtual_operation( vop );
         }
         catch (fc::exception e)
         {

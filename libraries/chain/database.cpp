@@ -874,10 +874,10 @@ namespace taiyi { namespace chain {
         // Update global qi pool numbers.
         db.modify( cprops, [&]( dynamic_global_property_object& props ) {
             if( to_reward_balance ) {
-                props.pending_rewarded_qi_shares += new_qi;
+                props.pending_rewarded_qi += new_qi;
             }
             else {
-                props.total_qi_shares += new_qi;
+                props.total_qi += new_qi;
             }
         } );
         
@@ -966,7 +966,7 @@ namespace taiyi { namespace chain {
             
             w.virtual_last_update = wso.current_virtual_time;
             w.adores += delta;
-            FC_ASSERT( w.adores <= get_dynamic_global_properties().total_qi_shares.amount, "", ("w.adores", w.adores)("props",get_dynamic_global_properties().total_qi_shares) );
+            FC_ASSERT( w.adores <= get_dynamic_global_properties().total_qi.amount, "", ("w.adores", w.adores)("props",get_dynamic_global_properties().total_qi) );
             
             w.virtual_scheduled_time = w.virtual_last_update + (TAIYI_VIRTUAL_SCHEDULE_LAP_LENGTH - w.virtual_position)/(w.adores.value+1);
             
@@ -1030,9 +1030,9 @@ namespace taiyi { namespace chain {
              */
             share_type to_withdraw;
             if ( from_account.to_withdraw - from_account.withdrawn < from_account.qi_withdraw_rate.amount )
-                to_withdraw = std::min( from_account.qi_shares.amount, from_account.to_withdraw % from_account.qi_withdraw_rate.amount ).value;
+                to_withdraw = std::min( from_account.qi.amount, from_account.to_withdraw % from_account.qi_withdraw_rate.amount ).value;
             else
-                to_withdraw = std::min( from_account.qi_shares.amount, from_account.qi_withdraw_rate.amount ).value;
+                to_withdraw = std::min( from_account.qi.amount, from_account.qi_withdraw_rate.amount ).value;
             
             share_type qi_deposited_as_yang = 0;
             share_type qi_deposited_as_qi = 0;
@@ -1057,7 +1057,7 @@ namespace taiyi { namespace chain {
                         pre_push_virtual_operation( vop );
                         
                         modify( to_account, [&]( account_object& a ) {
-                            a.qi_shares.amount += to_deposit;
+                            a.qi.amount += to_deposit;
                         });
                         adjust_proxied_siming_adores( to_account, to_deposit );
                         
@@ -1090,7 +1090,7 @@ namespace taiyi { namespace chain {
                         });
                         
                         modify( cprops, [&]( dynamic_global_property_object& o ) {
-                            o.total_qi_shares.amount -= to_deposit;
+                            o.total_qi.amount -= to_deposit;
                         });
                         
                         post_push_virtual_operation( vop );
@@ -1106,11 +1106,11 @@ namespace taiyi { namespace chain {
             pre_push_virtual_operation( vop );
             
             modify( from_account, [&]( account_object& a ) {
-                a.qi_shares.amount -= to_withdraw;
+                a.qi.amount -= to_withdraw;
                 a.balance += converted_yang;
                 a.withdrawn += to_withdraw;
                 
-                if( a.withdrawn >= a.to_withdraw || a.qi_shares.amount == 0 )
+                if( a.withdrawn >= a.to_withdraw || a.qi.amount == 0 )
                 {
                     a.qi_withdraw_rate.amount = 0;
                     a.next_qi_withdrawal_time = fc::time_point_sec::maximum();
@@ -1122,7 +1122,7 @@ namespace taiyi { namespace chain {
             });
             
             modify( cprops, [&]( dynamic_global_property_object& o ) {
-                o.total_qi_shares.amount -= to_convert;
+                o.total_qi.amount -= to_convert;
             });
             
             if( to_withdraw > 0 )
@@ -1186,11 +1186,11 @@ namespace taiyi { namespace chain {
         
         // pay siming in qi shares
         const auto& siming_account = get_account( csiming.owner );
-        if( props.head_block_number >= TAIYI_START_MINER_ADORING_BLOCK || (siming_account.qi_shares.amount.value == 0) )
+        if( props.head_block_number >= TAIYI_START_MINER_ADORING_BLOCK || (siming_account.qi.amount.value == 0) )
         {
             operation vop = producer_reward_operation( csiming.owner, asset( 0, QI_SYMBOL ) );
-            create_qi2( *this, siming_account, asset( siming_reward, YANG_SYMBOL ), false, [&]( const asset& qi_shares ) {
-                vop.get< producer_reward_operation >().qi_shares = qi_shares;
+            create_qi2( *this, siming_account, asset( siming_reward, YANG_SYMBOL ), false, [&]( const asset& qi ) {
+                vop.get< producer_reward_operation >().qi = qi;
                 pre_push_virtual_operation( vop );
             } );
             post_push_virtual_operation( vop );
@@ -1226,7 +1226,7 @@ namespace taiyi { namespace chain {
             });
             
             modify( gpo, [&]( dynamic_global_property_object& o ) {
-                o.pending_rewarded_qi_shares += reward_qi;
+                o.pending_rewarded_qi += reward_qi;
             });
             
             used_rewards_yang += ryang;
@@ -1288,7 +1288,7 @@ namespace taiyi { namespace chain {
             
             /// remove all current adores
             std::array<share_type, TAIYI_MAX_PROXY_RECURSION_DEPTH+1> delta;
-            delta[0] = -account.qi_shares.amount;
+            delta[0] = -account.qi.amount;
             for( int i = 0; i < TAIYI_MAX_PROXY_RECURSION_DEPTH; ++i )
                 delta[i+1] = -account.proxied_vsf_adores[i];
             adjust_proxied_siming_adores( account, delta );
@@ -1348,7 +1348,7 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< change_recovery_account_evaluator        >();
         _my->_evaluator_registry.register_evaluator< decline_adoring_rights_evaluator         >();
         _my->_evaluator_registry.register_evaluator< claim_reward_balance_evaluator           >();
-        _my->_evaluator_registry.register_evaluator< delegate_qi_shares_evaluator             >();
+        _my->_evaluator_registry.register_evaluator< delegate_qi_evaluator             >();
         _my->_evaluator_registry.register_evaluator< siming_set_properties_evaluator          >();
         
         _my->_evaluator_registry.register_evaluator< create_contract_evaluator                >();
@@ -2241,13 +2241,13 @@ namespace taiyi { namespace chain {
         
         while( itr != delegations_by_exp.end() && itr->expiration < now )
         {
-            operation vop = return_qi_delegation_operation( itr->delegator, itr->qi_shares );
+            operation vop = return_qi_delegation_operation( itr->delegator, itr->qi );
             try{
                 pre_push_virtual_operation( vop );
                 
                 modify( get_account( itr->delegator ), [&]( account_object& a ) {
-                    util::update_manabar(gpo, a, true, itr->qi_shares.amount.value );
-                    a.delegated_qi_shares -= itr->qi_shares;
+                    util::update_manabar(gpo, a, true, itr->qi.amount.value );
+                    a.delegated_qi -= itr->qi;
                 });
                 
                 post_push_virtual_operation( vop );
@@ -2316,9 +2316,9 @@ namespace taiyi { namespace chain {
                         FC_ASSERT( acnt.balance.amount.value >= 0, "Insufficient YANG funds" );
                     break;
                 case TAIYI_ASSET_NUM_QI:
-                    acnt.qi_shares += delta;
+                    acnt.qi += delta;
                     if( check_balance )
-                        FC_ASSERT( acnt.qi_shares.amount.value >= 0, "Insufficient QI funds" );
+                        FC_ASSERT( acnt.qi.amount.value >= 0, "Insufficient QI funds" );
                     break;
                 default:
                     FC_ASSERT( false, "invalid symbol" );
@@ -2404,14 +2404,14 @@ namespace taiyi { namespace chain {
         void add_to_balance( account_rewards_balance_object& bo )
         {
             if( is_qi )
-                bo.pending_qi_shares += share_delta;
+                bo.pending_qi += share_delta;
             else
                 bo.pending_liquid += liquid_delta;
         }
         int64_t get_combined_balance( const account_rewards_balance_object* bo, bool* is_all_zero )
         {
-            asset result = is_qi ? (bo->pending_qi_shares * TAIYI_QI_SHARE_PRICE + liquid_delta) : (bo->pending_liquid + liquid_delta);
-            *is_all_zero = result.amount.value == 0 && (is_qi ? bo->pending_liquid.amount.value : bo->pending_qi_shares.amount.value) == 0;
+            asset result = is_qi ? (bo->pending_qi * TAIYI_QI_SHARE_PRICE + liquid_delta) : (bo->pending_liquid + liquid_delta);
+            *is_all_zero = result.amount.value == 0 && (is_qi ? bo->pending_liquid.amount.value : bo->pending_qi.amount.value) == 0;
             return result.amount.value;
         }
         
@@ -2537,7 +2537,7 @@ namespace taiyi { namespace chain {
             case TAIYI_ASSET_NUM_YANG:
                 return a.balance;
             case TAIYI_ASSET_NUM_QI:
-                return a.qi_shares;
+                return a.qi;
             default:
             {
                 FC_ASSERT( symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
@@ -2659,17 +2659,17 @@ namespace taiyi { namespace chain {
         /// verify no siming has too many adores
         const auto& siming_idx = get_index< siming_index >().indices();
         for( auto itr = siming_idx.begin(); itr != siming_idx.end(); ++itr )
-            FC_ASSERT( itr->adores <= gpo.total_qi_shares.amount, "", ("itr",*itr) );
+            FC_ASSERT( itr->adores <= gpo.total_qi.amount, "", ("itr",*itr) );
         
         for( auto itr = account_idx.begin(); itr != account_idx.end(); ++itr )
         {
             total_supply += itr->balance;
             total_supply += itr->reward_yang_balance;
-            total_qi += itr->qi_shares;
+            total_qi += itr->qi;
             total_qi += itr->reward_qi_balance;
             total_vsf_adores += ( itr->proxy == TAIYI_PROXY_TO_SELF_ACCOUNT ?
                 itr->siming_adore_weight() :
-                ( TAIYI_MAX_PROXY_RECURSION_DEPTH > 0 ? itr->proxied_vsf_adores[TAIYI_MAX_PROXY_RECURSION_DEPTH - 1] : itr->qi_shares.amount ) );
+                ( TAIYI_MAX_PROXY_RECURSION_DEPTH > 0 ? itr->proxied_vsf_adores[TAIYI_MAX_PROXY_RECURSION_DEPTH - 1] : itr->qi.amount ) );
         }
         
         const auto& reward_idx = get_index< reward_fund_index, by_id >();        
@@ -2678,11 +2678,11 @@ namespace taiyi { namespace chain {
             total_qi += itr->reward_qi_balance;
         }
         
-        total_supply += (gpo.total_qi_shares + gpo.pending_rewarded_qi_shares) * TAIYI_QI_SHARE_PRICE;
+        total_supply += (gpo.total_qi + gpo.pending_rewarded_qi) * TAIYI_QI_SHARE_PRICE;
         
         FC_ASSERT( gpo.current_supply == total_supply, "", ("gpo.current_supply",gpo.current_supply)("total_supply",total_supply) );
-        FC_ASSERT( gpo.total_qi_shares + gpo.pending_rewarded_qi_shares == total_qi, "", ("gpo.total_qi_shares",gpo.total_qi_shares)("total_qi",total_qi) );
-        FC_ASSERT( gpo.total_qi_shares.amount == total_vsf_adores, "", ("total_qi_shares",gpo.total_qi_shares)("total_vsf_adores",total_vsf_adores) );
+        FC_ASSERT( gpo.total_qi + gpo.pending_rewarded_qi == total_qi, "", ("gpo.total_qi",gpo.total_qi)("total_qi",total_qi) );
+        FC_ASSERT( gpo.total_qi.amount == total_vsf_adores, "", ("total_qi",gpo.total_qi)("total_vsf_adores",total_vsf_adores) );
         
     } FC_CAPTURE_LOG_AND_RETHROW( (head_block_num()) ); }
 

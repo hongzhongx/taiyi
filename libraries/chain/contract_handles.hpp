@@ -57,6 +57,7 @@ namespace taiyi { namespace chain {
         bool is_nfa = true;
         string symbol;
         string owner_account;
+        int64_t qi;
         
         lua_map data;
         
@@ -69,6 +70,7 @@ namespace taiyi { namespace chain {
             t.v[lua_types(lua_string("is_nfa"))] = lua_bool(is_nfa);
             t.v[lua_types(lua_string("symbol"))] = lua_string(symbol);
             t.v[lua_types(lua_string("owner_account"))] = lua_string(owner_account);
+            t.v[lua_types(lua_string("qi"))] = lua_int(qi);
             t.v[lua_types(lua_string("data"))] = lua_table(data);
             return t;
         }

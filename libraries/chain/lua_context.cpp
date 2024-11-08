@@ -253,6 +253,7 @@ namespace taiyi { namespace chain {
         registerMember("is_nfa", &contract_nfa_base_info::is_nfa);
         registerMember("symbol", &contract_nfa_base_info::symbol);
         registerMember("owner_account", &contract_nfa_base_info::owner_account);
+        registerMember("qi", &contract_nfa_base_info::qi);
         registerMember("data", &contract_nfa_base_info::data);
 
         //nfa resources

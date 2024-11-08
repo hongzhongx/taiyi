@@ -777,10 +777,10 @@ namespace taiyi { namespace xuanpin {
                     asset total_vest(0, QI_SYMBOL );
                     for( const auto& a : accounts ) {
                         total_yang += a.balance.to_asset();
-                        total_vest  += a.qi_shares.to_asset();
+                        total_vest  += a.qi.to_asset();
                         out << std::left << std::setw( 17 ) << std::string(a.name)
                         << std::right << std::setw(18) << fc::variant(a.balance).as_string() <<" "
-                        << std::right << std::setw(26) << fc::variant(a.qi_shares).as_string() <<"\n";
+                        << std::right << std::setw(26) << fc::variant(a.qi).as_string() <<"\n";
                     }
                     out << "-------------------------------------------------------------------------\n";
                     out << std::left << std::setw( 17 ) << "TOTAL"
@@ -1484,7 +1484,7 @@ namespace taiyi { namespace xuanpin {
         return my->sign_transaction( tx, broadcast );
     }
     
-    baiyujing_api::legacy_signed_transaction xuanpin_api::delegate_qi_shares( string delegator, string delegatee, baiyujing_api::legacy_asset qi_shares, bool broadcast )
+    baiyujing_api::legacy_signed_transaction xuanpin_api::delegate_qi( string delegator, string delegatee, baiyujing_api::legacy_asset qi, bool broadcast )
     {
         FC_ASSERT( !is_locked() );
         
@@ -1493,10 +1493,10 @@ namespace taiyi { namespace xuanpin {
         FC_ASSERT( delegator == accounts[0].name, "Delegator account is not right?" );
         FC_ASSERT( delegatee == accounts[1].name, "Delegator account is not right?" );
         
-        delegate_qi_shares_operation op;
+        delegate_qi_operation op;
         op.delegator = delegator;
         op.delegatee = delegatee;
-        op.qi_shares = qi_shares.to_asset();
+        op.qi = qi.to_asset();
         
         signed_transaction tx;
         tx.operations.push_back( op );
@@ -1677,12 +1677,12 @@ namespace taiyi { namespace xuanpin {
         return my->sign_transaction( tx, broadcast );
     }
     
-    baiyujing_api::legacy_signed_transaction xuanpin_api::withdraw_qi( string from, baiyujing_api::legacy_asset qi_shares, bool broadcast )
+    baiyujing_api::legacy_signed_transaction xuanpin_api::withdraw_qi( string from, baiyujing_api::legacy_asset qi, bool broadcast )
     {
         FC_ASSERT( !is_locked() );
         withdraw_qi_operation op;
         op.account = from;
-        op.qi_shares = qi_shares.to_asset();
+        op.qi = qi.to_asset();
         
         signed_transaction tx;
         tx.operations.push_back( op );
@@ -1879,13 +1879,14 @@ namespace taiyi { namespace xuanpin {
         return revise_contract(reviser, name, contract_data, broadcast);
     } FC_CAPTURE_AND_RETHROW( (reviser)(name)(filename) ) }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, bool broadcast )
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, const string& contract, bool broadcast )
     { try {
         FC_ASSERT( !is_locked() );
         create_nfa_symbol_operation op;
         op.creator = creator;
         op.symbol = symbol;
         op.describe = describe;
+        op.default_contract = contract;
 
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -1997,5 +1998,26 @@ namespace taiyi { namespace xuanpin {
 
         return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(action)(value_list) ) }
+
+    baiyujing_api::find_nfas_return xuanpin_api::find_nfas( vector< int64_t > ids )
+    {
+        return my->_remote_api->find_nfas( ids );
+    }
+
+    baiyujing_api::find_nfa_return xuanpin_api::find_nfa( const int64_t& id )
+    {
+        return my->_remote_api->find_nfa( id );
+    }
+
+    vector< baiyujing_api::api_nfa_object > xuanpin_api::list_nfas(const account_name_type& owner, uint32_t limit)
+    {
+       return my->_remote_api->list_nfas( owner, limit );
+    }
+
+    map< uint32_t, baiyujing_api::api_operation_object > xuanpin_api::get_nfa_history( const int64_t& nfa_id, uint32_t from, uint32_t limit )
+    {
+       return my->_remote_api->get_nfa_history( nfa_id, from, limit );
+    }
+
 
 } } // taiyi::xuanpin

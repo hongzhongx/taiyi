@@ -15,7 +15,7 @@
 
 #define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1728747000))  //2024-10-12 23:30:00
 
-#define TAIYI_MIN_ACCOUNT_CREATION_FEE          int64_t(100)
+#define TAIYI_MIN_ACCOUNT_CREATION_FEE          int64_t(1)
 #define TAIYI_MAX_ACCOUNT_CREATION_FEE          int64_t(1000000000)
 
 #define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)

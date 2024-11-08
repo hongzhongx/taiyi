@@ -537,7 +537,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
 
     db_plugin->debug_update( [=]( database& db ) {
         db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.current_mana = util::get_effective_qi(a);
             a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
         });
     });
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
 
     db_plugin->debug_update( [=]( database& db ) {
         db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.current_mana = util::get_effective_qi(a);
             a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
         });
     });
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     db_plugin->debug_update( [=]( database& db ) {
         db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi_shares(a);
+            a.manabar.current_mana = util::get_effective_qi(a);
             a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
         });
     });
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
         db_plugin->debug_update( [=]( database& db ) {
             db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-                a.manabar.current_mana = util::get_effective_qi_shares(a);
+                a.manabar.current_mana = util::get_effective_qi(a);
                 a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
             });
         });

@@ -77,6 +77,10 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (broadcast_transaction_synchronous)
                 (broadcast_block)
                 (get_account_resources)
+                (find_nfa)
+                (find_nfas)
+                (list_nfas)
+                (get_nfa_history)
             )
             
             void on_post_apply_block( const signed_block& b );
@@ -728,6 +732,66 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
             return result;
         }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, find_nfa )
+        {
+            CHECK_ARG_SIZE( 1 )
+            
+            find_nfa_return result;
+
+            auto a = _database_api->find_nfa( { args[0].as<int64_t>() } ).result;
+            
+            if(a.valid())
+                result = api_nfa_object( *a );
+            
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, find_nfas )
+        {
+            CHECK_ARG_SIZE( 1 )
+
+            const auto& nfas = _database_api->find_nfas( { args[0].as< vector< taiyi::plugins::database_api::api_id_type > >() } ).result;
+            find_nfas_return result;
+
+            for( const auto& a : nfas ) result.emplace_back( api_nfa_object( a ) );
+
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_nfas )
+        {
+            CHECK_ARG_SIZE( 2 )
+
+            auto nfas = _database_api->list_nfas( { args[0], args[1].as< uint32_t >(), database_api::by_owner } ).result;
+
+            list_nfas_return result;
+            for( const auto& a : nfas ) result.emplace_back( api_nfa_object( a ) );
+
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, get_nfa_history )
+        {
+           CHECK_ARG_SIZE( 3 )
+           FC_ASSERT( _account_history_api, "account_history_api_plugin not enabled." );
+
+           auto history = _account_history_api->get_nfa_history( { args[0].as< int64_t >(), args[1].as< uint64_t >(), args[2].as< uint32_t >() } ).history;
+           get_nfa_history_return result;
+
+           legacy_operation l_op;
+           legacy_operation_conversion_visitor visitor( l_op );
+
+           for( auto& entry : history )
+           {
+              if( entry.second.op.visit( visitor ) )
+              {
+                 result.emplace( entry.first, api_operation_object( entry.second, visitor.l_op ) );
+              }
+           }
+
+           return result;
+        }
 
         void baiyujing_api_impl::on_post_apply_block( const signed_block& b )
         { try {
@@ -863,6 +927,10 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (verify_account_authority)
         (get_account_history)
         (get_account_resources)
+        (find_nfa)
+        (find_nfas)
+        (list_nfas)
+        (get_nfa_history)
     )
 
 } } } // taiyi::plugins::baiyujing_api

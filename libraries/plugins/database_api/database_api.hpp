@@ -115,6 +115,13 @@ namespace taiyi { namespace plugins { namespace database_api {
             (verify_signatures)
                     
             (find_account_resources)
+                    
+            //********
+            // NFAs //
+            //********
+            (find_nfa)
+            (find_nfas)
+            (list_nfas)
         )
         
     private:

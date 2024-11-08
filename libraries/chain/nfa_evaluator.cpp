@@ -21,10 +21,10 @@ extern std::string wstring_to_utf8(const std::wstring& str);
 namespace taiyi { namespace chain {
     
     namespace util {
-        //对get_effective_qi_shares模版函数的特化
-        template<> int64_t get_effective_qi_shares<nfa_object>( const nfa_object& obj )
+        //对get_effective_qi模版函数的特化
+        template<> int64_t get_effective_qi<nfa_object>( const nfa_object& obj )
         {
-            return obj.qi_shares.amount.value;
+            return obj.qi.amount.value;
         }
     }
 
@@ -131,7 +131,7 @@ namespace taiyi { namespace chain {
         _db.adjust_balance( account, -o.amount );
         
         _db.modify(*nfa, [&](nfa_object& obj) {
-            obj.qi_shares += o.amount;
+            obj.qi += o.amount;
             util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
         });
 
@@ -154,11 +154,11 @@ namespace taiyi { namespace chain {
         FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
         FC_ASSERT(owner.id == nfa->owner_account, "Can not withdraw from NFA not ownd by you.");
         
-        FC_ASSERT(nfa->qi_shares >= o.amount, "NFA has not enough Qi to withrawn.");
+        FC_ASSERT(nfa->qi >= o.amount, "NFA has not enough Qi to withrawn.");
 
 
         _db.modify(*nfa, [&](nfa_object& obj) {
-            obj.qi_shares -= o.amount;
+            obj.qi -= o.amount;
             util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
         });
 

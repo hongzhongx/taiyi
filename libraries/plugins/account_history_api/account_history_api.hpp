@@ -65,6 +65,15 @@ namespace taiyi { namespace plugins { namespace account_history {
         std::map< uint32_t, api_operation_object > history;
     };
     
+    struct get_nfa_history_args
+    {
+        int64_t                                 id;
+        uint64_t                                start = -1;
+        uint32_t                                limit = 1000;
+    };
+
+    typedef get_account_history_return get_nfa_history_return;
+    
     /** Allows to specify range of blocks to retrieve virtual operations for.
      *  \param block_range_begin - starting block number (inclusive) to search for virtual operations
      *  \param block_range_end   - last block number (exclusive) to search for virtual operations
@@ -89,11 +98,12 @@ namespace taiyi { namespace plugins { namespace account_history {
         ~account_history_api();
         
         DECLARE_API(
-                    (get_ops_in_block)
-                    (get_transaction)
-                    (get_account_history)
-                    (enum_virtual_ops)
-                    )
+            (get_ops_in_block)
+            (get_transaction)
+            (get_account_history)
+            (get_nfa_history)
+            (enum_virtual_ops)
+        )
         
     private:
         std::unique_ptr< account_history_api_impl > my;
@@ -113,3 +123,5 @@ FC_REFLECT( taiyi::plugins::account_history::get_account_history_return, (histor
 
 FC_REFLECT( taiyi::plugins::account_history::enum_virtual_ops_args, (block_range_begin)(block_range_end) )
 FC_REFLECT( taiyi::plugins::account_history::enum_virtual_ops_return, (ops)(next_block_range_begin) )
+
+FC_REFLECT( taiyi::plugins::account_history::get_nfa_history_args, (id)(start)(limit) )

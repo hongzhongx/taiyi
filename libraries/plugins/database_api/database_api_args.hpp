@@ -48,7 +48,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         by_total_adores,
         by_contributor,
         by_symbol_id,
-        by_uuid
+        by_uuid,
+        by_owner
     };
     
     enum order_direction_type
@@ -345,12 +346,38 @@ namespace taiyi { namespace plugins { namespace database_api {
     {
         vector<resource_assets> resources;
     };
+    
+    /* NFA */
+
+    typedef list_object_args_type list_nfas_args;
+    struct list_nfas_return
+    {
+        vector< api_nfa_object > result;
+    };
+
+    struct find_nfas_args
+    {
+        vector< api_id_type > ids;
+    };
+    typedef list_nfas_return find_nfas_return;
+
+    struct find_nfa_args
+    {
+        find_nfa_args(const int64_t& i) : id(i) {}
+        find_nfa_args() {}
+        
+        int64_t id;
+    };
+    struct find_nfa_return
+    {
+        optional< api_nfa_object > result;
+    };
 
 } } } // taiyi::database_api
 
 FC_REFLECT( taiyi::plugins::database_api::get_version_return, (blockchain_version)(taiyi_revision)(fc_revision)(chain_id) )
 
-FC_REFLECT_ENUM( taiyi::plugins::database_api::sort_order_type, (by_name)(by_proxy)(by_next_qi_withdrawal_time)(by_account)(by_expiration)(by_effective_date)(by_adore_name)(by_schedule_time)(by_account_siming)(by_siming_account)(by_from_id)(by_ratification_deadline)(by_withdraw_route)(by_destination)(by_complete_from_id)(by_to_complete)(by_delegation)(by_account_expiration)(by_conversion_date)(by_price)(by_symbol_contributor)(by_symbol)(by_control_account)(by_symbol_time)(by_creator)(by_start_date)(by_end_date)(by_total_adores)(by_contributor)(by_symbol_id)(by_uuid) )
+FC_REFLECT_ENUM( taiyi::plugins::database_api::sort_order_type, (by_name)(by_proxy)(by_next_qi_withdrawal_time)(by_account)(by_expiration)(by_effective_date)(by_adore_name)(by_schedule_time)(by_account_siming)(by_siming_account)(by_from_id)(by_ratification_deadline)(by_withdraw_route)(by_destination)(by_complete_from_id)(by_to_complete)(by_delegation)(by_account_expiration)(by_conversion_date)(by_last_update)(by_price)(by_symbol_contributor)(by_symbol)(by_control_account)(by_symbol_time)(by_creator)(by_start_date)(by_end_date)(by_total_adores)(by_contributor)(by_symbol_id)(by_uuid)(by_owner) )
 
 FC_REFLECT_ENUM( taiyi::plugins::database_api::order_direction_type, (ascending)(descending) )
 
@@ -416,3 +443,10 @@ FC_REFLECT( taiyi::plugins::database_api::verify_signatures_return, (valid) )
 FC_REFLECT( taiyi::plugins::database_api::resource_assets, (gold)(food)(wood)(fabric)(herb) )
 FC_REFLECT( taiyi::plugins::database_api::find_account_resources_args, (accounts) )
 FC_REFLECT( taiyi::plugins::database_api::find_account_resources_return, (resources) )
+
+FC_REFLECT( taiyi::plugins::database_api::list_nfas_return, (result) )
+
+FC_REFLECT( taiyi::plugins::database_api::find_nfas_args, (ids) )
+
+FC_REFLECT( taiyi::plugins::database_api::find_nfa_args, (id) )
+FC_REFLECT( taiyi::plugins::database_api::find_nfa_return, (result) )

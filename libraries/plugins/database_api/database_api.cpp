@@ -55,6 +55,9 @@ namespace taiyi { namespace plugins { namespace database_api {
             (verify_account_authority)
             (verify_signatures)
             (find_account_resources)
+            (find_nfa)
+            (find_nfas)
+            (list_nfas)
         )
 
         template< typename ResultType >
@@ -920,6 +923,91 @@ namespace taiyi { namespace plugins { namespace database_api {
 
         return result;
     }
+    
+    //*************************************************************************
+    //                                                                       //
+    // NFAs                                                                //
+    //                                                                       //
+    //*************************************************************************
+
+    DEFINE_API_IMPL( database_api_impl, find_nfa )
+    {
+        find_nfa_return result;
+        
+        auto nfa = _db.find< chain::nfa_object, chain::by_id >( args.id );
+        if( nfa != nullptr )
+            result.result = api_nfa_object( *nfa, _db );
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, find_nfas )
+    {
+        FC_ASSERT( args.ids.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        find_nfas_return result;
+        result.result.reserve( args.ids.size() );
+
+        std::for_each( args.ids.begin(), args.ids.end(), [&](auto& id) {
+            auto nfa = _db.find< chain::nfa_object, chain::by_id >( id );
+            if( nfa != nullptr )
+                result.result.emplace_back( api_nfa_object( *nfa, _db ) );
+        });
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, list_nfas )
+    {
+        FC_ASSERT( args.limit <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        list_nfas_return result;
+        result.result.reserve( args.limit );
+
+        switch( args.order )
+        {
+            case( by_owner ):
+            {
+                auto key = args.start.as< protocol::account_name_type >();
+                const auto& key_account = _db.get_account(key);
+                iterate_results< chain::nfa_index, chain::by_owner >(
+                    boost::make_tuple( key_account.id, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const nfa_object& o ){ return api_nfa_object( o, _db ); },
+                    [&]( const nfa_object& o ) { return o.owner_account == key_account.id; });
+                break;
+            }
+            case( by_creator ):
+            {
+                auto key = args.start.as< protocol::account_name_type >();
+                const auto& key_account = _db.get_account(key);
+                iterate_results< chain::nfa_index, chain::by_creator >(
+                    boost::make_tuple( key_account.id, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const nfa_object& o ){ return api_nfa_object( o, _db ); },
+                    [&]( const nfa_object& o ) { return o.creator_account == key_account.id; });
+                break;
+            }
+            case( by_symbol ):
+            {
+                auto key = args.start.as< string >();
+                const auto& key_symbol = _db.get<nfa_symbol_object, chain::by_symbol>(key);
+                iterate_results< chain::nfa_index, chain::by_symbol >(
+                    boost::make_tuple( key_symbol.id, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const nfa_object& o ){ return api_nfa_object( o, _db ); },
+                    [&]( const nfa_object& o ) { return o.symbol_id == key_symbol.id; });
+                break;
+            }
+            default:
+                FC_ASSERT( false, "Unknown or unsupported sort order" );
+        }
+
+        return result;
+    }
 
     DEFINE_LOCKLESS_APIS( database_api, (get_config)(get_version) )
     
@@ -955,6 +1043,9 @@ namespace taiyi { namespace plugins { namespace database_api {
         (verify_account_authority)
         (verify_signatures)
         (find_account_resources)
+        (find_nfa)
+        (find_nfas)
+        (list_nfas)
     )
     
 } } } // taiyi::plugins::database_api

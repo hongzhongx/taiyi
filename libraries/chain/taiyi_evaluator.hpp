@@ -24,7 +24,7 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( change_recovery_account )
     TAIYI_DEFINE_EVALUATOR( decline_adoring_rights )
     TAIYI_DEFINE_EVALUATOR( claim_reward_balance )
-    TAIYI_DEFINE_EVALUATOR( delegate_qi_shares )
+    TAIYI_DEFINE_EVALUATOR( delegate_qi )
     TAIYI_DEFINE_EVALUATOR( siming_set_properties )
         
     TAIYI_DEFINE_EVALUATOR( create_contract )

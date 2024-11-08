@@ -5,6 +5,8 @@
 #include <chain/taiyi_objects.hpp>
 #include <chain/transaction_object.hpp>
 #include <chain/siming_objects.hpp>
+#include <chain/nfa_objects.hpp>
+#include <chain/contract_objects.hpp>
 #include <chain/database.hpp>
 
 namespace taiyi { namespace plugins { namespace database_api {
@@ -23,7 +25,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_account_object
     {
-        api_account_object( const account_object& a, const database& db ) : id( a.id ), name( a.name ), memo_key( a.memo_key ), proxy( a.proxy ), last_account_update( a.last_account_update ), created( a.created ), recovery_account( a.recovery_account ), last_account_recovery( a.last_account_recovery ), can_adore( a.can_adore ), manabar( a.manabar ), balance( a.balance ), reward_yang_balance( a.reward_yang_balance ), reward_qi_balance( a.reward_qi_balance ), qi_shares( a.qi_shares ), delegated_qi_shares( a.delegated_qi_shares ), received_qi_shares( a.received_qi_shares ), qi_withdraw_rate( a.qi_withdraw_rate ), next_qi_withdrawal_time( a.next_qi_withdrawal_time ), withdrawn( a.withdrawn ), to_withdraw( a.to_withdraw ), withdraw_routes( a.withdraw_routes ), simings_adored_for( a.simings_adored_for )
+        api_account_object( const account_object& a, const database& db ) : id( a.id ), name( a.name ), memo_key( a.memo_key ), proxy( a.proxy ), last_account_update( a.last_account_update ), created( a.created ), recovery_account( a.recovery_account ), last_account_recovery( a.last_account_recovery ), can_adore( a.can_adore ), manabar( a.manabar ), balance( a.balance ), reward_yang_balance( a.reward_yang_balance ), reward_qi_balance( a.reward_qi_balance ), qi( a.qi ), delegated_qi( a.delegated_qi ), received_qi( a.received_qi ), qi_withdraw_rate( a.qi_withdraw_rate ), next_qi_withdrawal_time( a.next_qi_withdrawal_time ), withdrawn( a.withdrawn ), to_withdraw( a.to_withdraw ), withdraw_routes( a.withdraw_routes ), simings_adored_for( a.simings_adored_for )
         {
             size_t n = a.proxied_vsf_adores.size();
             proxied_vsf_adores.reserve( n );
@@ -75,9 +77,9 @@ namespace taiyi { namespace plugins { namespace database_api {
         asset             reward_yang_balance;
         asset             reward_qi_balance;
         
-        asset             qi_shares;
-        asset             delegated_qi_shares;
-        asset             received_qi_shares;
+        asset             qi;
+        asset             delegated_qi;
+        asset             received_qi;
         asset             qi_withdraw_rate;
         time_point_sec    next_qi_withdrawal_time;
         share_type        withdrawn;
@@ -207,12 +209,58 @@ namespace taiyi { namespace plugins { namespace database_api {
         protocol::hardfork_version    next_hardfork;
         fc::time_point_sec            next_hardfork_time;
     };
+    
+    struct api_nfa_object
+    {
+        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parents(o.parents), children(o.children), data(o.data), qi(o.qi), manabar(o.manabar), created_time(o.created_time), next_tick_time(o.next_tick_time)
+        {
+            creator_account = db.get<account_object, by_id>(o.creator_account).name;
+            owner_account = db.get<account_object, by_id>(o.owner_account).name;
+            
+            symbol = db.get<nfa_symbol_object, by_id>(o.symbol_id).symbol;
+            
+            main_contract = db.get<contract_object, by_id>(o.main_contract).name;
+            
+            gold = db.get_nfa_balance(o, GOLD_SYMBOL);
+            food = db.get_nfa_balance(o, FOOD_SYMBOL);
+            wood = db.get_nfa_balance(o, WOOD_SYMBOL);
+            fabric = db.get_nfa_balance(o, FABRIC_SYMBOL);
+            herb = db.get_nfa_balance(o, HERB_SYMBOL);
+        }
+        
+        api_nfa_object(){}
+        
+        nfa_id_type         id;
+        
+        account_name_type   creator_account;
+        account_name_type   owner_account;
+
+        string              symbol;
+        
+        vector<nfa_id_type> parents;
+        vector<nfa_id_type> children;
+        
+        string              main_contract;
+        lua_map             data;
+        
+        asset               qi;
+        util::manabar       manabar;
+
+        time_point_sec      created_time;
+        time_point_sec      next_tick_time;
+
+        asset               gold;
+        asset               food;
+        asset               wood;
+        asset               fabric;
+        asset               herb;
+    };
         
     typedef uint64_t api_id_type;
     
 } } } // taiyi::plugins::database_api
 
-FC_REFLECT( taiyi::plugins::database_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(mined)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(qi_shares)(delegated_qi_shares)(received_qi_shares)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::plugins::database_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(mined)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
 
 FC_REFLECT( taiyi::plugins::database_api::api_owner_authority_history_object, (id)(account)(previous_owner_authority)(last_valid_time) )
 
@@ -225,3 +273,5 @@ FC_REFLECT( taiyi::plugins::database_api::api_siming_schedule_object, (id)(curre
 FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiyi::protocol::signed_block), (block_id)(signing_key)(transaction_ids) )
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
+
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parents)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))

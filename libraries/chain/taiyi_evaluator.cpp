@@ -324,13 +324,13 @@ namespace taiyi { namespace chain {
 
     operation_result withdraw_qi_evaluator::do_apply( const withdraw_qi_operation& o )
     {
-        FC_ASSERT( o.qi_shares.amount >= 0, "Cannot withdraw negative Qi. account: ${account}, qi:${qi}", ("account", o.account)("qi", o.qi_shares) );
+        FC_ASSERT( o.qi.amount >= 0, "Cannot withdraw negative Qi. account: ${account}, qi:${qi}", ("account", o.account)("qi", o.qi) );
         
         const auto& account = _db.get_account( o.account );
-        FC_ASSERT( account.qi_shares >= asset( 0, QI_SYMBOL ), "Account does not have sufficient Taiyi Qi for withdraw." );
-        FC_ASSERT( account.qi_shares - account.delegated_qi_shares >= o.qi_shares, "Account does not have sufficient Taiyi Qi for withdraw." );
+        FC_ASSERT( account.qi >= asset( 0, QI_SYMBOL ), "Account does not have sufficient Taiyi Qi for withdraw." );
+        FC_ASSERT( account.qi - account.delegated_qi >= o.qi, "Account does not have sufficient Taiyi Qi for withdraw." );
         
-        if( o.qi_shares.amount == 0 )
+        if( o.qi.amount == 0 )
         {
             FC_ASSERT( account.qi_withdraw_rate.amount != 0, "This operation would not change the qi withdraw rate." );
             _db.modify( account, [&]( account_object& a ) {
@@ -345,19 +345,19 @@ namespace taiyi { namespace chain {
             int qi_withdraw_intervals = TAIYI_QI_WITHDRAW_INTERVALS;
             
             _db.modify( account, [&]( account_object& a ) {
-                auto new_qi_withdraw_rate = asset( o.qi_shares.amount / qi_withdraw_intervals, QI_SYMBOL );
+                auto new_qi_withdraw_rate = asset( o.qi.amount / qi_withdraw_intervals, QI_SYMBOL );
                 
                 if( new_qi_withdraw_rate.amount == 0 )
                     new_qi_withdraw_rate.amount = 1;
                 
-                if( new_qi_withdraw_rate.amount * qi_withdraw_intervals < o.qi_shares.amount )
+                if( new_qi_withdraw_rate.amount * qi_withdraw_intervals < o.qi.amount )
                     new_qi_withdraw_rate.amount += 1;
                 
                 FC_ASSERT( account.qi_withdraw_rate  != new_qi_withdraw_rate, "This operation would not change the qi withdraw rate." );
                 
                 a.qi_withdraw_rate = new_qi_withdraw_rate;
                 a.next_qi_withdrawal_time = _db.head_block_time() + fc::seconds(TAIYI_QI_WITHDRAW_INTERVAL_SECONDS);
-                a.to_withdraw = o.qi_shares.amount;
+                a.to_withdraw = o.qi.amount;
                 a.withdrawn = 0;
             });
         }
@@ -430,7 +430,7 @@ namespace taiyi { namespace chain {
         
         /// remove all current adores
         std::array<share_type, TAIYI_MAX_PROXY_RECURSION_DEPTH+1> delta;
-        delta[0] = -account.qi_shares.amount;
+        delta[0] = -account.qi.amount;
         for( int i = 0; i < TAIYI_MAX_PROXY_RECURSION_DEPTH; ++i )
             delta[i+1] = -account.proxied_vsf_adores[i];
         _db.adjust_proxied_siming_adores( account, delta );
@@ -713,13 +713,13 @@ namespace taiyi { namespace chain {
         
         _db.modify( acnt, [&]( account_object& a ) {            
             util::update_manabar( _db.get_dynamic_global_properties(), a, true, op.reward_qi.amount.value );
-            a.qi_shares += op.reward_qi;            
+            a.qi += op.reward_qi;            
             a.reward_qi_balance -= op.reward_qi;
         });
         
         _db.modify( _db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
-            gpo.total_qi_shares += op.reward_qi;            
-            gpo.pending_rewarded_qi_shares -= op.reward_qi;
+            gpo.total_qi += op.reward_qi;            
+            gpo.pending_rewarded_qi -= op.reward_qi;
         });
         
         _db.adjust_proxied_siming_adores( acnt, op.reward_qi.amount );
@@ -728,23 +728,23 @@ namespace taiyi { namespace chain {
     }
     
     template< typename T >
-    int64_t get_effective_qi_shares( const T& account )
+    int64_t get_effective_qi( const T& account )
     {
-        int64_t effective_qi_shares = account.qi_shares.amount.value              // base qi shares
-            + account.received_qi_shares.amount.value    // incoming delegations
-            - account.delegated_qi_shares.amount.value;  // outgoing delegations
+        int64_t effective_qi = account.qi.amount.value              // base qi shares
+            + account.received_qi.amount.value    // incoming delegations
+            - account.delegated_qi.amount.value;  // outgoing delegations
         
         // If there is a power down occuring, also reduce effective qi shares by this week's power down amount
         if( account.next_qi_withdrawal_time != fc::time_point_sec::maximum() )
         {
-            effective_qi_shares -= std::min(account.qi_withdraw_rate.amount.value,                  // Weekly amount
+            effective_qi -= std::min(account.qi_withdraw_rate.amount.value,                  // Weekly amount
                                             account.to_withdraw.value - account.withdrawn.value);   // Or remainder
         }
         
-        return effective_qi_shares;
+        return effective_qi;
     }
 
-    operation_result delegate_qi_shares_evaluator::do_apply( const delegate_qi_shares_operation& op )
+    operation_result delegate_qi_evaluator::do_apply( const delegate_qi_operation& op )
     {
         const auto& delegator = _db.get_account( op.delegator );
         const auto& delegatee = _db.get_account( op.delegatee );
@@ -752,7 +752,7 @@ namespace taiyi { namespace chain {
         
         const auto& gpo = _db.get_dynamic_global_properties();
         
-        auto max_mana = util::get_effective_qi_shares( delegator );
+        auto max_mana = util::get_effective_qi( delegator );
         
         _db.modify( delegator, [&]( account_object& a ) {
             util::update_manabar( gpo, a, true );
@@ -761,7 +761,7 @@ namespace taiyi { namespace chain {
         asset available_shares = asset( delegator.manabar.current_mana, QI_SYMBOL );
 
         // Assume delegated QI are used first when consuming mana. You cannot delegate received qi shares
-        available_shares.amount = std::min( available_shares.amount, max_mana - delegator.received_qi_shares.amount );
+        available_shares.amount = std::min( available_shares.amount, max_mana - delegator.received_qi.amount );
         
         if( delegator.next_qi_withdrawal_time < fc::time_point_sec::maximum() && (delegator.to_withdraw - delegator.withdrawn) > delegator.qi_withdraw_rate.amount )
         {
@@ -792,83 +792,83 @@ namespace taiyi { namespace chain {
         // If delegation doesn't exist, create it
         if( delegation == nullptr )
         {
-            FC_ASSERT( available_shares >= op.qi_shares, "Account ${acc} does not have enough mana to delegate. required: ${r} available: ${a}", ("acc", op.delegator)("r", op.qi_shares)("a", available_shares) );
-            FC_ASSERT( op.qi_shares >= min_delegation, "Account must delegate a minimum of ${v}", ("v", min_delegation) );
+            FC_ASSERT( available_shares >= op.qi, "Account ${acc} does not have enough mana to delegate. required: ${r} available: ${a}", ("acc", op.delegator)("r", op.qi)("a", available_shares) );
+            FC_ASSERT( op.qi >= min_delegation, "Account must delegate a minimum of ${v}", ("v", min_delegation) );
             
             _db.create< qi_delegation_object >( [&]( qi_delegation_object& obj ) {
                 obj.delegator = op.delegator;
                 obj.delegatee = op.delegatee;
-                obj.qi_shares = op.qi_shares;
+                obj.qi = op.qi;
                 obj.min_delegation_time = _db.head_block_time();
             });
             
             _db.modify( delegator, [&]( account_object& a ) {
-                a.delegated_qi_shares += op.qi_shares;
-                a.manabar.use_mana( op.qi_shares.amount.value );
+                a.delegated_qi += op.qi;
+                a.manabar.use_mana( op.qi.amount.value );
             });
             
             _db.modify( delegatee, [&]( account_object& a ) {
-                util::update_manabar( gpo, a, true, op.qi_shares.amount.value );
-                a.received_qi_shares += op.qi_shares;
+                util::update_manabar( gpo, a, true, op.qi.amount.value );
+                a.received_qi += op.qi;
             });
         }
         // Else if the delegation is increasing
-        else if( op.qi_shares >= delegation->qi_shares )
+        else if( op.qi >= delegation->qi )
         {
-            auto delta = op.qi_shares - delegation->qi_shares;
+            auto delta = op.qi - delegation->qi;
             
             FC_ASSERT( delta >= min_update, "Taiyi Qi increase is not enough of a difference. min_update: ${min}", ("min", min_update) );
             FC_ASSERT( available_shares >= delta, "Account ${acc} does not have enough mana to delegate. required: ${r} available: ${a}", ("acc", op.delegator)("r", delta)("a", available_shares) );
             
             _db.modify( delegator, [&]( account_object& a ) {
-                a.delegated_qi_shares += delta;
+                a.delegated_qi += delta;
                 a.manabar.use_mana( delta.amount.value );
             });
             
             _db.modify( delegatee, [&]( account_object& a ) {
                 util::update_manabar( gpo, a, true, delta.amount.value );
-                a.received_qi_shares += delta;
+                a.received_qi += delta;
             });
             
             _db.modify( *delegation, [&]( qi_delegation_object& obj ) {
-                obj.qi_shares = op.qi_shares;
+                obj.qi = op.qi;
             });
         }
         // Else the delegation is decreasing
-        else /* delegation->qi_shares > op.qi_shares */
+        else /* delegation->qi > op.qi */
         {
-            auto delta = delegation->qi_shares - op.qi_shares;
+            auto delta = delegation->qi - op.qi;
             
-            if( op.qi_shares.amount > 0 )
+            if( op.qi.amount > 0 )
             {
                 FC_ASSERT( delta >= min_update, "Taiyi Qi decrease is not enough of a difference. min_update: ${min}", ("min", min_update) );
-                FC_ASSERT( op.qi_shares >= min_delegation, "Delegation must be removed or leave minimum delegation amount of ${v}", ("v", min_delegation) );
+                FC_ASSERT( op.qi >= min_delegation, "Delegation must be removed or leave minimum delegation amount of ${v}", ("v", min_delegation) );
             }
             else
             {
-                FC_ASSERT( delegation->qi_shares.amount > 0, "Delegation would set qi_shares to zero, but it is already zero");
+                FC_ASSERT( delegation->qi.amount > 0, "Delegation would set qi to zero, but it is already zero");
             }
             
             _db.create< qi_delegation_expiration_object >( [&]( qi_delegation_expiration_object& obj ) {
                 obj.delegator = op.delegator;
-                obj.qi_shares = delta;
+                obj.qi = delta;
                 obj.expiration = std::max( _db.head_block_time() + gpo.delegation_return_period, delegation->min_delegation_time );
             });
             
             _db.modify( delegatee, [&]( account_object& a ) {
                 util::update_manabar( gpo, a, true );
                 
-                a.received_qi_shares -= delta;
+                a.received_qi -= delta;
                 a.manabar.use_mana( delta.amount.value );
 
                 if( a.manabar.current_mana < 0 )
                     a.manabar.current_mana = 0;
             });
             
-            if( op.qi_shares.amount > 0 )
+            if( op.qi.amount > 0 )
             {
                 _db.modify( *delegation, [&]( qi_delegation_object& obj ) {
-                    obj.qi_shares = op.qi_shares;
+                    obj.qi = op.qi;
                 });
             }
             else

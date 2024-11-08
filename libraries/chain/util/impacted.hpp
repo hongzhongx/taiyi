@@ -11,6 +11,7 @@ namespace taiyi { namespace chain {
     using namespace fc;
     
     void operation_get_impacted_accounts(const taiyi::protocol::operation& op, fc::flat_set<protocol::account_name_type>& result );
+    void operation_get_impacted_nfas(const taiyi::protocol::operation& op, fc::flat_set<int64_t>& result );
     
     void transaction_get_impacted_accounts(const taiyi::protocol::transaction& tx, fc::flat_set<protocol::account_name_type>& result);
 

@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE( account_create_apply )
         BOOST_REQUIRE( acct.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
         BOOST_REQUIRE( acct.id._id == acct_auth.id._id );
         
-        BOOST_REQUIRE( acct.qi_shares.amount.value == 100000 );
+        BOOST_REQUIRE( acct.qi.amount.value == 100000 );
         BOOST_REQUIRE( acct.qi_withdraw_rate.amount.value == ASSET( "0.000000 QI" ).amount.value );
         BOOST_REQUIRE( acct.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( ( init_starting_balance - ASSET( "0.100 YANG" ) ).amount.value == init.balance.amount.value );
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE( account_create_apply )
         BOOST_REQUIRE( acct.proxy == "" );
         BOOST_REQUIRE( acct.created == db->head_block_time() );
         BOOST_REQUIRE( acct.balance.amount.value == ASSET( "0.000 YANG " ).amount.value );
-        BOOST_REQUIRE( acct.qi_shares.amount.value == 100000 );
+        BOOST_REQUIRE( acct.qi.amount.value == 100000 );
         BOOST_REQUIRE( acct.qi_withdraw_rate.amount.value == ASSET( "0.000000 QI" ).amount.value );
         BOOST_REQUIRE( acct.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( ( init_starting_balance - ASSET( "0.100 YANG" ) ).amount.value == init.balance.amount.value );
@@ -669,9 +669,9 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         
         BOOST_REQUIRE( alice.balance == ASSET( "10.000 YANG" ) );
         
-        auto shares = asset( gpo.total_qi_shares.amount, QI_SYMBOL );
-        auto alice_shares = alice.qi_shares;
-        auto bob_shares = bob.qi_shares;
+        auto shares = asset( gpo.total_qi.amount, QI_SYMBOL );
+        auto alice_shares = alice.qi;
+        auto bob_shares = bob.qi;
         
         transfer_to_qi_operation op;
         op.from = "alice";
@@ -695,8 +695,8 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         alice_shares += new_vest;
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "2.500 YANG" ).amount.value );
-        BOOST_REQUIRE( alice.qi_shares.amount.value == alice_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi_shares.amount.value == shares.amount.value );
+        BOOST_REQUIRE( alice.qi.amount.value == alice_shares.amount.value );
+        BOOST_REQUIRE( gpo.total_qi.amount.value == shares.amount.value );
         validate_database();
         
         op.to = "bob";
@@ -713,19 +713,19 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         bob_shares += new_vest;
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "0.500 YANG" ).amount.value );
-        BOOST_REQUIRE( alice.qi_shares.amount.value == alice_shares.amount.value );
+        BOOST_REQUIRE( alice.qi.amount.value == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
-        BOOST_REQUIRE( bob.qi_shares.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi_shares.amount.value == shares.amount.value );
+        BOOST_REQUIRE( bob.qi.amount.value == bob_shares.amount.value );
+        BOOST_REQUIRE( gpo.total_qi.amount.value == shares.amount.value );
         validate_database();
         
         TAIYI_REQUIRE_THROW( db->push_transaction( tx, database::skip_transaction_dupe_check ), fc::exception );
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "0.500 YANG").amount.value );
-        BOOST_REQUIRE( alice.qi_shares.amount.value == alice_shares.amount.value );
+        BOOST_REQUIRE( alice.qi.amount.value == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
-        BOOST_REQUIRE( bob.qi_shares.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi_shares.amount.value == shares.amount.value );
+        BOOST_REQUIRE( bob.qi.amount.value == bob_shares.amount.value );
+        BOOST_REQUIRE( gpo.total_qi.amount.value == shares.amount.value );
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_authorities )
         
         withdraw_qi_operation op;
         op.account = "alice";
-        op.qi_shares = ASSET( "0.001000 QI" );
+        op.qi = ASSET( "0.001000 QI" );
         
         signed_transaction tx;
         tx.operations.push_back( op );
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             
             withdraw_qi_operation op;
             op.account = "alice";
-            op.qi_shares = asset( -1, QI_SYMBOL );
+            op.qi = asset( -1, QI_SYMBOL );
             
             signed_transaction tx;
             tx.operations.push_back( op );
@@ -814,9 +814,9 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             
             
             BOOST_TEST_MESSAGE( "--- Test withdraw of existing QI" );
-            op.qi_shares = asset( alice.qi_shares.amount / 2, QI_SYMBOL );
+            op.qi = asset( alice.qi.amount / 2, QI_SYMBOL );
             
-            auto old_qi_shares = alice.qi_shares;
+            auto old_qi = alice.qi;
             
             tx.clear();
             tx.operations.push_back( op );
@@ -824,9 +824,9 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             sign( tx, alice_private_key );
             db->push_transaction( tx, 0 );
             
-            BOOST_REQUIRE( alice.qi_shares.amount.value == old_qi_shares.amount.value );
-            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi_shares.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 2 ) ).value );
-            BOOST_REQUIRE( alice.to_withdraw.value == op.qi_shares.amount.value );
+            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
+            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 2 ) ).value );
+            BOOST_REQUIRE( alice.to_withdraw.value == op.qi.amount.value );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == db->head_block_time() + TAIYI_QI_WITHDRAW_INTERVAL_SECONDS );
             validate_database();
             
@@ -834,15 +834,15 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             tx.operations.clear();
             tx.signatures.clear();
             
-            op.qi_shares = asset( alice.qi_shares.amount / 3, QI_SYMBOL );
+            op.qi = asset( alice.qi.amount / 3, QI_SYMBOL );
             tx.operations.push_back( op );
             tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
             sign( tx, alice_private_key );
             db->push_transaction( tx, 0 );
             
-            BOOST_REQUIRE( alice.qi_shares.amount.value == old_qi_shares.amount.value );
-            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi_shares.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
-            BOOST_REQUIRE( alice.to_withdraw.value == op.qi_shares.amount.value );
+            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
+            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
+            BOOST_REQUIRE( alice.to_withdraw.value == op.qi.amount.value );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == db->head_block_time() + TAIYI_QI_WITHDRAW_INTERVAL_SECONDS );
             validate_database();
             
@@ -851,14 +851,14 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             tx.operations.clear();
             tx.signatures.clear();
             
-            op.qi_shares = asset( alice.qi_shares.amount * 2, QI_SYMBOL );
+            op.qi = asset( alice.qi.amount * 2, QI_SYMBOL );
             tx.operations.push_back( op );
             tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
             sign( tx, alice_private_key );
             TAIYI_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
             
-            BOOST_REQUIRE( alice.qi_shares.amount.value == old_qi_shares.amount.value );
-            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi_shares.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
+            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
+            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == db->head_block_time() + TAIYI_QI_WITHDRAW_INTERVAL_SECONDS );
             validate_database();
             
@@ -866,20 +866,20 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             tx.operations.clear();
             tx.signatures.clear();
             
-            op.qi_shares = asset( 0, QI_SYMBOL );
+            op.qi = asset( 0, QI_SYMBOL );
             tx.operations.push_back( op );
             tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
             sign( tx, alice_private_key );
             db->push_transaction( tx, 0 );
             
-            BOOST_REQUIRE( alice.qi_shares.amount.value == old_qi_shares.amount.value );
+            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
             BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == 0 );
             BOOST_REQUIRE( alice.to_withdraw.value == 0 );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == fc::time_point_sec::maximum() );
             
             
             BOOST_TEST_MESSAGE( "--- Test cancelling a withdraw when below the account creation fee" );
-            op.qi_shares = alice.qi_shares;
+            op.qi = alice.qi;
             tx.clear();
             tx.operations.push_back( op );
             sign( tx, alice_private_key );
@@ -897,7 +897,7 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
         withdraw_qi_operation op;
         signed_transaction tx;
         op.account = "alice";
-        op.qi_shares = ASSET( "0.000000 QI" );
+        op.qi = ASSET( "0.000000 QI" );
         tx.operations.push_back( op );
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         sign( tx, alice_private_key );
@@ -908,7 +908,7 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
         
         BOOST_TEST_MESSAGE( "--- Test withdrawing minimal QI" );
         op.account = "bob";
-        op.qi_shares = db->get_account( "bob" ).qi_shares;
+        op.qi = db->get_account( "bob" ).qi;
         tx.clear();
         tx.operations.push_back( op );
         sign( tx, bob_private_key );
@@ -1162,7 +1162,7 @@ BOOST_AUTO_TEST_CASE( account_siming_adore_apply )
         
         db->push_transaction( tx, 0 );
         
-        BOOST_REQUIRE( sam_siming.adores == alice.qi_shares.amount );
+        BOOST_REQUIRE( sam_siming.adores == alice.qi.amount );
         BOOST_REQUIRE( siming_adore_idx.find( boost::make_tuple( sam_siming.owner, alice.name ) ) != siming_adore_idx.end() );
         validate_database();
         
@@ -1194,7 +1194,7 @@ BOOST_AUTO_TEST_CASE( account_siming_adore_apply )
         
         db->push_transaction( tx, 0 );
         
-        BOOST_REQUIRE( sam_siming.adores == ( bob.proxied_vsf_adores_total() + bob.qi_shares.amount ) );
+        BOOST_REQUIRE( sam_siming.adores == ( bob.proxied_vsf_adores_total() + bob.qi.amount ) );
         BOOST_REQUIRE( siming_adore_idx.find( boost::make_tuple( sam_siming.owner, bob.name ) ) != siming_adore_idx.end() );
         BOOST_REQUIRE( siming_adore_idx.find( boost::make_tuple( sam_siming.owner, alice.name ) ) == siming_adore_idx.end() );
         
@@ -1206,7 +1206,7 @@ BOOST_AUTO_TEST_CASE( account_siming_adore_apply )
         sign( tx, alice_private_key );
         TAIYI_REQUIRE_THROW( db->push_transaction( tx, database::skip_transaction_dupe_check ), fc::exception );
         
-        BOOST_REQUIRE( sam_siming.adores == ( bob.proxied_vsf_adores_total() + bob.qi_shares.amount ) );
+        BOOST_REQUIRE( sam_siming.adores == ( bob.proxied_vsf_adores_total() + bob.qi.amount ) );
         BOOST_REQUIRE( siming_adore_idx.find( boost::make_tuple( sam_siming.owner, bob.name ) ) != siming_adore_idx.end() );
         BOOST_REQUIRE( siming_adore_idx.find( boost::make_tuple( sam_siming.owner, alice.name ) ) == siming_adore_idx.end() );
         
@@ -1342,7 +1342,7 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         BOOST_REQUIRE( bob.proxy == "alice" );
         BOOST_REQUIRE( bob.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( alice.proxy == TAIYI_PROXY_TO_SELF_ACCOUNT );
-        BOOST_REQUIRE( alice.proxied_vsf_adores_total() == bob.qi_shares.amount );
+        BOOST_REQUIRE( alice.proxied_vsf_adores_total() == bob.qi.amount );
         validate_database();
         
         BOOST_TEST_MESSAGE( "--- Test changing proxy" );
@@ -1360,7 +1360,7 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         BOOST_REQUIRE( bob.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( alice.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( sam.proxy == TAIYI_PROXY_TO_SELF_ACCOUNT );
-        BOOST_REQUIRE( sam.proxied_vsf_adores_total().value == bob.qi_shares.amount );
+        BOOST_REQUIRE( sam.proxied_vsf_adores_total().value == bob.qi.amount );
         validate_database();
         
         BOOST_TEST_MESSAGE( "--- Test failure when changing proxy to existing proxy" );
@@ -1370,7 +1370,7 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         BOOST_REQUIRE( bob.proxy == "sam" );
         BOOST_REQUIRE( bob.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( sam.proxy == TAIYI_PROXY_TO_SELF_ACCOUNT );
-        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == bob.qi_shares.amount );
+        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == bob.qi.amount );
         validate_database();
         
         BOOST_TEST_MESSAGE( "--- Test adding a grandparent proxy" );
@@ -1388,9 +1388,9 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         BOOST_REQUIRE( bob.proxy == "sam" );
         BOOST_REQUIRE( bob.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( sam.proxy == "dave" );
-        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == bob.qi_shares.amount );
+        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == bob.qi.amount );
         BOOST_REQUIRE( dave.proxy == TAIYI_PROXY_TO_SELF_ACCOUNT );
-        BOOST_REQUIRE( dave.proxied_vsf_adores_total() == ( sam.qi_shares + bob.qi_shares ).amount );
+        BOOST_REQUIRE( dave.proxied_vsf_adores_total() == ( sam.qi + bob.qi ).amount );
         validate_database();
         
         BOOST_TEST_MESSAGE( "--- Test adding a grandchild proxy" );
@@ -1412,9 +1412,9 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         BOOST_REQUIRE( bob.proxy == "sam" );
         BOOST_REQUIRE( bob.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( sam.proxy == "dave" );
-        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == ( bob.qi_shares + alice.qi_shares ).amount );
+        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == ( bob.qi + alice.qi ).amount );
         BOOST_REQUIRE( dave.proxy == TAIYI_PROXY_TO_SELF_ACCOUNT );
-        BOOST_REQUIRE( dave.proxied_vsf_adores_total() == ( sam.qi_shares + bob.qi_shares + alice.qi_shares ).amount );
+        BOOST_REQUIRE( dave.proxied_vsf_adores_total() == ( sam.qi + bob.qi + alice.qi ).amount );
         validate_database();
         
         BOOST_TEST_MESSAGE( "--- Test removing a grandchild proxy" );
@@ -1434,9 +1434,9 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         BOOST_REQUIRE( bob.proxy == TAIYI_PROXY_TO_SELF_ACCOUNT );
         BOOST_REQUIRE( bob.proxied_vsf_adores_total().value == 0 );
         BOOST_REQUIRE( sam.proxy == "dave" );
-        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == alice.qi_shares.amount );
+        BOOST_REQUIRE( sam.proxied_vsf_adores_total() == alice.qi.amount );
         BOOST_REQUIRE( dave.proxy == TAIYI_PROXY_TO_SELF_ACCOUNT );
-        BOOST_REQUIRE( dave.proxied_vsf_adores_total() == ( sam.qi_shares + alice.qi_shares ).amount );
+        BOOST_REQUIRE( dave.proxied_vsf_adores_total() == ( sam.qi + alice.qi ).amount );
         validate_database();
         
         BOOST_TEST_MESSAGE( "--- Test votes are transferred when a proxy is added" );
@@ -1459,7 +1459,7 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         
         db->push_transaction( tx, 0 );
         
-        BOOST_REQUIRE( db->get_siming( TAIYI_INIT_SIMING_NAME ).adores == ( alice.qi_shares + bob.qi_shares ).amount );
+        BOOST_REQUIRE( db->get_siming( TAIYI_INIT_SIMING_NAME ).adores == ( alice.qi + bob.qi ).amount );
         validate_database();
         
         BOOST_TEST_MESSAGE( "--- Test votes are removed when a proxy is removed" );
@@ -1471,7 +1471,7 @@ BOOST_AUTO_TEST_CASE( account_siming_proxy_apply )
         
         db->push_transaction( tx, 0 );
         
-        BOOST_REQUIRE( db->get_siming( TAIYI_INIT_SIMING_NAME ).adores == bob.qi_shares.amount );
+        BOOST_REQUIRE( db->get_siming( TAIYI_INIT_SIMING_NAME ).adores == bob.qi.amount );
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -2180,7 +2180,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
             
             db.modify( db.get_dynamic_global_properties(), []( dynamic_global_property_object& gpo ) {
                 gpo.current_supply += ASSET( "20.000 YANG" );
-                gpo.pending_rewarded_qi_shares += ASSET( "10.000000 QI" );
+                gpo.pending_rewarded_qi += ASSET( "10.000000 QI" );
             });
         });
         
@@ -2188,7 +2188,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         validate_database();
         
         auto alice_taiyi = db->get_account( "alice" ).balance;
-        auto alice_qi = db->get_account( "alice" ).qi_shares;
+        auto alice_qi = db->get_account( "alice" ).qi;
         
         
         BOOST_TEST_MESSAGE( "--- Attempting to claim more YANG than exists in the reward balance." );
@@ -2217,7 +2217,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         
         BOOST_REQUIRE( db->get_account( "alice" ).balance == alice_taiyi + op.reward_yang );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_yang_balance == ASSET( "10.000 YANG" ) );
-        BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == alice_qi + op.reward_qi );
+        BOOST_REQUIRE( db->get_account( "alice" ).qi == alice_qi + op.reward_qi );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_balance == ASSET( "5.000000 QI" ) );
         validate_database();
         
@@ -2234,38 +2234,38 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         
         BOOST_REQUIRE( db->get_account( "alice" ).balance == alice_taiyi + op.reward_yang );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_yang_balance == ASSET( "0.000 YANG" ) );
-        BOOST_REQUIRE( db->get_account( "alice" ).qi_shares == alice_qi + op.reward_qi );
+        BOOST_REQUIRE( db->get_account( "alice" ).qi == alice_qi + op.reward_qi );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_balance == ASSET( "0.000000 QI" ) );
         validate_database();
     }
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE( delegate_qi_shares_validate )
+BOOST_AUTO_TEST_CASE( delegate_qi_validate )
 {
     try
     {
-        delegate_qi_shares_operation op;
+        delegate_qi_operation op;
         
         op.delegator = "alice";
         op.delegatee = "bob";
-        op.qi_shares = asset( -1, QI_SYMBOL );
+        op.qi = asset( -1, QI_SYMBOL );
         TAIYI_REQUIRE_THROW( op.validate(), fc::assert_exception );
     }
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE( delegate_qi_shares_authorities )
+BOOST_AUTO_TEST_CASE( delegate_qi_authorities )
 {
     try
     {
-        BOOST_TEST_MESSAGE( "Testing: delegate_qi_shares_authorities" );
+        BOOST_TEST_MESSAGE( "Testing: delegate_qi_authorities" );
         signed_transaction tx;
         ACTORS( (alice)(bob) )
         vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "10000.000 YANG" ) );
         
-        delegate_qi_shares_operation op;
-        op.qi_shares = ASSET( "300.000000 QI");
+        delegate_qi_operation op;
+        op.qi = ASSET( "300.000000 QI");
         op.delegator = "alice";
         op.delegatee = "bob";
         
@@ -2303,11 +2303,11 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_authorities )
     FC_LOG_AND_RETHROW()
 }
 
-BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
+BOOST_AUTO_TEST_CASE( delegate_qi_apply )
 {
     try
     {
-        BOOST_TEST_MESSAGE( "Testing: delegate_qi_shares_apply" );
+        BOOST_TEST_MESSAGE( "Testing: delegate_qi_apply" );
         signed_transaction tx;
         ACTORS( (alice)(bob)(charlie) )
         generate_block();
@@ -2324,17 +2324,17 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         
         generate_block();
         
-        delegate_qi_shares_operation op;
-        op.qi_shares = ASSET( "10000.000000 QI");
+        delegate_qi_operation op;
+        op.qi = ASSET( "10000.000000 QI");
         op.delegator = "alice";
         op.delegatee = "bob";
         
         util::manabar old_manabar = db->get_account( "alice" ).manabar;
-        util::manabar_params params( util::get_effective_qi_shares( db->get_account( "alice" ) ), TAIYI_MANA_REGENERATION_SECONDS );
+        util::manabar_params params( util::get_effective_qi( db->get_account( "alice" ) ), TAIYI_MANA_REGENERATION_SECONDS );
         old_manabar.regenerate_mana( params, db->head_block_time() );
 
         util::manabar old_bob_manabar = db->get_account( "bob" ).manabar;
-        params.max_mana = util::get_effective_qi_shares( db->get_account( "bob" ) );
+        params.max_mana = util::get_effective_qi( db->get_account( "bob" ) );
         old_bob_manabar.regenerate_mana( params, db->head_block_time() );
 
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
@@ -2345,31 +2345,31 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         const account_object& alice_acc = db->get_account( "alice" );
         const account_object& bob_acc = db->get_account( "bob" );
         
-        BOOST_REQUIRE( alice_acc.delegated_qi_shares == ASSET( "10000.000000 QI" ) );
-        BOOST_REQUIRE( alice_acc.manabar.current_mana == old_manabar.current_mana - op.qi_shares.amount.value );
-        BOOST_REQUIRE( bob_acc.received_qi_shares == ASSET( "10000.000000 QI" ) );
-        BOOST_REQUIRE( bob_acc.manabar.current_mana == old_bob_manabar.current_mana + op.qi_shares.amount.value );
+        BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "10000.000000 QI" ) );
+        BOOST_REQUIRE( alice_acc.manabar.current_mana == old_manabar.current_mana - op.qi.amount.value );
+        BOOST_REQUIRE( bob_acc.received_qi == ASSET( "10000.000000 QI" ) );
+        BOOST_REQUIRE( bob_acc.manabar.current_mana == old_bob_manabar.current_mana + op.qi.amount.value );
 
         BOOST_TEST_MESSAGE( "--- Test that the delegation object is correct. " );
         auto delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
         
         BOOST_REQUIRE( delegation != nullptr );
         BOOST_REQUIRE( delegation->delegator == op.delegator);
-        BOOST_REQUIRE( delegation->qi_shares  == ASSET( "10000.000000 QI"));
+        BOOST_REQUIRE( delegation->qi  == ASSET( "10000.000000 QI"));
         
         old_manabar = db->get_account( "alice" ).manabar;
-        params.max_mana = util::get_effective_qi_shares( db->get_account( "alice" ) );
+        params.max_mana = util::get_effective_qi( db->get_account( "alice" ) );
         old_manabar.regenerate_mana( params, db->head_block_time() );
 
         old_bob_manabar = db->get_account( "bob" ).manabar;
-        params.max_mana = util::get_effective_qi_shares( db->get_account( "bob" ) );
+        params.max_mana = util::get_effective_qi( db->get_account( "bob" ) );
         old_bob_manabar.regenerate_mana( params, db->head_block_time() );
 
         int64_t delta = 10000000000;
         
         validate_database();
         tx.clear();
-        op.qi_shares.amount += delta;
+        op.qi.amount += delta;
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         tx.operations.push_back( op );
         sign( tx, alice_private_key );
@@ -2380,10 +2380,10 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
 
         BOOST_REQUIRE( delegation != nullptr );
         BOOST_REQUIRE( delegation->delegator == op.delegator);
-        BOOST_REQUIRE( delegation->qi_shares == ASSET( "20000.000000 QI"));
-        BOOST_REQUIRE( alice_acc.delegated_qi_shares == ASSET( "20000.000000 QI"));
+        BOOST_REQUIRE( delegation->qi == ASSET( "20000.000000 QI"));
+        BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "20000.000000 QI"));
         BOOST_REQUIRE( alice_acc.manabar.current_mana == old_manabar.current_mana - delta );
-        BOOST_REQUIRE( bob_acc.received_qi_shares == ASSET( "20000.000000 QI"));
+        BOOST_REQUIRE( bob_acc.received_qi == ASSET( "20000.000000 QI"));
         BOOST_REQUIRE( bob_acc.manabar.current_mana == old_bob_manabar.current_mana + delta );
 
         BOOST_TEST_MESSAGE( "--- Test failure delegating delgated QI." );
@@ -2407,7 +2407,7 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
 
         generate_block();
 
-        auto sam_vest = db->get_account( "sam" ).qi_shares;
+        auto sam_vest = db->get_account( "sam" ).qi;
 
         BOOST_TEST_MESSAGE( "--- Test failure when delegating 0 QI" );
         tx.clear();
@@ -2419,7 +2419,7 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
 
         BOOST_TEST_MESSAGE( "--- Testing failure delegating more qi shares than account has." );
         tx.clear();
-        op.qi_shares = asset( sam_vest.amount + 1, QI_SYMBOL );
+        op.qi = asset( sam_vest.amount + 1, QI_SYMBOL );
         tx.operations.push_back( op );
         sign( tx, sam_private_key );
         TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
@@ -2434,7 +2434,7 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
             });
         });
         
-        op.qi_shares = sam_vest;
+        op.qi = sam_vest;
         tx.clear();
         tx.operations.push_back( op );
         sign( tx, sam_private_key );
@@ -2444,7 +2444,7 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         generate_block();
         db_plugin->debug_update( [=]( database& db ) {
             db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
-                a.manabar.current_mana = util::get_effective_qi_shares( a ) / 4;
+                a.manabar.current_mana = util::get_effective_qi( a ) / 4;
                 a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
             });
         });
@@ -2453,19 +2453,19 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         sam_vest = asset( sam_vest.amount / 2, QI_SYMBOL );
         withdraw_qi_operation withdraw;
         withdraw.account = "sam";
-        withdraw.qi_shares = sam_vest;
+        withdraw.qi = sam_vest;
         tx.operations.push_back( withdraw );
         sign( tx, sam_private_key );
         db->push_transaction( tx, 0 );
         
         tx.clear();
-        op.qi_shares = asset( sam_vest.amount + 2, QI_SYMBOL );
+        op.qi = asset( sam_vest.amount + 2, QI_SYMBOL );
         tx.operations.push_back( op );
         sign( tx, sam_private_key );
         TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
         
         tx.clear();
-        withdraw.qi_shares = ASSET( "0.000000 QI" );
+        withdraw.qi = ASSET( "0.000000 QI" );
         tx.operations.push_back( withdraw );
         sign( tx, sam_private_key );
         db->push_transaction( tx, 0 );
@@ -2479,14 +2479,14 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         });
 
         sam_vest.amount += 1000;
-        op.qi_shares = sam_vest;
+        op.qi = sam_vest;
         tx.clear();
         tx.operations.push_back( op );
         sign( tx, sam_private_key );
         db->push_transaction( tx, 0 );
 
         tx.clear();
-        withdraw.qi_shares = asset( sam_vest.amount, QI_SYMBOL );
+        withdraw.qi = asset( sam_vest.amount, QI_SYMBOL );
         tx.operations.push_back( withdraw );
         sign( tx, sam_private_key );
         TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );
@@ -2496,11 +2496,11 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         util::manabar old_sam_manabar = db->get_account( "sam" ).manabar;
         util::manabar old_dave_manabar = db->get_account( "dave" ).manabar;
 
-        util::manabar_params sam_params( util::get_effective_qi_shares( db->get_account( "sam" ) ), TAIYI_MANA_REGENERATION_SECONDS );
-        util::manabar_params dave_params( util::get_effective_qi_shares( db->get_account( "dave" ) ), TAIYI_MANA_REGENERATION_SECONDS );
+        util::manabar_params sam_params( util::get_effective_qi( db->get_account( "sam" ) ), TAIYI_MANA_REGENERATION_SECONDS );
+        util::manabar_params dave_params( util::get_effective_qi( db->get_account( "dave" ) ), TAIYI_MANA_REGENERATION_SECONDS );
 
         tx.clear();
-        op.qi_shares = ASSET( "0.000000 QI" );
+        op.qi = ASSET( "0.000000 QI" );
         tx.operations.push_back( op );
         sign( tx, sam_private_key );
         db->push_transaction( tx, 0 );
@@ -2513,10 +2513,10 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
 
         BOOST_REQUIRE( exp_obj != end );
         BOOST_REQUIRE( exp_obj->delegator == "sam" );
-        BOOST_REQUIRE( exp_obj->qi_shares == sam_vest );
+        BOOST_REQUIRE( exp_obj->qi == sam_vest );
         BOOST_REQUIRE( exp_obj->expiration == db->head_block_time() + gpo.delegation_return_period );
-        BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi_shares == sam_vest );
-        BOOST_REQUIRE( db->get_account( "dave" ).received_qi_shares == ASSET( "0.000000 QI" ) );
+        BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi == sam_vest );
+        BOOST_REQUIRE( db->get_account( "dave" ).received_qi == ASSET( "0.000000 QI" ) );
         delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
         BOOST_REQUIRE( delegation == nullptr );
 
@@ -2532,8 +2532,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         old_sam_manabar = db->get_account( "sam" ).manabar;
         old_dave_manabar = db->get_account( "dave" ).manabar;
 
-        sam_params.max_mana = util::get_effective_qi_shares( db->get_account( "sam" ) );
-        dave_params.max_mana = util::get_effective_qi_shares( db->get_account( "dave" ) );
+        sam_params.max_mana = util::get_effective_qi( db->get_account( "sam" ) );
+        dave_params.max_mana = util::get_effective_qi( db->get_account( "dave" ) );
 
         generate_blocks( exp_obj->expiration + TAIYI_BLOCK_INTERVAL );
 
@@ -2547,7 +2547,7 @@ BOOST_AUTO_TEST_CASE( delegate_qi_shares_apply )
         end = db->get_index< qi_delegation_expiration_index, by_id >().end();
 
         BOOST_REQUIRE( exp_obj == end );
-        BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi_shares == ASSET( "0.000000 QI" ) );
+        BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi == ASSET( "0.000000 QI" ) );
         BOOST_REQUIRE( db->get_account( "sam" ).manabar.current_mana == old_sam_manabar.current_mana + sam_vest.amount.value );
         BOOST_REQUIRE( db->get_account( "dave" ).manabar.current_mana == old_dave_manabar.current_mana );
     }
@@ -2576,8 +2576,8 @@ BOOST_AUTO_TEST_CASE( issue_971_qi_removal )
         generate_block();
         
         signed_transaction tx;
-        delegate_qi_shares_operation op;
-        op.qi_shares = ASSET( "10000.000000 QI");
+        delegate_qi_operation op;
+        op.qi = ASSET( "10000.000000 QI");
         op.delegator = "alice";
         op.delegatee = "bob";
         
@@ -2589,8 +2589,8 @@ BOOST_AUTO_TEST_CASE( issue_971_qi_removal )
         const account_object& alice_acc = db->get_account( "alice" );
         const account_object& bob_acc = db->get_account( "bob" );
         
-        BOOST_REQUIRE( alice_acc.delegated_qi_shares == ASSET( "10000.000000 QI"));
-        BOOST_REQUIRE( bob_acc.received_qi_shares == ASSET( "10000.000000 QI"));
+        BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "10000.000000 QI"));
+        BOOST_REQUIRE( bob_acc.received_qi == ASSET( "10000.000000 QI"));
         
         generate_block();
         
@@ -2602,7 +2602,7 @@ BOOST_AUTO_TEST_CASE( issue_971_qi_removal )
         
         generate_block();
         
-        op.qi_shares = ASSET( "0.000000 QI" );
+        op.qi = ASSET( "0.000000 QI" );
         
         tx.clear();
         tx.operations.push_back( op );
@@ -2610,8 +2610,8 @@ BOOST_AUTO_TEST_CASE( issue_971_qi_removal )
         db->push_transaction( tx, 0 );
         generate_block();
         
-        BOOST_REQUIRE( alice_acc.delegated_qi_shares == ASSET( "10000.000000 QI"));
-        BOOST_REQUIRE( bob_acc.received_qi_shares == ASSET( "0.000000 QI"));
+        BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "10000.000000 QI"));
+        BOOST_REQUIRE( bob_acc.received_qi == ASSET( "0.000000 QI"));
     }
     FC_LOG_AND_RETHROW()
 }

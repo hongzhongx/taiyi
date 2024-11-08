@@ -12,6 +12,7 @@ namespace taiyi { namespace protocol {
      * or it will trigger a hardfork.
      */
     typedef fc::static_variant<
+    
         account_create_operation,
         account_update_operation,
 
@@ -19,7 +20,7 @@ namespace taiyi { namespace protocol {
         transfer_to_qi_operation,
         withdraw_qi_operation,
         set_withdraw_qi_route_operation,
-        delegate_qi_shares_operation,
+        delegate_qi_operation,
 
         siming_update_operation,
         siming_set_properties_operation,
@@ -53,7 +54,10 @@ namespace taiyi { namespace protocol {
         hardfork_operation,
         fill_qi_withdraw_operation,
         return_qi_delegation_operation,
-        producer_reward_operation
+        producer_reward_operation,
+    
+        nfa_convert_qi_to_resources_operation
+    
     > operation;
 
     bool is_market_operation( const operation& op );
