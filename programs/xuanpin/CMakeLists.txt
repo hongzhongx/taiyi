@@ -11,7 +11,7 @@ endif()
 
 if( TAIYI_STATIC_BUILD )
    target_link_libraries( xuanpin PRIVATE
-                          "-static-libstdc++ -static-libgcc -lreadline"
+                          "-static-libstdc++ -static-libgcc"
                           taiyi_net taiyi_chain taiyi_protocol taiyi_utilities taiyi_xuanpin baiyujing_api_plugin fc ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} )
 else( TAIYI_STATIC_BUILD )
    target_link_libraries( xuanpin PRIVATE

@@ -84,7 +84,7 @@
 
 ## 在 macOS X 操作系统上编译
 
-参考这个链接安装Xcode和它的命令行工具：https://guide.macports.org/#installing.xcode.  在OS X 10.11 (El Capitan)之后的系统中，当你在命令行下启动开发者工具时，你会受到一个安装开发者工具包的提示（需要接受Xcode的许可证（license））：
+参考这个链接安装Xcode和它的命令行工具：https://guide.macports.org/#installing.xcode.  在OS X 10.11 (El Capitan)之后的系统中，当你在命令行下启动开发者工具时，你会收到一个安装开发者工具包的提示（需要接受Xcode的许可证（license））：
 
     sudo xcodebuild -license accept
 
