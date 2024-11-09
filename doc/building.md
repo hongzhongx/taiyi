@@ -28,49 +28,36 @@
     cd taiyi
     docker build -t zuowangdao/taiyi .
 
-## 在 Ubuntu 18.04 操作系统上编译
+## 在 Ubuntu 22.04 操作系统上编译
 
-注意，首先要通过`apt`管理器安装各种环境工具和库。
+注意，首先要通过`apt-get`管理器安装各种环境工具和库。
 
     # Required packages
-    sudo apt install -y \
+    sudo apt-get update
+    sudo apt-get install -y \
+        git \
+        build-essential \
+        libboost-all-dev \
+        cmake \
+        libssl-dev \
+        libsnappy-dev \
+        python3-jinja2 \
+        doxygen \
         autoconf \
         automake \
-        cmake \
-        gcc-5 \
-        g++-5 \
-        libbz2-dev \
-        libsnappy-dev \
-        libssl1.0-dev \
-        libtool \
-        make \
-        pkg-config \
-        python3 \
-        python3-jinja2
-
-    # Optional packages
-    sudo apt install -y \
-        doxygen \
-        libncurses5-dev \
+        autotools-dev \
+        bsdmainutils \
+        libyajl-dev \
         libreadline-dev \
-        perl
-
-    # Remove worthless versions of compilers and create symlinks to the right ones.
-    sudo apt remove -y gcc g++
-    ln -s /usr/bin/gcc-5 /usr/bin/gcc
-    ln -s /usr/bin/gcc-5 /usr/bin/cc
-    ln -s /usr/bin/g++-5 /usr/bin/g++
-    ln -s /usr/bin/g++-5 /usr/bin/cxx
-
-    # Installing libboost 1.76
-    cd ~/
-    wget 'http://sourceforge.net/projects/boost/files/boost/1.76.0/boost_1_76_0.tar.bz2'
-    tar -xvf boost_1_76_0.tar.bz2
-    cd boost_1_76_0
-    ./bootstrap.sh
-    sudo ./b2 install
-    cd ..
-    rm -rf boost_1_76_0*
+        libssl-dev \
+        libtool \
+        liblz4-tool \
+        ncurses-dev \
+        libgflags-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        liblz4-dev \
+        libzstd-dev
 
     # Actual build
     git clone https://github.com/hongzhongx/taiyi

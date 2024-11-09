@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as builder
+FROM ubuntu:22.04 as builder
 
 # The default build params are for low memory mira version.
 # This usually are used as a siming node.
@@ -77,7 +77,7 @@ RUN if [ "${DOXYGEN}" = "ON" ] ; then \
         programs/build_helpers/get_config_check.sh; \
     fi
 
-FROM ubuntu:18.04 as final
+FROM ubuntu:22.04 as final
 
 ARG CMAKE_BUILD_TYPE=Release
 ARG BUILD_TAG=main
