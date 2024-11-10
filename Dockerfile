@@ -1,5 +1,8 @@
 FROM ubuntu:22.04 as builder
 
+# https://askubuntu.com/questions/909277/avoiding-user-interaction-with-tzdata-when-installing-certbot-in-a-docker-contai
+ARG DEBIAN_FRONTEND=noninteractive
+
 # The default build params are for low memory mira version.
 # This usually are used as a siming node.
 ARG CMAKE_BUILD_TYPE=Release
