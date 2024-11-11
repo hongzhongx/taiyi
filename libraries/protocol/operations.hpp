@@ -56,8 +56,9 @@ namespace taiyi { namespace protocol {
         return_qi_delegation_operation,
         producer_reward_operation,
     
-        nfa_convert_qi_to_resources_operation
-    
+        nfa_convert_qi_to_resources_operation,
+        reward_qi_operation
+
     > operation;
 
     bool is_market_operation( const operation& op );

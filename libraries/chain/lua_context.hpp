@@ -1724,7 +1724,7 @@ public:
         static const int maxSize = 1;
 
         template<typename TType2>
-        static PushedObject push(lua_State* state, TType2&& value) noexcept {
+        static PushedObject push(lua_State* state, TType2&& value) {
             // this function is called when lua's garbage collector wants to destroy our object
             // we simply call its destructor
             const auto garbageCallbackFunction = [](lua_State* lua) -> int {

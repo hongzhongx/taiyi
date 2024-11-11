@@ -176,6 +176,11 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
 
+        void operator()( const reward_qi_operation& op )
+        {
+            _impacted.insert( op.account );
+        }
+
         //void operator()( const operation& op ){}
     };
 

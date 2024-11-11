@@ -60,7 +60,17 @@ namespace taiyi { namespace protocol {
         asset               qi_converted;
         asset               new_resource;
     };
-                        
+
+    struct reward_qi_operation : public virtual_operation
+    {
+        reward_qi_operation(){}
+        reward_qi_operation( const account_name_type& a, const asset& q )
+            : account( a ), qi( q ) {}
+        
+        account_name_type   account;
+        asset               qi;
+    };
+
 } } //taiyi::protocol
 
 FC_REFLECT( taiyi::protocol::fill_qi_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
@@ -68,3 +78,4 @@ FC_REFLECT( taiyi::protocol::hardfork_operation, (hardfork_id) )
 FC_REFLECT( taiyi::protocol::return_qi_delegation_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(qi) )
 FC_REFLECT( taiyi::protocol::nfa_convert_qi_to_resources_operation, (nfa)(owner)(qi_converted)(new_resource) )
+FC_REFLECT( taiyi::protocol::reward_qi_operation, (account)(qi) )

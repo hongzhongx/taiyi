@@ -108,18 +108,28 @@ namespace taiyi { namespace chain {
         const account_object& account = get_account(account_name);
         
         if(qi > rf.reward_qi_balance) {
+            reward_qi_operation vop = reward_qi_operation( account.name, rf.reward_qi_balance );
+            pre_push_virtual_operation( vop );
+
             modify_reward_balance(account, asset(0, YANG_SYMBOL), rf.reward_qi_balance, true);
 
             modify(rf, [&](reward_fund_object& rfo) {
                 rfo.reward_qi_balance.amount = 0;
             });
+
+            post_push_virtual_operation( vop );
         }
         else {
+            reward_qi_operation vop = reward_qi_operation( account.name, qi );
+            pre_push_virtual_operation( vop );
+
             modify_reward_balance(account, asset(0, YANG_SYMBOL), qi, true);
 
             modify(rf, [&](reward_fund_object& rfo) {
                 rfo.reward_qi_balance -= qi;
             });
+
+            post_push_virtual_operation( vop );
         }
     }
 
