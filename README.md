@@ -14,7 +14,7 @@
 
 # 介绍
 
-这是一个在线小游戏，模拟一个虚拟的修仙世界，为乐子人找找乐子。
+这是一个在线虚拟小游戏，模拟一个修仙世界，为乐子人找找乐子。
 
 <br>
 <div align='center'><a href='./doc/imgs/map.jpg'><img src='./doc/imgs/map.jpg' width=40%></a></div>
@@ -33,6 +33,7 @@
 
 ## 文档
 
+* 太乙宇宙观：原本见[《太乙宇宙内篇》](./doc/yuzhou.md)，现代白话解读见[《太乙宇宙多维结构————五部十八界》](./doc/yuzhou_explain.md)
 * 智能游戏脚本（SGS）：[https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf](https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf) (*不断更新中*)
 * 前期交流社区（Discord）：[https://discord.gg/g4f84UEGCD](https://discord.gg/g4f84UEGCD)。理想情况下，社区将由太乙网络本身承载，详见[坐忘道项目](https://)
 
