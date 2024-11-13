@@ -10,6 +10,10 @@
 #include <fc/real128.hpp>
 #include <fc/api.hpp>
 
+namespace fc {
+    template<> struct get_typename<variant_object>  { static const char* name()  { return "variant_object";  } };
+}
+
 namespace taiyi { namespace xuanpin {
 
     using namespace std;
