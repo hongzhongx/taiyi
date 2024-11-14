@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
 
     string nfa_code_lua = " hello_nfa = { consequence = true }  \n \
                             function init_data() return {} end  \n \
-                            function do_hello_nfa(me, params)   \n \
+                            function do_hello_nfa()             \n \
                                 contract_helper:log('hello nfa')\n \
                             end";
 
@@ -665,11 +665,11 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     
     int64_t used_mana = old_manabar.current_mana - db->get_account( "charlie" ).manabar.current_mana;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 470 );
+    BOOST_REQUIRE( used_mana == 456 );
 
     asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
     //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(470, QI_SYMBOL) );
+    BOOST_REQUIRE( reward_qi == asset(456, QI_SYMBOL) );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -683,10 +683,10 @@ BOOST_AUTO_TEST_CASE( action_drops )
                                                                 \n \
                             function init_data() return {} end  \n \
                                                                 \n \
-                            function do_active(me, params)      \n \
+                            function do_active()                \n \
                                 nfa_helper:enable_tick()        \n \
                             end                                 \n \
-                            function do_heart_beat(me, params)  \n \
+                            function do_heart_beat()            \n \
                                 contract_helper:log('beat')     \n \
                             end";
 
@@ -808,7 +808,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     used_mana = old_manabar.current_mana - db->get_account( "charlie" ).manabar.current_mana;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 526 );
+    BOOST_REQUIRE( used_mana == 512 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -822,10 +822,10 @@ BOOST_AUTO_TEST_CASE( heart_beat )
                                                                 \n \
                             function init_data() return {} end  \n \
                                                                 \n \
-                            function do_active(me, params)      \n \
+                            function do_active()                \n \
                                 nfa_helper:enable_tick()        \n \
                             end                                 \n \
-                            function do_heart_beat(me, params)  \n \
+                            function do_heart_beat()            \n \
                                 contract_helper:log('beat')     \n \
                             end";
 
@@ -1001,7 +1001,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
             used_mana = old_mana - nfa.manabar.current_mana;
             idump( (old_mana)(nfa.manabar.current_mana)(used_mana) );
-            BOOST_CHECK_EQUAL( used_mana, 526);
+            BOOST_CHECK_EQUAL( used_mana, 512);
         }
         else {
             generate_block();

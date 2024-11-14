@@ -187,13 +187,6 @@ namespace taiyi { namespace chain {
         _db.modify( owner, [&]( account_object& a ) {
             util::update_manabar( _db.get_dynamic_global_properties(), a, true );
         });
-
-        //重整规范参数，使得最终传入合约参数为[me, params]
-        lua_table params;
-        for(size_t i=0; i<o.value_list.size(); i++)
-            params.v[lua_types(lua_int(i+1))] = o.value_list[i]; //lua中数组下标在table中用key是从1开始的
-        vector<lua_types> value_list;
-        value_list.emplace_back(params);
         
         contract_result cresult;
         contract_worker worker;
@@ -204,7 +197,7 @@ namespace taiyi { namespace chain {
         //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
         long long old_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        bool bOK = worker.do_nfa_contract_action(*nfa, o.action, value_list, cresult, vm_drops, true, context, _db);
+        bool bOK = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, cresult, vm_drops, true, context, _db);
         FC_ASSERT(bOK, "NFA do contract action fail.");
         int64_t used_drops = old_drops - vm_drops;
 

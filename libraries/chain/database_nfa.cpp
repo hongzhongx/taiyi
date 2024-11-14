@@ -152,7 +152,7 @@ namespace taiyi { namespace chain {
                 util::update_manabar( get_dynamic_global_properties(), obj, true );
             });
 
-            vector<lua_types> value_list(1, lua_table()); //no params, so one empty table.
+            vector<lua_types> value_list; //no params.
             contract_result cresult;
             contract_worker worker;
 
@@ -165,6 +165,11 @@ namespace taiyi { namespace chain {
             bool beat_fail = false;
             try {
                 worker.do_nfa_contract_action(nfa, "heart_beat", value_list, cresult, vm_drops, true, context, *this);
+            }
+            catch (fc::exception e) {
+                //任何错误都不能照成核心循环崩溃
+                beat_fail = true;
+                wlog("NFA (${i}) process heart beat fail. err: ${e}", ("i", nfa.id)("e", e.to_string()));
             }
             catch (...) {
                 //任何错误都不能照成核心循环崩溃

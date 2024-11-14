@@ -836,14 +836,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
             string action_name = args[1].as< string >();
             vector<lua_types> value_list = args[2].as< vector<lua_types> >();
-            
-            //重整规范参数，使得最终传入合约参数为[me, params]
-            lua_table params;
-            for(size_t i=0; i<value_list.size(); i++)
-                params.v[lua_types(lua_int(i+1))] = value_list[i]; //lua中数组下标在table中用key是从1开始的
-            value_list.clear();
-            value_list.emplace_back(params);
-            
+                        
             contract_result cresult;
             contract_worker worker;
 

@@ -51,7 +51,7 @@ namespace taiyi { namespace chain {
         int64_t used_drops = old_drops - vm_drops;
         
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create contract." );
+        FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create contract. need ${n}", ("n", used_mana) );
         _db.modify( creator, [&]( account_object& a ) {
             a.manabar.use_mana( used_mana );
         });

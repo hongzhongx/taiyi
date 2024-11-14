@@ -417,12 +417,14 @@ namespace taiyi { namespace chain {
             
             string function_name = "do_" + action;
             
-            //准备参数，默认首个参数me，第二个参数是params
+            //准备参数
             vector<lua_types> value_list;
-            contract_nfa_base_info cnbi(nfa, db);
-            lua_table me_value = cnbi.to_lua_table();
-            value_list.push_back(me_value);
-            value_list.push_back(lua_table(params));
+            size_t params_ct = params.size();
+            for(int i=1; i< (params_ct+1); i++) {
+                auto p = params.find(lua_key(lua_int(i)));
+                FC_ASSERT(p != params.end(), "eval_nfa_action input invalid params");
+                value_list.push_back(p->second);
+            }
             
             auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
             FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));

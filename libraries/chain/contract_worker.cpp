@@ -438,16 +438,9 @@ namespace taiyi { namespace chain {
         int pre_drops_enable = lua_enabledrops(context.mState, 1, reset_vm_memused?1:0);
         lua_setdrops(context.mState, vm_drops);
 
-        try {
-            FC_ASSERT(value_list.size() == 1, "nfa contract action function only support one table parameter, for exp: {param1, param2...}.");
-            
+        try
+        {            
             const auto& caller_account = db.get<account_object, by_id>(caller_nfa.owner_account);
-            
-            //插入默认首个参数me
-            contract_nfa_base_info cnbi(caller_nfa, db);
-            lua_table me_value = cnbi.to_lua_table();
-            value_list.insert(value_list.begin(), me_value);
-            
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
