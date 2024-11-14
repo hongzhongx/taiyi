@@ -270,6 +270,7 @@ namespace taiyi { namespace chain {
         registerFunction("get_resources", &contract_nfa_handler::get_resources);
         registerFunction("convert_qi_to_resource", &contract_nfa_handler::convert_qi_to_resource);
         registerFunction("set_data", &contract_nfa_handler::set_data);
+        registerFunction("add_child", &contract_nfa_handler::add_child);        
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

@@ -916,6 +916,10 @@ LUA_API int lua_enabledrops (lua_State *L, int enable, int reset_memused) {
     return pre_enable;
 }
 
+LUA_API int lua_getdropsenabled (lua_State *L) {
+    return L->enable_drops;
+}
+
 /*
 ** 'load' and 'call' functions (run Lua code)
 */

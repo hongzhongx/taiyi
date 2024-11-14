@@ -388,8 +388,13 @@ namespace taiyi { namespace chain {
     //=============================================================================
     void contract_handler::eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
     {
-        //TODO: eval产生的消耗
         LuaContext nfa_context;
+        
+        if(lua_getdropsenabled(context.mState)) {
+            lua_enabledrops(nfa_context.mState, 1, 1);
+            lua_setdrops(nfa_context.mState, lua_getdrops(context.mState)); //上层虚拟机还剩下的drops可用
+        }
+
         try
         {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
@@ -485,8 +490,12 @@ namespace taiyi { namespace chain {
             }
             ch.result.relevant_datasize += fc::raw::pack_size(nfa_contract.contract_data) + fc::raw::pack_size(ch.account_conntract_data) + fc::raw::pack_size(ch.result.contract_affecteds);
         }
-        catch (fc::exception e)
+        catch(fc::exception e)
         {
+            if(lua_getdropsenabled(context.mState)) {
+                auto vm_drops = lua_getdrops(nfa_context.mState);
+                lua_setdrops(context.mState, vm_drops); //即使崩溃了也要将使用drops情况反馈到上层
+            }
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
     }

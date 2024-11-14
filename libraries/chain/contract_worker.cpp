@@ -29,9 +29,7 @@ namespace taiyi { namespace chain {
             auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
             FC_ASSERT(abi_itr != contract.contract_ABI.end(), "${function_name} maybe a internal function", ("function_name", function_name));
             if(!abi_itr->second.get<lua_function>().is_var_arg)
-                FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(),
-                          "input values count is ${n}, but ${function_name}`s parameter list is ${plist}...",
-                          ("n", value_list.size())("function_name", function_name)("plist", abi_itr->second.get<lua_function>().arglist));
+                FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${function_name}`s parameter list is ${plist}...", ("n", value_list.size())("function_name", function_name)("plist", abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size()<=20,"value list is greater than 20 limit");
                         
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;

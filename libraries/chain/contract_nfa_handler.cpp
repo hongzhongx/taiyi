@@ -130,7 +130,8 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
-    void contract_nfa_handler::set_data(const lua_map& data) {
+    void contract_nfa_handler::set_data(const lua_map& data)
+    {
         try
         {
             FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
@@ -144,6 +145,52 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
+    //=========================================================================
+    void modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check, database& db)
+    {
+        for (auto _id: nfa.children) {
+            if(recursion_loop_check.find(_id) != recursion_loop_check.end())
+                continue;
 
+            const auto& child_nfa = db.get<nfa_object, by_id>(_id);
+            db.modify(child_nfa, [&]( nfa_object& obj ) {
+                obj.owner_account = new_owner.id;
+            });
+            
+            recursion_loop_check.insert(_id);
+            
+            modify_nfa_children_owner(child_nfa, new_owner, recursion_loop_check, db);
+        }
+    }
+    
+    void contract_nfa_handler::add_child(int64_t nfa_id)
+    {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
 
+            const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(child_nfa.owner_account == _caller_account.id, "caller account not the input nfa's owner");
+            
+            FC_ASSERT(child_nfa.parent == std::numeric_limits<nfa_id_type>::max(), "input nfa already have parent");
+            FC_ASSERT(std::find(_caller.children.begin(), _caller.children.end(), nfa_id_type(nfa_id)) == _caller.children.end(), "input nfa is already child");
+            
+            _db.modify(_caller, [&]( nfa_object& obj ) {
+                obj.children.push_back(nfa_id);
+            });
+            
+            _db.modify(child_nfa, [&]( nfa_object& obj ) {
+                obj.parent = _caller.id;
+            });
+            
+            //TODO: 转移子节点里面所有子节点的所有权，在NFA增加使用权账号后，是否也要转移使用权？
+            std::set<nfa_id_type> look_checker;
+            modify_nfa_children_owner(child_nfa, _caller_account, look_checker, _db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    
 } } // namespace taiyi::chain

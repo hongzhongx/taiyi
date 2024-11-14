@@ -97,6 +97,7 @@ namespace taiyi { namespace chain {
         void disable_tick();
         void convert_qi_to_resource(int64_t amount, string resource_symbol_name);
         void set_data(const lua_map& data);
+        void add_child(int64_t nfa_id);
     };
 
     //合约本身被账号直接调用的角度来处理事务，隐含了合约调用账号

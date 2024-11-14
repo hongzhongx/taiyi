@@ -212,7 +212,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     struct api_nfa_object
     {
-        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parents(o.parents), children(o.children), data(o.data), qi(o.qi), manabar(o.manabar), created_time(o.created_time), next_tick_time(o.next_tick_time)
+        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), children(o.children), data(o.data), qi(o.qi), manabar(o.manabar), created_time(o.created_time), next_tick_time(o.next_tick_time)
         {
             creator_account = db.get<account_object, by_id>(o.creator_account).name;
             owner_account = db.get<account_object, by_id>(o.owner_account).name;
@@ -237,7 +237,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
         string              symbol;
         
-        vector<nfa_id_type> parents;
+        nfa_id_type         parent;
         vector<nfa_id_type> children;
         
         string              main_contract;
@@ -274,4 +274,4 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parents)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parent)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
