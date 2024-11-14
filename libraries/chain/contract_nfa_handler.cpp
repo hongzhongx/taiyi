@@ -29,6 +29,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 obj.next_tick_time = time_point_sec::min();
             });
@@ -43,6 +45,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 obj.next_tick_time = time_point_sec::maximum();
             });
@@ -81,6 +85,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+
             asset qi(amount, QI_SYMBOL);
             FC_ASSERT(_db.get_nfa_balance(_caller, QI_SYMBOL) >= qi, "NFA not have enough qi to convert.");
             
@@ -123,5 +129,21 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
+    //=========================================================================
+    void contract_nfa_handler::set_data(const lua_map& data) {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            
+            _db.modify(_caller, [&]( nfa_object& obj ) {
+                obj.data = data;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+
 
 } } // namespace taiyi::chain

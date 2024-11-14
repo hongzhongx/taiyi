@@ -80,12 +80,13 @@ namespace taiyi { namespace chain {
     //NFA绑定合约被调用的角度来处理事务，隐含了发起这个调用相关的NFA对象
     struct contract_nfa_handler
     {
+        const account_object&               _caller_account;
         const nfa_object&                   _caller;
         LuaContext&                         _context;
         database&                           _db;
 
-        contract_nfa_handler(const nfa_object& caller, LuaContext &context, database &db)
-            : _caller(caller), _context(context), _db(db)
+        contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db)
+        : _caller_account(caller_account), _caller(caller), _context(context), _db(db)
         {}
 
         contract_nfa_base_info get_info();
@@ -95,6 +96,7 @@ namespace taiyi { namespace chain {
         void enable_tick();
         void disable_tick();
         void convert_qi_to_resource(int64_t amount, string resource_symbol_name);
+        void set_data(const lua_map& data);
     };
 
     //合约本身被账号直接调用的角度来处理事务，隐含了合约调用账号

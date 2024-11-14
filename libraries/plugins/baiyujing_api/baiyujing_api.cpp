@@ -11,6 +11,9 @@
 
 #include <chain/util/uint256.hpp>
 
+#include <chain/lua_context.hpp>
+#include <chain/contract_worker.hpp>
+
 #include <fc/git_revision.hpp>
 
 #include <boost/range/iterator_range.hpp>
@@ -81,6 +84,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (find_nfas)
                 (list_nfas)
                 (get_nfa_history)
+                (get_nfa_action_info)
+                (eval_nfa_action)
             )
             
             void on_post_apply_block( const signed_block& b );
@@ -792,6 +797,70 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
            return result;
         }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, get_nfa_action_info )
+        {
+            CHECK_ARG_SIZE( 2 )
+            
+            api_contract_action_info result;
+            
+            const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
+            string action_name = args[1].as< string >();
+            
+            const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.main_contract);
+            if(contract_ptr == nullptr)
+                return result;
+            
+            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action_name)));
+            if(abi_itr == contract_ptr->contract_ABI.end())
+                return result;
+            if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
+                return result;
+            
+            result.exist = true;
+
+            lua_map action_def = abi_itr->second.get<lua_table>().v;
+            auto def_itr = action_def.find(lua_types(lua_string("consequence")));
+            if(def_itr != action_def.end())
+                result.consequence = def_itr->second.get<lua_bool>().v;
+                    
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, eval_nfa_action )
+        {
+            CHECK_ARG_SIZE( 3 )
+            
+            vector<string> result;
+
+            const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
+            string action_name = args[1].as< string >();
+            vector<lua_types> value_list = args[2].as< vector<lua_types> >();
+            
+            //重整规范参数，使得最终传入合约参数为[me, params]
+            lua_table params;
+            for(size_t i=0; i<value_list.size(); i++)
+                params.v[lua_types(lua_int(i+1))] = value_list[i]; //lua中数组下标在table中用key是从1开始的
+            value_list.clear();
+            value_list.emplace_back(params);
+            
+            contract_result cresult;
+            contract_worker worker;
+
+            LuaContext context;
+            _db.initialize_VM_baseENV(context);
+            
+            long long vm_drops = 100000000;
+            worker.eval_nfa_contract_action(nfa, action_name, value_list, cresult, vm_drops, true, context, _db);
+
+            for(auto& temp : cresult.contract_affecteds) {
+                if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
+                    result.push_back(temp.get<contract_logger>().message);
+                }
+            }
+
+            return result;
+        }
 
         void baiyujing_api_impl::on_post_apply_block( const signed_block& b )
         { try {
@@ -931,6 +1000,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (find_nfas)
         (list_nfas)
         (get_nfa_history)
+        (get_nfa_action_info)
+        (eval_nfa_action)
     )
 
 } } } // taiyi::plugins::baiyujing_api

@@ -363,6 +363,42 @@ namespace taiyi { namespace chain {
         }
     } FC_CAPTURE_AND_RETHROW() }
     
+    bool contract_worker::eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, contract_result &result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    { try {
+        //check existence and consequence type
+        const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
+        if(contract_ptr == nullptr)
+            return false;
+        
+        auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
+        if(abi_itr == contract_ptr->contract_ABI.end())
+            return false;
+        if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
+            return false;
+        
+        lua_map action_def = abi_itr->second.get<lua_table>().v;
+        auto def_itr = action_def.find(lua_types(lua_string("consequence")));
+        if(def_itr != action_def.end())
+            FC_ASSERT(def_itr->second.get<lua_bool>().v == false, "Can not eval action ${a} in nfa with consequence history. should signing it in transaction.", ("a", action));
+        
+        //evaluate contract authority
+        const auto& caller = db.get<account_object, by_id>(caller_nfa.owner_account);
+        if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
+            FC_ASSERT(contract_ptr->can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract_ptr->name));
+                    
+        lua_map account_data;
+        const auto* op_acd = db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract_ptr->id));
+        if(op_acd != nullptr)
+            account_data = op_acd->contract_data;
+        lua_map contract_data = contract_ptr->contract_data;
+        
+        flat_set<public_key_type> sigkeys; //no signature keys
+        string function_name = "do_" + action;
+        do_nfa_contract_function(caller_nfa, function_name, value_list, account_data, sigkeys, result, *contract_ptr, vm_drops, reset_vm_memused, context, db);
+        
+        return true;        
+    } FC_CAPTURE_AND_RETHROW() }
+
     bool contract_worker::do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, contract_result &result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
@@ -427,7 +463,7 @@ namespace taiyi { namespace chain {
             
             contract_base_info cbi(db, context, contract_owner, contract.name, caller_account.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
             contract_handler ch(db, caller_account, contract, result, context, sigkeys, apply_result, account_data);
-            contract_nfa_handler cnh(caller_nfa, context, db);
+            contract_nfa_handler cnh(caller_account, caller_nfa, context, db);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox

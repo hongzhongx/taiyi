@@ -70,6 +70,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         uint32_t                   ref_block_prefix = 0;
         fc::time_point_sec         expiration;
         vector< legacy_operation > operations;
+        vector<protocol::operation_result> operation_results; //仅在玄牝有效
         extensions_type            extensions;
         vector< signature_type >   signatures;
         transaction_id_type        transaction_id;
@@ -136,6 +137,6 @@ namespace fc {
     
 }
 
-FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_signed_transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(extensions)(signatures)(transaction_id)(block_num)(transaction_num) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_signed_transaction, (ref_block_num)(ref_block_prefix)(expiration)(operations)(operation_results)(extensions)(signatures)(transaction_id)(block_num)(transaction_num) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_signed_block, (previous)(timestamp)(siming)(transaction_merkle_root)(extensions)(siming_signature)(transactions)(block_id)(signing_key)(transaction_ids) )

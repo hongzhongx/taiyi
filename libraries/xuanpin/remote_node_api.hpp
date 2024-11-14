@@ -59,6 +59,8 @@ namespace taiyi { namespace xuanpin {
         optional< baiyujing_api::api_nfa_object > find_nfa( const int64_t& ) { FC_ASSERT( false ); }
         vector< baiyujing_api::api_nfa_object > list_nfas(const account_name_type&, uint32_t) const { FC_ASSERT( false ); }
         map< uint32_t, baiyujing_api::api_operation_object > get_nfa_history( int64_t, uint64_t, uint32_t ) { FC_ASSERT( false ); }
+        baiyujing_api::api_contract_action_info get_nfa_action_info(int64_t, const string&) const { FC_ASSERT( false ); }
+        vector<string> eval_nfa_action(int64_t, const string&, const vector<lua_types>&) const { FC_ASSERT( false ); }
     };
 
 } } //taiyi::xuanpin
@@ -108,4 +110,6 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (find_nfas)
     (list_nfas)
     (get_nfa_history)
+    (get_nfa_action_info)
+    (eval_nfa_action)
 )

@@ -1892,7 +1892,9 @@ namespace taiyi { namespace xuanpin {
         tx.operations.push_back(op);
         tx.validate();
 
-        return my->sign_transaction( tx, broadcast );
+        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
+        transaction.operation_results = get_transaction_results(transaction.transaction_id);
+        return transaction;
     } FC_CAPTURE_AND_RETHROW( (creator)(symbol)(describe)(broadcast) ) }
 
     baiyujing_api::legacy_signed_transaction xuanpin_api::create_nfa( const account_name_type& creator, const string& symbol, bool broadcast )
@@ -1906,7 +1908,9 @@ namespace taiyi { namespace xuanpin {
         tx.operations.push_back(op);
         tx.validate();
 
-        return my->sign_transaction( tx, broadcast );
+        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
+        transaction.operation_results = get_transaction_results(transaction.transaction_id);
+        return transaction;
     } FC_CAPTURE_AND_RETHROW( (creator)(symbol)(broadcast) ) }
 
     baiyujing_api::legacy_signed_transaction xuanpin_api::transfer_nfa( const account_name_type& from, const account_name_type& to, int64_t nfa_id, bool broadcast )
@@ -1954,9 +1958,13 @@ namespace taiyi { namespace xuanpin {
         return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(amount)(broadcast) ) }
     
+    baiyujing_api::api_contract_action_info xuanpin_api::get_nfa_action_info(int64_t nfa_id, const string& action)
+    {
+        return my->_remote_api->get_nfa_action_info( nfa_id, action );
+    }
+
     vector<string> xuanpin_api::action_nfa(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list)
     {
-#if 0
         auto info = get_nfa_action_info(nfa_id, action);
         if(!info.consequence)
         {
@@ -1964,7 +1972,6 @@ namespace taiyi { namespace xuanpin {
             return my->_remote_api->eval_nfa_action( nfa_id, action, lua_value_list );
         }
         else
-#endif
         {
             auto transaction = action_nfa_consequence(owner, nfa_id, action, value_list, true);
             auto transaction_results = get_transaction_results(transaction.transaction_id);
@@ -1996,7 +2003,9 @@ namespace taiyi { namespace xuanpin {
         tx.operations.push_back(op);
         tx.validate();
 
-        return my->sign_transaction( tx, broadcast );
+        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
+        transaction.operation_results = get_transaction_results(transaction.transaction_id);
+        return transaction;
     } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(action)(value_list) ) }
 
     baiyujing_api::find_nfas_return xuanpin_api::find_nfas( vector< int64_t > ids )

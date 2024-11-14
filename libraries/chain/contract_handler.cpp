@@ -438,7 +438,7 @@ namespace taiyi { namespace chain {
             
             contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
             contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->apply_result, current_ch->account_conntract_data);
-            contract_nfa_handler cnh(nfa, nfa_context, db);
+            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db);
             
             const auto& name = nfa_contract.name;
             nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -543,7 +543,7 @@ namespace taiyi { namespace chain {
             
             contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
             contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->apply_result, current_ch->account_conntract_data);
-            contract_nfa_handler cnh(nfa, nfa_context, db);
+            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db);
             
             const auto& name = nfa_contract.name;
             nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox

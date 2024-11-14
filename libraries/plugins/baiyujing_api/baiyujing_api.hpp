@@ -311,6 +311,13 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_asset        herb;
     };
 
+    struct api_contract_action_info
+    {
+        bool exist = false;
+        bool consequence = false;
+    };
+
+
 #define DEFINE_API_ARGS( api_name, arg_type, return_type )  \
     typedef arg_type api_name ## _args;                     \
     typedef return_type api_name ## _return;
@@ -358,6 +365,8 @@ DEFINE_API_ARGS( find_nfa,                          vector< variant >, optional<
 DEFINE_API_ARGS( find_nfas,                         vector< variant >, vector< api_nfa_object > )
 DEFINE_API_ARGS( list_nfas,                         vector< variant >, vector< api_nfa_object > )
 DEFINE_API_ARGS( get_nfa_history,                   vector< variant >, get_nfa_history_return_type )
+DEFINE_API_ARGS( get_nfa_action_info,               vector< variant >, api_contract_action_info )
+DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, vector<string> )
 
 #undef DEFINE_API_ARGS
 
@@ -412,6 +421,8 @@ DEFINE_API_ARGS( get_nfa_history,                   vector< variant >, get_nfa_h
             (find_nfas)
             (list_nfas)
             (get_nfa_history)
+            (eval_nfa_action)
+            (get_nfa_action_info)
         )
         
     private:
@@ -454,3 +465,5 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::broadcast_transaction_synchronous_ret
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_resource_assets, (gold)(food)(wood)(fabric)(herb) )
 
 FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parents)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_contract_action_info, (exist)(consequence) )

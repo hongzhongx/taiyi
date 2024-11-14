@@ -30,18 +30,18 @@ namespace taiyi { namespace chain {
     {
         const siming_schedule_object& wso = db.get_siming_schedule_object();
         
-        /// fetch all siming objects
+        // fetch all siming objects
         vector<const siming_object*> active; active.reserve( wso.num_scheduled_simings );
         for( int i = 0; i < wso.num_scheduled_simings; i++ )
             active.push_back( &db.get_siming( wso.current_shuffled_simings[i] ) );
         
-        /// sort them by account_creation_fee
+        // sort them by account_creation_fee
         std::sort( active.begin(), active.end(), [&]( const siming_object* a, const siming_object* b ) {
             return a->props.account_creation_fee.amount < b->props.account_creation_fee.amount;
         } );
         asset median_account_creation_fee = active[active.size()/2]->props.account_creation_fee;
         
-        /// sort them by maximum_block_size
+        // sort them by maximum_block_size
         std::sort( active.begin(), active.end(), [&]( const siming_object* a, const siming_object* b ) {
             return a->props.maximum_block_size < b->props.maximum_block_size;
         } );
@@ -63,7 +63,7 @@ namespace taiyi { namespace chain {
         vector< account_name_type > active_simings;
         active_simings.reserve( TAIYI_MAX_SIMINGS );
         
-        /// Add the highest adored simings
+        // Add the highest adored simings
         flat_set< siming_id_type > selected_adored;
         selected_adored.reserve( wso.max_adored_simings );
         
@@ -79,18 +79,18 @@ namespace taiyi { namespace chain {
         
         auto num_elected = active_simings.size();
         
-        /// Add the running simings in the lead
+        // Add the running simings in the lead
         fc::uint128 new_virtual_time = wso.current_virtual_time;
         const auto& schedule_idx = db.get_index<siming_index>().indices().get<by_schedule_time>();
         auto sitr = schedule_idx.begin();
         vector<decltype(sitr)> processed_simings;
         for( auto siming_count = selected_adored.size(); sitr != schedule_idx.end() && siming_count < TAIYI_MAX_SIMINGS; ++sitr )
         {
-            new_virtual_time = sitr->virtual_scheduled_time; /// everyone advances to at least this time
+            new_virtual_time = sitr->virtual_scheduled_time; // everyone advances to at least this time
             processed_simings.push_back(sitr);
             
             if( sitr->signing_key == public_key_type() )
-                continue; /// skip simings without a valid block signing key
+                continue; // skip simings without a valid block signing key
             
             if( selected_adored.find(sitr->id) == selected_adored.end() )
             {
@@ -102,7 +102,7 @@ namespace taiyi { namespace chain {
         
         auto num_timeshare = active_simings.size() - num_elected;
         
-        /// Update virtual schedule of processed simings
+        // Update virtual schedule of processed simings
         bool reset_virtual_time = false;
         for( auto itr = processed_simings.begin(); itr != processed_simings.end(); ++itr )
         {
@@ -118,6 +118,7 @@ namespace taiyi { namespace chain {
                 wo.virtual_scheduled_time  = new_virtual_scheduled_time;
             } );
         }
+        
         if( reset_virtual_time )
         {
             new_virtual_time = fc::uint128();
@@ -125,8 +126,7 @@ namespace taiyi { namespace chain {
         }
         
         size_t expected_active_simings = std::min( size_t(TAIYI_MAX_SIMINGS), widx.size() );
-        FC_ASSERT( active_simings.size() == expected_active_simings, "number of active simings does not equal expected_active_simings=${expected_active_simings}",
-                  ("active_simings.size()",active_simings.size()) ("TAIYI_MAX_SIMINGS",TAIYI_MAX_SIMINGS) ("expected_active_simings", expected_active_simings) );
+        FC_ASSERT( active_simings.size() == expected_active_simings, "number of active simings does not equal expected_active_simings=${expected_active_simings}", ("active_simings.size()",active_simings.size()) ("TAIYI_MAX_SIMINGS",TAIYI_MAX_SIMINGS) ("expected_active_simings", expected_active_simings) );
         
         auto majority_version = wso.majority_version;
         
@@ -206,12 +206,12 @@ namespace taiyi { namespace chain {
             _wso.num_scheduled_simings = std::max< uint8_t >( active_simings.size(), 1 );
             _wso.siming_pay_normalization_factor = _wso.elected_weight * num_elected + _wso.timeshare_weight * num_timeshare;
             
-            /// shuffle current shuffled simings
+            // shuffle current shuffled simings
             auto now_hi = uint64_t(db.head_block_time().sec_since_epoch()) << 32;
             for( uint32_t i = 0; i < _wso.num_scheduled_simings; ++i )
             {
-                /// High performance random generator
-                /// http://xorshift.di.unimi.it/
+                // High performance random generator
+                // http://xorshift.di.unimi.it/
                 uint64_t k = now_hi + uint64_t(i)*2685821657736338717ULL;
                 k ^= (k >> 12);
                 k ^= (k << 25);

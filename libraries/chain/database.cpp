@@ -1461,9 +1461,9 @@ namespace taiyi { namespace chain {
             });
             
             create< siming_object >( [&]( siming_object& w ) {
-                w.owner        = TAIYI_INIT_SIMING_NAME + ( i ? fc::to_string(i) : std::string() );
-                w.signing_key  = init_public_key;
-                w.schedule = siming_object::miner;
+                w.owner         = TAIYI_INIT_SIMING_NAME + ( i ? fc::to_string(i) : std::string() );
+                w.signing_key   = init_public_key;
+                w.schedule      = siming_object::miner;
             } );
         }
         
