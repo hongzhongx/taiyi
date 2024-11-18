@@ -61,6 +61,11 @@ namespace taiyi { namespace xuanpin {
         map< uint32_t, baiyujing_api::api_operation_object > get_nfa_history( int64_t, uint64_t, uint32_t ) { FC_ASSERT( false ); }
         baiyujing_api::api_contract_action_info get_nfa_action_info(int64_t, const string&) const { FC_ASSERT( false ); }
         vector<string> eval_nfa_action(int64_t, const string&, const vector<lua_types>&) const { FC_ASSERT( false ); }
+        optional< database_api::api_actor_object > find_actor( const string& ) { FC_ASSERT( false ); }
+        vector< database_api::api_actor_object > find_actors( vector< int64_t > ) { FC_ASSERT( false ); }
+        vector< database_api::api_actor_object > list_actors(const account_name_type&, uint32_t) const { FC_ASSERT( false ); }
+        vector< database_api::api_actor_object > list_actors_below_health(const int16_t&, uint32_t) const { FC_ASSERT( false ); }
+        vector< database_api::api_actor_talent_rule_object > find_actor_talent_rules( vector< int64_t > ) { FC_ASSERT( false ); }
     };
 
 } } //taiyi::xuanpin
@@ -112,4 +117,9 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (get_nfa_history)
     (get_nfa_action_info)
     (eval_nfa_action)
+    (find_actor)
+    (find_actors)
+    (list_actors)
+    (list_actors_below_health)
+    (find_actor_talent_rules)
 )

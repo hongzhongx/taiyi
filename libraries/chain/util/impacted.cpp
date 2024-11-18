@@ -181,6 +181,11 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.account );
         }
 
+        void operator()( const create_actor_operation& op )
+        {
+            _impacted.insert( op.creator );
+        }
+        
         //void operator()( const operation& op ){}
     };
 

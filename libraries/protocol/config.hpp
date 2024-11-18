@@ -188,3 +188,9 @@
 
 #define TAIYI_USEMANA_STATE_BYTES_SCALE         1
 #define TAIYI_USEMANA_EXECUTION_SCALE           1
+
+#define TAIYI_MIN_ACTOR_CREATION_FEE            0
+#define TAIYI_MAX_ACTOR_CREATION_FEE            int64_t(1000000000)
+#define TAIYI_ACTOR_NAME_LIMIT                  (64)
+#define TAIYI_MAX_BORN_ACTOR_FEE                int64_t(1000000000)
+#define TAIYI_ACTOR_INIT_ATTRIBUTE_AMOUNT       (800)

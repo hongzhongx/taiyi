@@ -58,6 +58,10 @@ namespace taiyi { namespace plugins { namespace database_api {
             (find_nfa)
             (find_nfas)
             (list_nfas)
+            (find_actor)
+            (find_actors)
+            (list_actors)
+            (find_actor_talent_rules)
         )
 
         template< typename ResultType >
@@ -65,9 +69,12 @@ namespace taiyi { namespace plugins { namespace database_api {
         
         template< typename ValueType >
         static bool filter_default( const ValueType& r ) { return true; }
-        
-        template<typename IndexType, typename OrderType, typename StartType, typename ResultType, typename OnPushType, typename FilterType>
-        void iterate_results(StartType start, std::vector<ResultType>& result, uint32_t limit, OnPushType&& on_push, FilterType&& filter, order_direction_type direction = ascending )
+
+        template< typename ValueType >
+        static bool stop_filter_default( const ValueType& r ) { return false; }
+
+        template<typename IndexType, typename OrderType, typename StartType, typename ResultType, typename OnPushType, typename StopFilterType, typename FilterType>
+        void iterate_results(StartType start, std::vector<ResultType>& result, uint32_t limit, OnPushType&& on_push, StopFilterType&& stop_filter, FilterType&& filter, order_direction_type direction = ascending )
         {
             const auto& idx = _db.get_index< IndexType, OrderType >();
             if( direction == ascending )
@@ -77,6 +84,9 @@ namespace taiyi { namespace plugins { namespace database_api {
                 
                 while( result.size() < limit && itr != end )
                 {
+                    if( stop_filter( *itr ) )
+                        break;
+                    
                     if( filter( *itr ) )
                         result.push_back( on_push( *itr ) );
                     
@@ -90,6 +100,9 @@ namespace taiyi { namespace plugins { namespace database_api {
                 
                 while( result.size() < limit && itr != end )
                 {
+                    if( stop_filter( *itr ) )
+                        break;
+                    
                     if( filter( *itr ) )
                         result.push_back( on_push( *itr ) );
                     
@@ -193,6 +206,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.simings,
                     args.limit,
                     [&]( const siming_object& w ){ return api_siming_object( w ); },
+                    &database_api_impl::stop_filter_default< siming_object >,
                     &database_api_impl::filter_default< siming_object >
                 );
                 break;
@@ -205,6 +219,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.simings,
                     args.limit,
                     [&]( const siming_object& w ){ return api_siming_object( w ); },
+                    &database_api_impl::stop_filter_default< siming_object >,
                     &database_api_impl::filter_default< siming_object >
                 );
                 break;
@@ -218,6 +233,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.simings,
                     args.limit,
                     [&]( const siming_object& w ){ return api_siming_object( w ); },
+                    &database_api_impl::stop_filter_default< siming_object >,
                     &database_api_impl::filter_default< siming_object >
                 );
                 break;
@@ -263,6 +279,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.adores,
                     args.limit,
                     [&]( const siming_adore_object& v ){ return api_siming_adore_object( v ); },
+                    &database_api_impl::stop_filter_default< api_siming_adore_object >,
                     &database_api_impl::filter_default< api_siming_adore_object >
                 );
                 break;
@@ -275,6 +292,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.adores,
                     args.limit,
                     [&]( const siming_adore_object& v ){ return api_siming_adore_object( v ); },
+                    &database_api_impl::stop_filter_default< api_siming_adore_object >,
                     &database_api_impl::filter_default< api_siming_adore_object >
                 );
                 break;
@@ -320,6 +338,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.accounts,
                     args.limit,
                     [&]( const account_object& a ){ return api_account_object( a, _db ); },
+                    &database_api_impl::stop_filter_default< account_object >,
                     &database_api_impl::filter_default< account_object >
                 );
                 break;
@@ -332,6 +351,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.accounts,
                     args.limit,
                     [&]( const account_object& a ){ return api_account_object( a, _db ); },
+                    &database_api_impl::stop_filter_default< account_object >,
                     &database_api_impl::filter_default< account_object >
                 );
                 break;
@@ -344,6 +364,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.accounts,
                     args.limit,
                     [&]( const account_object& a ){ return api_account_object( a, _db ); },
+                    &database_api_impl::stop_filter_default< account_object >,
                     &database_api_impl::filter_default< account_object >
                 );
                 break;
@@ -385,6 +406,7 @@ namespace taiyi { namespace plugins { namespace database_api {
             result.owner_auths,
             args.limit,
             [&]( const owner_authority_history_object& o ){ return api_owner_authority_history_object( o ); },
+            &database_api_impl::stop_filter_default< owner_authority_history_object >,
             &database_api_impl::filter_default< owner_authority_history_object >
         );
         
@@ -425,6 +447,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.requests,
                     args.limit,
                     [&]( const account_recovery_request_object& a ){ return api_account_recovery_request_object( a ); },
+                    &database_api_impl::stop_filter_default< api_account_recovery_request_object >,
                     &database_api_impl::filter_default< api_account_recovery_request_object >
                 );
                 break;
@@ -437,6 +460,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.requests,
                     args.limit,
                     [&]( const account_recovery_request_object& a ){ return api_account_recovery_request_object( a ); },
+                    &database_api_impl::stop_filter_default< api_account_recovery_request_object >,
                     &database_api_impl::filter_default< api_account_recovery_request_object >
                 );
                 break;
@@ -482,6 +506,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.requests,
                     args.limit,
                     &database_api_impl::on_push_default< change_recovery_account_request_object >,
+                    &database_api_impl::stop_filter_default< change_recovery_account_request_object >,
                     &database_api_impl::filter_default< change_recovery_account_request_object >
                 );
                 break;
@@ -494,6 +519,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.requests,
                     args.limit,
                     &database_api_impl::on_push_default< change_recovery_account_request_object >,
+                    &database_api_impl::stop_filter_default< change_recovery_account_request_object >,
                     &database_api_impl::filter_default< change_recovery_account_request_object >
                 );
                 break;
@@ -540,6 +566,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.routes,
                     args.limit,
                     &database_api_impl::on_push_default< withdraw_qi_route_object >,
+                    &database_api_impl::stop_filter_default< withdraw_qi_route_object >,
                     &database_api_impl::filter_default< withdraw_qi_route_object >
                 );
                 break;
@@ -552,6 +579,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.routes,
                     args.limit,
                     &database_api_impl::on_push_default< withdraw_qi_route_object >,
+                    &database_api_impl::stop_filter_default< withdraw_qi_route_object >,
                     &database_api_impl::filter_default< withdraw_qi_route_object >
                 );
                 break;
@@ -621,6 +649,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.delegations,
                     args.limit,
                     &database_api_impl::on_push_default< api_qi_delegation_object >,
+                    &database_api_impl::stop_filter_default< qi_delegation_object >,
                     &database_api_impl::filter_default< qi_delegation_object >
                 );
                 break;
@@ -666,6 +695,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.delegations,
                     args.limit,
                     &database_api_impl::on_push_default< api_qi_delegation_expiration_object >,
+                    &database_api_impl::stop_filter_default< qi_delegation_expiration_object >,
                     &database_api_impl::filter_default< qi_delegation_expiration_object >
                 );
                 break;
@@ -679,6 +709,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.delegations,
                     args.limit,
                     &database_api_impl::on_push_default< api_qi_delegation_expiration_object >,
+                    &database_api_impl::stop_filter_default< qi_delegation_expiration_object >,
                     &database_api_impl::filter_default< qi_delegation_expiration_object >
                 );
                 break;
@@ -723,6 +754,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.requests,
                     args.limit,
                     &database_api_impl::on_push_default< api_decline_adoring_rights_request_object >,
+                    &database_api_impl::stop_filter_default< decline_adoring_rights_request_object >,
                     &database_api_impl::filter_default< decline_adoring_rights_request_object >
                 );
                 break;
@@ -735,6 +767,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                     result.requests,
                     args.limit,
                     &database_api_impl::on_push_default< api_decline_adoring_rights_request_object >,
+                    &database_api_impl::stop_filter_default< decline_adoring_rights_request_object >,
                     &database_api_impl::filter_default< decline_adoring_rights_request_object >
                 );
                 break;
@@ -926,7 +959,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     //*************************************************************************
     //                                                                       //
-    // NFAs                                                                //
+    // NFAs                                                                  //
     //                                                                       //
     //*************************************************************************
 
@@ -974,8 +1007,10 @@ namespace taiyi { namespace plugins { namespace database_api {
                     boost::make_tuple( key_account.id, 0 ),
                     result.result,
                     args.limit,
-                    [&]( const nfa_object& o ){ return api_nfa_object( o, _db ); },
-                    [&]( const nfa_object& o ) { return o.owner_account == key_account.id; });
+                    [&]( const nfa_object& o ) { return api_nfa_object( o, _db ); },
+                    [&]( const nfa_object& o ) { return o.owner_account != key_account.id; },
+                    &database_api_impl::filter_default< nfa_object >
+                );
                 break;
             }
             case( by_creator ):
@@ -986,8 +1021,10 @@ namespace taiyi { namespace plugins { namespace database_api {
                     boost::make_tuple( key_account.id, 0 ),
                     result.result,
                     args.limit,
-                    [&]( const nfa_object& o ){ return api_nfa_object( o, _db ); },
-                    [&]( const nfa_object& o ) { return o.creator_account == key_account.id; });
+                    [&]( const nfa_object& o ) { return api_nfa_object( o, _db ); },
+                    [&]( const nfa_object& o ) { return o.creator_account != key_account.id; },
+                    &database_api_impl::filter_default< nfa_object >
+                );
                 break;
             }
             case( by_symbol ):
@@ -998,8 +1035,10 @@ namespace taiyi { namespace plugins { namespace database_api {
                     boost::make_tuple( key_symbol.id, 0 ),
                     result.result,
                     args.limit,
-                    [&]( const nfa_object& o ){ return api_nfa_object( o, _db ); },
-                    [&]( const nfa_object& o ) { return o.symbol_id == key_symbol.id; });
+                    [&]( const nfa_object& o ) { return api_nfa_object( o, _db ); },
+                    [&]( const nfa_object& o ) { return o.symbol_id != key_symbol.id; },
+                    &database_api_impl::filter_default< nfa_object >
+                );
                 break;
             }
             default:
@@ -1008,6 +1047,130 @@ namespace taiyi { namespace plugins { namespace database_api {
 
         return result;
     }
+    
+    //************************************************************************
+    //                                                                      //
+    // Actors                                                               //
+    //                                                                      //
+    //************************************************************************
+
+    DEFINE_API_IMPL( database_api_impl, find_actor )
+    {
+        find_actor_return result;
+        
+        auto act = _db.find< chain::actor_object, chain::by_name >( args.name );
+        if( act != nullptr )
+            result.result = api_actor_object( *act, _db );
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, find_actors )
+    {
+        FC_ASSERT( args.actor_ids.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        find_actors_return result;
+        result.result.reserve( args.actor_ids.size() );
+
+        std::for_each( args.actor_ids.begin(), args.actor_ids.end(), [&](auto& id) {
+            auto act = _db.find< chain::actor_object, chain::by_id >( id );
+            if( act != nullptr )
+            {
+                result.result.emplace_back( api_actor_object( *act, _db ) );
+            }
+        });
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, list_actors )
+    {
+        FC_ASSERT( args.limit <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        list_actors_return result;
+        result.result.reserve( args.limit );
+
+        switch( args.order )
+        {
+            case( by_owner ):
+            {
+                auto key = args.start.as< protocol::account_name_type >();
+                const auto& key_account = _db.get_account(key);
+                iterate_results< chain::nfa_index, chain::by_owner >(
+                    boost::make_tuple( key_account.id, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const nfa_object& o ) { return api_actor_object( _db.get<actor_object, by_nfa_id>(o.id), _db ); },
+                    [&]( const nfa_object& o ) { return o.owner_account != key_account.id; }, //stop condition
+                    [&]( const nfa_object& o ) { return _db.find<actor_object, by_nfa_id>(o.id) != nullptr; }
+                );
+                break;
+            }
+            case( by_health ):
+            {
+                auto key = args.start.as< int16_t >();
+                iterate_results< chain::actor_index, chain::by_health >(
+                    boost::make_tuple( key, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const actor_object& a ) { return api_actor_object( a, _db ); },
+                    [&]( const actor_object& a ) { return a.health > key; },  //stop condition
+                    &database_api_impl::filter_default< actor_object >
+                );
+                break;
+            }
+            case( by_solor_term ):
+            {
+                auto key = args.start.as< int >();
+                iterate_results< chain::actor_index, chain::by_solor_term >(
+                    boost::make_tuple( key, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const actor_object& a ) { return api_actor_object( a, _db ); },
+                    [&]( const actor_object& a ) { return a.born_vtimes != key; },  //stop condition
+                    &database_api_impl::filter_default< actor_object >
+                );
+                break;
+            }
+//            case( by_location ):
+//            {
+//                const zone_object* zone = _db.find< chain::zone_object, chain::by_zone_name >(args.start.as< string >());
+//                if(zone) {
+//                    iterate_results< chain::actor_index, chain::by_actor_location >(
+//                        zone->id,
+//                        result.actors,
+//                        args.limit,
+//                        [&]( const actor_object& a ){ return api_actor_object( a, _db ); },
+//                        [&]( const actor_object& a ) { return a.location == zone->id; }
+//                    );
+//                }
+//                break;
+//            }
+            default:
+                FC_ASSERT( false, "Unknown or unsupported sort order" );
+        }
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, find_actor_talent_rules )
+    {
+        FC_ASSERT( args.uuids.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        find_actor_talent_rules_return result;
+        result.rules.reserve( args.uuids.size() );
+
+        std::for_each( args.uuids.begin(), args.uuids.end(), [&](auto& id) {
+            auto po = _db.find< chain::actor_talent_rule_object, chain::by_uuid >( id );
+            if( po != nullptr && !po->removed )
+            {
+                result.rules.push_back( *po );
+            }
+        });
+
+        return result;
+    }
+
 
     DEFINE_LOCKLESS_APIS( database_api, (get_config)(get_version) )
     
@@ -1046,6 +1209,10 @@ namespace taiyi { namespace plugins { namespace database_api {
         (find_nfa)
         (find_nfas)
         (list_nfas)
+        (find_actor)
+        (find_actors)
+        (list_actors)
+        (find_actor_talent_rules)
     )
     
 } } } // taiyi::plugins::database_api

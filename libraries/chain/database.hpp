@@ -329,7 +329,15 @@ namespace taiyi { namespace chain {
         void process_decline_adoring_rights();
 
         std::tuple<share_type, share_type> pay_reward_funds( share_type reward_yang, share_type reward_qi_fund );
-       
+
+        void initialize_actor_object( actor_object& act, const std::string& name, const nfa_object& nfa );
+        void initialize_actor_talents( const actor_object& act, int gender, int sexuality );
+        void initialize_actor_attributes( const actor_object& act, const vector<uint16_t>& init_attrs );
+        const actor_object&  get_actor( const std::string& name )const;
+        const actor_object*  find_actor( const std::string& name )const;
+        uint16_t get_actor_init_attribute_amount_max( const actor_object& actor )const;
+        uint16_t get_actor_init_attribute_amount_max( const std::string& name )const;
+
         time_point_sec   head_block_time()const;
         uint32_t         head_block_num()const;
         block_id_type    head_block_id()const;

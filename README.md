@@ -73,7 +73,7 @@
 
 包含如下四个计划：
 
-- [ ] [【司命】](https://github.com/users/hongzhongx/projects/1)集结最多二十一个司命启动因果天道网络————太乙网络，建立基础的因果历史信息序列
+- [x] [【司命】](https://github.com/users/hongzhongx/projects/1)集结最多二十一个司命启动因果天道网络————太乙网络，建立基础的因果历史信息序列
     * 司命天道共识，建立一息约为3秒钟的因果链式信息结构   
     * 实现[白玉京APIs](libraries/plugins/baiyujing_api/)，统一对天道网络的访问请求
     * 实现可执行程序“[太阴（taiyin）](programs/taiyin/)”来运行太乙节点
@@ -130,6 +130,7 @@ NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方
 
 - [ ] [【袄景】](https://github.com/users/hongzhongx/projects/8)游戏角色NFA（Actor）扩展对象的原生实现
     * 角色内置属性原生实现（天赋、基本属性等）
+    * 角色天赋的设计和发布在坐忘道完成（通过坐忘道平台投票）
     * 角色相互关系原生实现（亲友夫妻师徒父兄仇敌等）
     * 角色托管资产，支持FA和NFA
     * 角色行动力（Mana）的原生实现，建立角色拥有的气和行动力上限以及恢复速度的关系

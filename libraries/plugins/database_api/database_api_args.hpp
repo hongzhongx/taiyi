@@ -49,7 +49,9 @@ namespace taiyi { namespace plugins { namespace database_api {
         by_contributor,
         by_symbol_id,
         by_uuid,
-        by_owner
+        by_owner,
+        by_health,
+        by_solor_term
     };
     
     enum order_direction_type
@@ -372,12 +374,47 @@ namespace taiyi { namespace plugins { namespace database_api {
     {
         optional< api_nfa_object > result;
     };
+    
+    /* Actor */
+
+    typedef list_object_args_type list_actors_args;
+    struct list_actors_return
+    {
+        vector< api_actor_object > result;
+    };
+
+    struct find_actors_args
+    {
+        vector< api_id_type > actor_ids;
+    };
+    typedef list_actors_return find_actors_return;
+
+    struct find_actor_args
+    {
+        find_actor_args(const string& n) : name(n) {}
+        find_actor_args() {}
+        
+        string name;
+    };
+    struct find_actor_return
+    {
+        optional< api_actor_object > result;
+    };
+
+    struct find_actor_talent_rules_args
+    {
+        vector< api_id_type > uuids;
+    };
+    struct find_actor_talent_rules_return
+    {
+        vector< api_actor_talent_rule_object > rules;
+    };
 
 } } } // taiyi::database_api
 
 FC_REFLECT( taiyi::plugins::database_api::get_version_return, (blockchain_version)(taiyi_revision)(fc_revision)(chain_id) )
 
-FC_REFLECT_ENUM( taiyi::plugins::database_api::sort_order_type, (by_name)(by_proxy)(by_next_qi_withdrawal_time)(by_account)(by_expiration)(by_effective_date)(by_adore_name)(by_schedule_time)(by_account_siming)(by_siming_account)(by_from_id)(by_ratification_deadline)(by_withdraw_route)(by_destination)(by_complete_from_id)(by_to_complete)(by_delegation)(by_account_expiration)(by_conversion_date)(by_last_update)(by_price)(by_symbol_contributor)(by_symbol)(by_control_account)(by_symbol_time)(by_creator)(by_start_date)(by_end_date)(by_total_adores)(by_contributor)(by_symbol_id)(by_uuid)(by_owner) )
+FC_REFLECT_ENUM( taiyi::plugins::database_api::sort_order_type, (by_name)(by_proxy)(by_next_qi_withdrawal_time)(by_account)(by_expiration)(by_effective_date)(by_adore_name)(by_schedule_time)(by_account_siming)(by_siming_account)(by_from_id)(by_ratification_deadline)(by_withdraw_route)(by_destination)(by_complete_from_id)(by_to_complete)(by_delegation)(by_account_expiration)(by_conversion_date)(by_last_update)(by_price)(by_symbol_contributor)(by_symbol)(by_control_account)(by_symbol_time)(by_creator)(by_start_date)(by_end_date)(by_total_adores)(by_contributor)(by_symbol_id)(by_uuid)(by_owner)(by_health)(by_solor_term) )
 
 FC_REFLECT_ENUM( taiyi::plugins::database_api::order_direction_type, (ascending)(descending) )
 
@@ -450,3 +487,12 @@ FC_REFLECT( taiyi::plugins::database_api::find_nfas_args, (ids) )
 
 FC_REFLECT( taiyi::plugins::database_api::find_nfa_args, (id) )
 FC_REFLECT( taiyi::plugins::database_api::find_nfa_return, (result) )
+
+FC_REFLECT( taiyi::plugins::database_api::find_actor_args, (name) )
+FC_REFLECT( taiyi::plugins::database_api::find_actor_return, (result) )
+
+FC_REFLECT( taiyi::plugins::database_api::find_actors_args, (actor_ids) )
+FC_REFLECT( taiyi::plugins::database_api::list_actors_return, (result) )
+
+FC_REFLECT( taiyi::plugins::database_api::find_actor_talent_rules_args, (uuids) )
+FC_REFLECT( taiyi::plugins::database_api::find_actor_talent_rules_return, (rules) )

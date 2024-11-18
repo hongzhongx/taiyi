@@ -86,7 +86,13 @@ namespace taiyi {
             contract_bin_code_object_type,
 
             nfa_symbol_object_type,
-            nfa_object_type
+            nfa_object_type,
+            
+            actor_object_type,
+            actor_core_attributes_object_type,
+            actor_group_object_type,
+            actor_talent_rule_object_type,
+            actor_talents_object_type
         };
         
         class dynamic_global_property_object;
@@ -121,6 +127,12 @@ namespace taiyi {
 
         class nfa_symbol_object;
         class nfa_object;
+        
+        class actor_object;
+        class actor_core_attributes_object;
+        class actor_group_object;
+        class actor_talent_rule_object;
+        class actor_talents_object;
 
         typedef oid< dynamic_global_property_object         > dynamic_global_property_id_type;
         typedef oid< account_object                         > account_id_type;
@@ -154,6 +166,12 @@ namespace taiyi {
 
         typedef oid< nfa_symbol_object                      > nfa_symbol_id_type;
         typedef oid< nfa_object                             > nfa_id_type;
+        
+        typedef oid< actor_object                           > actor_id_type;
+        typedef oid< actor_core_attributes_object           > actor_core_attributes_id_type;
+        typedef oid< actor_group_object                     > actor_group_id_type;
+        typedef oid< actor_talent_rule_object               > actor_talent_rule_id_type;
+        typedef oid< actor_talents_object                   > actor_talents_id_type;
 
     } //chain
     
@@ -297,6 +315,14 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     (account_contract_data_object_type)
     (contract_bin_code_object_type)                
 
+    //nfa objects
     (nfa_symbol_object_type)
     (nfa_object_type)
+                
+    //actor objects
+    (actor_object_type)
+    (actor_core_attributes_object_type)
+    (actor_group_object_type)
+    (actor_talent_rule_object_type)
+    (actor_talents_object_type)
 )

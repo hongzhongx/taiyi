@@ -8,6 +8,7 @@ add_library( taiyi_chain
              index.cpp
              asset_index.cpp
              contract_index.cpp
+             actor_index.cpp
 
              taiyi_evaluator.cpp
 
@@ -29,6 +30,9 @@ add_library( taiyi_chain
 
              nfa_evaluator.cpp
              database_nfa.cpp
+
+             actor_evaluator.cpp
+             database_actor.cpp
 
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp

@@ -7,6 +7,7 @@
 #include <chain/siming_objects.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/contract_objects.hpp>
+#include <chain/actor_objects.hpp>
 #include <chain/database.hpp>
 
 namespace taiyi { namespace plugins { namespace database_api {
@@ -22,10 +23,11 @@ namespace taiyi { namespace plugins { namespace database_api {
     typedef qi_delegation_object                    api_qi_delegation_object;
     typedef qi_delegation_expiration_object         api_qi_delegation_expiration_object;
     typedef reward_fund_object                      api_reward_fund_object;
+    typedef actor_talent_rule_object                api_actor_talent_rule_object;
 
     struct api_account_object
     {
-        api_account_object( const account_object& a, const database& db ) : id( a.id ), name( a.name ), memo_key( a.memo_key ), proxy( a.proxy ), last_account_update( a.last_account_update ), created( a.created ), recovery_account( a.recovery_account ), last_account_recovery( a.last_account_recovery ), can_adore( a.can_adore ), manabar( a.manabar ), balance( a.balance ), reward_yang_balance( a.reward_yang_balance ), reward_qi_balance( a.reward_qi_balance ), qi( a.qi ), delegated_qi( a.delegated_qi ), received_qi( a.received_qi ), qi_withdraw_rate( a.qi_withdraw_rate ), next_qi_withdrawal_time( a.next_qi_withdrawal_time ), withdrawn( a.withdrawn ), to_withdraw( a.to_withdraw ), withdraw_routes( a.withdraw_routes ), simings_adored_for( a.simings_adored_for )
+        api_account_object( const account_object& a, const database& db ) : id(a.id), name(a.name), memo_key(a.memo_key), proxy(a.proxy), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), manabar(a.manabar), balance(a.balance), reward_yang_balance(a.reward_yang_balance), reward_qi_balance(a.reward_qi_balance), qi(a.qi), delegated_qi(a.delegated_qi), received_qi(a.received_qi), qi_withdraw_rate(a.qi_withdraw_rate), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for)
         {
             size_t n = a.proxied_vsf_adores.size();
             proxied_vsf_adores.reserve( n );
@@ -93,7 +95,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_owner_authority_history_object
     {
-        api_owner_authority_history_object( const owner_authority_history_object& o ) : id( o.id ), account( o.account ), previous_owner_authority( authority( o.previous_owner_authority ) ), last_valid_time( o.last_valid_time )
+        api_owner_authority_history_object( const owner_authority_history_object& o ) : id(o.id), account(o.account), previous_owner_authority(authority(o.previous_owner_authority)), last_valid_time(o.last_valid_time)
         {}
         
         api_owner_authority_history_object() {}
@@ -107,7 +109,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_account_recovery_request_object
     {
-        api_account_recovery_request_object( const account_recovery_request_object& o ) : id( o.id ), account_to_recover( o.account_to_recover ), new_owner_authority( authority( o.new_owner_authority ) ), expires( o.expires )
+        api_account_recovery_request_object( const account_recovery_request_object& o ) : id(o.id), account_to_recover(o.account_to_recover), new_owner_authority(authority(o.new_owner_authority)), expires(o.expires)
         {}
         
         api_account_recovery_request_object() {}
@@ -120,7 +122,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_siming_object
     {
-        api_siming_object( const siming_object& w ) : id( w.id ), owner( w.owner ), created( w.created ), url( w.url ), total_missed( w.total_missed ), last_aslot( w.last_aslot ), last_confirmed_block_num( w.last_confirmed_block_num ), signing_key( w.signing_key ), props( w.props ), adores( w.adores ), virtual_last_update( w.virtual_last_update ), virtual_position( w.virtual_position ), virtual_scheduled_time( w.virtual_scheduled_time ), running_version( w.running_version ), hardfork_version_vote( w.hardfork_version_vote ), hardfork_time_vote( w.hardfork_time_vote )
+        api_siming_object( const siming_object& w ) : id(w.id), owner(w.owner), created(w.created), url(w.url), total_missed(w.total_missed), last_aslot(w.last_aslot), last_confirmed_block_num(w.last_confirmed_block_num), signing_key(w.signing_key), props(w.props), adores(w.adores), virtual_last_update(w.virtual_last_update), virtual_position(w.virtual_position), virtual_scheduled_time(w.virtual_scheduled_time), running_version(w.running_version), hardfork_version_vote(w.hardfork_version_vote), hardfork_time_vote(w.hardfork_time_vote)
         {}
         
         api_siming_object() {}
@@ -147,7 +149,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     {
         api_siming_schedule_object() {}
         
-        api_siming_schedule_object( const siming_schedule_object& wso) : id( wso.id ), current_virtual_time( wso.current_virtual_time ), next_shuffle_block_num( wso.next_shuffle_block_num ), num_scheduled_simings( wso.num_scheduled_simings ), elected_weight( wso.elected_weight ), timeshare_weight( wso.timeshare_weight ), miner_weight( wso.miner_weight ), siming_pay_normalization_factor( wso.siming_pay_normalization_factor ), median_props( wso.median_props ), majority_version( wso.majority_version ), max_adored_simings( wso.max_adored_simings ), hardfork_required_simings( wso.hardfork_required_simings )
+        api_siming_schedule_object( const siming_schedule_object& wso) : id(wso.id), current_virtual_time(wso.current_virtual_time), next_shuffle_block_num(wso.next_shuffle_block_num), num_scheduled_simings(wso.num_scheduled_simings), elected_weight(wso.elected_weight), timeshare_weight(wso.timeshare_weight), miner_weight(wso.miner_weight), siming_pay_normalization_factor(wso.siming_pay_normalization_factor), median_props(wso.median_props), majority_version(wso.majority_version), max_adored_simings(wso.max_adored_simings), hardfork_required_simings(wso.hardfork_required_simings)
         {
             size_t n = wso.current_shuffled_simings.size();
             current_shuffled_simings.reserve( n );
@@ -174,7 +176,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_signed_block_object : public signed_block
     {
-        api_signed_block_object( const signed_block& block ) : signed_block( block )
+        api_signed_block_object( const signed_block& block ) : signed_block(block)
         {
             block_id = id();
             signing_key = signee();
@@ -191,7 +193,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_hardfork_property_object
     {
-        api_hardfork_property_object( const hardfork_property_object& h ) : id( h.id ), last_hardfork( h.last_hardfork ), current_hardfork_version( h.current_hardfork_version ), next_hardfork( h.next_hardfork ), next_hardfork_time( h.next_hardfork_time )
+        api_hardfork_property_object( const hardfork_property_object& h ) : id(h.id), last_hardfork(h.last_hardfork), current_hardfork_version(h.current_hardfork_version), next_hardfork(h.next_hardfork), next_hardfork_time(h.next_hardfork_time)
         {
             size_t n = h.processed_hardforks.size();
             processed_hardforks.reserve( n );
@@ -256,6 +258,96 @@ namespace taiyi { namespace plugins { namespace database_api {
         asset               herb;
     };
         
+    struct api_actor_object
+    {
+        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vtimes(a.born_vtimes), five_phase(a.five_phase), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update)
+        {
+            const auto* maybe_talents = db.find< actor_talents_object, by_actor >( id );
+            if( maybe_talents ) {
+                for(auto it = maybe_talents->talents.begin(); it!=maybe_talents->talents.end(); it++)
+                    talents.push_back(it->first);
+            }
+            
+            const auto* maybe_core_attrs = db.find< actor_core_attributes_object, by_actor >( id );
+            if( maybe_core_attrs ) {
+                strength = maybe_core_attrs->strength;
+                physique = maybe_core_attrs->physique;
+                agility = maybe_core_attrs->agility;
+                vitality = maybe_core_attrs->vitality;
+                comprehension = maybe_core_attrs->comprehension;
+                willpower = maybe_core_attrs->willpower;
+                charm = maybe_core_attrs->charm;
+                mood = maybe_core_attrs->mood;
+
+                strength_max = maybe_core_attrs->strength_max;
+                physique_max = maybe_core_attrs->physique_max;
+                agility_max = maybe_core_attrs->agility_max;
+                vitality_max = maybe_core_attrs->vitality_max;
+                comprehension_max = maybe_core_attrs->comprehension_max;
+                willpower_max = maybe_core_attrs->willpower_max;
+                charm_max = maybe_core_attrs->charm_max;
+                mood_max = maybe_core_attrs->mood_max;
+            }
+                                    
+            max_init_attribute_amount = db.get_actor_init_attribute_amount_max(name);
+            
+            standpoint_type = a.get_standpoint_type();
+            
+            //location = db.get<zone_object, by_id>(a.location).name;
+            //base_name = db.get< zone_object, by_id >(a.base).name;
+        }
+        
+        api_actor_object(){}
+        
+        actor_id_type       id;
+        nfa_id_type         nfa_id;
+        
+        string              name;
+        
+        uint16_t            age;
+        int16_t             health;
+        int16_t             health_max;
+
+        //core attributes
+        int16_t             strength        = 0;
+        int16_t             strength_max    = 0;
+        int16_t             physique        = 0;
+        int16_t             physique_max    = 0;
+        int16_t             agility         = 0;
+        int16_t             agility_max     = 0;
+        int16_t             vitality        = 0;
+        int16_t             vitality_max    = 0;
+        int16_t             comprehension   = 0;
+        int16_t             comprehension_max   = 0;
+        int16_t             willpower       = 0;
+        int16_t             willpower_max   = 0;
+        int16_t             charm           = 0;
+        int16_t             charm_max       = 0;
+        int16_t             mood            = 0;
+        int16_t             mood_max        = 0;
+
+        vector< uint32_t >  talents;
+        uint16_t            max_init_attribute_amount;
+        
+        bool                born;
+        int                 gender;
+        int                 sexuality;
+        int                 fertility;
+                
+        time_point_sec      born_time;
+        int                 born_vyears;
+        int                 born_vtimes;
+        int                 five_phase;
+        uint                standpoint;
+        E_ACTOR_STANDPOINT_TYPE standpoint_type;
+        int32_t             loyalty;
+        
+        string              location;   //所在区域名称
+        string              base_name;   //从属地名称
+        
+        time_point_sec      last_update;
+    };
+
     typedef uint64_t api_id_type;
     
 } } } // taiyi::plugins::database_api
@@ -275,3 +367,5 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parent)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+
+FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(max_init_attribute_amount)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update) )

@@ -38,6 +38,8 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( withdraw_qi_from_nfa )
     TAIYI_DEFINE_EVALUATOR( action_nfa )
 
+    TAIYI_DEFINE_EVALUATOR( create_actor )
+
     inline void validate_permlink_0_1( const string& permlink );
 
 } } // taiyi::chain

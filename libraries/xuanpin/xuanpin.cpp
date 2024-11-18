@@ -2028,5 +2028,47 @@ namespace taiyi { namespace xuanpin {
        return my->_remote_api->get_nfa_history( nfa_id, from, limit );
     }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor( const account_name_type& creator, const string& family_name, const string& last_name, int gender, int sexuality, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        create_actor_operation op;
+        op.creator = creator;
+        op.family_name = family_name;
+        op.last_name = last_name;
+        op.gender = gender;
+        op.sexuality = sexuality;
+        op.fee = my->_remote_api->get_chain_properties().account_creation_fee;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (creator)(family_name)(last_name) ) }
+
+    baiyujing_api::find_actor_return xuanpin_api::find_actor( const string& name )
+    {
+        return my->_remote_api->find_actor( name );
+    }
+
+    baiyujing_api::find_actors_return xuanpin_api::find_actors( vector< int64_t > actor_ids )
+    {
+        return my->_remote_api->find_actors( actor_ids );
+    }
+
+    vector< database_api::api_actor_object > xuanpin_api::list_actors(const account_name_type& owner, uint32_t limit)
+    {
+       return my->_remote_api->list_actors( owner, limit );
+    }
+
+    vector< database_api::api_actor_object > xuanpin_api::list_actors_below_health(const int16_t& health, uint32_t limit)
+    {
+        return my->_remote_api->list_actors_below_health( health, limit );
+    }
+
+    baiyujing_api::find_actor_talent_rules_return xuanpin_api::find_actor_talent_rules( vector< int64_t > uuids )
+    {
+        return my->_remote_api->find_actor_talent_rules( uuids );
+    }
 
 } } // taiyi::xuanpin

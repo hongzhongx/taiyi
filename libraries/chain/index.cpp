@@ -11,6 +11,7 @@ namespace taiyi { namespace chain {
 
     void initialize_asset_indexes( database& db );
     void initialize_contract_indexes( database& db );
+    void initialize_actor_indexes( database& db );
 
     void initialize_core_indexes( database& db )
     {
@@ -35,6 +36,7 @@ namespace taiyi { namespace chain {
 
         initialize_asset_indexes(db);
         initialize_contract_indexes(db);
+        initialize_actor_indexes(db);
     }
     
     index_info::index_info() {}

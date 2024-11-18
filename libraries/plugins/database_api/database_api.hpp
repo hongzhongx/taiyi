@@ -122,6 +122,14 @@ namespace taiyi { namespace plugins { namespace database_api {
             (find_nfa)
             (find_nfas)
             (list_nfas)
+                    
+            //************
+            //Actors    //
+            //************
+            (find_actor)
+            (find_actors)
+            (list_actors)
+            (find_actor_talent_rules)
         )
         
     private:

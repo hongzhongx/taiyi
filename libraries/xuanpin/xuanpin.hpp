@@ -693,6 +693,45 @@ namespace taiyi { namespace xuanpin {
         vector< baiyujing_api::api_nfa_object > list_nfas(const account_name_type& owner, uint32_t limit);
 
         map< uint32_t, baiyujing_api::api_operation_object > get_nfa_history( const int64_t& nfa_id, uint32_t from, uint32_t limit );
+
+        /**
+         *  This method will create new actor. There is a fee associated with actor creation
+         *  that is paid by the creator. The current actor creation fee can be found with the
+         *  'info' xuanpin command.
+         *
+         *  @param creator The account creating the new actor
+         *  @param family_name 姓
+         *  @param last_name 名
+         *  @param gender 性别
+         *  @param sexuality 性取向
+         *  @param broadcast true if you wish to broadcast the transaction
+         */
+        baiyujing_api::legacy_signed_transaction create_actor( const account_name_type& creator, const string& family_name, const string& last_name, int gender, int sexuality, bool broadcast );
+        
+        /**
+         * Find actors with given ids
+         * @param _ids - array with ids of wanted actors to be founded.
+         */
+        baiyujing_api::find_actor_return find_actor( const string& name );
+        baiyujing_api::find_actors_return find_actors( vector< int64_t > actor_ids );
+        
+        /** Lists actors owned by accounts
+         * This returns a list of all actor objects owned by account names.
+         *
+         * Use the \c owner and limit parameters to page through the list.
+         *
+         * @param owner the name of the owner account.
+         * @param limit the maximum number of simings to return (max: 1000)
+         * @returns a list of actor objects
+         */
+        vector< database_api::api_actor_object > list_actors(const account_name_type& owner, uint32_t limit);
+        vector< database_api::api_actor_object > list_actors_below_health(const int16_t& health, uint32_t limit);
+
+        /**
+         * Find actor talent rule with given id
+         * @param _ids - array with ids of wanted rules to be founded.
+         */
+        baiyujing_api::find_actor_talent_rules_return find_actor_talent_rules( vector< int64_t > uuids );
     };
     
 } }
@@ -779,7 +818,15 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (get_nfa_history)
     (get_nfa_action_info)
        
-    /// helper api
+    //actor
+    (create_actor)
+    (find_actor)
+    (find_actors)
+    (list_actors)
+    (list_actors_below_health)
+    (find_actor_talent_rules)
+
+    //helper api
     (get_prototype_operation)
     (serialize_transaction)
     (sign_transaction)

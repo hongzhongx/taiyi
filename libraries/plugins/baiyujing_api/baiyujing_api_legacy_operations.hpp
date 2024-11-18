@@ -360,6 +360,32 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         account_name_type   account;
         legacy_asset        qi;
     };
+    
+    struct legacy_create_actor_operation
+    {
+        legacy_create_actor_operation() {}
+        legacy_create_actor_operation(const create_actor_operation& op) : fee(legacy_asset::from_asset(op.fee)), creator(op.creator), family_name(op.family_name), last_name(op.last_name), gender(op.gender), sexuality(op.sexuality)
+        {}
+
+        operator create_actor_operation()const
+        {
+            create_actor_operation op;
+            op.fee = fee;
+            op.creator = creator;
+            op.family_name = family_name;
+            op.last_name = last_name;
+            op.gender = gender;
+            op.sexuality = sexuality;
+            return op;
+        }
+
+        legacy_asset      fee;
+        account_name_type creator;
+        string            family_name;
+        string            last_name;
+        int               gender;       //-2=男生女相，-1=男，0=随机，1=女，2=女生男相
+        int               sexuality;    //0=无性取向，1=喜欢男性，2=喜欢女性，3=双性恋
+    };
 
     typedef fc::static_variant<
         legacy_transfer_operation,
@@ -392,7 +418,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_withdraw_qi_from_nfa_operation,
         legacy_action_nfa_operation,
 
-        /// virtual operations below this point
+        legacy_create_actor_operation,
+
+        // virtual operations below this point
         legacy_fill_qi_withdraw_operation,
         legacy_hardfork_operation,
         legacy_return_qi_delegation_operation,
@@ -515,6 +543,12 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return true;
         }
 
+        bool operator()( const create_actor_operation& op )const
+        {
+            l_op = legacy_create_actor_operation( op );
+            return true;
+        }
+
         // Should only be FA ops
         template< typename T >
         bool operator()( const T& )const { return false; }
@@ -602,6 +636,11 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return operation( reward_qi_operation( op ) );
         }
 
+        operation operator()( const legacy_create_actor_operation& op )const
+        {
+            return operation( create_actor_operation( op ) );
+        }
+
     };
 
 } } } // taiyi::plugins::baiyujing_api
@@ -672,5 +711,6 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_deposit_qi_to_nfa_operation, (
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_withdraw_qi_from_nfa_operation, (owner)(id)(amount) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_convert_qi_to_resources_operation, (nfa)(owner)(qi_converted)(new_resource) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_qi_operation, (account)(qi) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_actor_operation, (fee)(creator)(family_name)(last_name)(gender)(sexuality) )
 
 FC_REFLECT_TYPENAME( taiyi::plugins::baiyujing_api::legacy_operation )

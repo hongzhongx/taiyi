@@ -86,6 +86,11 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (get_nfa_history)
                 (get_nfa_action_info)
                 (eval_nfa_action)
+                (find_actor)
+                (find_actors)
+                (list_actors)
+                (list_actors_below_health)
+                (find_actor_talent_rules)
             )
             
             void on_post_apply_block( const signed_block& b );
@@ -854,6 +859,37 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
             return result;
         }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, find_actor )
+        {
+            CHECK_ARG_SIZE( 1 )
+            return _database_api->find_actor( { args[0].as<string>() } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, find_actors )
+        {
+            CHECK_ARG_SIZE( 1 )
+            return _database_api->find_actors( { args[0].as< vector< database_api::api_id_type > >() } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_actors )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_actors( { args[0], args[1].as< uint32_t >(), database_api::by_owner } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_actors_below_health )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_actors( { args[0], args[1].as< uint32_t >(), database_api::by_health } ).result;
+        }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, find_actor_talent_rules )
+        {
+            CHECK_ARG_SIZE( 1 )
+
+            return _database_api->find_actor_talent_rules( { args[0].as< vector< taiyi::plugins::database_api::api_id_type > >() } ).rules;
+        }
 
         void baiyujing_api_impl::on_post_apply_block( const signed_block& b )
         { try {
@@ -995,6 +1031,11 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (get_nfa_history)
         (get_nfa_action_info)
         (eval_nfa_action)
+        (find_actor)
+        (find_actors)
+        (list_actors)
+        (list_actors_below_health)
+        (find_actor_talent_rules)
     )
 
 } } } // taiyi::plugins::baiyujing_api

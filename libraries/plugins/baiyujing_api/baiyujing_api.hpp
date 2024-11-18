@@ -317,6 +317,14 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool consequence = false;
     };
 
+    struct api_simple_actor_object
+    {
+        api_simple_actor_object(const account_name_type& o, const string& n) : owner(o), name(n) {}
+        api_simple_actor_object() {}
+        
+        account_name_type   owner;
+        string              name;
+    };
 
 #define DEFINE_API_ARGS( api_name, arg_type, return_type )  \
     typedef arg_type api_name ## _args;                     \
@@ -367,6 +375,11 @@ DEFINE_API_ARGS( list_nfas,                         vector< variant >, vector< a
 DEFINE_API_ARGS( get_nfa_history,                   vector< variant >, get_nfa_history_return_type )
 DEFINE_API_ARGS( get_nfa_action_info,               vector< variant >, api_contract_action_info )
 DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, vector<string> )
+DEFINE_API_ARGS( find_actor,                        vector< variant >, optional< database_api::api_actor_object > )
+DEFINE_API_ARGS( find_actors,                       vector< variant >, vector< database_api::api_actor_object > )
+DEFINE_API_ARGS( list_actors,                       vector< variant >, vector< database_api::api_actor_object > )
+DEFINE_API_ARGS( list_actors_below_health,          vector< variant >, vector< database_api::api_actor_object > )
+DEFINE_API_ARGS( find_actor_talent_rules,           vector< variant >, vector< database_api::api_actor_talent_rule_object > )
 
 #undef DEFINE_API_ARGS
 
@@ -423,6 +436,11 @@ DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, vector<st
             (get_nfa_history)
             (eval_nfa_action)
             (get_nfa_action_info)
+            (find_actor)
+            (find_actors)
+            (list_actors)
+            (list_actors_below_health)
+            (find_actor_talent_rules)
         )
         
     private:
@@ -467,3 +485,5 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::api_resource_assets, (gold)(food)(woo
 FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parent)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_contract_action_info, (exist)(consequence) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_simple_actor_object, (owner)(name) )
