@@ -3,16 +3,18 @@
 #include <fc/io/raw.hpp>
 #include <protocol/types_fwd.hpp>
 
+// Fungible Asset Identifier (FAI)
+
 #define TAIYI_ASSET_SYMBOL_PRECISION_BITS    4
 #define TAIYI_ASSET_CONTROL_BITS             1
-#define TAIYI_NAI_SHIFT                      ( TAIYI_ASSET_SYMBOL_PRECISION_BITS + TAIYI_ASSET_CONTROL_BITS )
-#define SGT_MAX_NAI                          99999999
-#define SGT_MIN_NAI                          1
-#define SGT_MIN_NON_RESERVED_NAI             10000000
-#define TAIYI_ASSET_SYMBOL_NAI_LENGTH        10
-#define TAIYI_ASSET_SYMBOL_NAI_STRING_LENGTH ( TAIYI_ASSET_SYMBOL_NAI_LENGTH + 2 )
-#define SGT_MAX_NAI_POOL_COUNT               10
-#define SGT_MAX_NAI_GENERATION_TRIES         100
+#define TAIYI_FAI_SHIFT                      ( TAIYI_ASSET_SYMBOL_PRECISION_BITS + TAIYI_ASSET_CONTROL_BITS )
+#define SGT_MAX_FAI                          99999999
+#define SGT_MIN_FAI                          1
+#define SGT_MIN_NON_RESERVED_FAI             10000000
+#define TAIYI_ASSET_SYMBOL_FAI_LENGTH        10
+#define TAIYI_ASSET_SYMBOL_FAI_STRING_LENGTH ( TAIYI_ASSET_SYMBOL_FAI_LENGTH + 2 )
+#define SGT_MAX_FAI_POOL_COUNT               10
+#define SGT_MAX_FAI_GENERATION_TRIES         100
 
 #define TAIYI_PRECISION_YIN     (3)
 #define TAIYI_PRECISION_YANG    (3)
@@ -24,27 +26,27 @@
 #define TAIYI_PRECISION_FABRIC  (6)
 #define TAIYI_PRECISION_HERB    (6)
 
-// One's place is used for check digit, which means NAI 0-9 all have NAI data of 0 which is invalid
-// This space is safe to use because it would alwasys result in failure to convert from NAI
-#define TAIYI_NAI_YIN       (1)
-#define TAIYI_NAI_YANG      (2)
-#define TAIYI_NAI_QI        (3)
+// One's place is used for check digit, which means FAI 0-9 all have FAI data of 0 which is invalid
+// This space is safe to use because it would alwasys result in failure to convert from FAI
+#define TAIYI_FAI_YIN       (1)
+#define TAIYI_FAI_YANG      (2)
+#define TAIYI_FAI_QI        (3)
 
-#define TAIYI_NAI_GOLD      (4)
-#define TAIYI_NAI_FOOD      (5)
-#define TAIYI_NAI_WOOD      (6)
-#define TAIYI_NAI_FABRIC    (7)
-#define TAIYI_NAI_HERB      (8)
+#define TAIYI_FAI_GOLD      (4)
+#define TAIYI_FAI_FOOD      (5)
+#define TAIYI_FAI_WOOD      (6)
+#define TAIYI_FAI_FABRIC    (7)
+#define TAIYI_FAI_HERB      (8)
 
-#define TAIYI_ASSET_NUM_YIN     (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YIN)    << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YIN))
-#define TAIYI_ASSET_NUM_YANG    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_YANG)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_YANG))
-#define TAIYI_ASSET_NUM_QI      (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_QI)     << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_QI))
+#define TAIYI_ASSET_NUM_YIN     (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_YIN)    << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_YIN))
+#define TAIYI_ASSET_NUM_YANG    (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_YANG)   << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_YANG))
+#define TAIYI_ASSET_NUM_QI      (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_QI)     << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_QI))
 
-#define TAIYI_ASSET_NUM_GOLD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_GOLD)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_GOLD))
-#define TAIYI_ASSET_NUM_FOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FOOD)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FOOD))
-#define TAIYI_ASSET_NUM_WOOD    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_WOOD)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_WOOD))
-#define TAIYI_ASSET_NUM_FABRIC  (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_FABRIC) << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_FABRIC))
-#define TAIYI_ASSET_NUM_HERB    (uint32_t(((SGT_MAX_NAI + TAIYI_NAI_HERB)   << TAIYI_NAI_SHIFT) | TAIYI_PRECISION_HERB))
+#define TAIYI_ASSET_NUM_GOLD    (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_GOLD)   << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_GOLD))
+#define TAIYI_ASSET_NUM_FOOD    (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_FOOD)   << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_FOOD))
+#define TAIYI_ASSET_NUM_WOOD    (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_WOOD)   << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_WOOD))
+#define TAIYI_ASSET_NUM_FABRIC  (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_FABRIC) << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_FABRIC))
+#define TAIYI_ASSET_NUM_HERB    (uint32_t(((SGT_MAX_FAI + TAIYI_FAI_HERB)   << TAIYI_FAI_SHIFT) | TAIYI_PRECISION_HERB))
 
 #define QI_SYMBOL_U64       (uint64_t('Q') | (uint64_t('I') << 8))
 #define YANG_SYMBOL_U64     (uint64_t('Y') | (uint64_t('A') << 8) | (uint64_t('N') << 16) | (uint64_t('G') << 24))
@@ -72,7 +74,7 @@
 #define SGT_ASSET_NUM_CONTROL_MASK     0x10
 #define SGT_ASSET_NUM_QI_MASK     0x20
 
-#define ASSET_SYMBOL_NAI_KEY      "nai"
+#define ASSET_SYMBOL_FAI_KEY      "fai"
 #define ASSET_SYMBOL_DECIMALS_KEY "decimals"
 
 namespace taiyi { namespace protocol {
@@ -83,28 +85,28 @@ namespace taiyi { namespace protocol {
         enum asset_symbol_space
         {
             legacy_space = 1,
-            nai_space = 2
+            fai_space = 2
         };
         
-        explicit operator uint32_t() { return to_nai(); }
+        explicit operator uint32_t() { return to_fai(); }
         
         // buf must have space for TAIYI_ASSET_SYMBOL_MAX_LENGTH+1
         static asset_symbol_type from_string( const std::string& str );
-        static asset_symbol_type from_nai_string( const char* buf, uint8_t decimal_places );
+        static asset_symbol_type from_fai_string( const char* buf, uint8_t decimal_places );
         static asset_symbol_type from_asset_num( uint32_t asset_num ) { asset_symbol_type result; result.asset_num = asset_num; return result; }
-        static uint32_t asset_num_from_nai( uint32_t nai, uint8_t decimal_places );
-        static asset_symbol_type from_nai( uint32_t nai, uint8_t decimal_places ) { return from_asset_num( asset_num_from_nai( nai, decimal_places ) ); }
+        static uint32_t asset_num_from_fai( uint32_t fai, uint8_t decimal_places );
+        static asset_symbol_type from_fai( uint32_t fai, uint8_t decimal_places ) { return from_asset_num( asset_num_from_fai( fai, decimal_places ) ); }
         static uint8_t damm_checksum_8digit(uint32_t value);
         
         std::string to_string()const;
-        void to_nai_string( char* buf )const;
-        std::string to_nai_string()const
+        void to_fai_string( char* buf )const;
+        std::string to_fai_string()const
         {
-            char buf[ TAIYI_ASSET_SYMBOL_NAI_STRING_LENGTH ];
-            to_nai_string( buf );
+            char buf[ TAIYI_ASSET_SYMBOL_FAI_STRING_LENGTH ];
+            to_fai_string( buf );
             return std::string( buf );
         }
-        uint32_t to_nai()const;
+        uint32_t to_fai()const;
         
         /**Returns true when symbol represents qi variant of the token,
          * false for liquid one.
@@ -146,11 +148,11 @@ namespace fc {
         // 0000pppp aaaaaaaa bbbbbbbb cccccccc dddddddd eeeeeeee ffffffff 00000000
         // Symbol = abcdef
         //
-        // NAI serialization of assets
+        // FAI serialization of assets
         // aaa1pppp bbbbbbbb cccccccc dddddddd
-        // NAI = (MSB to LSB) dddddddd cccccccc bbbbbbbb aaa
+        // FAI = (MSB to LSB) dddddddd cccccccc bbbbbbbb aaa
         //
-        // NAI internal storage of legacy assets
+        // FAI internal storage of legacy assets
         
         template< typename Stream >
         inline void pack( Stream& s, const taiyi::protocol::asset_symbol_type& sym )
@@ -192,7 +194,7 @@ namespace fc {
                     pack( s, ser );
                     break;
                 }
-                case taiyi::protocol::asset_symbol_type::nai_space:
+                case taiyi::protocol::asset_symbol_type::fai_space:
                     pack( s, sym.asset_num );
                     break;
                 default:
@@ -260,7 +262,7 @@ namespace fc {
         try
         {
             mutable_variant_object o;
-            o( ASSET_SYMBOL_NAI_KEY, sym.to_nai_string() )
+            o( ASSET_SYMBOL_FAI_KEY, sym.to_fai_string() )
             ( ASSET_SYMBOL_DECIMALS_KEY, sym.decimals() );
             var = std::move( o );
         } FC_CAPTURE_AND_RETHROW()
@@ -276,16 +278,16 @@ namespace fc {
             
             auto& o = var.get_object();
             
-            auto nai = o.find( ASSET_SYMBOL_NAI_KEY );
-            FC_ASSERT( nai != o.end(), "Expected key '${key}'.", ("key", ASSET_SYMBOL_NAI_KEY) );
-            FC_ASSERT( nai->value().is_string(), "Expected a string type for value '${key}'.", ("key", ASSET_SYMBOL_NAI_KEY) );
+            auto fai = o.find( ASSET_SYMBOL_FAI_KEY );
+            FC_ASSERT( fai != o.end(), "Expected key '${key}'.", ("key", ASSET_SYMBOL_FAI_KEY) );
+            FC_ASSERT( fai->value().is_string(), "Expected a string type for value '${key}'.", ("key", ASSET_SYMBOL_FAI_KEY) );
             
             auto decimals = o.find( ASSET_SYMBOL_DECIMALS_KEY );
             FC_ASSERT( decimals != o.end(), "Expected key '${key}'.", ("key", ASSET_SYMBOL_DECIMALS_KEY) );
             FC_ASSERT( decimals->value().is_uint64(), "Expected an unsigned integer type for value '${key}'.", ("key", ASSET_SYMBOL_DECIMALS_KEY) );
             FC_ASSERT( decimals->value().as_uint64() <= TAIYI_ASSET_MAX_DECIMALS, "Expected decimals to be less than or equal to ${num}", ("num", TAIYI_ASSET_MAX_DECIMALS) );
             
-            sym = asset_symbol_type::from_nai_string( nai->value().as_string().c_str(), decimals->value().as< uint8_t >() );
+            sym = asset_symbol_type::from_fai_string( fai->value().as_string().c_str(), decimals->value().as< uint8_t >() );
         } FC_CAPTURE_AND_RETHROW()
     }
 

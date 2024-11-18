@@ -7,7 +7,7 @@
 
 #define ASSET_AMOUNT_KEY     "amount"
 #define ASSET_PRECISION_KEY  "precision"
-#define ASSET_NAI_KEY        "nai"
+#define ASSET_FAI_KEY        "fai"
 
 /*
 
@@ -31,10 +31,10 @@ namespace taiyi { namespace protocol {
         return fc::json::from_string( str ).as< asset_symbol_type >();
     }
 
-    void asset_symbol_type::to_nai_string( char* buf )const
+    void asset_symbol_type::to_fai_string( char* buf )const
     {
-        static_assert( TAIYI_ASSET_SYMBOL_NAI_STRING_LENGTH >= 12, "This code will overflow a short buffer" );
-        uint32_t x = to_nai();
+        static_assert( TAIYI_ASSET_SYMBOL_FAI_STRING_LENGTH >= 12, "This code will overflow a short buffer" );
+        uint32_t x = to_fai();
         buf[11] = '\0';
         buf[10] = ((x%10)+'0');  x /= 10;
         buf[ 9] = ((x%10)+'0');  x /= 10;
@@ -49,15 +49,15 @@ namespace taiyi { namespace protocol {
         buf[ 0] = '@';
     }
 
-    asset_symbol_type asset_symbol_type::from_nai_string( const char* p, uint8_t decimal_places )
+    asset_symbol_type asset_symbol_type::from_fai_string( const char* p, uint8_t decimal_places )
     {
         try
         {
-            FC_ASSERT( p != nullptr, "NAI string cannot be a null" );
-            FC_ASSERT( std::strlen( p ) == TAIYI_ASSET_SYMBOL_NAI_STRING_LENGTH - 1, "Incorrect NAI string length" );
-            FC_ASSERT( p[0] == '@' && p[1] == '@', "Invalid NAI string prefix" );
-            uint32_t nai = boost::lexical_cast< uint32_t >( p + 2 );
-            return asset_symbol_type::from_nai( nai, decimal_places );
+            FC_ASSERT( p != nullptr, "FAI string cannot be a null" );
+            FC_ASSERT( std::strlen( p ) == TAIYI_ASSET_SYMBOL_FAI_STRING_LENGTH - 1, "Incorrect FAI string length" );
+            FC_ASSERT( p[0] == '@' && p[1] == '@', "Invalid FAI string prefix" );
+            uint32_t fai = boost::lexical_cast< uint32_t >( p + 2 );
+            return asset_symbol_type::from_fai( fai, decimal_places );
         } FC_CAPTURE_AND_RETHROW();
     }
 
@@ -106,85 +106,85 @@ namespace taiyi { namespace protocol {
         return x/10;
     }
 
-    uint32_t asset_symbol_type::asset_num_from_nai( uint32_t nai, uint8_t decimal_places )
+    uint32_t asset_symbol_type::asset_num_from_fai( uint32_t fai, uint8_t decimal_places )
     {
         // Can be replaced with some clever bitshifting
-        uint32_t nai_check_digit = nai % 10;
-        uint32_t nai_data_digits = nai / 10;
+        uint32_t fai_check_digit = fai % 10;
+        uint32_t fai_data_digits = fai / 10;
         
-        FC_ASSERT( (nai_data_digits >= SGT_MIN_NAI) & (nai_data_digits <= SGT_MAX_NAI), "NAI out of range" );
-        FC_ASSERT( nai_check_digit == damm_checksum_8digit(nai_data_digits), "Invalid check digit" );
+        FC_ASSERT( (fai_data_digits >= SGT_MIN_FAI) & (fai_data_digits <= SGT_MAX_FAI), "FAI out of range" );
+        FC_ASSERT( fai_check_digit == damm_checksum_8digit(fai_data_digits), "Invalid check digit" );
         
-        switch( nai_data_digits )
+        switch( fai_data_digits )
         {
-            case TAIYI_NAI_YANG:
+            case TAIYI_FAI_YANG:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_YANG );
                 return TAIYI_ASSET_NUM_YANG;
-            case TAIYI_NAI_YIN:
+            case TAIYI_FAI_YIN:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_YIN );
                 return TAIYI_ASSET_NUM_YIN;
-            case TAIYI_NAI_QI:
+            case TAIYI_FAI_QI:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_QI );
                 return TAIYI_ASSET_NUM_QI;
-            case TAIYI_NAI_GOLD:
+            case TAIYI_FAI_GOLD:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_GOLD );
                 return TAIYI_ASSET_NUM_GOLD;
-            case TAIYI_NAI_FOOD:
+            case TAIYI_FAI_FOOD:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_FOOD );
                 return TAIYI_ASSET_NUM_FOOD;
-            case TAIYI_NAI_WOOD:
+            case TAIYI_FAI_WOOD:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_WOOD );
                 return TAIYI_ASSET_NUM_WOOD;
-            case TAIYI_NAI_FABRIC:
+            case TAIYI_FAI_FABRIC:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_FABRIC );
                 return TAIYI_ASSET_NUM_FABRIC;
-            case TAIYI_NAI_HERB:
+            case TAIYI_FAI_HERB:
                 FC_ASSERT( decimal_places == TAIYI_PRECISION_HERB );
                 return TAIYI_ASSET_NUM_HERB;
             default:
                 FC_ASSERT( decimal_places <= TAIYI_ASSET_MAX_DECIMALS, "Invalid decimal_places" );
-                return (nai_data_digits << TAIYI_NAI_SHIFT) | SGT_ASSET_NUM_CONTROL_MASK | decimal_places;
+                return (fai_data_digits << TAIYI_FAI_SHIFT) | SGT_ASSET_NUM_CONTROL_MASK | decimal_places;
         }
     }
 
-    uint32_t asset_symbol_type::to_nai()const
+    uint32_t asset_symbol_type::to_fai()const
     {
-        uint32_t nai_data_digits = 0;
+        uint32_t fai_data_digits = 0;
         
         // Can be replaced with some clever bitshifting
         switch( asset_num )
         {
             case TAIYI_ASSET_NUM_YANG:
-                nai_data_digits = TAIYI_NAI_YANG;
+                fai_data_digits = TAIYI_FAI_YANG;
                 break;
             case TAIYI_ASSET_NUM_YIN:
-                nai_data_digits = TAIYI_NAI_YIN;
+                fai_data_digits = TAIYI_FAI_YIN;
                 break;
             case TAIYI_ASSET_NUM_QI:
-                nai_data_digits = TAIYI_NAI_QI;
+                fai_data_digits = TAIYI_FAI_QI;
                 break;
             case TAIYI_ASSET_NUM_GOLD:
-                nai_data_digits = TAIYI_NAI_GOLD;
+                fai_data_digits = TAIYI_FAI_GOLD;
                 break;
             case TAIYI_ASSET_NUM_FOOD:
-                nai_data_digits = TAIYI_NAI_FOOD;
+                fai_data_digits = TAIYI_FAI_FOOD;
                 break;
             case TAIYI_ASSET_NUM_WOOD:
-                nai_data_digits = TAIYI_NAI_WOOD;
+                fai_data_digits = TAIYI_FAI_WOOD;
                 break;
             case TAIYI_ASSET_NUM_FABRIC:
-                nai_data_digits = TAIYI_NAI_FABRIC;
+                fai_data_digits = TAIYI_FAI_FABRIC;
                 break;
             case TAIYI_ASSET_NUM_HERB:
-                nai_data_digits = TAIYI_NAI_HERB;
+                fai_data_digits = TAIYI_FAI_HERB;
                 break;
             default:
-                FC_ASSERT( space() == nai_space );
-                nai_data_digits = (asset_num >> TAIYI_NAI_SHIFT);
+                FC_ASSERT( space() == fai_space );
+                fai_data_digits = (asset_num >> TAIYI_FAI_SHIFT);
         }
         
-        uint32_t nai_check_digit = damm_checksum_8digit(nai_data_digits);
-        return nai_data_digits * 10 + nai_check_digit;
+        uint32_t fai_check_digit = damm_checksum_8digit(fai_data_digits);
+        return fai_data_digits * 10 + fai_check_digit;
     }
 
     bool asset_symbol_type::is_qi() const
@@ -211,7 +211,7 @@ namespace taiyi { namespace protocol {
                         FC_ASSERT( false, "Unknown asset symbol" );
                 }
             }
-            case nai_space:
+            case fai_space:
                 // 6th bit of asset_num is used as qi/liquid variant indicator.
                 return asset_num & SGT_ASSET_NUM_QI_MASK;
             default:
@@ -243,7 +243,7 @@ namespace taiyi { namespace protocol {
                         FC_ASSERT( false, "Unknown asset symbol" );
                 }
             }
-            case nai_space:
+            case fai_space:
             {
                 // Toggle 6th bit of this asset_num.
                 auto paired_asset_num = asset_num ^ ( SGT_ASSET_NUM_QI_MASK );
@@ -270,7 +270,7 @@ namespace taiyi { namespace protocol {
                 s = legacy_space;
                 break;
             default:
-                s = nai_space;
+                s = fai_space;
         }
         return s;
     }
@@ -290,13 +290,13 @@ namespace taiyi { namespace protocol {
                 break;
             default:
             {
-                uint32_t nai_data_digits = (asset_num >> TAIYI_NAI_SHIFT);
-                uint32_t nai_1bit = (asset_num & SGT_ASSET_NUM_CONTROL_MASK);
-                uint32_t nai_decimal_places = (asset_num & SGT_ASSET_NUM_PRECISION_MASK);
-                FC_ASSERT( (nai_data_digits >= SGT_MIN_NAI) &
-                          (nai_data_digits <= SGT_MAX_NAI) &
-                          (nai_1bit == SGT_ASSET_NUM_CONTROL_MASK) &
-                          (nai_decimal_places <= TAIYI_ASSET_MAX_DECIMALS),
+                uint32_t fai_data_digits = (asset_num >> TAIYI_FAI_SHIFT);
+                uint32_t fai_1bit = (asset_num & SGT_ASSET_NUM_CONTROL_MASK);
+                uint32_t fai_decimal_places = (asset_num & SGT_ASSET_NUM_PRECISION_MASK);
+                FC_ASSERT( (fai_data_digits >= SGT_MIN_FAI) &
+                          (fai_data_digits <= SGT_MAX_FAI) &
+                          (fai_1bit == SGT_ASSET_NUM_CONTROL_MASK) &
+                          (fai_decimal_places <= TAIYI_ASSET_MAX_DECIMALS),
                           "Cannot determine space for asset ${n}", ("n", asset_num) );
             }
         }
@@ -384,7 +384,7 @@ namespace fc {
     { try {
         variant v = mutable_variant_object( ASSET_AMOUNT_KEY, boost::lexical_cast< std::string >( var.amount.value ) )
         ( ASSET_PRECISION_KEY, uint64_t( var.symbol.decimals() ) )
-        ( ASSET_NAI_KEY, var.symbol.to_nai_string() );
+        ( ASSET_FAI_KEY, var.symbol.to_fai_string() );
         vo = v;
     } FC_CAPTURE_AND_RETHROW() }
     
@@ -402,9 +402,9 @@ namespace fc {
         FC_ASSERT( v_object.contains( ASSET_PRECISION_KEY ), "Precision field doesn't exist." );
         FC_ASSERT( v_object[ ASSET_PRECISION_KEY ].is_uint64(), "Expected an unsigned integer type for value '${key}'.", ("key", ASSET_PRECISION_KEY) );
         
-        FC_ASSERT( v_object.contains( ASSET_NAI_KEY ), "NAI field doesn't exist." );
-        FC_ASSERT( v_object[ ASSET_NAI_KEY ].is_string(), "Expected a string type for value '${key}'.", ("key", ASSET_NAI_KEY) );
+        FC_ASSERT( v_object.contains( ASSET_FAI_KEY ), "FAI field doesn't exist." );
+        FC_ASSERT( v_object[ ASSET_FAI_KEY ].is_string(), "Expected a string type for value '${key}'.", ("key", ASSET_FAI_KEY) );
         
-        vo.symbol = taiyi::protocol::asset_symbol_type::from_nai_string( v_object[ ASSET_NAI_KEY ].as< std::string >().c_str(), v_object[ ASSET_PRECISION_KEY ].as< uint8_t >() );
+        vo.symbol = taiyi::protocol::asset_symbol_type::from_fai_string( v_object[ ASSET_FAI_KEY ].as< std::string >().c_str(), v_object[ ASSET_PRECISION_KEY ].as< uint8_t >() );
     } FC_CAPTURE_AND_RETHROW() }
 } //fc

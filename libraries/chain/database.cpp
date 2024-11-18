@@ -2455,7 +2455,7 @@ namespace taiyi { namespace chain {
                       ("acc", a.name)("r", delta)("a", available) );
         }
         
-        if( delta.symbol.space() == asset_symbol_type::nai_space
+        if( delta.symbol.space() == asset_symbol_type::fai_space
            || delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
            || delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
            || delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
@@ -2480,7 +2480,7 @@ namespace taiyi { namespace chain {
                       ("acc", name)("r", delta)("a", available) );
         }
         
-        if( delta.symbol.space() == asset_symbol_type::nai_space
+        if( delta.symbol.space() == asset_symbol_type::fai_space
            || delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
            || delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
            || delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
@@ -2500,7 +2500,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
         
         // No account object modification for asset balance, hence separate handling here.
-        if( liquid_delta.symbol.space() == asset_symbol_type::nai_space
+        if( liquid_delta.symbol.space() == asset_symbol_type::fai_space
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
@@ -2519,7 +2519,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
         
         // No account object modification for asset balance, hence separate handling here.
-        if( liquid_delta.symbol.space() == asset_symbol_type::nai_space
+        if( liquid_delta.symbol.space() == asset_symbol_type::fai_space
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_GOLD
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FOOD
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_WOOD
@@ -2570,7 +2570,7 @@ namespace taiyi { namespace chain {
                           symbol.asset_num == TAIYI_ASSET_NUM_WOOD ||
                           symbol.asset_num == TAIYI_ASSET_NUM_FABRIC ||
                           symbol.asset_num == TAIYI_ASSET_NUM_HERB ||
-                          symbol.space() == asset_symbol_type::nai_space,
+                          symbol.space() == asset_symbol_type::fai_space,
                           "Invalid symbol: ${s}", ("s", symbol) );
                 auto key = boost::make_tuple( a.name, symbol.is_qi() ? symbol.get_paired_symbol() : symbol );
                 const account_regular_balance_object* arbo = find< account_regular_balance_object, by_owner_liquid_symbol >( key );

@@ -121,53 +121,53 @@ BOOST_AUTO_TEST_CASE( asset_test )
         std::string s;
         
         BOOST_CHECK_EQUAL( asset().symbol.decimals(), 3 );
-        BOOST_CHECK_EQUAL( fc::json::to_string( asset() ), "{\"amount\":\"0\",\"precision\":3,\"nai\":\"@@000000021\"}" );
+        BOOST_CHECK_EQUAL( fc::json::to_string( asset() ), "{\"amount\":\"0\",\"precision\":3,\"fai\":\"@@000000021\"}" );
         
-        asset taiyi = fc::json::from_string( "{\"amount\":\"123456\",    \"precision\":3, \"nai\":\"@@000000021\"}" ).as< asset >();
-        asset qi = fc::json::from_string( "{\"amount\":\"123456789\", \"precision\":6, \"nai\":\"@@000000037\"}" ).as< asset >();
-        asset tmp =   fc::json::from_string( "{\"amount\":\"456\",       \"precision\":3, \"nai\":\"@@000000021\"}" ).as< asset >();
+        asset taiyi = fc::json::from_string( "{\"amount\":\"123456\",    \"precision\":3, \"fai\":\"@@000000021\"}" ).as< asset >();
+        asset qi = fc::json::from_string( "{\"amount\":\"123456789\", \"precision\":6, \"fai\":\"@@000000037\"}" ).as< asset >();
+        asset tmp =   fc::json::from_string( "{\"amount\":\"456\",       \"precision\":3, \"fai\":\"@@000000021\"}" ).as< asset >();
         BOOST_CHECK_EQUAL( tmp.amount.value, 456 );
-        tmp = fc::json::from_string( "{\"amount\":\"56\", \"precision\":3, \"nai\":\"@@000000021\"}" ).as< asset >();
+        tmp = fc::json::from_string( "{\"amount\":\"56\", \"precision\":3, \"fai\":\"@@000000021\"}" ).as< asset >();
         BOOST_CHECK_EQUAL( tmp.amount.value, 56 );
         
         BOOST_CHECK_EQUAL( taiyi.amount.value, 123456 );
         BOOST_CHECK_EQUAL( taiyi.symbol.decimals(), 3 );
-        BOOST_CHECK_EQUAL( fc::json::to_string( taiyi ), "{\"amount\":\"123456\",\"precision\":3,\"nai\":\"@@000000021\"}" );
+        BOOST_CHECK_EQUAL( fc::json::to_string( taiyi ), "{\"amount\":\"123456\",\"precision\":3,\"fai\":\"@@000000021\"}" );
         BOOST_CHECK( taiyi.symbol.asset_num == TAIYI_ASSET_NUM_YANG );
-        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50, YANG_SYMBOL ) ), "{\"amount\":\"50\",\"precision\":3,\"nai\":\"@@000000021\"}" );
-        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50000, YANG_SYMBOL ) ), "{\"amount\":\"50000\",\"precision\":3,\"nai\":\"@@000000021\"}" );
+        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50, YANG_SYMBOL ) ), "{\"amount\":\"50\",\"precision\":3,\"fai\":\"@@000000021\"}" );
+        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50000, YANG_SYMBOL ) ), "{\"amount\":\"50000\",\"precision\":3,\"fai\":\"@@000000021\"}" );
         
         BOOST_CHECK_EQUAL( qi.amount.value, 123456789 );
         BOOST_CHECK_EQUAL( qi.symbol.decimals(), 6 );
-        BOOST_CHECK_EQUAL( fc::json::to_string( qi ), "{\"amount\":\"123456789\",\"precision\":6,\"nai\":\"@@000000037\"}" );
+        BOOST_CHECK_EQUAL( fc::json::to_string( qi ), "{\"amount\":\"123456789\",\"precision\":6,\"fai\":\"@@000000037\"}" );
         BOOST_CHECK( qi.symbol.asset_num == TAIYI_ASSET_NUM_QI );
-        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50, QI_SYMBOL ) ), "{\"amount\":\"50\",\"precision\":6,\"nai\":\"@@000000037\"}" );
-        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50000, QI_SYMBOL ) ), "{\"amount\":\"50000\",\"precision\":6,\"nai\":\"@@000000037\"}" );
+        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50, QI_SYMBOL ) ), "{\"amount\":\"50\",\"precision\":6,\"fai\":\"@@000000037\"}" );
+        BOOST_CHECK_EQUAL( fc::json::to_string( asset( 50000, QI_SYMBOL ) ), "{\"amount\":\"50000\",\"precision\":6,\"fai\":\"@@000000037\"}" );
         
         // amount overflow
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"9223372036854775808\",\"precision\":3,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"9223372036854775808\",\"precision\":3,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
         // amount underflow
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"-1\",\"precision\":3,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"-1\",\"precision\":3,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
         
         // precision overflow
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10\",\"precision\":256,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10\",\"precision\":256,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
         // precision underflow
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10\",\"precision\":-1,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10\",\"precision\":-1,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
         
         // Check wrong size tuple
         BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"0\",3]" ).as< asset >(), fc::exception );
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"0\",\"precision\":3,\"nai\":\"@@000000021\",1}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"0\",\"precision\":3,\"fai\":\"@@000000021\",1}" ).as< asset >(), fc::exception );
         
         // Check non-numeric characters in amount
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"foobar\",\"precision\":3,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10a\",\"precision\":3,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10a00\",\"precision\":3,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"foobar\",\"precision\":3,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10a\",\"precision\":3,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"10a00\",\"precision\":3,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
         
         // Check hex value
-        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"0x8000\",\"precision\":3,\"nai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
+        BOOST_CHECK_THROW( fc::json::from_string( "{\"amount\":\"0x8000\",\"precision\":3,\"fai\":\"@@000000021\"}" ).as< asset >(), fc::exception );
         
         // Check octal value
-        BOOST_CHECK_EQUAL( fc::json::from_string( "{\"amount\":\"08000\",\"precision\":3,\"nai\":\"@@000000021\"}" ).as< asset >().amount.value, 8000 );
+        BOOST_CHECK_EQUAL( fc::json::from_string( "{\"amount\":\"08000\",\"precision\":3,\"fai\":\"@@000000021\"}" ).as< asset >().amount.value, 8000 );
     }
     FC_LOG_AND_RETHROW()
 }
@@ -499,9 +499,9 @@ BOOST_AUTO_TEST_CASE( static_variant_json_test )
         op = transfer_operation();
         
         auto json_str = fc::json::to_string( op );
-        BOOST_CHECK_EQUAL( json_str, "{\"type\":\"transfer_operation\",\"value\":{\"from\":\"\",\"to\":\"\",\"amount\":{\"amount\":\"0\",\"precision\":3,\"nai\":\"@@000000021\"},\"memo\":\"\"}}" );
+        BOOST_CHECK_EQUAL( json_str, "{\"type\":\"transfer_operation\",\"value\":{\"from\":\"\",\"to\":\"\",\"amount\":{\"amount\":\"0\",\"precision\":3,\"fai\":\"@@000000021\"},\"memo\":\"\"}}" );
         
-        json_str = "{\"type\":\"transfer_operation\",\"value\":{\"from\":\"foo\",\"to\":\"bar\",\"amount\":{\"amount\":\"1000\",\"precision\":3,\"nai\":\"@@000000021\"},\"memo\":\"\"}}";
+        json_str = "{\"type\":\"transfer_operation\",\"value\":{\"from\":\"foo\",\"to\":\"bar\",\"amount\":{\"amount\":\"1000\",\"precision\":3,\"fai\":\"@@000000021\"},\"memo\":\"\"}}";
         from_variant( fc::json::from_string( json_str ), op );
         BOOST_CHECK_EQUAL( op.which(), 0 );
         
@@ -511,7 +511,7 @@ BOOST_AUTO_TEST_CASE( static_variant_json_test )
         BOOST_CHECK( t.amount == asset( 1000, YANG_SYMBOL ) );
         BOOST_CHECK( t.memo == "" );
         
-        json_str = "{\"type\":\"transfer_to_qi_operation\",\"value\":{\"from\":\"foo\",\"to\":\"bar\",\"amount\":{\"amount\":\"1000\",\"precision\":3,\"nai\":\"@@000000021\"}}}";
+        json_str = "{\"type\":\"transfer_to_qi_operation\",\"value\":{\"from\":\"foo\",\"to\":\"bar\",\"amount\":{\"amount\":\"1000\",\"precision\":3,\"fai\":\"@@000000021\"}}}";
         
         from_variant( fc::json::from_string( json_str ), op );
         BOOST_CHECK_EQUAL( op.which(), 1 );
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE( static_variant_json_test )
         BOOST_CHECK( c.to == "bar" );
         BOOST_CHECK( t.amount == asset( 1000, YANG_SYMBOL ) );
 
-        json_str = "{\"type\":\"not_a_type\",\"value\":{\"from\":\"foo\",\"to\":\"bar\",\"amount\":{\"amount\":\"1000\",\"precision\":3,\"nai\":\"@@000000021\"},\"memo\":\"\"}}";
+        json_str = "{\"type\":\"not_a_type\",\"value\":{\"from\":\"foo\",\"to\":\"bar\",\"amount\":{\"amount\":\"1000\",\"precision\":3,\"fai\":\"@@000000021\"},\"memo\":\"\"}}";
         TAIYI_REQUIRE_THROW( from_variant( fc::json::from_string( json_str ), op ), fc::assert_exception );
     }
     FC_LOG_AND_RETHROW();
@@ -542,21 +542,21 @@ BOOST_AUTO_TEST_CASE( asset_symbol_type_test )
 {
     try
     {
-        uint32_t asset_num = 10000000 << TAIYI_NAI_SHIFT; // Shift NAI value in to position
+        uint32_t asset_num = 10000000 << TAIYI_FAI_SHIFT; // Shift FAI value in to position
         asset_num |= SGT_ASSET_NUM_CONTROL_MASK;          // Flip the control bit
         asset_num |= 3;                                   // Add the precision
         
         auto symbol = asset_symbol_type::from_asset_num( asset_num );
         
-        BOOST_REQUIRE( symbol == asset_symbol_type::from_nai( 100000006, 3 ) );
-        BOOST_REQUIRE( symbol == asset_symbol_type::from_nai_string( "@@100000006", 3 ) );
-        BOOST_REQUIRE( asset_num == asset_symbol_type::asset_num_from_nai( 100000006, 3 ) );
-        BOOST_REQUIRE( symbol.to_nai_string() == "@@100000006" );
-        BOOST_REQUIRE( symbol.to_nai() == 100000006 );
+        BOOST_REQUIRE( symbol == asset_symbol_type::from_fai( 100000006, 3 ) );
+        BOOST_REQUIRE( symbol == asset_symbol_type::from_fai_string( "@@100000006", 3 ) );
+        BOOST_REQUIRE( asset_num == asset_symbol_type::asset_num_from_fai( 100000006, 3 ) );
+        BOOST_REQUIRE( symbol.to_fai_string() == "@@100000006" );
+        BOOST_REQUIRE( symbol.to_fai() == 100000006 );
         BOOST_REQUIRE( symbol.asset_num == asset_num );
-        BOOST_REQUIRE( symbol.space() == asset_symbol_type::asset_symbol_space::nai_space );
+        BOOST_REQUIRE( symbol.space() == asset_symbol_type::asset_symbol_space::fai_space );
         BOOST_REQUIRE( symbol.get_paired_symbol() == asset_symbol_type::from_asset_num( asset_num ^ SGT_ASSET_NUM_QI_MASK ) );
-        BOOST_REQUIRE( asset_symbol_type::from_nai( symbol.to_nai(), 3 ) == symbol );
+        BOOST_REQUIRE( asset_symbol_type::from_fai( symbol.to_fai(), 3 ) == symbol );
         
         asset_symbol_type taiyi = asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_YANG );
         asset_symbol_type qi = asset_symbol_type::from_asset_num( TAIYI_ASSET_NUM_QI );
@@ -564,15 +564,15 @@ BOOST_AUTO_TEST_CASE( asset_symbol_type_test )
         BOOST_REQUIRE( taiyi.space() == asset_symbol_type::asset_symbol_space::legacy_space );
         BOOST_REQUIRE( qi.space() == asset_symbol_type::asset_symbol_space::legacy_space );
         
-        BOOST_REQUIRE( asset_symbol_type::from_nai( taiyi.to_nai(), TAIYI_PRECISION_YANG ) == taiyi );
-        BOOST_REQUIRE( asset_symbol_type::from_nai( qi.to_nai(), TAIYI_PRECISION_QI ) == qi );
+        BOOST_REQUIRE( asset_symbol_type::from_fai( taiyi.to_fai(), TAIYI_PRECISION_YANG ) == taiyi );
+        BOOST_REQUIRE( asset_symbol_type::from_fai( qi.to_fai(), TAIYI_PRECISION_QI ) == qi );
         
-        TAIYI_REQUIRE_THROW( asset_symbol_type::from_nai_string( "@@100000006", TAIYI_ASSET_MAX_DECIMALS + 1 ), fc::assert_exception ); // More than max decimals
-        TAIYI_REQUIRE_THROW( asset_symbol_type::from_nai_string( "@0100000006", 3 ), fc::assert_exception );                            // Invalid NAI prefix
-        TAIYI_REQUIRE_THROW( asset_symbol_type::from_nai_string( "@@00000006", 3 ), fc::assert_exception );                             // Length too short
-        TAIYI_REQUIRE_THROW( asset_symbol_type::from_nai_string( "@@0100000006", 3 ), fc::assert_exception );                           // Length too long
-        TAIYI_REQUIRE_THROW( asset_symbol_type::from_nai_string( "@@invalid00", 3 ), fc::exception );                                   // Boost lexical bad cast
-        TAIYI_REQUIRE_THROW( asset_symbol_type::from_nai_string( nullptr, 3 ), fc::exception );                                         // Null pointer
+        TAIYI_REQUIRE_THROW( asset_symbol_type::from_fai_string( "@@100000006", TAIYI_ASSET_MAX_DECIMALS + 1 ), fc::assert_exception ); // More than max decimals
+        TAIYI_REQUIRE_THROW( asset_symbol_type::from_fai_string( "@0100000006", 3 ), fc::assert_exception );                            // Invalid FAI prefix
+        TAIYI_REQUIRE_THROW( asset_symbol_type::from_fai_string( "@@00000006", 3 ), fc::assert_exception );                             // Length too short
+        TAIYI_REQUIRE_THROW( asset_symbol_type::from_fai_string( "@@0100000006", 3 ), fc::assert_exception );                           // Length too long
+        TAIYI_REQUIRE_THROW( asset_symbol_type::from_fai_string( "@@invalid00", 3 ), fc::exception );                                   // Boost lexical bad cast
+        TAIYI_REQUIRE_THROW( asset_symbol_type::from_fai_string( nullptr, 3 ), fc::exception );                                         // Null pointer
     }
     FC_LOG_AND_RETHROW();
 }

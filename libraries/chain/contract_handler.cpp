@@ -17,9 +17,9 @@ namespace taiyi { namespace chain {
     
     asset_symbol_type s_get_symbol_type_from_string(const string name)
     {
-        if(name.size() == (TAIYI_ASSET_SYMBOL_NAI_STRING_LENGTH - 1) && name[0] == '@' && name[1] == '@') {
-            //NAI string
-            return asset_symbol_type::from_nai_string(name.c_str(), 3); //自定义创建的资产仅支持3位精度
+        if(name.size() == (TAIYI_ASSET_SYMBOL_FAI_STRING_LENGTH - 1) && name[0] == '@' && name[1] == '@') {
+            //FAI string
+            return asset_symbol_type::from_fai_string(name.c_str(), 3); //自定义创建的资产仅支持3位精度
         }
         else {
             //legacy symbol
