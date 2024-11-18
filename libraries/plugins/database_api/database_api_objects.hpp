@@ -5,8 +5,10 @@
 #include <chain/taiyi_objects.hpp>
 #include <chain/transaction_object.hpp>
 #include <chain/siming_objects.hpp>
+#include <chain/tiandao_property_object.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/contract_objects.hpp>
+#include <chain/zone_objects.hpp>
 #include <chain/actor_objects.hpp>
 #include <chain/database.hpp>
 
@@ -24,6 +26,8 @@ namespace taiyi { namespace plugins { namespace database_api {
     typedef qi_delegation_expiration_object         api_qi_delegation_expiration_object;
     typedef reward_fund_object                      api_reward_fund_object;
     typedef actor_talent_rule_object                api_actor_talent_rule_object;
+    typedef tiandao_property_object                 api_tiandao_property_object;
+    typedef zone_object                             api_zone_object;
 
     struct api_account_object
     {
@@ -293,8 +297,8 @@ namespace taiyi { namespace plugins { namespace database_api {
             
             standpoint_type = a.get_standpoint_type();
             
-            //location = db.get<zone_object, by_id>(a.location).name;
-            //base_name = db.get< zone_object, by_id >(a.base).name;
+            location = db.get<zone_object, by_id>(a.location).name;
+            base_name = db.get<zone_object, by_id>(a.base).name;
         }
         
         api_actor_object(){}
@@ -343,7 +347,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         int32_t             loyalty;
         
         string              location;   //所在区域名称
-        string              base_name;   //从属地名称
+        string              base_name;  //从属地名称
         
         time_point_sec      last_update;
     };

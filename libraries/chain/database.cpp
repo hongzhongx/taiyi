@@ -12,6 +12,7 @@
 #include <chain/asset_objects/asset_objects.hpp>
 #include <chain/taiyi_evaluator.hpp>
 #include <chain/taiyi_objects.hpp>
+#include <chain/tiandao_property_object.hpp>
 #include <chain/account_object.hpp>
 #include <chain/transaction_object.hpp>
 #include <chain/contract_objects.hpp>
@@ -1363,6 +1364,9 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< action_nfa_evaluator                     >();
         
         _my->_evaluator_registry.register_evaluator< create_actor_evaluator                   >();
+
+        _my->_evaluator_registry.register_evaluator< create_zone_evaluator                    >();
+        _my->_evaluator_registry.register_evaluator< connect_to_zone_evaluator                >();
     }
     
     void database::register_custom_operation_interpreter( std::shared_ptr< custom_operation_interpreter > interpreter )
@@ -1389,6 +1393,7 @@ namespace taiyi { namespace chain {
         _plugin_index_signal();
     }
     
+    void g_init_tiandao_property_object( tiandao_property_object& tiandao );
     void database::init_genesis(uint64_t init_supply)
     { try {
         
@@ -1478,6 +1483,20 @@ namespace taiyi { namespace chain {
             p.maximum_block_size = TAIYI_MAX_BLOCK_SIZE;
         } );
         
+        create< tiandao_property_object >( [&]( tiandao_property_object& p ) {
+            p.cruelty = 0;
+            p.enjoyment = 0;
+            p.decay = 0;
+            p.falsity = 0;
+            
+            p.v_years = 0;
+            p.v_months = 0;
+            p.v_times = 0;
+            
+            p.next_npc_born_time = TAIYI_GENESIS_TIME;
+            g_init_tiandao_property_object(p);
+        } );
+        
         for( int i = 0; i < 0x10000; i++ )
             create< block_summary_object >( [&]( block_summary_object& ) {});
         
@@ -1505,6 +1524,9 @@ namespace taiyi { namespace chain {
         // Create basic contracts such as THE first contract baseENV
         create_basic_contract_objects();
         
+        // Create basic contracts such as THE default actor symbol
+        create_basic_nfa_symbol_objects();
+
     } FC_CAPTURE_AND_RETHROW() }
     
     void database::validate_transaction( const signed_transaction& trx )
@@ -1724,6 +1746,7 @@ namespace taiyi { namespace chain {
         account_recovery_processing();
         process_decline_adoring_rights();
         
+        process_tiandao();
         process_nfa_tick();
         
         process_hardforks();

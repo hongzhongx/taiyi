@@ -66,6 +66,14 @@ namespace taiyi { namespace xuanpin {
         vector< database_api::api_actor_object > list_actors(const account_name_type&, uint32_t) const { FC_ASSERT( false ); }
         vector< database_api::api_actor_object > list_actors_below_health(const int16_t&, uint32_t) const { FC_ASSERT( false ); }
         vector< database_api::api_actor_talent_rule_object > find_actor_talent_rules( vector< int64_t > ) { FC_ASSERT( false ); }
+        vector< database_api::api_zone_object > find_zones( vector< int64_t > ) { FC_ASSERT( false ); }
+        vector< database_api::api_zone_object > list_zones(const account_name_type&, uint32_t) const { FC_ASSERT( false ); }
+        vector< database_api::api_zone_object > list_zones_by_type(E_ZONE_TYPE, uint32_t) const { FC_ASSERT( false ); }
+        vector< database_api::api_zone_object > list_to_zones_by_from(const string&, uint32_t) const { FC_ASSERT( false ); }
+        vector< database_api::api_zone_object > list_from_zones_by_to(const string&, uint32_t) const { FC_ASSERT( false ); }
+        database_api::find_way_to_zone_return find_way_to_zone(const string&, const string&) const { FC_ASSERT( false ); }
+        vector< database_api::api_zone_object > find_zones_by_name( vector< string > ) { FC_ASSERT( false ); }
+        database_api::api_tiandao_property_object get_tiandao_properties() const { FC_ASSERT( false ); }
     };
 
 } } //taiyi::xuanpin
@@ -122,4 +130,12 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (list_actors)
     (list_actors_below_health)
     (find_actor_talent_rules)
+    (find_zones)
+    (list_zones)
+    (list_zones_by_type)
+    (list_to_zones_by_from)
+    (list_from_zones_by_to)
+    (find_way_to_zone)
+    (find_zones_by_name)
+    (get_tiandao_properties)
 )

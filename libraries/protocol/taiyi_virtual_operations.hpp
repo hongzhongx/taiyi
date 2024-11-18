@@ -71,6 +71,50 @@ namespace taiyi { namespace protocol {
         asset               qi;
     };
 
+    struct tiandao_year_change_operation : public virtual_operation
+    {
+        tiandao_year_change_operation() {}
+        tiandao_year_change_operation( const account_name_type& a, const uint32_t& y, const uint32_t& m, const uint32_t& t, const uint32_t& n, const uint32_t& d)
+            : messager(a), years(y), months(m), times(t), live_num(n), dead_num(d) {}
+        
+        account_name_type           messager;
+        
+        uint32_t                    years;
+        uint32_t                    months;
+        uint32_t                    times;
+        
+        uint32_t                    live_num;   //人口数（多少活人）
+        uint32_t                    dead_num;   //总去世人数
+        uint32_t                    born_this_year;
+        uint32_t                    dead_this_year;
+    };
+    
+    struct tiandao_month_change_operation : public virtual_operation
+    {
+        tiandao_month_change_operation() {}
+        tiandao_month_change_operation( const account_name_type& a, const uint32_t& y, const uint32_t& m, const uint32_t& t)
+            : messager(a), years(y), months(m), times(t) {}
+        
+        account_name_type           messager;
+        
+        uint32_t                    years;
+        uint32_t                    months;
+        uint32_t                    times;
+    };
+    
+    struct tiandao_time_change_operation : public virtual_operation
+    {
+        tiandao_time_change_operation() {}
+        tiandao_time_change_operation( const account_name_type& a, const uint32_t& y, const uint32_t& m, const uint32_t& t)
+            : messager(a), years(y), months(m), times(t) {}
+        
+        account_name_type           messager;
+        
+        uint32_t                    years;
+        uint32_t                    months;
+        uint32_t                    times;
+    };
+
 } } //taiyi::protocol
 
 FC_REFLECT( taiyi::protocol::fill_qi_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
@@ -79,3 +123,6 @@ FC_REFLECT( taiyi::protocol::return_qi_delegation_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(qi) )
 FC_REFLECT( taiyi::protocol::nfa_convert_qi_to_resources_operation, (nfa)(owner)(qi_converted)(new_resource) )
 FC_REFLECT( taiyi::protocol::reward_qi_operation, (account)(qi) )
+FC_REFLECT( taiyi::protocol::tiandao_year_change_operation, (messager)(years)(months)(times)(live_num)(dead_num)(born_this_year)(dead_this_year) )
+FC_REFLECT( taiyi::protocol::tiandao_month_change_operation, (messager)(years)(months)(times) )
+FC_REFLECT( taiyi::protocol::tiandao_time_change_operation, (messager)(years)(months)(times) )

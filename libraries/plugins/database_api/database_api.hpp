@@ -123,13 +123,23 @@ namespace taiyi { namespace plugins { namespace database_api {
             (find_nfas)
             (list_nfas)
                     
-            //************
-            //Actors    //
-            //************
+            //********
+            //Actors//
+            //********
             (find_actor)
             (find_actors)
             (list_actors)
             (find_actor_talent_rules)
+
+            //*********
+            // Zones //
+            //*********
+            (find_zones)
+            (list_zones)
+            (find_zones_by_name)
+            (find_way_to_zone)
+                    
+            (get_tiandao_properties)
         )
         
     private:

@@ -355,7 +355,7 @@ DEFINE_API_ARGS( get_qi_delegations,                vector< variant >, vector< a
 DEFINE_API_ARGS( get_expiring_qi_delegations,       vector< variant >, vector< api_qi_delegation_expiration_object > )
 DEFINE_API_ARGS( get_simings,                       vector< variant >, vector< optional< api_siming_object > > )
 DEFINE_API_ARGS( get_siming_by_account,             vector< variant >, optional< api_siming_object > )
-DEFINE_API_ARGS( get_simings_by_adore,               vector< variant >, vector< api_siming_object > )
+DEFINE_API_ARGS( get_simings_by_adore,              vector< variant >, vector< api_siming_object > )
 DEFINE_API_ARGS( lookup_siming_accounts,            vector< variant >, vector< account_name_type > )
 DEFINE_API_ARGS( get_siming_count,                  vector< variant >, uint64_t )
 DEFINE_API_ARGS( get_transaction_hex,               vector< variant >, string )
@@ -369,17 +369,28 @@ DEFINE_API_ARGS( get_account_history,               vector< variant >, get_accou
 DEFINE_API_ARGS( broadcast_transaction,             vector< variant >, json_rpc::void_type )
 DEFINE_API_ARGS( broadcast_block,                   vector< variant >, json_rpc::void_type )
 DEFINE_API_ARGS( get_account_resources,             vector< variant >, vector< api_resource_assets > )
+    
 DEFINE_API_ARGS( find_nfa,                          vector< variant >, optional< api_nfa_object > )
 DEFINE_API_ARGS( find_nfas,                         vector< variant >, vector< api_nfa_object > )
 DEFINE_API_ARGS( list_nfas,                         vector< variant >, vector< api_nfa_object > )
 DEFINE_API_ARGS( get_nfa_history,                   vector< variant >, get_nfa_history_return_type )
 DEFINE_API_ARGS( get_nfa_action_info,               vector< variant >, api_contract_action_info )
 DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, vector<string> )
+    
 DEFINE_API_ARGS( find_actor,                        vector< variant >, optional< database_api::api_actor_object > )
 DEFINE_API_ARGS( find_actors,                       vector< variant >, vector< database_api::api_actor_object > )
 DEFINE_API_ARGS( list_actors,                       vector< variant >, vector< database_api::api_actor_object > )
 DEFINE_API_ARGS( list_actors_below_health,          vector< variant >, vector< database_api::api_actor_object > )
 DEFINE_API_ARGS( find_actor_talent_rules,           vector< variant >, vector< database_api::api_actor_talent_rule_object > )
+
+DEFINE_API_ARGS( get_tiandao_properties,            vector< variant >, database_api::api_tiandao_property_object )
+DEFINE_API_ARGS( find_zones,                        vector< variant >, vector< database_api::api_zone_object > )
+DEFINE_API_ARGS( find_zones_by_name,                vector< variant >, vector< database_api::api_zone_object > )
+DEFINE_API_ARGS( list_zones,                        vector< variant >, vector< database_api::api_zone_object > )
+DEFINE_API_ARGS( list_zones_by_type,                vector< variant >, vector< database_api::api_zone_object > )
+DEFINE_API_ARGS( list_to_zones_by_from,             vector< variant >, vector< database_api::api_zone_object > )
+DEFINE_API_ARGS( list_from_zones_by_to,             vector< variant >, vector< database_api::api_zone_object > )
+DEFINE_API_ARGS( find_way_to_zone,                  vector< variant >, database_api::find_way_to_zone_return )
 
 #undef DEFINE_API_ARGS
 
@@ -430,17 +441,28 @@ DEFINE_API_ARGS( find_actor_talent_rules,           vector< variant >, vector< d
             (broadcast_transaction_synchronous)
             (broadcast_block)
             (get_account_resources)
+                    
             (find_nfa)
             (find_nfas)
             (list_nfas)
             (get_nfa_history)
             (eval_nfa_action)
             (get_nfa_action_info)
+                    
             (find_actor)
             (find_actors)
             (list_actors)
             (list_actors_below_health)
             (find_actor_talent_rules)
+                   
+            (get_tiandao_properties)
+            (find_zones)
+            (find_zones_by_name)
+            (list_zones)
+            (list_zones_by_type)
+            (list_to_zones_by_from)
+            (list_from_zones_by_to)
+            (find_way_to_zone)
         )
         
     private:

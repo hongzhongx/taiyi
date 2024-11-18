@@ -300,4 +300,34 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( fc::is_utf8( last_name ), "Last name not formatted in UTF8" );
     }
 
+    void create_zone_operation::validate() const
+    {
+        validate_account_name( creator );
+        
+        FC_ASSERT( name.size() > 0, "Name is empty" );
+        FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT,
+                  "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
+        FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );
+        
+        FC_ASSERT( type.size() > 0, "Type is empty" );
+        FC_ASSERT( type.size() < TAIYI_ZONE_TYPE_NAME_LIMIT,
+                  "Type size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_TYPE_NAME_LIMIT - 1)("n", type.size()) );
+        FC_ASSERT( fc::is_utf8( type ), "Name not formatted in UTF8" );
+    }
+    
+    void connect_to_zone_operation::validate() const
+    {
+        validate_account_name( account );
+        
+        FC_ASSERT( from.size() > 0, "from zone name is empty" );
+        FC_ASSERT( from.size() < TAIYI_ZONE_NAME_LIMIT,
+                  "from zone name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", from.size()) );
+        FC_ASSERT( fc::is_utf8( from ), "from zone name not formatted in UTF8" );
+        
+        FC_ASSERT( to.size() > 0, "to zone name is empty" );
+        FC_ASSERT( to.size() < TAIYI_ZONE_NAME_LIMIT,
+                  "to zone name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", to.size()) );
+        FC_ASSERT( fc::is_utf8( to ), "to zone name not formatted in UTF8" );
+    }
+
 } } // taiyi::protocol

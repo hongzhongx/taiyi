@@ -185,6 +185,31 @@ namespace taiyi { namespace chain {
         {
             _impacted.insert( op.creator );
         }
+
+        void operator()( const tiandao_year_change_operation& op )
+        {
+            _impacted.insert( op.messager );
+        }
+        
+        void operator()( const tiandao_month_change_operation& op )
+        {
+            _impacted.insert( op.messager );
+        }
+        
+        void operator()( const tiandao_time_change_operation& op )
+        {
+            _impacted.insert( op.messager );
+        }        
+
+        void operator()( const create_zone_operation& op )
+        {
+            _impacted.insert( op.creator );
+        }
+
+        void operator()( const connect_to_zone_operation& op )
+        {
+            _impacted.insert( op.account );
+        }
         
         //void operator()( const operation& op ){}
     };

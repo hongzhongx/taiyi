@@ -85,14 +85,22 @@ namespace taiyi {
             account_contract_data_object_type,
             contract_bin_code_object_type,
 
+            //nfa objects
             nfa_symbol_object_type,
             nfa_object_type,
             
+            //actor objects
             actor_object_type,
             actor_core_attributes_object_type,
             actor_group_object_type,
             actor_talent_rule_object_type,
-            actor_talents_object_type
+            actor_talents_object_type,
+            
+            //zone objects
+            zone_object_type,
+            zone_connect_object_type,
+            cunzhuang_object_type,
+            tiandao_property_object_type
         };
         
         class dynamic_global_property_object;
@@ -134,6 +142,11 @@ namespace taiyi {
         class actor_talent_rule_object;
         class actor_talents_object;
 
+        class zone_object;
+        class zone_connect_object;
+        class cunzhuang_object;
+        class tiandao_property_object;
+
         typedef oid< dynamic_global_property_object         > dynamic_global_property_id_type;
         typedef oid< account_object                         > account_id_type;
         typedef oid< account_metadata_object                > account_metadata_id_type;
@@ -173,6 +186,49 @@ namespace taiyi {
         typedef oid< actor_talent_rule_object               > actor_talent_rule_id_type;
         typedef oid< actor_talents_object                   > actor_talents_id_type;
 
+        typedef oid< zone_object                            > zone_id_type;
+        typedef oid< zone_connect_object                    > zone_connect_id_type;
+        typedef oid< cunzhuang_object                       > cunzhuang_id_type;
+        typedef oid< tiandao_property_object                > tiandao_property_id_type;
+
+        enum E_ZONE_TYPE
+        {
+            YUANYE = 0,     //原野
+            HUPO,           //湖泊
+            NONGTIAN,       //农田
+
+            LINDI,          //林地
+            MILIN,          //密林
+            YUANLIN,        //园林
+            
+            SHANYUE,        //山岳
+            DONGXUE,        //洞穴
+            SHILIN,         //石林
+            
+            QIULIN,         //丘陵
+            TAOYUAN,        //桃源
+            SANGYUAN,       //桑园
+            
+            XIAGU,          //峡谷
+            ZAOZE,          //沼泽
+            YAOYUAN,        //药园
+            
+            HAIYANG,        //海洋
+            SHAMO,          //沙漠
+            HUANGYE,        //荒野
+            ANYUAN,         //暗渊
+            _NATURE_ZONE_TYPE_NUM,
+
+            DUHUI = _NATURE_ZONE_TYPE_NUM,  //都会
+            MENPAI,         //门派
+            SHIZHEN,        //市镇
+            GUANSAI,        //关寨
+            CUNZHUANG,      //村庄
+            
+            _ZONE_TYPE_NUM,
+            _ZONE_INVALID_TYPE
+        };
+        
     } //chain
     
 } //taiyi
@@ -325,4 +381,12 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     (actor_group_object_type)
     (actor_talent_rule_object_type)
     (actor_talents_object_type)
+                
+    //zone objects
+    (zone_object_type)
+    (zone_connect_object_type)
+    (cunzhuang_object_type)
+    (tiandao_property_object_type)
 )
+
+FC_REFLECT_ENUM( taiyi::chain::E_ZONE_TYPE, (YUANYE)(HUPO)(NONGTIAN)(LINDI)(MILIN)(YUANLIN)(SHANYUE)(DONGXUE)(SHILIN)(QIULIN)(TAOYUAN)(SANGYUAN)(XIAGU)(ZAOZE)(YAOYUAN)(HAIYANG)(SHAMO)(HUANGYE)(ANYUAN)(DUHUI)(MENPAI)(SHIZHEN)(GUANSAI)(CUNZHUANG))

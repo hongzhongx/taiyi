@@ -62,6 +62,12 @@ namespace taiyi { namespace plugins { namespace database_api {
             (find_actors)
             (list_actors)
             (find_actor_talent_rules)
+            (find_zones)
+            (list_zones)
+            (find_zones_by_name)
+            (find_way_to_zone)
+                         
+            (get_tiandao_properties)
         )
 
         template< typename ResultType >
@@ -1132,20 +1138,21 @@ namespace taiyi { namespace plugins { namespace database_api {
                 );
                 break;
             }
-//            case( by_location ):
-//            {
-//                const zone_object* zone = _db.find< chain::zone_object, chain::by_zone_name >(args.start.as< string >());
-//                if(zone) {
-//                    iterate_results< chain::actor_index, chain::by_actor_location >(
-//                        zone->id,
-//                        result.actors,
-//                        args.limit,
-//                        [&]( const actor_object& a ){ return api_actor_object( a, _db ); },
-//                        [&]( const actor_object& a ) { return a.location == zone->id; }
-//                    );
-//                }
-//                break;
-//            }
+            case( by_location ):
+            {
+                const zone_object* zone = _db.find< chain::zone_object, chain::by_name >(args.start.as< string >());
+                if(zone) {
+                    iterate_results< chain::actor_index, chain::by_location >(
+                        zone->id,
+                        result.result,
+                        args.limit,
+                        [&]( const actor_object& a ) { return api_actor_object( a, _db ); },
+                        [&]( const actor_object& a ) { return a.location != zone->id; }, //stop condition
+                        &database_api_impl::filter_default< actor_object >
+                    );
+                }
+                break;
+            }
             default:
                 FC_ASSERT( false, "Unknown or unsupported sort order" );
         }
@@ -1171,6 +1178,166 @@ namespace taiyi { namespace plugins { namespace database_api {
         return result;
     }
 
+    /* Zones */
+
+    DEFINE_API_IMPL( database_api_impl, find_zones )
+    {
+        FC_ASSERT( args.ids.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        find_zones_return result;
+        result.result.reserve( args.ids.size() );
+
+        std::for_each( args.ids.begin(), args.ids.end(), [&](auto& id) {
+            auto z = _db.find< chain::zone_object, chain::by_id >( id );
+            if( z != nullptr )
+                result.result.push_back( *z );
+        });
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, list_zones )
+    {
+        FC_ASSERT( args.limit <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        list_zones_return result;
+        result.result.reserve( args.limit );
+
+        switch( args.order )
+        {
+            case( by_owner ):
+            {
+                auto key = args.start.as< protocol::account_name_type >();
+                const auto& key_account = _db.get_account(key);
+                iterate_results< chain::nfa_index, chain::by_owner >(
+                    boost::make_tuple( key_account.id, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const nfa_object& o ) { return _db.get<zone_object, by_nfa_id>(o.id); },
+                    [&]( const nfa_object& o ) { return o.owner_account != key_account.id; }, //stop condition
+                    [&]( const nfa_object& o ) { return _db.find<zone_object, by_nfa_id>(o.id) != nullptr; }
+                );
+                break;
+            }
+            case( by_type ):
+            {
+                auto key = args.start.as< E_ZONE_TYPE >();
+                iterate_results< chain::zone_index, chain::by_type >(
+                    boost::make_tuple( key, 0 ),
+                    result.result,
+                    args.limit,
+                    [&]( const zone_object& a ) { return a; },
+                    [&]( const zone_object& a ) { return a.type != key; }, //stop condition
+                    &database_api_impl::filter_default< zone_object >
+                );
+                break;
+            }
+            case( by_zone_from ):
+            {
+                const auto* from_zone = _db.find< chain::zone_object, chain::by_name >(args.start.as< string >());
+                if(from_zone) {
+                    iterate_results< chain::zone_connect_index, chain::by_zone_from >(
+                        boost::make_tuple( from_zone->id, 0 ),
+                        result.result,
+                        args.limit,
+                        [&]( const zone_connect_object& a ) { return _db.get< chain::zone_object, chain::by_id >(a.to); },
+                        [&]( const zone_connect_object& a ) { return a.from != from_zone->id; }, //stop condition
+                        &database_api_impl::filter_default< zone_connect_object >
+                    );
+                }
+                break;
+            }
+            case( by_zone_to ):
+            {
+                const auto* to_zone = _db.find< chain::zone_object, chain::by_name >(args.start.as< string >());
+                if(to_zone) {
+                    iterate_results< chain::zone_connect_index, chain::by_zone_to >(
+                        boost::make_tuple( to_zone->id, 0 ),
+                        result.result,
+                        args.limit,
+                        [&]( const zone_connect_object& a ) { return _db.get< chain::zone_object, chain::by_id >(a.from); },
+                        [&]( const zone_connect_object& a ) { return a.to != to_zone->id; }, //stop condition
+                        &database_api_impl::filter_default< zone_connect_object >
+                    );
+                }
+                break;
+            }
+            default:
+                FC_ASSERT( false, "Unknown or unsupported sort order" );
+        }
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, find_zones_by_name )
+    {
+        FC_ASSERT( args.name_list.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        find_zones_by_name_return result;
+        result.result.reserve( args.name_list.size() );
+
+        std::for_each( args.name_list.begin(), args.name_list.end(), [&](auto& name) {
+            auto z = _db.find< chain::zone_object, chain::by_name >( name );
+            if( z != nullptr )
+                result.result.push_back( *z );
+        });
+
+        return result;
+    }
+    
+    //pre_from 用于避免相邻节点的循环通路
+    bool is_connect(chain::zone_id_type from, chain::zone_id_type dest, chain::zone_id_type pre_from, int depth, const mira::index_adapter< chain::zone_connect_index, chain::by_zone_from >& zone_connect_by_from_idx, std::vector<string>& way_points, chain::database& db) {
+        if(depth > 10)
+            return false;
+        auto itz = zone_connect_by_from_idx.lower_bound( from );
+        while(itz != zone_connect_by_from_idx.end()) {
+            if(itz->from != from)
+                break;
+            if(itz->to != pre_from) {
+                if(itz->to == dest) {
+                    way_points.push_back(db.get< chain::zone_object, by_id >(dest).name);
+                    return true;
+                }
+                if(is_connect(itz->to, dest, from, depth+1, zone_connect_by_from_idx, way_points, db)) {
+                    way_points.insert(way_points.begin(), db.get< chain::zone_object, by_id >(itz->to).name);
+                    return true;
+                }
+            }
+            itz++;
+        }
+        return false;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, find_way_to_zone )
+    {
+        const auto* from_zone = _db.find< chain::zone_object, chain::by_name >( args.from_zone );
+        FC_ASSERT( from_zone != nullptr );
+        const auto* to_zone = _db.find< chain::zone_object, chain::by_name >( args.to_zone );
+        FC_ASSERT( to_zone != nullptr );
+
+        find_way_to_zone_return result;
+        const auto& zone_connect_by_from_idx = _db.get_index< zone_connect_index >().indices().get< chain::by_zone_from >();
+        auto itz = zone_connect_by_from_idx.lower_bound( from_zone->id );
+        while(itz != zone_connect_by_from_idx.end()) {
+            if(itz->from != from_zone->id)
+                break;
+            if(itz->to == to_zone->id) {
+                result.way_points.push_back(to_zone->name);
+                break;
+            }
+            if(is_connect(itz->to, to_zone->id, from_zone->id, 1, zone_connect_by_from_idx, result.way_points, _db)) {
+                result.way_points.insert(result.way_points.begin(), _db.get< chain::zone_object, by_id >(itz->to).name);
+                break;
+            }
+            itz++;
+        }
+        return result;
+    }
+    
+    DEFINE_API_IMPL( database_api_impl, get_tiandao_properties )
+    {
+       return _db.get_tiandao_properties();
+    }
 
     DEFINE_LOCKLESS_APIS( database_api, (get_config)(get_version) )
     
@@ -1213,6 +1380,12 @@ namespace taiyi { namespace plugins { namespace database_api {
         (find_actors)
         (list_actors)
         (find_actor_talent_rules)
+        (find_zones)
+        (list_zones)
+        (find_zones_by_name)
+        (find_way_to_zone)
+                     
+        (get_tiandao_properties)
     )
     
 } } } // taiyi::plugins::database_api

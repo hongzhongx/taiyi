@@ -28,6 +28,8 @@
 
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (20) // about 60 seconds
 
+#define TAIYI_VMONTH_BLOCK_NUM                  (20*10) // 10 minutes
+
 #else // IS LIVE TAIYI NETWORK
 
 #define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 0) )
@@ -49,6 +51,8 @@
 #define TAIYI_MANA_REGENERATION_SECONDS         (5*60*60*24) // 5 day
 
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
+
+#define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_BLOCKS_PER_HOUR*2)
 
 #endif // END LIVE TAIYI NETWORK
 
@@ -194,3 +198,8 @@
 #define TAIYI_ACTOR_NAME_LIMIT                  (64)
 #define TAIYI_MAX_BORN_ACTOR_FEE                int64_t(1000000000)
 #define TAIYI_ACTOR_INIT_ATTRIBUTE_AMOUNT       (800)
+
+#define TAIYI_MIN_ZONE_CREATION_FEE             0
+#define TAIYI_MAX_ZONE_CREATION_FEE             int64_t(1000000000)
+#define TAIYI_ZONE_NAME_LIMIT                   (256)
+#define TAIYI_ZONE_TYPE_NAME_LIMIT              (128)

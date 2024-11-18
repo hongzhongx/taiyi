@@ -52,15 +52,23 @@ namespace taiyi { namespace protocol {
     
         // actor
         create_actor_operation,
+    
+        // zone
+        create_zone_operation,
+        connect_to_zone_operation,
 
-        // virtual operations below this point
+        //**** virtual operations below this point
         hardfork_operation,
         fill_qi_withdraw_operation,
         return_qi_delegation_operation,
         producer_reward_operation,
     
         nfa_convert_qi_to_resources_operation,
-        reward_qi_operation
+        reward_qi_operation,
+    
+        tiandao_year_change_operation,
+        tiandao_month_change_operation,
+        tiandao_time_change_operation
 
     > operation;
 

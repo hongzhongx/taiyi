@@ -40,6 +40,9 @@ namespace taiyi { namespace chain {
 
     TAIYI_DEFINE_EVALUATOR( create_actor )
 
+    TAIYI_DEFINE_EVALUATOR( create_zone )
+    TAIYI_DEFINE_EVALUATOR( connect_to_zone )
+
     inline void validate_permlink_0_1( const string& permlink );
 
 } } // taiyi::chain

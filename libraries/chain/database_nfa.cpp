@@ -35,6 +35,33 @@
 
 namespace taiyi { namespace chain {
 
+    void database::create_basic_nfa_symbol_objects()
+    {
+        const auto& creator = get_account( TAIYI_YEMING_ACCOUNT );
+        create_nfa_symbol_object(creator, "nfa.actor.default", "默认的角色", "contract.actor.default");
+        create_nfa_symbol_object(creator, "nfa.zone.default", "默认的区域", "contract.zone.default");
+    }
+    //=========================================================================
+    size_t database::create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract)
+    {
+        const auto* nfa_symbol = find<nfa_symbol_object, by_symbol>(symbol);
+        FC_ASSERT(nfa_symbol == nullptr, "NFA symbol named \"${n}\" is already exist.", ("n", symbol));
+        
+        const auto& contract = get<contract_object, by_name>(default_contract);
+        auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
+        FC_ASSERT(abi_itr != contract.contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract.name)("i", TAIYI_NFA_INIT_FUNC_NAME));
+        
+        const auto& nfa_symbol_obj = create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
+            obj.creator = creator.name;
+            obj.symbol = symbol;
+            obj.describe = describe;
+            obj.default_contract = contract.id;
+            obj.count = 0;
+        });
+        
+        return fc::raw::pack_size(nfa_symbol_obj);
+    }
+    //=========================================================================
     const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context)
     {
         const auto& caller = creator;

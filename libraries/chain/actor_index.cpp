@@ -5,6 +5,7 @@
 #include <chain/account_object.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
+#include <chain/zone_objects.hpp>
 #include <chain/actor_objects.hpp>
 
 namespace taiyi { namespace chain {

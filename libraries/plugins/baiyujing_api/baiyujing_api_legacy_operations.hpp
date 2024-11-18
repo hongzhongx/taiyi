@@ -46,6 +46,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef create_nfa_operation                    legacy_create_nfa_operation;
     typedef transfer_nfa_operation                  legacy_transfer_nfa_operation;
     typedef action_nfa_operation                    legacy_action_nfa_operation;
+    typedef tiandao_year_change_operation           legacy_tiandao_year_change_operation;
+    typedef tiandao_month_change_operation          legacy_tiandao_month_change_operation;
+    typedef tiandao_time_change_operation           legacy_tiandao_time_change_operation;
 
     struct api_chain_properties
     {
@@ -386,6 +389,54 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         int               gender;       //-2=男生女相，-1=男，0=随机，1=女，2=女生男相
         int               sexuality;    //0=无性取向，1=喜欢男性，2=喜欢女性，3=双性恋
     };
+    
+    struct legacy_create_zone_operation
+    {
+        legacy_create_zone_operation() {}
+        legacy_create_zone_operation(const create_zone_operation& op) : fee(legacy_asset::from_asset(op.fee)), creator(op.creator), uid(op.uid), name(op.name), type(op.type)
+        {}
+
+        operator create_zone_operation()const
+        {
+            create_zone_operation op;
+            op.fee = fee;
+            op.creator = creator;
+            op.uid = uid;
+            op.name = name;
+            op.type = type;
+            return op;
+        }
+
+        legacy_asset      fee;
+        account_name_type creator;
+        
+        uint32_t          uid;
+        string            name;
+        string            type;
+    };
+    
+    struct legacy_connect_to_zone_operation
+    {
+        legacy_connect_to_zone_operation() {}
+        legacy_connect_to_zone_operation(const connect_to_zone_operation& op) : fee(legacy_asset::from_asset(op.fee)), account(op.account), from(op.from), to(op.to)
+        {}
+
+        operator connect_to_zone_operation()const
+        {
+            connect_to_zone_operation op;
+            op.fee = fee;
+            op.account = account;
+            op.from = from;
+            op.to = to;
+            return op;
+        }
+
+        legacy_asset      fee;
+        account_name_type account;
+        
+        string            from;
+        string            to;
+    };
 
     typedef fc::static_variant<
         legacy_transfer_operation,
@@ -420,15 +471,22 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
         legacy_create_actor_operation,
 
-        // virtual operations below this point
+        legacy_create_zone_operation,
+        legacy_connect_to_zone_operation,
+    
+        //**** virtual operations below this point
         legacy_fill_qi_withdraw_operation,
         legacy_hardfork_operation,
         legacy_return_qi_delegation_operation,
         legacy_producer_reward_operation,
 
         legacy_nfa_convert_qi_to_resources_operation,
-        legacy_reward_qi_operation
+        legacy_reward_qi_operation,
 
+        legacy_tiandao_year_change_operation,
+        legacy_tiandao_month_change_operation,
+        legacy_tiandao_time_change_operation
+    
     > legacy_operation;
 
     struct legacy_operation_conversion_visitor
@@ -458,6 +516,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const create_nfa_operation& op )const                      { l_op = op; return true; }
         bool operator()( const transfer_nfa_operation& op )const                    { l_op = op; return true; }
         bool operator()( const action_nfa_operation& op )const                      { l_op = op; return true; }
+        bool operator()( const tiandao_year_change_operation& op )const             { l_op = op; return true; }
+        bool operator()( const tiandao_month_change_operation& op )const            { l_op = op; return true; }
+        bool operator()( const tiandao_time_change_operation& op )const             { l_op = op; return true; }
 
         bool operator()( const transfer_operation& op )const
         {
@@ -546,6 +607,18 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const create_actor_operation& op )const
         {
             l_op = legacy_create_actor_operation( op );
+            return true;
+        }
+
+        bool operator()( const create_zone_operation& op )const
+        {
+            l_op = legacy_create_zone_operation( op );
+            return true;
+        }
+
+        bool operator()( const connect_to_zone_operation& op )const
+        {
+            l_op = legacy_connect_to_zone_operation( op );
             return true;
         }
 
@@ -641,6 +714,16 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return operation( create_actor_operation( op ) );
         }
 
+        operation operator()( const legacy_create_zone_operation& op )const
+        {
+            return operation( create_zone_operation( op ) );
+        }
+
+        operation operator()( const legacy_connect_to_zone_operation& op )const
+        {
+            return operation( connect_to_zone_operation( op ) );
+        }
+
     };
 
 } } } // taiyi::plugins::baiyujing_api
@@ -712,5 +795,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_withdraw_qi_from_nfa_operation
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_convert_qi_to_resources_operation, (nfa)(owner)(qi_converted)(new_resource) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_qi_operation, (account)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_actor_operation, (fee)(creator)(family_name)(last_name)(gender)(sexuality) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_zone_operation, (fee)(creator)(uid)(name)(type) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_connect_to_zone_operation, (fee)(account)(from)(to) )
 
 FC_REFLECT_TYPENAME( taiyi::plugins::baiyujing_api::legacy_operation )

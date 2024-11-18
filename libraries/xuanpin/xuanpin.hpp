@@ -732,6 +732,62 @@ namespace taiyi { namespace xuanpin {
          * @param _ids - array with ids of wanted rules to be founded.
          */
         baiyujing_api::find_actor_talent_rules_return find_actor_talent_rules( vector< int64_t > uuids );
+
+        /**
+         *  This method will create new zone. There is a fee associated with zone creation
+         *  that is paid by the creator. The current zone creation fee can be found with the
+         *  'info' xuanpin command.
+         *
+         *  @param creator The account creating the new zone
+         *  @param name The name of the new zone
+         *  @param type The type string of the new zone
+         *  @param uid any number to make unique permlink for proposal comment
+         *  @param broadcast true if you wish to broadcast the transaction
+         */
+        baiyujing_api::legacy_signed_transaction create_zone( const account_name_type& creator, const string& name, const string& type, uint32_t uid, bool broadcast );
+        baiyujing_api::legacy_signed_transaction connect_to_zone( const account_name_type& account, const string& from_zone, const string& to_zone, bool broadcast );
+
+        /**
+         * Find zones with given ids
+         * @param zone_ids - array with ids of wanted zones to be founded.
+         */
+        baiyujing_api::find_zones_return find_zones( vector< int64_t > ids );
+        
+        /**
+         * Find zones with given positions
+         * @param name_list - array with names of wanted zones to be founded.
+         */
+        baiyujing_api::find_zones_return find_zones_by_name( vector< string > name_list );
+        
+        /** Lists zones owned by accounts
+         * This returns a list of all zone objects owned by account names.
+         *
+         * Use the \c owner and limit parameters to page through the list.
+         *
+         * @param owner the name of the owner account.
+         * @param limit the maximum number of simings to return (max: 1000)
+         * @returns a list of zone objects
+         */
+        vector< database_api::api_zone_object > list_zones(const account_name_type& owner, uint32_t limit);
+        vector< database_api::api_zone_object > list_zones_by_type(E_ZONE_TYPE type, uint32_t limit);
+        vector< database_api::api_zone_object > list_to_zones_by_from(const string& from_zone, uint32_t limit);
+        vector< database_api::api_zone_object > list_from_zones_by_to(const string& to_zone, uint32_t limit);
+        
+        /** find the path way from from_zone to to_zone
+         * This returns the zone names in path.
+         *
+         * @param from_zone the name of the start zone.
+         * @param to_zone the name of the destination zone.
+         * @returns zone names of way points in path, or empty if not find a path
+         */
+        vector<string> find_way_to_zone(const string& from_zone, const string& to_zone);
+
+        /** Returns the world's tiandao properties.
+         * The returned object contains information of nature's law
+         * @see \c get_tiandao_properties()
+         * @returns the tiandao properties
+         */
+        database_api::api_tiandao_property_object get_tiandao_properties() const;
     };
     
 } }
@@ -825,6 +881,18 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (list_actors)
     (list_actors_below_health)
     (find_actor_talent_rules)
+       
+    //zone
+    (create_zone)
+    (connect_to_zone)
+    (list_zones)
+    (list_zones_by_type)
+    (list_to_zones_by_from)
+    (list_from_zones_by_to)
+    (find_way_to_zone)
+    (find_zones)
+    (find_zones_by_name)
+    (get_tiandao_properties)
 
     //helper api
     (get_prototype_operation)

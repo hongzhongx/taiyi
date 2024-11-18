@@ -80,17 +80,28 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (broadcast_transaction_synchronous)
                 (broadcast_block)
                 (get_account_resources)
+                             
                 (find_nfa)
                 (find_nfas)
                 (list_nfas)
                 (get_nfa_history)
                 (get_nfa_action_info)
                 (eval_nfa_action)
+                             
                 (find_actor)
                 (find_actors)
                 (list_actors)
                 (list_actors_below_health)
                 (find_actor_talent_rules)
+                             
+                (get_tiandao_properties)
+                (find_zones)
+                (find_zones_by_name)
+                (list_zones)
+                (list_zones_by_type)
+                (list_to_zones_by_from)
+                (list_from_zones_by_to)
+                (find_way_to_zone)
             )
             
             void on_post_apply_block( const signed_block& b );
@@ -891,6 +902,56 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return _database_api->find_actor_talent_rules( { args[0].as< vector< taiyi::plugins::database_api::api_id_type > >() } ).rules;
         }
 
+        DEFINE_API_IMPL( baiyujing_api_impl, find_zones )
+        {
+            CHECK_ARG_SIZE( 1 )
+            return _database_api->find_zones({ args[0].as< vector< taiyi::plugins::database_api::api_id_type > >() }).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, find_zones_by_name )
+        {
+            CHECK_ARG_SIZE( 1 )
+            return _database_api->find_zones_by_name( { args[0].as< vector< string > >() } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_zones )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_zones( { args[0], args[1].as< uint32_t >(), database_api::by_owner } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_zones_by_type )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_zones( { args[0], args[1].as< uint32_t >(), database_api::by_type } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_to_zones_by_from )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_zones( { args[0], args[1].as< uint32_t >(), database_api::by_zone_from } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_from_zones_by_to )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_zones( { args[0], args[1].as< uint32_t >(), database_api::by_zone_to } ).result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, find_way_to_zone )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->find_way_to_zone( { args[0].as< string >(), args[1].as< string >() } );
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, get_tiandao_properties )
+        {
+           CHECK_ARG_SIZE( 0 )
+           get_tiandao_properties_return tiandao = _database_api->get_tiandao_properties( {} );
+
+           return tiandao;
+        }
+
         void baiyujing_api_impl::on_post_apply_block( const signed_block& b )
         { try {
             boost::lock_guard< boost::mutex > guard( _mtx );
@@ -1025,17 +1086,28 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (verify_account_authority)
         (get_account_history)
         (get_account_resources)
+                     
         (find_nfa)
         (find_nfas)
         (list_nfas)
         (get_nfa_history)
         (get_nfa_action_info)
         (eval_nfa_action)
+                     
         (find_actor)
         (find_actors)
         (list_actors)
         (list_actors_below_health)
         (find_actor_talent_rules)
+                     
+        (get_tiandao_properties)
+        (find_zones)
+        (find_zones_by_name)
+        (list_zones)
+        (list_zones_by_type)
+        (list_to_zones_by_from)
+        (list_from_zones_by_to)
+        (find_way_to_zone)
     )
 
 } } } // taiyi::plugins::baiyujing_api

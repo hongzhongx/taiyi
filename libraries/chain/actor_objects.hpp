@@ -59,8 +59,8 @@ namespace taiyi { namespace chain {
         uint                standpoint = 500;       //立场, [0,1000]
         int32_t             loyalty = 300;          //忠贞
         
-        //zone_id_type        location;
-        //zone_id_type        base;                 //从属地
+        zone_id_type        location;
+        zone_id_type        base;                   //从属地
         
         actor_id_type       need_mating_target;             //春宵需求对象
         uint32_t            need_mating_end_block_num = 0;  //春宵需求截止时间
@@ -92,8 +92,8 @@ namespace taiyi { namespace chain {
 
     struct by_name;
     struct by_nfa_id;
-    //struct by_location;
-    //struct by_base;
+    struct by_location;
+    struct by_base;
     struct by_health;
     struct by_solor_term;
     typedef multi_index_container<
@@ -102,18 +102,18 @@ namespace taiyi { namespace chain {
             ordered_unique< tag< by_id >, member< actor_object, actor_id_type, &actor_object::id > >,
             ordered_unique< tag< by_name >, member< actor_object, std::string, &actor_object::name >, strcmp_less >,
             ordered_unique< tag< by_nfa_id >, member< actor_object, nfa_id_type, &actor_object::nfa_id> >,
-//            ordered_unique< tag< by_location >,
-//                composite_key< actor_object,
-//                    member< actor_object, zone_id_type, &actor_object::location >,
-//                    member< actor_object, actor_id_type, &actor_object::id >
-//                >
-//            >,
-//            ordered_unique< tag< by_base >,
-//                composite_key< actor_object,
-//                    member< actor_object, zone_id_type, &actor_object::base >,
-//                    member< actor_object, actor_id_type, &actor_object::id >
-//                >
-//            >,
+            ordered_unique< tag< by_location >,
+                composite_key< actor_object,
+                    member< actor_object, zone_id_type, &actor_object::location >,
+                    member< actor_object, actor_id_type, &actor_object::id >
+                >
+            >,
+            ordered_unique< tag< by_base >,
+                composite_key< actor_object,
+                    member< actor_object, zone_id_type, &actor_object::base >,
+                    member< actor_object, actor_id_type, &actor_object::id >
+                >
+            >,
             ordered_unique< tag< by_health >,
                 composite_key< actor_object,
                     member< actor_object, int16_t, &actor_object::health >,
@@ -321,7 +321,7 @@ namespace mira {
 
 FC_REFLECT_ENUM( taiyi::chain::E_ACTOR_STANDPOINT_TYPE, (UPRIGHT)(KINDNESS)(MIDDLEBROW)(REBEL)(SOLIPSISM) )
 
-FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vtimes)(five_phase)(standpoint)(loyalty)/*(location)(base)*/(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update))
+FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vtimes)(five_phase)(standpoint)(loyalty)(location)(base)(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_object, taiyi::chain::actor_index)
 
 FC_REFLECT(taiyi::chain::actor_core_attributes_object, (id)(actor)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(last_update)(created))

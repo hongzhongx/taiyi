@@ -43,6 +43,37 @@
     modf=math.modf, pi=math.pi, pow=math.pow, rad=math.rad, sin=math.sin, sinh=math.sinh, sqrt=math.sqrt, tan=math.tan, \
     tanh=math.tanh } } return baseENV"
 
+#define CONTRACT_BASE_ACTOR "               \
+    welcome = { consequence = false }       \
+    look = { consequence = false }          \
+    go = { consequence = true }             \
+    function do_welcome(me, params)         \
+        chainhelper:log(string.format('- 欢迎&YEL&%s&NOR&进入游戏 -', me.name))  \
+    end                                     \
+    function do_look(me, params)            \
+        chainhelper:log(string.format('&YEL&%s&NOR&看了看四周。', me.name))      \
+    end                                     \
+    function do_go(me, params)              \
+        chainhelper:log(string.format('&YEL&%s&NOR&不会走路。', me.name))       \
+    end                                     \
+    function init_data()                    \
+        return {                            \
+            unit = '个'                      \
+        }                                   \
+    end                                     \
+"
+
+#define CONTRACT_BASE_ZONE "                \
+    function short(me) return '' end        \
+    function long(me) return '' end         \
+    function exits(me) return {} end        \
+    function init_data()                    \
+        return {                            \
+            unit = '处'                     \
+        }                                   \
+    end                                     \
+"
+
 namespace taiyi { namespace chain {
 
     void database::initialize_VM_baseENV(LuaContext& context)
@@ -58,12 +89,10 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    size_t database::create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops)
+    size_t database::create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops)
     {
-        const auto& owner_account = get_account( owner );
-        
         const contract_object& contract = create<contract_object>([&](contract_object &c) {
-            c.owner = owner_account.id;
+            c.owner = owner.id;
             c.name = contract_name;
             
             if (c.id != contract_id_type())
@@ -92,8 +121,12 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void database::create_basic_contract_objects()
     {
+        const auto& owner = get_account( TAIYI_YEMING_ACCOUNT );
         long long vm_drops = 1000000;
-        create_contract_objects(TAIYI_YEMING_ACCOUNT, "contract.baseENV", CONTRACT_BASE_ENV, public_key_type(), vm_drops);
+        create_contract_objects(owner, "contract.baseENV", CONTRACT_BASE_ENV, public_key_type(), vm_drops);
+
+        create_contract_objects(owner, "contract.actor.default", CONTRACT_BASE_ACTOR, public_key_type(), vm_drops);
+        create_contract_objects(owner, "contract.zone.default", CONTRACT_BASE_ZONE, public_key_type(), vm_drops);
     }
     //=========================================================================
     void database::reward_contract_owner(const account_name_type& account_name, const asset& qi )

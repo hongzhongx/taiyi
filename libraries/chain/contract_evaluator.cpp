@@ -47,7 +47,7 @@ namespace taiyi { namespace chain {
         //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
         long long old_drops = creator.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        size_t new_state_size = _db.create_contract_objects( o.owner, o.name, o.data, o.contract_authority, vm_drops );
+        size_t new_state_size = _db.create_contract_objects( creator, o.name, o.data, o.contract_authority, vm_drops );
         int64_t used_drops = old_drops - vm_drops;
         
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;

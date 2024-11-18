@@ -330,14 +330,6 @@ namespace taiyi { namespace chain {
 
         std::tuple<share_type, share_type> pay_reward_funds( share_type reward_yang, share_type reward_qi_fund );
 
-        void initialize_actor_object( actor_object& act, const std::string& name, const nfa_object& nfa );
-        void initialize_actor_talents( const actor_object& act, int gender, int sexuality );
-        void initialize_actor_attributes( const actor_object& act, const vector<uint16_t>& init_attrs );
-        const actor_object&  get_actor( const std::string& name )const;
-        const actor_object*  find_actor( const std::string& name )const;
-        uint16_t get_actor_init_attribute_amount_max( const actor_object& actor )const;
-        uint16_t get_actor_init_attribute_amount_max( const std::string& name )const;
-
         time_point_sec   head_block_time()const;
         uint32_t         head_block_num()const;
         block_id_type    head_block_id()const;
@@ -346,6 +338,26 @@ namespace taiyi { namespace chain {
 
         uint32_t last_non_undoable_block_num() const;
         
+        //************ database_actor.cpp ************//
+
+        void initialize_actor_object( actor_object& act, const std::string& name, const nfa_object& nfa );
+        void initialize_actor_talents( const actor_object& act, int gender, int sexuality );
+        void initialize_actor_attributes( const actor_object& act, const vector<uint16_t>& init_attrs );
+        const actor_object&  get_actor( const std::string& name )const;
+        const actor_object*  find_actor( const std::string& name )const;
+        uint16_t get_actor_init_attribute_amount_max( const actor_object& actor )const;
+        uint16_t get_actor_init_attribute_amount_max( const std::string& name )const;
+
+        //************ database_zone.cpp ************//
+
+        const tiandao_property_object& get_tiandao_properties()const;
+        void initialize_zone_object( zone_object& zone, const std::string& name, const nfa_object& nfa, E_ZONE_TYPE type );
+        const zone_object&  get_zone(  const std::string& name )const;
+        const zone_object*  find_zone( const std::string& name )const;
+        void grow_zone( const zone_object& zone );
+        int calculate_moving_days_to_zone( const zone_object& zone );
+        void process_tiandao();
+
         //************ database_init.cpp ************//
 
         void initialize_evaluators();
@@ -393,9 +405,13 @@ namespace taiyi { namespace chain {
         void initialize_VM_baseENV(LuaContext& context);
 
         void create_basic_contract_objects();
-        size_t create_contract_objects(const account_name_type& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
+        size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
         
         void reward_contract_owner(const account_name_type& account_name, const asset& qi );
+        
+        // nfa
+        void create_basic_nfa_symbol_objects();
+        size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract);
 
     protected:
         //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead

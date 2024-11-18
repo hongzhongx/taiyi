@@ -2071,4 +2071,77 @@ namespace taiyi { namespace xuanpin {
         return my->_remote_api->find_actor_talent_rules( uuids );
     }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_zone(const account_name_type& creator, const string& name, const string& type, uint32_t uid, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        create_zone_operation op;
+        op.creator = creator;
+        op.uid = uid;
+        op.name = name;
+        op.type = type;
+        op.fee = my->_remote_api->get_chain_properties().account_creation_fee;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (creator)(name)(type) ) }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::connect_to_zone( const account_name_type& account, const string& from_zone, const string& to_zone, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        connect_to_zone_operation op;
+        op.account = account;
+        op.from = from_zone;
+        op.to = to_zone;
+        //op.fee = my->_remote_api->get_chain_properties().account_creation_fee;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (account)(from_zone)(to_zone) ) }
+
+    baiyujing_api::find_zones_return xuanpin_api::find_zones( vector< int64_t > ids )
+    {
+        return my->_remote_api->find_zones( ids );
+    }
+
+    baiyujing_api::find_zones_return xuanpin_api::find_zones_by_name( vector< string > name_list )
+    {
+        return my->_remote_api->find_zones_by_name( name_list );
+    }
+
+    vector< database_api::api_zone_object > xuanpin_api::list_zones(const account_name_type& owner, uint32_t limit)
+    {
+        return my->_remote_api->list_zones( owner, limit );
+    }
+
+    vector< database_api::api_zone_object > xuanpin_api::list_zones_by_type(E_ZONE_TYPE type, uint32_t limit)
+    {
+        return my->_remote_api->list_zones_by_type( type, limit );
+    }
+
+    vector< database_api::api_zone_object > xuanpin_api::list_to_zones_by_from(const string& from_zone, uint32_t limit)
+    {
+        return my->_remote_api->list_to_zones_by_from( from_zone, limit );
+    }
+
+    vector< database_api::api_zone_object > xuanpin_api::list_from_zones_by_to(const string& to_zone, uint32_t limit)
+    {
+        return my->_remote_api->list_from_zones_by_to( to_zone, limit );
+    }
+
+    vector<string> xuanpin_api::find_way_to_zone(const string& from_zone, const string& to_zone)
+    {
+        return my->_remote_api->find_way_to_zone( from_zone, to_zone ).way_points;
+    }
+
+    database_api::api_tiandao_property_object xuanpin_api::get_tiandao_properties() const
+    {
+        return my->_remote_api->get_tiandao_properties();
+    }
+
 } } // taiyi::xuanpin

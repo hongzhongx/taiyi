@@ -63,9 +63,9 @@
     * 10%的新增供应用于奖励维护天道因果网络的司命们（即区块生产节点）
 * 大傩世界的一个月，持续时长约为现实时间2小时，即现实一天，大傩一年
 
-# 路线图/阶段计划
+# 路线图/计划
 
-## 阶段一
+## 第一部分[【起源】](https://github.com/hongzhongx/taiyi/blob/main/doc/yuzhou_explain.md#%E6%BA%90%E9%83%A8%E8%B5%B7%E6%BA%90)
 
 本阶段用于启动最初的因果天道运行，各种最初的法宝开始运转，最初的物质体系形成。这个阶段需要对太乙宇宙[“起源”](https://github.com/hongzhongx/taiyi/blob/main/doc/yuzhou_explain.md#%E6%BA%90%E9%83%A8%E8%B5%B7%E6%BA%90)部分理论有所理解的参与者。
 
@@ -103,7 +103,7 @@
     * 账号开始炼器和炼丹（由基本材料生产物品，并注入天道）
     * 首批自身具有天道的物品NFA开始运转，例如“炼天塔（转换气到基本物质或者从基本物质炼制NFA的法宝）”和“气铃铛（账号将气传递给NFA）”等
 
-## 阶段二
+## 第二部分[【网络】](https://github.com/hongzhongx/taiyi/blob/main/doc/yuzhou_explain.md#%E7%BD%91%E9%83%A8%E7%BD%91%E7%BB%9C)
 
 本阶段将启动一个基于太乙网络的社交系统（名为`坐忘道`），用于天道的普遍开发、应用和讨论。这个阶段重点对应太乙宇宙的[“网络”](https://github.com/hongzhongx/taiyi/blob/main/doc/yuzhou_explain.md#%E7%BD%91%E9%83%A8%E7%BD%91%E7%BB%9C)部分，参与者需要对太乙宇宙网部理论比较了解。
 
@@ -122,11 +122,9 @@ NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方
 - [ ] [【舞狮】](https://github.com/users/hongzhongx/projects/7)实现NFA的去中心化`铁匠铺`发行判定，铁匠铺在坐忘道平台上组织
     * 账号对新NFA（物品/角色/区域/道具等等）配方或者图谱的点赞和踩，凭净胜真气来判定
 
-## 阶段三
+## 第三部分[【星空】](https://github.com/hongzhongx/taiyi/blob/main/doc/yuzhou_explain.md#%E6%98%9F%E9%83%A8%E6%98%9F%E7%A9%BA)
 
-本阶段需要原生实现几个重要的可编程游戏实体，为大傩世界的创建和玩家角色的进入做准备。
-
-包含如下两个计划：
+包含如下一个计划：
 
 - [ ] [【袄景】](https://github.com/users/hongzhongx/projects/8)游戏角色NFA（Actor）扩展对象的原生实现
     * 角色内置属性原生实现（天赋、基本属性等）
@@ -140,6 +138,10 @@ NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方
     * 角色互动事件判定的原生或者合约实现（爱慕、交谈、春宵、霸凌、怀孕等）
     * 账号开始创建角色
 
+## 第四部分[【相接】](https://github.com/hongzhongx/taiyi/blob/main/doc/yuzhou_explain.md#%E6%8E%A5%E9%83%A8%E7%9B%B8%E6%8E%A5%E8%BF%9E%E6%8E%A5)
+
+包含如下一个计划：
+
 - [ ] [【监天】](https://github.com/users/hongzhongx/projects/9)游戏区域NFA（Zone）扩展对象的原生实现
     * 区域自然属性（数字地理学）
     * 区域连通性，建立游戏的空间概念（从箱子到房间到城市都是相互连接的区域）
@@ -148,7 +150,7 @@ NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方
         <div align='center'><a href='./doc/imgs/gradio_map.jpg'><img src='./doc/imgs/gradio_map.jpg' width=50%></a></div>
         <div align='center'><i>Gradio客户端接入白玉京后，分析出来牛心村和周围地区的连接</i></div>
 
-## 阶段四
+## 第五部分[【大地】](https://github.com/hongzhongx/taiyi/blob/main/doc/yuzhou_explain.md#%E5%9C%B0%E9%83%A8%E5%9C%B0%E7%90%83%E5%A4%A7%E5%9C%B0)
 
 本阶段通过[坐忘道平台](https://)，由玩家角色开始建设大傩世界
 

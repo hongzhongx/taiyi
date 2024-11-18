@@ -524,6 +524,31 @@ namespace taiyi { namespace protocol {
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
     };
 
+    struct create_zone_operation : public base_operation
+    {
+        asset             fee;
+        account_name_type creator;
+
+        uint32_t          uid;  //any number to create unique permlink for proposal comment
+        string            name;
+        string            type;
+
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
+    };
+
+    struct connect_to_zone_operation : public base_operation
+    {
+        asset             fee;
+        account_name_type account;
+
+        string            from;
+        string            to;
+
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(account); }
+    };
+
 } } // taiyi::protocol
 
 FC_REFLECT( taiyi::protocol::legacy_chain_properties, (account_creation_fee)(maximum_block_size))
@@ -558,3 +583,6 @@ FC_REFLECT( taiyi::protocol::withdraw_qi_from_nfa_operation, (owner)(id)(amount)
 FC_REFLECT( taiyi::protocol::action_nfa_operation, (owner)(id)(action)(value_list) )
 
 FC_REFLECT( taiyi::protocol::create_actor_operation, (fee)(creator)(family_name)(last_name)(gender)(sexuality) )
+
+FC_REFLECT( taiyi::protocol::create_zone_operation, (fee)(creator)(uid)(name)(type) )
+FC_REFLECT( taiyi::protocol::connect_to_zone_operation, (fee)(account)(from)(to) )
