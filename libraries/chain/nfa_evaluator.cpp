@@ -84,12 +84,19 @@ namespace taiyi { namespace chain {
         
         const auto* nfa = _db.find<nfa_object, by_id>(o.id);
         FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
+
+        const auto* parent_nfa = _db.find<nfa_object, by_id>(nfa->parent);
+        FC_ASSERT(parent_nfa == nullptr, "Can not transfer child NFA, only can transfer root NFA");
         
         FC_ASSERT(from_account.id == nfa->owner_account, "Can not transfer NFA not ownd by you.");
         
         _db.modify(*nfa, [&](nfa_object &obj) {
             obj.owner_account = to_account.id;
         });
+        
+        //TODO: 转移子节点里面所有子节点的所有权，在NFA增加使用权账号后，是否也要转移使用权？
+        std::set<nfa_id_type> look_checker;
+        _db.modify_nfa_children_owner(*nfa, to_account, look_checker);
         
         contract_result result;
         
@@ -174,7 +181,6 @@ namespace taiyi { namespace chain {
             util::update_manabar( _db.get_dynamic_global_properties(), a, true );
         });
         
-        contract_result cresult;
         contract_worker worker;
 
         LuaContext context;
@@ -183,7 +189,7 @@ namespace taiyi { namespace chain {
         //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
         long long old_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        bool bOK = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, cresult, vm_drops, true, context, _db);
+        bool bOK = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, vm_drops, true, context, _db);
         FC_ASSERT(bOK, "NFA do contract action fail.");
         int64_t used_drops = old_drops - vm_drops;
 
@@ -198,7 +204,7 @@ namespace taiyi { namespace chain {
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
         _db.reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
 
-        return cresult;
+        return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 } } // taiyi::chain

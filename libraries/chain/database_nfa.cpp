@@ -92,25 +92,14 @@ namespace taiyi { namespace chain {
                 FC_ASSERT(key_itr != sigkeys.end(), "No contract related permissions were found in the signature, contract_authority:${c}", ("c", contract.contract_authority));
             }
         }
-        
-        const auto* op_acd = find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract.id));
-        if(op_acd == nullptr) {
-            create<account_contract_data_object>([&](account_contract_data_object &a) {
-                a.owner = caller.id;
-                a.contract_id = contract.id;
-            });
-            op_acd = find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract.id));
-        }
-        lua_map account_data = op_acd->contract_data;
-        
-        contract_result result;
+                
         contract_worker worker;
         vector<lua_types> value_list;
         
         //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
         long long old_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        lua_table result_table = worker.do_contract_function_return_table(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, account_data, sigkeys, result, contract, vm_drops, reset_vm_memused, context, *this);
+        lua_table result_table = worker.do_contract_function_return_table(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, reset_vm_memused, context, *this);
         int64_t used_drops = old_drops - vm_drops;
         
         size_t new_state_size = fc::raw::pack_size(nfa);
@@ -123,20 +112,10 @@ namespace taiyi { namespace chain {
         //reward contract owner
         const auto& contract_owner = get<account_object, by_id>(contract.owner);
         reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
-        
-        uint64_t contract_private_data_size    = 3L * 1024;
-        uint64_t contract_total_data_size      = 10L * 1024 * 1024;
-        uint64_t contract_max_data_size        = 2L * 1024 * 1024 * 1024;
-        FC_ASSERT(fc::raw::pack_size(account_data) <= contract_private_data_size, "the contract private data size is too large.");
-        FC_ASSERT(fc::raw::pack_size(contract.contract_data) <= contract_total_data_size, "the contract total data size is too large.");
-        
-        modify(*op_acd, [&](account_contract_data_object &a) {
-            a.contract_data = account_data;
-        });
-        
+                        
         //init nfa from result table
         modify(nfa, [&](nfa_object& obj) {
-            obj.data = result_table.v;
+            obj.contract_data = result_table.v;
         });
         
         return nfa;
@@ -180,7 +159,6 @@ namespace taiyi { namespace chain {
             });
 
             vector<lua_types> value_list; //no params.
-            contract_result cresult;
             contract_worker worker;
 
             LuaContext context;
@@ -191,7 +169,7 @@ namespace taiyi { namespace chain {
             long long vm_drops = old_drops;
             bool beat_fail = false;
             try {
-                worker.do_nfa_contract_action(nfa, "heart_beat", value_list, cresult, vm_drops, true, context, *this);
+                worker.do_nfa_contract_action(nfa, "heart_beat", value_list, vm_drops, true, context, *this);
             }
             catch (fc::exception e) {
                 //任何错误都不能照成核心循环崩溃
@@ -322,6 +300,34 @@ namespace taiyi { namespace chain {
         else {
             nfa_regular_balance_operator balance_operator( delta );
             adjust_nfa_balance< nfa_regular_balance_object >( nfa.id, delta, balance_operator );
+        }
+    }
+    //=========================================================================
+    //递归修改nfa所有内含子nfa的所有者账号
+    void database::modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check)
+    {
+        vector<nfa_id_type> children;
+        const auto& nfa_by_parent_idx = get_index< nfa_index >().indices().get< chain::by_parent >();
+        auto itn = nfa_by_parent_idx.lower_bound( nfa.id );
+        while(itn != nfa_by_parent_idx.end()) {
+            if(itn->parent != nfa.id)
+                break;
+            children.push_back(itn->id);
+            ++itn;
+        }
+
+        for (auto _id: children) {
+            if(recursion_loop_check.find(_id) != recursion_loop_check.end())
+                continue;
+
+            const auto& child_nfa = get<nfa_object, by_id>(_id);
+            modify(child_nfa, [&]( nfa_object& obj ) {
+                obj.owner_account = new_owner.id;
+            });
+            
+            recursion_loop_check.insert(_id);
+            
+            modify_nfa_children_owner(child_nfa, new_owner, recursion_loop_check);
         }
     }
 

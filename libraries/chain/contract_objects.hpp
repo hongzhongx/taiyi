@@ -67,12 +67,6 @@ namespace taiyi { namespace chain {
 
     //=============================================================================
 
-    struct boost_lua_variant_visitor : public boost::static_visitor<lua_types>
-    {
-        template <typename T>
-        lua_types operator()(T t) const { return t; }
-    };
-
     class account_contract_data_object : public object < account_contract_data_object_type, account_contract_data_object >
     {
         TAIYI_STD_ALLOCATOR_CONSTRUCTOR(account_contract_data_object)

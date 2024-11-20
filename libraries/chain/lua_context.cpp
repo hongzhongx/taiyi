@@ -5,6 +5,7 @@
 #include <chain/taiyi_objects.hpp>
 #include <chain/block_summary_object.hpp>
 #include <chain/account_object.hpp>
+#include <chain/nfa_objects.hpp>
 #include <chain/contract_objects.hpp>
 
 #include <chain/lua_context.hpp>
@@ -211,6 +212,13 @@ namespace taiyi { namespace chain {
         registerMember("contract_authority", &contract_base_info::contract_authority);
         registerMember("invoker_contract_name", &contract_base_info::invoker_contract_name);
         
+        //resources
+        registerMember("gold", &contract_asset_resources::gold);
+        registerMember("food", &contract_asset_resources::food);
+        registerMember("wood", &contract_asset_resources::wood);
+        registerMember("fabric", &contract_asset_resources::fabric);
+        registerMember("herb", &contract_asset_resources::herb);
+
         //contract handler
         registerFunction("log", &contract_handler::log);
         registerFunction("number_max", &contract_handler::nummax);
@@ -224,8 +232,8 @@ namespace taiyi { namespace chain {
         registerFunction("make_release", &contract_handler::make_release);
         registerFunction("random", &contract_handler::contract_random);
         registerFunction("is_owner", &contract_handler::is_owner);
-        registerFunction("read_chain", &contract_handler::read_cache);
-        registerFunction("write_chain", &contract_handler::fllush_cache);
+        registerFunction("read_chain", &contract_handler::read_chain);
+        registerFunction("write_chain", &contract_handler::write_chain);
         registerFunction("set_permissions_flag", &contract_handler::set_permissions_flag);
         registerFunction("set_invoke_share_percent", &contract_handler::set_invoke_share_percent);
         registerFunction("invoke_contract_function", &contract_handler::invoke_contract_function);
@@ -235,7 +243,9 @@ namespace taiyi { namespace chain {
         registerFunction("eval_nfa_action", &contract_handler::eval_nfa_action);
         registerFunction("do_nfa_action", &contract_handler::do_nfa_action);
         registerFunction("get_nfa_info", &contract_handler::get_nfa_info);
+        registerFunction("is_nfa_valid", &contract_handler::is_nfa_valid);        
         registerFunction("get_nfa_resources", &contract_handler::get_nfa_resources);
+        registerFunction("change_zone_type", &contract_handler::change_zone_type);        
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
@@ -254,14 +264,8 @@ namespace taiyi { namespace chain {
         registerMember("symbol", &contract_nfa_base_info::symbol);
         registerMember("owner_account", &contract_nfa_base_info::owner_account);
         registerMember("qi", &contract_nfa_base_info::qi);
+        registerMember("parent", &contract_nfa_base_info::parent);
         registerMember("data", &contract_nfa_base_info::data);
-
-        //nfa resources
-        registerMember("gold", &contract_asset_resources::gold);
-        registerMember("food", &contract_asset_resources::food);
-        registerMember("wood", &contract_asset_resources::wood);
-        registerMember("fabric", &contract_asset_resources::fabric);
-        registerMember("herb", &contract_asset_resources::herb);
 
         //nfa handler
         registerFunction("enable_tick", &contract_nfa_handler::enable_tick);
@@ -269,8 +273,14 @@ namespace taiyi { namespace chain {
         registerFunction("get_info", &contract_nfa_handler::get_info);
         registerFunction("get_resources", &contract_nfa_handler::get_resources);
         registerFunction("convert_qi_to_resource", &contract_nfa_handler::convert_qi_to_resource);
-        registerFunction("set_data", &contract_nfa_handler::set_data);
-        registerFunction("add_child", &contract_nfa_handler::add_child);        
+        registerFunction("add_child", &contract_nfa_handler::add_child);
+        registerFunction("add_to_parent", &contract_nfa_handler::add_to_parent);
+        registerFunction("remove_from_parent", &contract_nfa_handler::remove_from_parent);        
+        registerFunction("read_chain", &contract_nfa_handler::read_chain);
+        registerFunction("write_chain", &contract_nfa_handler::write_chain);
+        registerFunction<contract_nfa_handler, void(int64_t to, double, string, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, string symbol, bool enable_logger = false) {
+            handler.transfer_from(handler._caller.id, to, amount, symbol, enable_logger);
+        });
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

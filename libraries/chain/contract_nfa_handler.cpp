@@ -16,13 +16,24 @@
 namespace taiyi { namespace chain {
 
     contract_nfa_base_info::contract_nfa_base_info(const nfa_object& nfa, database& db)
-        : id(nfa.id), qi(nfa.qi.amount.value), data(nfa.data)
+    : id(nfa.id), qi(nfa.qi.amount.value), parent(nfa.parent), data(nfa.contract_data)
     {
         const auto& nfa_symbol = db.get<nfa_symbol_object, by_id>(nfa.symbol_id);
         symbol = nfa_symbol.symbol;
         
         const auto& owner = db.get<account_object, by_id>(nfa.owner_account);
         owner_account = owner.name;
+    }
+    //=============================================================================
+    contract_nfa_handler::contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch)
+        : _caller_account(caller_account), _caller(caller), _context(context), _db(db), _ch(ch)
+    {
+        _contract_data_cache = _caller.contract_data;
+    }
+    //=============================================================================
+    contract_nfa_handler::~contract_nfa_handler()
+    {
+        _db.modify(_caller, [&](nfa_object& obj){ obj.contract_data = _contract_data_cache; });
     }
     //=============================================================================
     void contract_nfa_handler::enable_tick()
@@ -129,40 +140,7 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
-    //=========================================================================
-    void contract_nfa_handler::set_data(const lua_map& data)
-    {
-        try
-        {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
-            
-            _db.modify(_caller, [&]( nfa_object& obj ) {
-                obj.data = data;
-            });
-        }
-        catch (fc::exception e)
-        {
-            LUA_C_ERR_THROW(_context.mState, e.to_string());
-        }
-    }
-    //=========================================================================
-    void modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check, database& db)
-    {
-        for (auto _id: nfa.children) {
-            if(recursion_loop_check.find(_id) != recursion_loop_check.end())
-                continue;
-
-            const auto& child_nfa = db.get<nfa_object, by_id>(_id);
-            db.modify(child_nfa, [&]( nfa_object& obj ) {
-                obj.owner_account = new_owner.id;
-            });
-            
-            recursion_loop_check.insert(_id);
-            
-            modify_nfa_children_owner(child_nfa, new_owner, recursion_loop_check, db);
-        }
-    }
-    
+    //=========================================================================    
     void contract_nfa_handler::add_child(int64_t nfa_id)
     {
         try
@@ -171,26 +149,140 @@ namespace taiyi { namespace chain {
 
             const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
             FC_ASSERT(child_nfa.owner_account == _caller_account.id, "caller account not the input nfa's owner");
-            
-            FC_ASSERT(child_nfa.parent == std::numeric_limits<nfa_id_type>::max(), "input nfa already have parent");
-            FC_ASSERT(std::find(_caller.children.begin(), _caller.children.end(), nfa_id_type(nfa_id)) == _caller.children.end(), "input nfa is already child");
-            
-            _db.modify(_caller, [&]( nfa_object& obj ) {
-                obj.children.push_back(nfa_id);
-            });
-            
+            FC_ASSERT(child_nfa.parent == nfa_id_type::max(), "input nfa already have parent");
+                        
             _db.modify(child_nfa, [&]( nfa_object& obj ) {
                 obj.parent = _caller.id;
             });
-            
-            //TODO: 转移子节点里面所有子节点的所有权，在NFA增加使用权账号后，是否也要转移使用权？
-            std::set<nfa_id_type> look_checker;
-            modify_nfa_children_owner(child_nfa, _caller_account, look_checker, _db);
         }
         catch (fc::exception e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
-    
+    //=============================================================================
+    void contract_nfa_handler::add_to_parent(int64_t parent_nfa_id)
+    {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
+
+            const auto& parent_nfa = _db.get<nfa_object, by_id>(parent_nfa_id);
+            FC_ASSERT(parent_nfa.owner_account == _caller_account.id, "caller account not the input nfa's owner");
+                        
+            _db.modify(_caller, [&]( nfa_object& obj ) {
+                obj.parent = parent_nfa.id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::remove_from_parent()
+    {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.parent != nfa_id_type::max(), "caller have no parent");
+
+            const auto& parent_nfa = _db.get<nfa_object, by_id>(_caller.parent);
+            FC_ASSERT(parent_nfa.owner_account == _caller_account.id, "caller account not the parent nfa's owner");
+                        
+            _db.modify(_caller, [&]( nfa_object& obj ) {
+                obj.parent = nfa_id_type::max();
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::transfer_from(nfa_id_type from, nfa_id_type to, double amount, string symbol_name, bool enable_logger)
+    {
+        try
+        {
+            asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
+            auto token = asset(amount, symbol);
+            transfer_by_contract(from, to, token, _ch.result, enable_logger);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::transfer_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger)
+    {
+        try
+        {
+            FC_ASSERT(from != to, "It's no use transferring resource to yourself");
+            const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
+            const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
+            try
+            {
+                FC_ASSERT(_db.get_nfa_balance(from_nfa, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from nfa '${a}' to '${t}'", ("a", from_nfa.id)("t", to_nfa.id)("total_transfer", token)("balance", _db.get_nfa_balance(from_nfa, token.symbol)));
+            }
+            FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from ${f} to ${t}", ("a", token)("f", from_nfa.id)("t", to_nfa.id));
+            
+            FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
+
+            _db.adjust_nfa_balance(from_nfa, -token);
+            _db.adjust_nfa_balance(to_nfa, token);
+            
+            if(enable_logger) {
+                variant v;
+                fc::to_variant(token, v);
+                _ch.log(FORMAT_MESSAGE("nfa #${a} transfer ${token} to nfa #${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_nfa.id)));
+            }
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::read_chain(const lua_map& read_list)
+    {
+        try
+        {
+            vector<lua_types> stacks = { lua_string("nfa_data") };
+            _ch.read_context(read_list, _contract_data_cache, stacks, _ch.contract.name);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(_context.mState, e.what());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::write_chain(const lua_map& write_list)
+    {
+        try
+        {
+            vector<lua_types> stacks = { lua_string("nfa_data") };
+            _ch.flush_context(write_list, _contract_data_cache, stacks, _ch.contract.name);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(_context.mState, e.what());
+        }
+    }
+
 } } // namespace taiyi::chain

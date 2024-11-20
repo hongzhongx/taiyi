@@ -58,6 +58,7 @@
     end                                     \
     function init_data()                    \
         return {                            \
+            is_actor = true,                \
             unit = '个'                      \
         }                                   \
     end                                     \
@@ -69,6 +70,7 @@
     function exits(me) return {} end        \
     function init_data()                    \
         return {                            \
+            is_zone = true,                 \
             unit = '处'                     \
         }                                   \
     end                                     \
@@ -127,6 +129,20 @@ namespace taiyi { namespace chain {
 
         create_contract_objects(owner, "contract.actor.default", CONTRACT_BASE_ACTOR, public_key_type(), vm_drops);
         create_contract_objects(owner, "contract.zone.default", CONTRACT_BASE_ZONE, public_key_type(), vm_drops);
+    }
+    //=========================================================================
+    lua_map database::prepare_account_contract_data(const account_object& account, const contract_object& contract)
+    {
+        const auto* acd = find<account_contract_data_object, by_account_contract>( boost::make_tuple(account.id, contract.id) );
+        if(acd == nullptr) {
+            create<account_contract_data_object>([&](account_contract_data_object &obj) {
+                obj.owner = account.id;
+                obj.contract_id = contract.id;
+            } );
+            acd = find<account_contract_data_object, by_account_contract>( boost::make_tuple(account.id, contract.id) );
+        }
+        
+        return acd->contract_data;
     }
     //=========================================================================
     void database::reward_contract_owner(const account_name_type& account_name, const asset& qi )

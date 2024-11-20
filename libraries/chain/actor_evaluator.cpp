@@ -27,18 +27,20 @@ namespace taiyi { namespace chain {
     //=============================================================================
     operation_result create_actor_evaluator::do_apply( const create_actor_operation& o )
     {
-        FC_ASSERT( o.fee <= asset( TAIYI_MAX_ACTOR_CREATION_FEE, YANG_SYMBOL ), "Actor creation fee cannot be too large" );
-        
         const auto& creator = _db.get_account( o.creator );
         
+        //check existence
         std::string name = o.family_name + o.last_name;
         auto check_act = _db.find< actor_object, by_name >( name );
         FC_ASSERT( check_act == nullptr, "There is already exist actor named \"${a}\".", ("a", name) );
         
-        //const auto& props = _db.get_dynamic_global_properties();
-        
+        const auto& props = _db.get_dynamic_global_properties();
+        const siming_schedule_object& wso = _db.get_siming_schedule_object();
+
+        FC_ASSERT( o.fee <= asset( TAIYI_MAX_ACTOR_CREATION_FEE, QI_SYMBOL ), "Actor creation fee cannot be too large" );
+        FC_ASSERT( o.fee == (wso.median_props.account_creation_fee * TAIYI_QI_SHARE_PRICE), "Must pay the exact actor creation fee. paid: ${p} fee: ${f}", ("p", o.fee) ("f", wso.median_props.account_creation_fee * TAIYI_QI_SHARE_PRICE) );
+
         _db.adjust_balance( creator, -o.fee );
-        _db.adjust_balance( _db.get< account_object, by_name >( TAIYI_NULL_ACCOUNT ), o.fee );
         
         contract_result result;
         
@@ -77,6 +79,18 @@ namespace taiyi { namespace chain {
         
         _db.initialize_actor_talents( new_actor, o.gender, o.sexuality );
         
+        if( o.fee.amount > 0 ) {
+            _db.modify(nfa, [&](nfa_object& obj) {
+                obj.qi += o.fee;
+                util::update_manabar( props, obj, true );
+            });
+        }
+        
+        affected.affected_account = creator.name;
+        affected.affected_item = nfa.id;
+        affected.action = nfa_affected_type::deposit_qi;
+        result.contract_affecteds.push_back(std::move(affected));
+
         return result;
     }
 

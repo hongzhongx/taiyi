@@ -44,7 +44,8 @@ namespace taiyi { namespace chain {
         act.name = name;
         act.standpoint = 500;
         act.loyalty = 300;
-        //act.location = std::numeric_limits<zone_id_type>::max();
+        act.location = zone_id_type::max();
+        act.base = zone_id_type::max();
     }
     //=============================================================================
     // gender; 0=random, -1=男, 1=女, -2=男生女相, 2=女生男相

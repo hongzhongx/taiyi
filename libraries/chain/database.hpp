@@ -406,12 +406,14 @@ namespace taiyi { namespace chain {
 
         void create_basic_contract_objects();
         size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
+        lua_map prepare_account_contract_data(const account_object& account, const contract_object& contract);
         
         void reward_contract_owner(const account_name_type& account_name, const asset& qi );
         
         // nfa
         void create_basic_nfa_symbol_objects();
         size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract);
+        void modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check);
 
     protected:
         //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead

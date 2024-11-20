@@ -15,9 +15,6 @@
 
 #define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1728747000))  //2024-10-12 23:30:00
 
-#define TAIYI_MIN_ACCOUNT_CREATION_FEE          int64_t(1)
-#define TAIYI_MAX_ACCOUNT_CREATION_FEE          int64_t(1000000000)
-
 #define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define TAIYI_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
 #define TAIYI_OWNER_UPDATE_LIMIT                          fc::seconds(0)
@@ -38,9 +35,6 @@
 #define TAIYI_CHAIN_ID                          fc::sha256()
 
 #define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1735732800))  //2025-1-1 20:00:00
-
-#define TAIYI_MIN_ACCOUNT_CREATION_FEE          1
-#define TAIYI_MAX_ACCOUNT_CREATION_FEE          int64_t(1000000000)
 
 #define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
 #define TAIYI_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
@@ -182,6 +176,9 @@
 #define TAIYI_COMMITTEE_ACCOUNT                 "sifu"
 ///@}
 
+#define TAIYI_MIN_ACCOUNT_CREATION_FEE          int64_t(1)
+#define TAIYI_MAX_ACCOUNT_CREATION_FEE          int64_t(1000000000)
+
 #define TAIYI_MIN_CONTRACT_NAME_LENGTH          9
 #define TAIYI_MAX_CONTRACT_NAME_LENGTH          128
 
@@ -194,12 +191,12 @@
 #define TAIYI_USEMANA_EXECUTION_SCALE           1
 
 #define TAIYI_MIN_ACTOR_CREATION_FEE            0
-#define TAIYI_MAX_ACTOR_CREATION_FEE            int64_t(1000000000)
+#define TAIYI_MAX_ACTOR_CREATION_FEE            int64_t(1000000000000)
 #define TAIYI_ACTOR_NAME_LIMIT                  (64)
-#define TAIYI_MAX_BORN_ACTOR_FEE                int64_t(1000000000)
+#define TAIYI_MAX_BORN_ACTOR_FEE                int64_t(1000000000000)
 #define TAIYI_ACTOR_INIT_ATTRIBUTE_AMOUNT       (800)
 
 #define TAIYI_MIN_ZONE_CREATION_FEE             0
-#define TAIYI_MAX_ZONE_CREATION_FEE             int64_t(1000000000)
+#define TAIYI_MAX_ZONE_CREATION_FEE             int64_t(1000000000000)
 #define TAIYI_ZONE_NAME_LIMIT                   (256)
 #define TAIYI_ZONE_TYPE_NAME_LIMIT              (128)

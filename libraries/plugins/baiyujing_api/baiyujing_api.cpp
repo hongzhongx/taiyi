@@ -847,22 +847,20 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         {
             CHECK_ARG_SIZE( 3 )
             
-            vector<string> result;
-
             const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
             string action_name = args[1].as< string >();
             vector<lua_types> value_list = args[2].as< vector<lua_types> >();
                         
-            contract_result cresult;
             contract_worker worker;
 
             LuaContext context;
             _db.initialize_VM_baseENV(context);
             
             long long vm_drops = 100000000;
-            worker.eval_nfa_contract_action(nfa, action_name, value_list, cresult, vm_drops, true, context, _db);
+            worker.eval_nfa_contract_action(nfa, action_name, value_list, vm_drops, true, context, _db);
 
-            for(auto& temp : cresult.contract_affecteds) {
+            vector<string> result;
+            for(auto& temp : worker.get_result().contract_affecteds) {
                 if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
                     result.push_back(temp.get<contract_logger>().message);
                 }

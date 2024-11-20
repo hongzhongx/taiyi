@@ -8,8 +8,8 @@
 
 namespace taiyi { namespace chain {
 
-    static E_ZONE_TYPE get_zone_type_from_string(const std::string& sType);
-    static string get_zone_type_string(E_ZONE_TYPE type);
+    E_ZONE_TYPE get_zone_type_from_string(const std::string& sType);
+    string get_zone_type_string(E_ZONE_TYPE type);
 
     struct zone_creation_data
     {
@@ -30,7 +30,7 @@ namespace taiyi { namespace chain {
         }
 
         id_type             id;
-        nfa_id_type         nfa_id      = std::numeric_limits<nfa_id_type>::max();
+        nfa_id_type         nfa_id      = nfa_id_type::max();
 
         std::string         name;
         E_ZONE_TYPE         type;

@@ -218,7 +218,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     struct api_nfa_object
     {
-        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), children(o.children), data(o.data), qi(o.qi), manabar(o.manabar), created_time(o.created_time), next_tick_time(o.next_tick_time)
+        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), contract_data(o.contract_data), qi(o.qi), manabar(o.manabar), created_time(o.created_time), next_tick_time(o.next_tick_time)
         {
             creator_account = db.get<account_object, by_id>(o.creator_account).name;
             owner_account = db.get<account_object, by_id>(o.owner_account).name;
@@ -232,6 +232,15 @@ namespace taiyi { namespace plugins { namespace database_api {
             wood = db.get_nfa_balance(o, WOOD_SYMBOL);
             fabric = db.get_nfa_balance(o, FABRIC_SYMBOL);
             herb = db.get_nfa_balance(o, HERB_SYMBOL);
+            
+            const auto& nfa_by_parent_idx = db.get_index< nfa_index >().indices().get< chain::by_parent >();
+            auto itn = nfa_by_parent_idx.lower_bound( id );
+            while(itn != nfa_by_parent_idx.end()) {
+                if(itn->parent != id)
+                    break;
+                children.push_back(itn->id);
+                ++itn;
+            }
         }
         
         api_nfa_object(){}
@@ -247,7 +256,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         vector<nfa_id_type> children;
         
         string              main_contract;
-        lua_map             data;
+        lua_map             contract_data;
         
         asset               qi;
         util::manabar       manabar;
@@ -370,6 +379,6 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parent)(children)(main_contract)(data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(max_init_attribute_amount)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update) )

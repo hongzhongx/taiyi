@@ -734,17 +734,15 @@ namespace taiyi { namespace xuanpin {
         baiyujing_api::find_actor_talent_rules_return find_actor_talent_rules( vector< int64_t > uuids );
 
         /**
-         *  This method will create new zone. There is a fee associated with zone creation
+         *  This method will create new empty zone（虚空）. There is a fee associated with zone creation
          *  that is paid by the creator. The current zone creation fee can be found with the
          *  'info' xuanpin command.
          *
          *  @param creator The account creating the new zone
          *  @param name The name of the new zone
-         *  @param type The type string of the new zone
-         *  @param uid any number to make unique permlink for proposal comment
          *  @param broadcast true if you wish to broadcast the transaction
          */
-        baiyujing_api::legacy_signed_transaction create_zone( const account_name_type& creator, const string& name, const string& type, uint32_t uid, bool broadcast );
+        baiyujing_api::legacy_signed_transaction create_zone( const account_name_type& creator, const string& name, bool broadcast );
         baiyujing_api::legacy_signed_transaction connect_to_zone( const account_name_type& account, const string& from_zone, const string& to_zone, bool broadcast );
 
         /**

@@ -28,6 +28,16 @@ namespace chainbase
         friend bool operator != ( const oid& a, const oid& b ) { return a._id != b._id; }
         
         int64_t _id = 0;
+        
+        static oid min()
+        {
+            return std::numeric_limits<int64_t>::min();
+        }
+        
+        static oid max()
+        {
+            return std::numeric_limits<int64_t>::max();
+        }
     };
 
 } /// namespace chainbase

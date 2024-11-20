@@ -286,8 +286,10 @@ namespace taiyi { namespace protocol {
     
     void create_actor_operation::validate() const
     {
-        FC_ASSERT( is_asset_type( fee, YANG_SYMBOL ), "Actor creation fee must be YANG" );
-        FC_ASSERT( fee >= asset( 0, YANG_SYMBOL ), "Actor creation fee cannot be negative" );
+        validate_account_name( creator );
+
+        FC_ASSERT( is_asset_type( fee, QI_SYMBOL ), "Actor creation fee must be QI" );
+        FC_ASSERT( fee >= asset( 0, QI_SYMBOL ), "Actor creation fee cannot be negative" );
         
         FC_ASSERT( family_name.size() > 0, "Family name is empty" );
         FC_ASSERT( family_name.size() < TAIYI_ACTOR_NAME_LIMIT,
@@ -304,15 +306,13 @@ namespace taiyi { namespace protocol {
     {
         validate_account_name( creator );
         
+        FC_ASSERT( is_asset_type( fee, QI_SYMBOL ), "Zone creation fee must be QI" );
+        FC_ASSERT( fee >= asset( 0, QI_SYMBOL ), "Zone creation fee cannot be negative" );
+
         FC_ASSERT( name.size() > 0, "Name is empty" );
         FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT,
                   "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
-        FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );
-        
-        FC_ASSERT( type.size() > 0, "Type is empty" );
-        FC_ASSERT( type.size() < TAIYI_ZONE_TYPE_NAME_LIMIT,
-                  "Type size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_TYPE_NAME_LIMIT - 1)("n", type.size()) );
-        FC_ASSERT( fc::is_utf8( type ), "Name not formatted in UTF8" );
+        FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );        
     }
     
     void connect_to_zone_operation::validate() const

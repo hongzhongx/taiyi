@@ -10,6 +10,18 @@
 
 namespace taiyi { namespace chain {
 
+    static const std::string Key_Special[] = {
+        "table", "_G", "_VERSION", "coroutine", "debug", "math", "io",
+        "utf8", "bit", "package", "string", "os", "cjson","baseENV",
+        "require"
+    };
+
+    struct boost_lua_variant_visitor : public boost::static_visitor<lua_types>
+    {
+        template <typename T>
+        lua_types operator()(T t) const { return t; }
+    };
+
     optional<lua_types> contract_object::get_lua_data(LuaContext &context, int index, bool check_fc)
     {
         static uint16_t stack = 0;

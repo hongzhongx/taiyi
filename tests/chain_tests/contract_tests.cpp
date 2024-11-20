@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
-    //idump( (used_mana) );
+    idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 476 );
     
 } FC_LOG_AND_RETHROW() }
@@ -701,12 +701,12 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     validate_database();
 
     int64_t used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
-    //idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 421 );
+    idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 411 );
     
     asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
     //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(421, QI_SYMBOL) );
+    BOOST_REQUIRE( reward_qi == asset(411, QI_SYMBOL) );
 
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     
@@ -732,11 +732,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
         
         used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
         //idump( (used_mana) );
-        BOOST_REQUIRE( used_mana == 421 );
+        BOOST_REQUIRE( used_mana == 411 );
         
         reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
         //idump( (reward_qi) );
-        BOOST_REQUIRE( reward_qi == asset(421, QI_SYMBOL) );
+        BOOST_REQUIRE( reward_qi == asset(411, QI_SYMBOL) );
     }
     
 } FC_LOG_AND_RETHROW() }

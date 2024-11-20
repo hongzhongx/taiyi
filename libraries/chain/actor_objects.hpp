@@ -32,7 +32,7 @@ namespace taiyi { namespace chain {
         }
 
         id_type             id;
-        nfa_id_type         nfa_id      = std::numeric_limits<nfa_id_type>::max();
+        nfa_id_type         nfa_id      = nfa_id_type::max();
         
         std::string         name;
         std::string         family_name;
@@ -59,8 +59,8 @@ namespace taiyi { namespace chain {
         uint                standpoint = 500;       //立场, [0,1000]
         int32_t             loyalty = 300;          //忠贞
         
-        zone_id_type        location;
-        zone_id_type        base;                   //从属地
+        zone_id_type        location = zone_id_type::max();
+        zone_id_type        base = zone_id_type::max();     //从属地
         
         actor_id_type       need_mating_target;             //春宵需求对象
         uint32_t            need_mating_end_block_num = 0;  //春宵需求截止时间
@@ -235,7 +235,7 @@ namespace taiyi { namespace chain {
         uint32_t            uuid;        //talent universally unique identifier
         std::string         title;
         std::string         description;
-        contract_id_type    main_contract = std::numeric_limits<contract_id_type>::max();
+        contract_id_type    main_contract = contract_id_type::max();
 
         //talent effect attributes' limit(max)
         int16_t             health      = 0;

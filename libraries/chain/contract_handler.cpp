@@ -8,6 +8,7 @@
 #include <chain/account_object.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
+#include <chain/zone_objects.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -51,6 +52,30 @@ namespace taiyi { namespace chain {
         wood = db.get_nfa_balance(nfa, WOOD_SYMBOL).amount.value;
         fabric = db.get_nfa_balance(nfa, FABRIC_SYMBOL).amount.value;
         herb = db.get_nfa_balance(nfa, HERB_SYMBOL).amount.value;
+    }
+    //=============================================================================
+    contract_handler::contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys)
+        : db(db), contract(contract), caller(caller), result(result), context(context), sigkeys(sigkeys)
+    {
+        result.contract_name = contract.name;
+        account_contract_data_cache = db.prepare_account_contract_data(caller, contract);
+        contract_data_cache = contract.contract_data;
+    }
+    //=============================================================================
+    contract_handler::~contract_handler()
+    {
+        const auto& acd = db.get<account_contract_data_object, by_account_contract>( boost::make_tuple(caller.id, contract.id) );
+        db.modify(acd, [&](account_contract_data_object &obj) { obj.contract_data = account_contract_data_cache; });
+        db.modify(contract, [&](contract_object& c) { c.contract_data = contract_data_cache; });
+    }
+    //=============================================================================
+    void contract_handler::assert_contract_data_size()
+    {
+        uint64_t contract_private_data_size    = 3L * 1024;
+        uint64_t contract_total_data_size      = 10L * 1024 * 1024;
+        uint64_t contract_max_data_size        = 2L * 1024 * 1024 * 1024;
+        FC_ASSERT(fc::raw::pack_size(account_contract_data_cache) <= contract_private_data_size, "the contract private data size is too large.");
+        FC_ASSERT(fc::raw::pack_size(contract_data_cache) <= contract_total_data_size, "the contract total data size is too large.");
     }
     //=============================================================================
     bool contract_handler::is_owner()
@@ -305,9 +330,7 @@ namespace taiyi { namespace chain {
             const account_object &to_account = db.get<account_object, by_id>(to);
             try
             {
-                FC_ASSERT(db.get_balance(from_account, token.symbol).amount >= token.amount,
-                          "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'",
-                          ("a", from_account.name)("t", to_account.name)("total_transfer", token)("balance", db.get_balance(from_account, token.symbol)));
+                FC_ASSERT(db.get_balance(from_account, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from account '${a}' to '${t}'", ("a", from_account.name)("t", to_account.name)("total_transfer", token)("balance", db.get_balance(from_account, token.symbol)));
             }
             FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from ${f} to ${t}", ("a", token)("f", from_account.name)("t", to_account.name));
             
@@ -373,6 +396,11 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    bool contract_handler::is_nfa_valid(int64_t nfa_id)
+    {
+        return db.find<nfa_object, by_id>(nfa_id) != nullptr;
+    }
+    //=============================================================================
     contract_nfa_base_info contract_handler::get_nfa_info(int64_t nfa_id)
     {
         try
@@ -429,9 +457,7 @@ namespace taiyi { namespace chain {
             auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
             FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
-                FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(),
-                          "input values count is ${n}, but ${f}`s parameter list is ${p}...",
-                          ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
+                FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
             
             auto current_contract_name = context.readVariable<string>("current_contract");
@@ -444,8 +470,8 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
             contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->apply_result, current_ch->account_conntract_data);
-            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db);
+            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys);
+            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
             nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -455,16 +481,15 @@ namespace taiyi { namespace chain {
             
             nfa_context.writeVariable("current_contract", name);
             nfa_context.writeVariable(name, "_G", "protected");
+
             nfa_context.writeVariable(name, "contract_helper", &ch);
-            nfa_context.writeVariable(name, "nfa_helper", &cnh);
             nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
-            nfa_context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
-            nfa_context.writeVariable(name, "read_list", "private_data", LuaContext::EmptyArray);
-            nfa_context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
-            nfa_context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
-            nfa_context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
-            
+            nfa_context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
+            nfa_context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
+
+            nfa_context.writeVariable(name, "nfa_helper", &cnh);
+            nfa_context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
+
             nfa_context.get_function(name, function_name);
             //push function actual parameters
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
@@ -486,11 +511,13 @@ namespace taiyi { namespace chain {
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
+            ch.assert_contract_data_size();
+            
             for(auto& temp : ch.result.contract_affecteds) {
                 if(temp.which() == contract_affected_type::tag<contract_result>::value)
                     ch.result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
-            ch.result.relevant_datasize += fc::raw::pack_size(nfa_contract.contract_data) + fc::raw::pack_size(ch.account_conntract_data) + fc::raw::pack_size(ch.result.contract_affecteds);
+            ch.result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(ch.result.contract_affecteds);
         }
         catch(fc::exception e)
         {
@@ -528,19 +555,19 @@ namespace taiyi { namespace chain {
             
             string function_name = "do_" + action;
             
-            //准备参数，默认首个参数me，第二个参数是params
+            //准备参数
             vector<lua_types> value_list;
-            contract_nfa_base_info cnbi(nfa, db);
-            lua_table me_value = cnbi.to_lua_table();
-            value_list.push_back(me_value);
-            value_list.push_back(lua_table(params));
-            
+            size_t params_ct = params.size();
+            for(int i=1; i< (params_ct+1); i++) {
+                auto p = params.find(lua_key(lua_int(i)));
+                FC_ASSERT(p != params.end(), "eval_nfa_action input invalid params");
+                value_list.push_back(p->second);
+            }
+                        
             auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
             FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
-                FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(),
-                          "input values count is ${n}, but ${f}`s parameter list is ${p}...",
-                          ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
+                FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
             
             auto current_contract_name = context.readVariable<string>("current_contract");
@@ -553,8 +580,8 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
             contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->apply_result, current_ch->account_conntract_data);
-            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db);
+            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys);
+            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
             nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -564,16 +591,15 @@ namespace taiyi { namespace chain {
             
             nfa_context.writeVariable("current_contract", name);
             nfa_context.writeVariable(name, "_G", "protected");
+
             nfa_context.writeVariable(name, "contract_helper", &ch);
-            nfa_context.writeVariable(name, "nfa_helper", &cnh);
             nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
-            nfa_context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
-            nfa_context.writeVariable(name, "read_list", "private_data", LuaContext::EmptyArray);
-            nfa_context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
-            nfa_context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
-            nfa_context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
-            
+            nfa_context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
+            nfa_context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
+
+            nfa_context.writeVariable(name, "nfa_helper", &cnh);
+            nfa_context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
+
             nfa_context.get_function(name, function_name);
             //push function actual parameters
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
@@ -595,11 +621,13 @@ namespace taiyi { namespace chain {
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
+            ch.assert_contract_data_size();
+
             for(auto& temp : ch.result.contract_affecteds) {
                 if(temp.which() == contract_affected_type::tag<contract_result>::value)
                     ch.result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
-            ch.result.relevant_datasize += fc::raw::pack_size(nfa_contract.contract_data) + fc::raw::pack_size(ch.account_conntract_data) + fc::raw::pack_size(ch.result.contract_affecteds);
+            ch.result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(ch.result.contract_affecteds);
         }
         catch (fc::exception e)
         {
@@ -648,63 +676,60 @@ namespace taiyi { namespace chain {
         return std::make_pair(false, result); //start值超出keys深度，未进行查找
     }
     //=============================================================================
-    void contract_handler::read_cache()
+    void contract_handler::read_chain(const lua_map& read_list)
     {
         try
         {
-            auto keys = LuaContext::read_lua_value<lua_table>(this->context, contract.name.data(), vector<string>{"read_list"});
-            for (auto &itr : keys.v)
+            for (auto &itr : read_list)
             {
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "private_data")
-                {
-                    vector<lua_types> stacks = {lua_string("private_data")};
-                    read_context(itr.second.get<lua_table>().v, this->account_conntract_data, stacks, contract.name);
+                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "private_data") {
+                    vector<lua_types> stacks = { lua_string("private_data") };
+                    read_context(itr.second.get<lua_table>().v, account_contract_data_cache, stacks, contract.name);
                 }
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "public_data")
-                {
-                    vector<lua_types> stacks = {lua_string("public_data")};
-                    lua_map contract_data = this->contract.contract_data;
-                    read_context(itr.second.get<lua_table>().v, contract_data, stacks, contract.name);
+                
+                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "public_data") {
+                    vector<lua_types> stacks = { lua_string("public_data") };
+                    read_context(itr.second.get<lua_table>().v, contract_data_cache, stacks, contract.name);
                 }
             }
         }
         catch (fc::exception e)
         {
+            wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
         catch (std::exception e)
         {
+            wdump((e.what()));
             LUA_C_ERR_THROW(this->context.mState, e.what());
         }
     }
     //=============================================================================
-    void contract_handler::fllush_cache()
+    void contract_handler::write_chain(const lua_map& write_list)
     {
         try
         {
-            auto keys = LuaContext::read_lua_value<lua_table>(this->context, contract.name.data(), vector<string>{"write_list"});
-            for (auto &itr : keys.v)
+            for (auto &itr : write_list)
             {
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "private_data")
-                {
-                    vector<lua_types> stacks = {lua_string("private_data")};
-                    fllush_context(itr.second.get<lua_table>().v, this->account_conntract_data, stacks, contract.name);
+                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "private_data") {
+                    vector<lua_types> stacks = { lua_string("private_data") };
+                    flush_context(itr.second.get<lua_table>().v, account_contract_data_cache, stacks, contract.name);
                 }
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "public_data")
-                {
-                    vector<lua_types> stacks = {lua_string("public_data")};
-                    lua_map contract_data;
-                    fllush_context(itr.second.get<lua_table>().v, contract_data, stacks, contract.name);
-                    db.modify(contract, [&](contract_object& c) { c.contract_data = contract_data; });
+
+                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "public_data") {
+                    vector<lua_types> stacks = { lua_string("public_data") };
+                    flush_context(itr.second.get<lua_table>().v, contract_data_cache, stacks, contract.name);
                 }
             }
         }
         catch (fc::exception e)
         {
+            wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
         catch (std::exception e)
         {
+            wdump((e.what()));
             LUA_C_ERR_THROW(this->context.mState, e.what());
         }
     }
@@ -715,11 +740,12 @@ namespace taiyi { namespace chain {
      *stacks:将keys树型路径图分割为单一路径的路径缓存栈
      *tablename:指定VM指定的环境目标
      ************************************************************************************************************************/
-    void contract_handler::read_context(lua_map &keys, lua_map &data_table, vector<lua_types> &stacks, string tablename)
+    void contract_handler::read_context(const lua_map &rkeys, lua_map &data_table, vector<lua_types> &stacks, string tablename)
     {
         static auto start_key = lua_types(lua_string("start"));
         static auto stop_key = lua_types(lua_string("stop"));
         uint32_t start = 0, stop = 0, index = 0;
+        lua_map keys = rkeys;
         if (keys.find(start_key) != keys.end() && keys[start_key].which() == lua_types::tag<lua_int>::value)
         {
             start = keys[start_key].get<lua_int>().v;
@@ -785,13 +811,13 @@ namespace taiyi { namespace chain {
         }
     }
     /******************************************************************************
-     *fllush_context:按指定的树型表更新链上对应的合约上下文
+     *flush_context:按指定的树型表更新链上对应的合约上下文
      *keys:指定的需要推送的树形结构路径图
      *data_table:树形结构合约上下文数据源
      *stacks:将keys树型路径图分割为单一路径的路径缓存栈
      *tablename:指定VM指定的环境目标
      ************************************************************************************************************************/
-    void contract_handler::fllush_context(const lua_map &keys, lua_map &data_table, vector<lua_types> &stacks, string table_name)
+    void contract_handler::flush_context(const lua_map &keys, lua_map &data_table, vector<lua_types> &stacks, string table_name)
     {
         for (auto itr = keys.begin(); itr != keys.end(); itr++)
         {
@@ -830,7 +856,7 @@ namespace taiyi { namespace chain {
                 auto finded = find_luaContext(&data_table, stacks, 1);
                 if (finded.first)
                 {
-                    fllush_context(itr->second.get<lua_table>().v, data_table, stacks, table_name);
+                    flush_context(itr->second.get<lua_table>().v, data_table, stacks, table_name);
                 }
                 else if (finded.second)
                 {
@@ -922,6 +948,28 @@ namespace taiyi { namespace chain {
         {
             const auto& nfa = db.get<nfa_object, by_id>(id);
             return contract_asset_resources(nfa, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::change_zone_type(int64_t nfa_id, const string& type)
+    {
+        try
+        {
+            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa.owner_account == caller.id, "caller account not the zone nfa #${z}'s owner", ("z", nfa_id));
+            
+            const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
+            FC_ASSERT(zone != nullptr, "nfa #${z} is not a zone", ("z", nfa_id));
+
+            auto new_type = get_zone_type_from_string(type);
+            FC_ASSERT(new_type != _ZONE_INVALID_TYPE, "invalid zone type \"${t}\"", ("t", type));
+            db.modify(*zone, [&](zone_object& obj){
+                obj.type = new_type;
+            });
         }
         catch (fc::exception e)
         {

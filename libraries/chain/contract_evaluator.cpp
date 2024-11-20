@@ -128,18 +128,7 @@ namespace taiyi { namespace chain {
                 FC_ASSERT(key_itr != sigkeys.end(), "No contract related permissions were found in the signature, contract_authority:${c}", ("c", contract.contract_authority));
             }
         }
-        
-        const auto* op_acd = _db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract.id));
-        if(op_acd == nullptr) {
-            _db.create<account_contract_data_object>([&](account_contract_data_object &a) {
-                a.owner = caller.id;
-                a.contract_id = contract.id;
-            });
-            op_acd = _db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract.id));
-        }
-        lua_map account_data = op_acd->contract_data;
-        
-        contract_result result;
+                
         contract_worker worker;
         
         LuaContext context;
@@ -148,7 +137,7 @@ namespace taiyi { namespace chain {
         //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
         long long old_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        worker.do_contract_function(caller, o.function_name, o.value_list, account_data, sigkeys, result, contract, vm_drops, true,  context, _db);
+        worker.do_contract_function(caller, o.function_name, o.value_list, sigkeys, contract, vm_drops, true,  context, _db);
         int64_t used_drops = old_drops - vm_drops;
 
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
@@ -160,18 +149,8 @@ namespace taiyi { namespace chain {
         //reward contract owner
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
         _db.reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
-
-        uint64_t contract_private_data_size    = 3L * 1024;
-        uint64_t contract_total_data_size      = 10L * 1024 * 1024;
-        uint64_t contract_max_data_size        = 2L * 1024 * 1024 * 1024;
-        FC_ASSERT(fc::raw::pack_size(account_data) <= contract_private_data_size, "the contract private data size is too large.");
-        FC_ASSERT(fc::raw::pack_size(contract.contract_data) <= contract_total_data_size, "the contract total data size is too large.");
-        
-        _db.modify(*op_acd, [&](account_contract_data_object &a) {
-            a.contract_data = account_data;
-        });
-        
-        return result;
+                
+        return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
     
 } } // taiyi::chain

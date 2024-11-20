@@ -193,7 +193,9 @@ namespace taiyi {
 
         enum E_ZONE_TYPE
         {
-            YUANYE = 0,     //原野
+            XUKONG = 0,     //虚空
+            
+            YUANYE,         //原野
             HUPO,           //湖泊
             NONGTIAN,       //农田
 
@@ -389,4 +391,4 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     (tiandao_property_object_type)
 )
 
-FC_REFLECT_ENUM( taiyi::chain::E_ZONE_TYPE, (YUANYE)(HUPO)(NONGTIAN)(LINDI)(MILIN)(YUANLIN)(SHANYUE)(DONGXUE)(SHILIN)(QIULIN)(TAOYUAN)(SANGYUAN)(XIAGU)(ZAOZE)(YAOYUAN)(HAIYANG)(SHAMO)(HUANGYE)(ANYUAN)(DUHUI)(MENPAI)(SHIZHEN)(GUANSAI)(CUNZHUANG))
+FC_REFLECT_ENUM( taiyi::chain::E_ZONE_TYPE, (XUKONG)(YUANYE)(HUPO)(NONGTIAN)(LINDI)(MILIN)(YUANLIN)(SHANYUE)(DONGXUE)(SHILIN)(QIULIN)(TAOYUAN)(SANGYUAN)(XIAGU)(ZAOZE)(YAOYUAN)(HAIYANG)(SHAMO)(HUANGYE)(ANYUAN)(DUHUI)(MENPAI)(SHIZHEN)(GUANSAI)(CUNZHUANG))

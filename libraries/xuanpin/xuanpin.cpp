@@ -2043,7 +2043,9 @@ namespace taiyi { namespace xuanpin {
         tx.operations.push_back(op);
         tx.validate();
 
-        return my->sign_transaction( tx, broadcast );
+        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
+        transaction.operation_results = get_transaction_results(transaction.transaction_id);
+        return transaction;
     } FC_CAPTURE_AND_RETHROW( (creator)(family_name)(last_name) ) }
 
     baiyujing_api::find_actor_return xuanpin_api::find_actor( const string& name )
@@ -2071,22 +2073,22 @@ namespace taiyi { namespace xuanpin {
         return my->_remote_api->find_actor_talent_rules( uuids );
     }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_zone(const account_name_type& creator, const string& name, const string& type, uint32_t uid, bool broadcast )
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_zone(const account_name_type& creator, const string& name, bool broadcast )
     { try {
         FC_ASSERT( !is_locked() );
         create_zone_operation op;
         op.creator = creator;
-        op.uid = uid;
         op.name = name;
-        op.type = type;
-        op.fee = my->_remote_api->get_chain_properties().account_creation_fee;
+        op.fee = my->_remote_api->get_chain_properties().account_creation_fee * TAIYI_QI_SHARE_PRICE;
 
         signed_transaction tx;
         tx.operations.push_back(op);
         tx.validate();
 
-        return my->sign_transaction( tx, broadcast );
-    } FC_CAPTURE_AND_RETHROW( (creator)(name)(type) ) }
+        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
+        transaction.operation_results = get_transaction_results(transaction.transaction_id);
+        return transaction;
+    } FC_CAPTURE_AND_RETHROW( (creator)(name) ) }
 
     baiyujing_api::legacy_signed_transaction xuanpin_api::connect_to_zone( const account_name_type& account, const string& from_zone, const string& to_zone, bool broadcast )
     { try {
@@ -2101,7 +2103,9 @@ namespace taiyi { namespace xuanpin {
         tx.operations.push_back(op);
         tx.validate();
 
-        return my->sign_transaction( tx, broadcast );
+        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
+        transaction.operation_results = get_transaction_results(transaction.transaction_id);
+        return transaction;
     } FC_CAPTURE_AND_RETHROW( (account)(from_zone)(to_zone) ) }
 
     baiyujing_api::find_zones_return xuanpin_api::find_zones( vector< int64_t > ids )

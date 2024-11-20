@@ -27,6 +27,8 @@ namespace taiyi { namespace chain {
     extern std::string s_debug_actor;
 
     std::string g_zone_type_strings[_ZONE_TYPE_NUM] = {
+        "XUKONG",         //虚空
+        
         "YUANYE",         //原野
         "HUPO",           //湖泊
         "NONGTIAN",       //农田
@@ -59,7 +61,7 @@ namespace taiyi { namespace chain {
         "CUNZHUANG"      //村庄
     };
 
-    static E_ZONE_TYPE get_zone_type_from_string(const std::string& sType) {
+    E_ZONE_TYPE get_zone_type_from_string(const std::string& sType) {
         for(unsigned int i=0; i<_ZONE_TYPE_NUM; i++) {
             if(sType == g_zone_type_strings[i])
                 return (E_ZONE_TYPE)i;
@@ -68,7 +70,7 @@ namespace taiyi { namespace chain {
         return _ZONE_INVALID_TYPE;
     }
     
-    static string get_zone_type_string(E_ZONE_TYPE type) {
+    string get_zone_type_string(E_ZONE_TYPE type) {
         if(type >= _ZONE_TYPE_NUM)
             return "";
         else
@@ -79,117 +81,63 @@ namespace taiyi { namespace chain {
     { try {
         const auto& creator = _db.get_account( o.creator ); // prove it exists
         auto now = _db.head_block_time();
-        
-        //when creator is not sifu, must put proposal in post for voting
-//        if(o.creator != TAIYI_COMMITTEE_ACCOUNT) {
-//            FC_ASSERT( ( now - auth.last_root_post ) > TAIYI_MIN_ROOT_COMMENT_INTERVAL, "You may only post once every 5 minutes.", ("now",now)("last_root_post", auth.last_root_post) );
-//        }
-            
+                    
         //check zone existence
         auto check_zone = _db.find< zone_object, by_name >( o.name );
         FC_ASSERT( check_zone == nullptr, "There is already exist zone named \"${a}\".", ("a", o.name) );
 
-        //check type
-        E_ZONE_TYPE zone_type = get_zone_type_from_string(o.type);
-        FC_ASSERT(zone_type != _ZONE_INVALID_TYPE, "zone type \"${t}\" is not valid.", ("t", o.type));
-
-//        char permlink[TAIYI_MAX_PERMLINK_LENGTH];
-//        sprintf(permlink, "--zone-creation-proposal--%u", o.uid);
-//        validate_permlink_0_1( permlink );
-//
-//        char title[TAIYI_COMMENT_TITLE_LIMIT];
-//        sprintf(title, "[Zone]%s", o.name.c_str());
-//
-//        const auto& by_permlink_idx = _db.get_index< comment_index >().indices().get< by_permlink >();
-//        auto itr = by_permlink_idx.find( boost::make_tuple( o.creator, permlink ) );
-//        FC_ASSERT(itr == by_permlink_idx.end(), "Can not edit an exist proposal! permlink=${l}", ("l", permlink));
-//
-//        _db.modify( auth, [&]( account_object& a ) {
-//            a.last_root_post = now;
-//            a.last_post = now;
-//            a.last_post_edit = now;
-//            a.post_count++;
-//        });
-//        
-//        const auto& new_comment = _db.create< comment_object >( [&]( comment_object& com ) {
-//            com.type = comment_types::CT_ZONE_CREATION;
-//            com.rule_uuid = 0;
-//            com.author = o.creator;
-//            com.permlink = permlink;
-//            com.last_update = _db.head_block_time();
-//            com.created = com.last_update;
-//            com.active = com.last_update;
-//            com.max_cashout_time = fc::time_point_sec::maximum();
-//            com.reward_weight = TAIYI_100_PERCENT;
-//            
-//            com.parent_author = "";
-//            com.parent_permlink = "zone-creation";
-//            com.category = "ZONE-CREATION";
-//            com.root_comment = com.id;
-//            
-//            if(o.creator == TAIYI_COMMITTEE_ACCOUNT) {
-//                com.last_payout = now;
-//                com.cashout_time = fc::time_point_sec::maximum();
-//            }
-//            else {
-//                com.last_payout = fc::time_point_sec::min();
-//                com.cashout_time = com.created + TAIYI_CASHOUT_WINDOW_SECONDS;
-//            }
-//        });
-//
-//        _db.create< comment_content_object >( [&]( comment_content_object& con ) {
-//            con.comment = new_comment.id;
-//            
-//            con.title = title;
-//
-//            char body[1024];
-//            sprintf(body, "This is a proposal to create new zone named \"%s\" with type=\"%s\"", o.name.c_str(), o.type.c_str());
-//            con.body = body;
-//            
-//            zone_creation_data data = {o.name, zone_type};
-//            string json_metadata = fc::json::to_string( data );
-//            con.json_metadata = json_metadata;
-//        });
-
         const auto& props = _db.get_dynamic_global_properties();
-        //const siming_schedule_object& wso = _db.get_siming_schedule_object();
+        const siming_schedule_object& wso = _db.get_siming_schedule_object();
+
+        FC_ASSERT( o.fee <= asset( TAIYI_MAX_ZONE_CREATION_FEE, QI_SYMBOL ), "Zone creation fee cannot be too large" );
+        FC_ASSERT( o.fee == (wso.median_props.account_creation_fee * TAIYI_QI_SHARE_PRICE), "Must pay the exact zone creation fee. paid: ${p} fee: ${f}", ("p", o.fee) ("f", wso.median_props.account_creation_fee * TAIYI_QI_SHARE_PRICE) );
+
+        _db.adjust_balance( creator, -o.fee );
 
         contract_result result;
 
-        //creator is sifu, approve this proposal immediately
-        if(o.creator == TAIYI_COMMITTEE_ACCOUNT) {
-            //先创建NFA
-            string nfa_symbol_name = "nfa.zone.default";
-            const auto* nfa_symbol = _db.find<nfa_symbol_object, by_symbol>(nfa_symbol_name);
-            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", nfa_symbol_name));
-            
-            const auto* current_trx = _db.get_current_trx_ptr();
-            FC_ASSERT(current_trx);
-            const flat_set<public_key_type>& sigkeys = current_trx->get_signature_keys(_db.get_chain_id(), fc::ecc::fc_canonical);
-            
-            LuaContext context;
-            _db.initialize_VM_baseENV(context);
-            
-            const auto& nfa = _db.create_nfa(creator, *nfa_symbol, sigkeys, true, context);
-            
-            protocol::nfa_affected affected;
-            affected.affected_account = creator.name;
-            affected.affected_item = nfa.id;
-            affected.action = nfa_affected_type::create_for;
-            result.contract_affecteds.push_back(std::move(affected));
-            
-            affected.affected_account = creator.name;
-            affected.action = nfa_affected_type::create_by;
-            result.contract_affecteds.push_back(std::move(affected));
-            
-            const auto& new_zone = _db.create< zone_object >( [&]( zone_object& zone ) {
-                _db.initialize_zone_object( zone, o.name, nfa, zone_type);
+        //先创建NFA
+        string nfa_symbol_name = "nfa.zone.default";
+        const auto* nfa_symbol = _db.find<nfa_symbol_object, by_symbol>(nfa_symbol_name);
+        FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", nfa_symbol_name));
+        
+        const auto* current_trx = _db.get_current_trx_ptr();
+        FC_ASSERT(current_trx);
+        const flat_set<public_key_type>& sigkeys = current_trx->get_signature_keys(_db.get_chain_id(), fc::ecc::fc_canonical);
+        
+        LuaContext context;
+        _db.initialize_VM_baseENV(context);
+        
+        const auto& nfa = _db.create_nfa(creator, *nfa_symbol, sigkeys, true, context);
+        
+        protocol::nfa_affected affected;
+        affected.affected_account = creator.name;
+        affected.affected_item = nfa.id;
+        affected.action = nfa_affected_type::create_for;
+        result.contract_affecteds.push_back(std::move(affected));
+        
+        affected.affected_account = creator.name;
+        affected.action = nfa_affected_type::create_by;
+        result.contract_affecteds.push_back(std::move(affected));
+        
+        //创建一个虚空区域
+        const auto& new_zone = _db.create< zone_object >( [&]( zone_object& zone ) {
+            _db.initialize_zone_object( zone, o.name, nfa, XUKONG);
+        });
+        
+        if( o.fee.amount > 0 ) {
+            _db.modify(nfa, [&](nfa_object& obj) {
+                obj.qi += o.fee;
+                util::update_manabar( props, obj, true );
             });
-                        
-            _db.grow_zone(new_zone);
-            
-            //_db.push_virtual_operation( zone_creation_approved_operation( new_comment.author, new_comment.permlink, new_zone.name ) );
         }
+        
+        affected.affected_account = creator.name;
+        affected.affected_item = nfa.id;
+        affected.action = nfa_affected_type::deposit_qi;
+        result.contract_affecteds.push_back(std::move(affected));
+                                
+        //_db.push_virtual_operation( zone_creation_approved_operation( new_comment.author, new_comment.permlink, new_zone.name ) );
         
         return result;
     } FC_CAPTURE_AND_RETHROW( (o) ) }

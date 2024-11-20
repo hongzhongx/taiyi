@@ -122,4 +122,10 @@ namespace taiyi { namespace chain { namespace util {
 
 } } } // taiyi::chain::util
 
+namespace mira {
+
+    template<> struct is_static_length< taiyi::chain::util::manabar > : public boost::true_type {};
+
+} // mira
+
 FC_REFLECT(taiyi::chain::util::manabar, (current_mana)(last_update_time))

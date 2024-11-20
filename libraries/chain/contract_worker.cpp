@@ -18,7 +18,7 @@ extern "C" {
 
 namespace taiyi { namespace chain {
 
-    void contract_worker::do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    void contract_worker::do_contract_function(const account_object& caller, string function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
 
         int pre_drops_enable = lua_enabledrops(context.mState, 1, reset_vm_memused?1:0);
@@ -34,7 +34,7 @@ namespace taiyi { namespace chain {
                         
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
+            contract_handler ch(db, caller, contract, result, context, sigkeys);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -44,15 +44,12 @@ namespace taiyi { namespace chain {
             context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
             context.writeVariable("current_contract", name);
             context.writeVariable(name, "_G", "protected");
+            
             context.writeVariable(name, "contract_helper", &ch);
             context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
-            context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
-            context.writeVariable(name, "read_list", "private_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
-            
+            context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
+            context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
+
             bool bOK = context.get_function(name, function_name);
             FC_ASSERT(bOK);
             //push function actual parameters
@@ -75,13 +72,15 @@ namespace taiyi { namespace chain {
                         
             if (err)
                 FC_THROW("Try the contract resolution execution failure,${message}", ("message", error_message));
-            for(auto& temp : result.contract_affecteds) {
+
+            ch.assert_contract_data_size();
+
+            for(auto& temp : result.contract_affecteds)
+            {
                 if(temp.which() == contract_affected_type::tag<contract_result>::value)
                     result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
-            result.relevant_datasize += fc::raw::pack_size(contract.contract_data) + fc::raw::pack_size(account_data) + fc::raw::pack_size(result.contract_affecteds);
-            
-            apply_result = result;
+            result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(result.contract_affecteds);
         }
         catch (LuaContext::VMcollapseErrorException e)
         {
@@ -101,7 +100,7 @@ namespace taiyi { namespace chain {
 
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
-    lua_table contract_worker::do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext &context, database &db)
+    lua_table contract_worker::do_contract_function_return_table(const account_object& caller, string function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext &context, database &db)
     { try {
         
         const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
@@ -124,7 +123,7 @@ namespace taiyi { namespace chain {
         
         const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
         contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-        contract_handler ch(db, caller, contract, result, context, sigkeys, apply_result, account_data);
+        contract_handler ch(db, caller, contract, result, context, sigkeys);
 
         const auto& name = contract.name;
         context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -134,15 +133,12 @@ namespace taiyi { namespace chain {
         context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
         context.writeVariable("current_contract", name);
         context.writeVariable(name, "_G", "protected");
+        
         context.writeVariable(name, "contract_helper", &ch);
         context.writeVariable(name, "contract_base_info", &cbi);
-        context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
-        context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
-        context.writeVariable(name, "read_list", "private_data", LuaContext::EmptyArray);
-        context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
-        context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
-        context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
-        
+        context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
+        context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
+
         bool bOK = context.get_function(name, function_name);
         FC_ASSERT(bOK);
         //push function actual parameters
@@ -179,13 +175,16 @@ namespace taiyi { namespace chain {
         
         if (err)
             FC_THROW("Try the contract resolution execution failure, ${m}", ("m", error_message));
-        for(auto& temp : result.contract_affecteds) {
+
+        ch.assert_contract_data_size();
+
+        for(auto& temp : result.contract_affecteds)
+        {
             if(temp.which() == contract_affected_type::tag<contract_result>::value)
                 result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
         }
-        result.relevant_datasize += fc::raw::pack_size(contract.contract_data) + fc::raw::pack_size(account_data) + fc::raw::pack_size(result.contract_affecteds);
+        result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(result.contract_affecteds);
         
-        apply_result = result;
         return result_table;
             
     } FC_CAPTURE_AND_RETHROW() }
@@ -361,7 +360,7 @@ namespace taiyi { namespace chain {
         }
     } FC_CAPTURE_AND_RETHROW() }
     
-    bool contract_worker::eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, contract_result &result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    bool contract_worker::eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
         const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
@@ -383,21 +382,15 @@ namespace taiyi { namespace chain {
         const auto& caller = db.get<account_object, by_id>(caller_nfa.owner_account);
         if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
             FC_ASSERT(contract_ptr->can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract_ptr->name));
-                    
-        lua_map account_data;
-        const auto* op_acd = db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract_ptr->id));
-        if(op_acd != nullptr)
-            account_data = op_acd->contract_data;
-        lua_map contract_data = contract_ptr->contract_data;
-        
+                            
         flat_set<public_key_type> sigkeys; //no signature keys
         string function_name = "do_" + action;
-        do_nfa_contract_function(caller_nfa, function_name, value_list, account_data, sigkeys, result, *contract_ptr, vm_drops, reset_vm_memused, context, db);
+        do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db);
         
         return true;        
     } FC_CAPTURE_AND_RETHROW() }
 
-    bool contract_worker::do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, contract_result &result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    bool contract_worker::do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
         const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
@@ -419,21 +412,15 @@ namespace taiyi { namespace chain {
         const auto& caller = db.get<account_object, by_id>(caller_nfa.owner_account);
         if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
             FC_ASSERT(contract_ptr->can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract_ptr->name));
-                    
-        lua_map account_data;
-        const auto* op_acd = db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(caller.id, contract_ptr->id));
-        if(op_acd != nullptr)
-            account_data = op_acd->contract_data;
-        lua_map contract_data = contract_ptr->contract_data;
-        
+                            
         flat_set<public_key_type> sigkeys; //no signature keys
         string function_name = "do_" + action;
-        do_nfa_contract_function(caller_nfa, function_name, value_list, account_data, sigkeys, result, *contract_ptr, vm_drops, reset_vm_memused, context, db);
+        do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db);
 
         return true;
     } FC_CAPTURE_AND_RETHROW() }
     
-    void contract_worker::do_nfa_contract_function(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, lua_map &account_data, const flat_set<public_key_type> &sigkeys, contract_result &apply_result, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    void contract_worker::do_nfa_contract_function(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         int pre_drops_enable = lua_enabledrops(context.mState, 1, reset_vm_memused?1:0);
         lua_setdrops(context.mState, vm_drops);
@@ -453,8 +440,8 @@ namespace taiyi { namespace chain {
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
             
             contract_base_info cbi(db, context, contract_owner, contract.name, caller_account.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller_account, contract, result, context, sigkeys, apply_result, account_data);
-            contract_nfa_handler cnh(caller_account, caller_nfa, context, db);
+            contract_handler ch(db, caller_account, contract, result, context, sigkeys);
+            contract_nfa_handler cnh(caller_account, caller_nfa, context, db, ch);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -464,15 +451,14 @@ namespace taiyi { namespace chain {
             context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
             context.writeVariable("current_contract", name);
             context.writeVariable(name, "_G", "protected");
+
             context.writeVariable(name, "contract_helper", &ch);
-            context.writeVariable(name, "nfa_helper", &cnh);
             context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "private_data", LuaContext::EmptyArray /*,account_data*/);
-            context.writeVariable(name, "public_data", LuaContext::EmptyArray /*,contract_data*/);
-            context.writeVariable(name, "read_list", "private_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "read_list", "public_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "write_list", "private_data", LuaContext::EmptyArray);
-            context.writeVariable(name, "write_list", "public_data", LuaContext::EmptyArray);
+            context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
+            context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
+
+            context.writeVariable(name, "nfa_helper", &cnh);
+            context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
 
             context.get_function(name, function_name);
             //push function actual parameters
@@ -495,13 +481,14 @@ namespace taiyi { namespace chain {
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
-            for(auto& temp : result.contract_affecteds) {
+            ch.assert_contract_data_size();
+            
+            for(auto& temp : result.contract_affecteds)
+            {
                 if(temp.which() == contract_affected_type::tag<contract_result>::value)
                     result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
-            result.relevant_datasize += fc::raw::pack_size(contract.contract_data) + fc::raw::pack_size(account_data) + fc::raw::pack_size(result.contract_affecteds);
-            
-            apply_result = result;
+            result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(result.contract_affecteds);
         }
         catch (LuaContext::VMcollapseErrorException e)
         {
