@@ -231,9 +231,14 @@ namespace taiyi { namespace chain {
             
             FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
 
+            operation vop = nfa_trasfer_operation(from, _db.get<account_object, by_id>(from_nfa.owner_account).name, to, _db.get<account_object, by_id>(to_nfa.owner_account).name, token );
+            _db.pre_push_virtual_operation( vop );
+            
             _db.adjust_nfa_balance(from_nfa, -token);
             _db.adjust_nfa_balance(to_nfa, token);
 
+            _db.post_push_virtual_operation( vop );
+            
             _db.modify(from_nfa, [&](nfa_object& obj) {
                 util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
             });
@@ -283,8 +288,13 @@ namespace taiyi { namespace chain {
             
             FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
 
+            operation vop = nfa_deposit_withdraw_operation(from, to_account.name, asset( 0, YANG_SYMBOL ), token );
+            _db.pre_push_virtual_operation( vop );
+
             _db.adjust_nfa_balance(from_nfa, -token);
             _db.adjust_balance(to_account, token);
+
+            _db.post_push_virtual_operation( vop );
 
             _db.modify(from_nfa, [&](nfa_object& obj) {
                 util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
@@ -332,9 +342,14 @@ namespace taiyi { namespace chain {
             
             FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
 
+            operation vop = nfa_deposit_withdraw_operation(to, from_account.name, token, asset( 0, YANG_SYMBOL ) );
+            _db.pre_push_virtual_operation( vop );
+
             _db.adjust_balance(from_account, -token);
             _db.adjust_nfa_balance(to_nfa, token);
-            
+
+            _db.post_push_virtual_operation( vop );
+
             _db.modify(to_nfa, [&](nfa_object& obj) {
                 util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
             });

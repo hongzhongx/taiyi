@@ -61,6 +61,33 @@ namespace taiyi { namespace protocol {
         asset               new_resource;
     };
 
+    struct nfa_trasfer_operation : public virtual_operation
+    {
+        nfa_trasfer_operation(){}
+        nfa_trasfer_operation( const int64_t& f, const account_name_type& fo, const int64_t& t, const account_name_type& to, const asset& a )
+            : from(f), from_owner(fo), to(t), to_owner(to), amount(a) {}
+        
+        int64_t             from;
+        account_name_type   from_owner;
+        int64_t             to;
+        account_name_type   to_owner;
+
+        asset               amount;
+    };
+    
+    struct nfa_deposit_withdraw_operation : public virtual_operation
+    {
+        nfa_deposit_withdraw_operation(){}
+        nfa_deposit_withdraw_operation( const int64_t& n, const string& a, const asset& d, const asset& w )
+            : nfa(n), account(a), deposited(d), withdrawn(w)  {}
+        
+        int64_t             nfa;
+        account_name_type   account;
+        
+        asset               deposited;
+        asset               withdrawn;
+    };
+
     struct reward_qi_operation : public virtual_operation
     {
         reward_qi_operation(){}
@@ -122,6 +149,8 @@ FC_REFLECT( taiyi::protocol::hardfork_operation, (hardfork_id) )
 FC_REFLECT( taiyi::protocol::return_qi_delegation_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(qi) )
 FC_REFLECT( taiyi::protocol::nfa_convert_qi_to_resources_operation, (nfa)(owner)(qi_converted)(new_resource) )
+FC_REFLECT( taiyi::protocol::nfa_trasfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
+FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
 FC_REFLECT( taiyi::protocol::reward_qi_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::tiandao_year_change_operation, (messager)(years)(months)(times)(live_num)(dead_num)(born_this_year)(dead_this_year) )
 FC_REFLECT( taiyi::protocol::tiandao_month_change_operation, (messager)(years)(months)(times) )
