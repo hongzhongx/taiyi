@@ -73,12 +73,8 @@ namespace taiyi { namespace chain {
             
             act.family_name = o.family_name;
             act.last_name = o.last_name;
-            
-            act.sexuality = o.sexuality;
         });
-        
-        _db.initialize_actor_talents( new_actor, o.gender, o.sexuality );
-        
+                
         if( o.fee.amount > 0 ) {
             _db.modify(nfa, [&](nfa_object& obj) {
                 obj.qi += o.fee;

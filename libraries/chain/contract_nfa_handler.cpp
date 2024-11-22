@@ -21,8 +21,8 @@ namespace taiyi { namespace chain {
         const auto& nfa_symbol = db.get<nfa_symbol_object, by_id>(nfa.symbol_id);
         symbol = nfa_symbol.symbol;
         
-        const auto& owner = db.get<account_object, by_id>(nfa.owner_account);
-        owner_account = owner.name;
+        owner_account = db.get<account_object, by_id>(nfa.owner_account).name;
+        creator_account = db.get<account_object, by_id>(nfa.creator_account).name;
     }
     //=============================================================================
     contract_nfa_handler::contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch)
@@ -201,7 +201,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_nfa_handler::transfer_from(nfa_id_type from, nfa_id_type to, double amount, string symbol_name, bool enable_logger)
+    void contract_nfa_handler::transfer_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger)
     {
         try
         {
@@ -225,7 +225,7 @@ namespace taiyi { namespace chain {
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
             try
             {
-                FC_ASSERT(_db.get_nfa_balance(from_nfa, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to transfer '${total_transfer}' from nfa '${a}' to '${t}'", ("a", from_nfa.id)("t", to_nfa.id)("total_transfer", token)("balance", _db.get_nfa_balance(from_nfa, token.symbol)));
+                FC_ASSERT(_db.get_nfa_balance(from_nfa, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to transfer '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", _db.get_nfa_balance(from_nfa, token.symbol)));
             }
             FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from ${f} to ${t}", ("a", token)("f", from_nfa.id)("t", to_nfa.id));
             
@@ -238,6 +238,51 @@ namespace taiyi { namespace chain {
                 variant v;
                 fc::to_variant(token, v);
                 _ch.log(FORMAT_MESSAGE("nfa #${a} transfer ${token} to nfa #${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_nfa.id)));
+            }
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::withdraw_to(nfa_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger)
+    {
+        try
+        {
+            asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
+            auto token = asset(amount, symbol);
+            withdraw_by_contract(from, _db.get_account(to).id, token, _ch.result, enable_logger);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::withdraw_by_contract(nfa_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger)
+    {
+        try
+        {
+            const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
+            const account_object &to_account = _db.get<account_object, by_id>(to);
+            try
+            {
+                FC_ASSERT(_db.get_nfa_balance(from_nfa, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to transfer '${token}' from nfa #${a} to account '${t}'", ("a", from_nfa.id)("t", to_account.name)("token", token)("balance", _db.get_nfa_balance(from_nfa, token.symbol)));
+            }
+            FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from nfa #${f} to ${t}", ("a", token)("f", from_nfa.id)("t", to_account.name));
+            
+            FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
+
+            _db.adjust_nfa_balance(from_nfa, -token);
+            _db.adjust_balance(to_account, token);
+            
+            if(enable_logger) {
+                variant v;
+                fc::to_variant(token, v);
+                _ch.log(FORMAT_MESSAGE("nfa #${a} transfer ${token} to account ${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_account.name)));
             }
         }
         catch (fc::exception e)
@@ -282,6 +327,28 @@ namespace taiyi { namespace chain {
         {
             wdump((e.what()));
             LUA_C_ERR_THROW(_context.mState, e.what());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::destroy()
+    {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller with parent can not be destroyed");
+            
+            const auto& nfa_by_parent_idx = _db.get_index< nfa_index >().indices().get< chain::by_parent >();
+            auto itn = nfa_by_parent_idx.lower_bound( _caller.id );
+            FC_ASSERT(itn == nfa_by_parent_idx.end() || itn->parent != _caller.id, "caller with child can not be destroyed");
+                        
+            _db.modify(_caller, [&]( nfa_object& obj ) {
+                obj.owner_account = _db.get_account(TAIYI_NULL_ACCOUNT).id;
+                obj.next_tick_time = time_point_sec::maximum(); //disable tick
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
 

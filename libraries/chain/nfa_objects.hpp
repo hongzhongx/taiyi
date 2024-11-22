@@ -69,7 +69,7 @@ namespace taiyi { namespace chain {
         contract_id_type            main_contract = contract_id_type::max();
         lua_map                     contract_data;
         
-        asset                       qi = asset( 0, QI_SYMBOL ); ///< total qi shares held by this nfa, controls its heart_beat power
+        asset                       qi = asset( 0, QI_SYMBOL ); /// total qi shares held by this nfa, controls its heart_beat power
         util::manabar               manabar;
 
         time_point_sec              created_time;

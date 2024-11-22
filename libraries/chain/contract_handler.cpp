@@ -6,6 +6,7 @@
 #include <chain/taiyi_objects.hpp>
 #include <chain/block_summary_object.hpp>
 #include <chain/account_object.hpp>
+#include <chain/tiandao_property_object.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/zone_objects.hpp>
@@ -42,6 +43,32 @@ namespace taiyi { namespace chain {
                 FC_ASSERT(false, "invalid asset symbol name string '${n}'", ("n", name));
                 return asset_symbol_type();
             }
+        }
+    }
+    //=============================================================================
+    void get_connected_zones(const zone_object& zone, std::set<zone_id_type>& connected_zones, database& db)
+    {
+        const auto& connect_by_from_idx = db.get_index< zone_connect_index, by_zone_from >();
+        auto itrf = connect_by_from_idx.lower_bound( zone.id );
+        auto endf = connect_by_from_idx.end();
+        while( itrf != endf )
+        {
+            if(itrf->from != zone.id)
+                break;
+            if(connected_zones.find(itrf->to) == connected_zones.end())
+                connected_zones.insert(itrf->to);
+            ++itrf;
+        }
+        const auto& connect_by_to_idx = db.get_index< zone_connect_index, by_zone_to >();
+        auto itrt = connect_by_to_idx.lower_bound( zone.id );
+        auto endt = connect_by_to_idx.end();
+        while( itrt != endt )
+        {
+            if(itrt->to != zone.id)
+                break;
+            if(connected_zones.find(itrt->from) == connected_zones.end())
+                connected_zones.insert(itrt->from);
+            ++itrt;
         }
     }
     //=============================================================================
@@ -365,7 +392,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_handler::transfer_from(account_id_type from, account_name_type to, double amount, string symbol_name, bool enable_logger)
+    void contract_handler::transfer_from(account_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger)
     {
         try
         {
@@ -976,5 +1003,71 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
     }
+    //=============================================================================
+    contract_zone_base_info contract_handler::get_zone_info(int64_t nfa_id)
+    {
+        try
+        {
+            const auto& zone = db.get<zone_object, by_nfa_id>(nfa_id);
+            return contract_zone_base_info(zone, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    contract_zone_base_info contract_handler::get_zone_info_by_name(const string& name)
+    {
+        try
+        {
+            const auto& zone = db.get<zone_object, by_name>(name);
+            return contract_zone_base_info(zone, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::connect_zones(int64_t from_zone_nfa_id, int64_t to_zone_nfa_id)
+    {
+        try
+        {
+            const auto& from_zone_nfa = db.get<nfa_object, by_id>(from_zone_nfa_id);
+            FC_ASSERT(from_zone_nfa.owner_account == caller.id, "caller account not the from zone nfa #${z}'s owner", ("z", from_zone_nfa));
+            const auto& to_zone_nfa = db.get<nfa_object, by_id>(to_zone_nfa_id);
+            FC_ASSERT(to_zone_nfa.owner_account == caller.id, "caller account not the to zone nfa #${z}'s owner", ("z", to_zone_nfa_id));
 
+            const auto* from_zone = db.find<zone_object, by_nfa_id>(from_zone_nfa_id);
+            FC_ASSERT(from_zone != nullptr, "from nfa #${z} is not a zone", ("z", from_zone_nfa_id));
+            const auto* to_zone = db.find<zone_object, by_nfa_id>(to_zone_nfa_id);
+            FC_ASSERT(to_zone != nullptr, "to nfa #${z} is not a zone", ("z", to_zone_nfa_id));
+
+            const auto* check_connect = db.find<zone_connect_object, by_zone_from>( boost::make_tuple(from_zone->id, to_zone->id) );
+            FC_ASSERT( check_connect == nullptr, "Connection from \"${a}\" to \"${b}\" is already exist.", ("a", from_zone->name)("b", to_zone->name) );
+            
+            const auto& tiandao = db.get_tiandao_properties();
+
+            //检查连接区域是否达到上限
+            std::set<zone_id_type> connected_zones;
+            uint max_num = tiandao.zone_type_connection_max_num_map.at(from_zone->type);
+            get_connected_zones(*from_zone, connected_zones, db);
+            FC_ASSERT(connected_zones.size() < max_num || connected_zones.find(to_zone->id) != connected_zones.end(), "The \"from zone\"'s connections exceed the limit.");
+            connected_zones.clear();
+            max_num = tiandao.zone_type_connection_max_num_map.at(to_zone->type);
+            FC_ASSERT(connected_zones.size() < max_num || connected_zones.find(from_zone->id) != connected_zones.end(), "The \"to zone\"'s connections exceed the limit.");
+
+            //create connection
+            db.create< zone_connect_object >( [&]( zone_connect_object& o ) {
+                o.from = from_zone->id;
+                o.to = to_zone->id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    
 } } // namespace taiyi::chain

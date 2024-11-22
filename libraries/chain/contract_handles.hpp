@@ -54,28 +54,24 @@ namespace taiyi { namespace chain {
 
     struct contract_nfa_base_info
     {
-        int64_t id;
-        bool is_nfa = true;
+        int64_t id;     //nfa id
         string symbol;
         string owner_account;
+        string creator_account;
         int64_t qi;
         int64_t parent;
         lua_map data;
                 
         contract_nfa_base_info(const nfa_object& nfa, database& db);
+    };
+    
+    struct contract_zone_base_info
+    {
+        int64_t nfa_id;
+        string name;
+        string type;
         
-//        lua_table to_lua_table() const
-//        {
-//            lua_table t;
-//            t.v[lua_types(lua_string("id"))] = lua_int(id);
-//            t.v[lua_types(lua_string("is_nfa"))] = lua_bool(is_nfa);
-//            t.v[lua_types(lua_string("symbol"))] = lua_string(symbol);
-//            t.v[lua_types(lua_string("owner_account"))] = lua_string(owner_account);
-//            t.v[lua_types(lua_string("qi"))] = lua_int(qi);
-//            t.v[lua_types(lua_string("parent"))] = lua_int(parent);
-//            t.v[lua_types(lua_string("data"))] = lua_table(data);
-//            return t;
-//        }
+        contract_zone_base_info(const zone_object& z, const database& db);        
     };
 
     //=========================================================================
@@ -104,9 +100,13 @@ namespace taiyi { namespace chain {
         void remove_from_parent();
         void read_chain(const lua_map& read_list);
         void write_chain(const lua_map& write_list);
+        void destroy();
 
-        void transfer_from(nfa_id_type from, nfa_id_type to, double amount, string symbol_name, bool enable_logger=false);
+        //以下是不直接暴露到合约的辅助函数
+        void transfer_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
         void transfer_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
+        void withdraw_to(nfa_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);
+        void withdraw_by_contract(nfa_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
     };
 
     //合约本身被账号直接调用的角度来处理事务，隐含了合约调用账号
@@ -140,11 +140,7 @@ namespace taiyi { namespace chain {
         string hash512(string source);
         uint32_t head_block_time();
         const account_object& get_account(string name);
-        void flush_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
-        void read_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
-        void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
         int64_t get_account_balance(account_id_type account, asset_symbol_type symbol);
-        void transfer_from(account_id_type from, account_name_type to, double amount, string symbol_name, bool enable_logger=false);
         void change_contract_authority(string authority);
         memo_data make_memo(string receiver_id_or_name, string key, string value, uint64_t ss, bool enable_logger=false);
         void invoke_contract_function(string contract_id_or_name, string function_name, string value_list_json);
@@ -164,9 +160,21 @@ namespace taiyi { namespace chain {
 
         void eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        
+        //Zone
         void change_zone_type(int64_t nfa_id, const string& type);
+        contract_zone_base_info get_zone_info(int64_t nfa_id);
+        contract_zone_base_info get_zone_info_by_name(const string& name);
+        void connect_zones(int64_t from_zone_nfa_id, int64_t to_zone_nfa_id);
+                
+        //以下是不直接暴露到合约的辅助函数
+        void transfer_from(account_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);
+        void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
+        void flush_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
+        void read_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
     };
     
     asset_symbol_type s_get_symbol_type_from_string(const string name);
+    void get_connected_zones(const zone_object& zone, std::set<zone_id_type>& connected_zones, database& db);
 
 } } //taiyi::chain

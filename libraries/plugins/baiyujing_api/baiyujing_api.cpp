@@ -857,12 +857,17 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             _db.initialize_VM_baseENV(context);
             
             long long vm_drops = 100000000;
-            worker.eval_nfa_contract_action(nfa, action_name, value_list, vm_drops, true, context, _db);
+            string err = worker.eval_nfa_contract_action(nfa, action_name, value_list, vm_drops, true, context, _db);
 
             vector<string> result;
-            for(auto& temp : worker.get_result().contract_affecteds) {
-                if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
-                    result.push_back(temp.get<contract_logger>().message);
+            if(err != "") {
+                result.push_back(err);
+            }
+            else {
+                for(auto& temp : worker.get_result().contract_affecteds) {
+                    if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
+                        result.push_back(temp.get<contract_logger>().message);
+                    }
                 }
             }
 

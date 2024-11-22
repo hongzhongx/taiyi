@@ -8,9 +8,6 @@
 
 namespace taiyi { namespace chain {
 
-    E_ZONE_TYPE get_zone_type_from_string(const std::string& sType);
-    string get_zone_type_string(E_ZONE_TYPE type);
-
     struct zone_creation_data
     {
         string            name;
@@ -126,6 +123,9 @@ namespace taiyi { namespace chain {
         >,
         allocator< cunzhuang_object >
     > cunzhuang_index;
+
+    E_ZONE_TYPE get_zone_type_from_string(const std::string& sType);
+    string get_zone_type_string(E_ZONE_TYPE type);
 
 } } // taiyi::chain
 

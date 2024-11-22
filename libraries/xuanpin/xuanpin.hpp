@@ -702,11 +702,9 @@ namespace taiyi { namespace xuanpin {
          *  @param creator The account creating the new actor
          *  @param family_name 姓
          *  @param last_name 名
-         *  @param gender 性别
-         *  @param sexuality 性取向
          *  @param broadcast true if you wish to broadcast the transaction
          */
-        baiyujing_api::legacy_signed_transaction create_actor( const account_name_type& creator, const string& family_name, const string& last_name, int gender, int sexuality, bool broadcast );
+        baiyujing_api::legacy_signed_transaction create_actor( const account_name_type& creator, const string& family_name, const string& last_name, bool broadcast );
         
         /**
          * Find actors with given ids
@@ -743,7 +741,6 @@ namespace taiyi { namespace xuanpin {
          *  @param broadcast true if you wish to broadcast the transaction
          */
         baiyujing_api::legacy_signed_transaction create_zone( const account_name_type& creator, const string& name, bool broadcast );
-        baiyujing_api::legacy_signed_transaction connect_to_zone( const account_name_type& account, const string& from_zone, const string& to_zone, bool broadcast );
 
         /**
          * Find zones with given ids
@@ -882,7 +879,6 @@ FC_API( taiyi::xuanpin::xuanpin_api,
        
     //zone
     (create_zone)
-    (connect_to_zone)
     (list_zones)
     (list_zones_by_type)
     (list_to_zones_by_from)

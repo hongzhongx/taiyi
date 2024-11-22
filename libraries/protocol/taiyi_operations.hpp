@@ -517,8 +517,6 @@ namespace taiyi { namespace protocol {
         account_name_type creator;
         string            family_name;
         string            last_name;
-        int               gender;       ///-2=男生女相，-1=男，0=随机，1=女，2=女生男相
-        int               sexuality;    ///0=无性取向，1=喜欢男性，2=喜欢女性，3=双性恋
 
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
@@ -532,18 +530,6 @@ namespace taiyi { namespace protocol {
 
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
-    };
-
-    struct connect_to_zone_operation : public base_operation
-    {
-        asset             fee;
-        account_name_type account;
-
-        string            from;
-        string            to;
-
-        void validate()const;
-        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(account); }
     };
 
 } } // taiyi::protocol
@@ -579,7 +565,5 @@ FC_REFLECT( taiyi::protocol::deposit_qi_to_nfa_operation, (account)(id)(amount) 
 FC_REFLECT( taiyi::protocol::withdraw_qi_from_nfa_operation, (owner)(id)(amount) )
 FC_REFLECT( taiyi::protocol::action_nfa_operation, (owner)(id)(action)(value_list) )
 
-FC_REFLECT( taiyi::protocol::create_actor_operation, (fee)(creator)(family_name)(last_name)(gender)(sexuality) )
-
+FC_REFLECT( taiyi::protocol::create_actor_operation, (fee)(creator)(family_name)(last_name) )
 FC_REFLECT( taiyi::protocol::create_zone_operation, (fee)(creator)(name) )
-FC_REFLECT( taiyi::protocol::connect_to_zone_operation, (fee)(account)(from)(to) )

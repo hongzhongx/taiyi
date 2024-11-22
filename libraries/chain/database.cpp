@@ -1364,9 +1364,7 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< action_nfa_evaluator                     >();
         
         _my->_evaluator_registry.register_evaluator< create_actor_evaluator                   >();
-
         _my->_evaluator_registry.register_evaluator< create_zone_evaluator                    >();
-        _my->_evaluator_registry.register_evaluator< connect_to_zone_evaluator                >();
     }
     
     void database::register_custom_operation_interpreter( std::shared_ptr< custom_operation_interpreter > interpreter )

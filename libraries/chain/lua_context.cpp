@@ -245,23 +245,26 @@ namespace taiyi { namespace chain {
         registerFunction("get_nfa_info", &contract_handler::get_nfa_info);
         registerFunction("is_nfa_valid", &contract_handler::is_nfa_valid);        
         registerFunction("get_nfa_resources", &contract_handler::get_nfa_resources);
-        registerFunction("change_zone_type", &contract_handler::change_zone_type);        
+        registerFunction("change_zone_type", &contract_handler::change_zone_type);
+        registerFunction("get_zone_info", &contract_handler::get_zone_info);
+        registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
+        registerFunction("connect_zones", &contract_handler::connect_zones);
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
         lua_register(mState, "format_vector_with_table", &format_vector_with_table);
         
-        registerFunction<contract_handler, void(string, double, string, bool)>("transfer_from_owner", [](contract_handler &handler, string to, double amount, string symbol, bool enable_logger = false) {
+        registerFunction<contract_handler, void(const string&, double, const string&, bool)>("transfer_from_owner", [](contract_handler &handler, const string& to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler.contract.owner, to, amount, symbol, enable_logger);
         });
-        registerFunction<contract_handler, void(string, double, string, bool)>("transfer_from_caller", [](contract_handler &handler, string to, double amount, string symbol, bool enable_logger = false) {
+        registerFunction<contract_handler, void(const string&, double, const string&, bool)>("transfer_from_caller", [](contract_handler &handler, const string& to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler.caller.id, to, amount, symbol, enable_logger);
         });
         
         //nfa base info
         registerMember("id", &contract_nfa_base_info::id);
-        registerMember("is_nfa", &contract_nfa_base_info::is_nfa);
         registerMember("symbol", &contract_nfa_base_info::symbol);
+        registerMember("creator_account", &contract_nfa_base_info::creator_account);
         registerMember("owner_account", &contract_nfa_base_info::owner_account);
         registerMember("qi", &contract_nfa_base_info::qi);
         registerMember("parent", &contract_nfa_base_info::parent);
@@ -278,9 +281,18 @@ namespace taiyi { namespace chain {
         registerFunction("remove_from_parent", &contract_nfa_handler::remove_from_parent);        
         registerFunction("read_chain", &contract_nfa_handler::read_chain);
         registerFunction("write_chain", &contract_nfa_handler::write_chain);
-        registerFunction<contract_nfa_handler, void(int64_t to, double, string, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, string symbol, bool enable_logger = false) {
+        registerFunction("destroy", &contract_nfa_handler::destroy);        
+        registerFunction<contract_nfa_handler, void(int64_t to, double, const string&, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler._caller.id, to, amount, symbol, enable_logger);
         });
+        registerFunction<contract_nfa_handler, void(const string&, double, const string&, bool)>("withdraw_to", [](contract_nfa_handler &handler, const string& to, double amount, const string& symbol, bool enable_logger = false) {
+            handler.withdraw_to(handler._caller.id, to, amount, symbol, enable_logger);
+        });
+
+        //zone base info
+        registerMember("nfa_id", &contract_zone_base_info::nfa_id);
+        registerMember("name", &contract_zone_base_info::name);
+        registerMember("type", &contract_zone_base_info::type);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

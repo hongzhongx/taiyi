@@ -2028,16 +2028,14 @@ namespace taiyi { namespace xuanpin {
        return my->_remote_api->get_nfa_history( nfa_id, from, limit );
     }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor( const account_name_type& creator, const string& family_name, const string& last_name, int gender, int sexuality, bool broadcast )
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor( const account_name_type& creator, const string& family_name, const string& last_name, bool broadcast )
     { try {
         FC_ASSERT( !is_locked() );
         create_actor_operation op;
         op.creator = creator;
         op.family_name = family_name;
         op.last_name = last_name;
-        op.gender = gender;
-        op.sexuality = sexuality;
-        op.fee = my->_remote_api->get_chain_properties().account_creation_fee;
+        op.fee = my->_remote_api->get_chain_properties().account_creation_fee * TAIYI_QI_SHARE_PRICE;
 
         signed_transaction tx;
         tx.operations.push_back(op);
@@ -2089,24 +2087,6 @@ namespace taiyi { namespace xuanpin {
         transaction.operation_results = get_transaction_results(transaction.transaction_id);
         return transaction;
     } FC_CAPTURE_AND_RETHROW( (creator)(name) ) }
-
-    baiyujing_api::legacy_signed_transaction xuanpin_api::connect_to_zone( const account_name_type& account, const string& from_zone, const string& to_zone, bool broadcast )
-    { try {
-        FC_ASSERT( !is_locked() );
-        connect_to_zone_operation op;
-        op.account = account;
-        op.from = from_zone;
-        op.to = to_zone;
-        //op.fee = my->_remote_api->get_chain_properties().account_creation_fee;
-
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
-
-        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
-        transaction.operation_results = get_transaction_results(transaction.transaction_id);
-        return transaction;
-    } FC_CAPTURE_AND_RETHROW( (account)(from_zone)(to_zone) ) }
 
     baiyujing_api::find_zones_return xuanpin_api::find_zones( vector< int64_t > ids )
     {

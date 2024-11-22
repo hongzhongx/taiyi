@@ -360,19 +360,19 @@ namespace taiyi { namespace chain {
         }
     } FC_CAPTURE_AND_RETHROW() }
     
-    bool contract_worker::eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    string contract_worker::eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
         const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
         if(contract_ptr == nullptr)
-            return false;
-        
+            return "NFA main contract not exist";
+
         auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
         if(abi_itr == contract_ptr->contract_ABI.end())
-            return false;
+            return FORMAT_MESSAGE("action \"${a}\" is not exist", ("a", action));
         if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
-            return false;
-        
+            return FORMAT_MESSAGE("action \"${a}\" defination is invalid", ("a", action));;
+
         lua_map action_def = abi_itr->second.get<lua_table>().v;
         auto def_itr = action_def.find(lua_types(lua_string("consequence")));
         if(def_itr != action_def.end())
@@ -387,21 +387,21 @@ namespace taiyi { namespace chain {
         string function_name = "do_" + action;
         do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db);
         
-        return true;        
+        return "";        
     } FC_CAPTURE_AND_RETHROW() }
 
-    bool contract_worker::do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    std::string contract_worker::do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
         const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
         if(contract_ptr == nullptr)
-            return false;
+            return "NFA main contract not exist";
         
         auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
         if(abi_itr == contract_ptr->contract_ABI.end())
-            return false;
+            return FORMAT_MESSAGE("action \"${a}\" is not exist", ("a", action));
         if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
-            return false;
+            return FORMAT_MESSAGE("action \"${a}\" defination is invalid", ("a", action));;
         
         lua_map action_def = abi_itr->second.get<lua_table>().v;
         auto def_itr = action_def.find(lua_types(lua_string("consequence")));
@@ -417,7 +417,7 @@ namespace taiyi { namespace chain {
         string function_name = "do_" + action;
         do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db);
 
-        return true;
+        return "";
     } FC_CAPTURE_AND_RETHROW() }
     
     void contract_worker::do_nfa_contract_function(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)

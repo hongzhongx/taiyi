@@ -205,11 +205,6 @@ namespace taiyi { namespace chain {
         {
             _impacted.insert( op.creator );
         }
-
-        void operator()( const connect_to_zone_operation& op )
-        {
-            _impacted.insert( op.account );
-        }
         
         //void operator()( const operation& op ){}
     };

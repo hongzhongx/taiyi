@@ -38,8 +38,6 @@ namespace taiyi { namespace chain {
 
     void database::initialize_actor_object( actor_object& act, const std::string& name, const nfa_object& nfa)
     {
-        const auto& props = get_dynamic_global_properties();
-        
         act.nfa_id = nfa.id;
         act.name = name;
         act.standpoint = 500;

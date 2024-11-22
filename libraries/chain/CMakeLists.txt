@@ -25,18 +25,19 @@ add_library( taiyi_chain
              contract_evaluator.cpp
              contract_objects.cpp
              contract_handler.cpp
-             contract_nfa_handler.cpp
              contract_worker.cpp
              database_contract.cpp
 
              nfa_evaluator.cpp
              database_nfa.cpp
+             contract_nfa_handler.cpp
 
              actor_evaluator.cpp
              database_actor.cpp
 
              zone_evaluator.cpp
              database_zone.cpp
+             contract_zone_handler.cpp
 
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp

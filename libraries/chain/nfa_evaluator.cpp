@@ -83,12 +83,12 @@ namespace taiyi { namespace chain {
         const auto& to_account = _db.get_account(o.to);
         
         const auto* nfa = _db.find<nfa_object, by_id>(o.id);
-        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
+        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found", ("i", o.id));
 
         const auto* parent_nfa = _db.find<nfa_object, by_id>(nfa->parent);
         FC_ASSERT(parent_nfa == nullptr, "Can not transfer child NFA, only can transfer root NFA");
         
-        FC_ASSERT(from_account.id == nfa->owner_account, "Can not transfer NFA not ownd by you.");
+        FC_ASSERT(from_account.id == nfa->owner_account, "Can not transfer NFA not ownd by you");
         
         _db.modify(*nfa, [&](nfa_object &obj) {
             obj.owner_account = to_account.id;
@@ -189,8 +189,8 @@ namespace taiyi { namespace chain {
         //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
         long long old_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        bool bOK = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, vm_drops, true, context, _db);
-        FC_ASSERT(bOK, "NFA do contract action fail.");
+        string err = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, vm_drops, true, context, _db);
+        FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
         int64_t used_drops = old_drops - vm_drops;
 
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;

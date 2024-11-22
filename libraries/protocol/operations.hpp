@@ -55,7 +55,6 @@ namespace taiyi { namespace protocol {
     
         // zone
         create_zone_operation,
-        connect_to_zone_operation,
 
         //**** virtual operations below this point
         hardfork_operation,

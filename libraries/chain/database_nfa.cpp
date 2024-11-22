@@ -136,9 +136,11 @@ namespace taiyi { namespace chain {
         {
             if(itnfa->next_tick_time > now)
                 break;
+            
             tick_nfas.push_back(&(*itnfa));
-            ++itnfa;
             run_num--;
+            
+            ++itnfa;
         }
         
         for(const auto* n : tick_nfas) {
