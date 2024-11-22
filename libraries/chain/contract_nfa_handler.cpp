@@ -233,7 +233,14 @@ namespace taiyi { namespace chain {
 
             _db.adjust_nfa_balance(from_nfa, -token);
             _db.adjust_nfa_balance(to_nfa, token);
-            
+
+            _db.modify(from_nfa, [&](nfa_object& obj) {
+                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
+            });
+            _db.modify(to_nfa, [&](nfa_object& obj) {
+                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
+            });
+
             if(enable_logger) {
                 variant v;
                 fc::to_variant(token, v);
@@ -278,11 +285,64 @@ namespace taiyi { namespace chain {
 
             _db.adjust_nfa_balance(from_nfa, -token);
             _db.adjust_balance(to_account, token);
-            
+
+            _db.modify(from_nfa, [&](nfa_object& obj) {
+                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
+            });
+
             if(enable_logger) {
                 variant v;
                 fc::to_variant(token, v);
                 _ch.log(FORMAT_MESSAGE("nfa #${a} transfer ${token} to account ${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_account.name)));
+            }
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::deposit_from(const account_name_type& from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger)
+    {
+        try
+        {
+            asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
+            auto token = asset(amount, symbol);
+            deposit_by_contract(_db.get_account(from).id, to, token, _ch.result, enable_logger);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::deposit_by_contract(account_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger)
+    {
+        try
+        {
+            const account_object &from_account = _db.get<account_object, by_id>(from);
+            const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
+            try
+            {
+                FC_ASSERT(_db.get_balance(from_account, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to transfer '${token}' from account ${a} to nfa #'${t}'", ("a", from_account.name)("t", to_nfa.id)("token", token)("balance", _db.get_balance(from_account, token.symbol)));
+            }
+            FC_RETHROW_EXCEPTIONS(error, "Unable to transfer ${a} from account ${f} to nfa #${t}", ("a", token)("f", from_account.name)("t", to_nfa.id));
+            
+            FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
+
+            _db.adjust_balance(from_account, -token);
+            _db.adjust_nfa_balance(to_nfa, token);
+            
+            _db.modify(to_nfa, [&](nfa_object& obj) {
+                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
+            });
+
+            if(enable_logger) {
+                variant v;
+                fc::to_variant(token, v);
+                _ch.log(FORMAT_MESSAGE("account ${a} transfer ${token} to nfa #${b}", ("a", from_account.name)("token", fc::json::to_string(v))("b", to_nfa.id)));
             }
         }
         catch (fc::exception e)

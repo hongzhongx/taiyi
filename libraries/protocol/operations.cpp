@@ -11,8 +11,6 @@ namespace taiyi { namespace protocol {
         bool operator()( T&& v )const { return false; }
         bool operator()( const transfer_operation& )const { return true; }
         bool operator()( const transfer_to_qi_operation& )const { return true; }
-        bool operator()( const deposit_qi_to_nfa_operation& )const { return true; }
-        bool operator()( const withdraw_qi_from_nfa_operation& )const { return true; }
     };
     
     bool is_market_operation( const operation& op ) {

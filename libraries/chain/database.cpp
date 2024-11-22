@@ -1359,8 +1359,6 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< create_nfa_symbol_evaluator              >();
         _my->_evaluator_registry.register_evaluator< create_nfa_evaluator                     >();
         _my->_evaluator_registry.register_evaluator< transfer_nfa_evaluator                   >();
-        _my->_evaluator_registry.register_evaluator< deposit_qi_to_nfa_evaluator              >();
-        _my->_evaluator_registry.register_evaluator< withdraw_qi_from_nfa_evaluator           >();
         _my->_evaluator_registry.register_evaluator< action_nfa_evaluator                     >();
         
         _my->_evaluator_registry.register_evaluator< create_actor_evaluator                   >();

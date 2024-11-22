@@ -173,8 +173,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                                     case operation::tag<withdraw_qi_operation>::value:
                                     case operation::tag<transfer_operation>::value:
                                     case operation::tag<claim_reward_balance_operation>::value:
-                                    case operation::tag<deposit_qi_to_nfa_operation>::value:
-                                    case operation::tag<withdraw_qi_from_nfa_operation>::value:
                                         if( item.second.op.visit( visitor ) )
                                         {
                                             eacnt.transfer_history.emplace( item.first, api_operation_object( item.second, visitor.l_op ) );

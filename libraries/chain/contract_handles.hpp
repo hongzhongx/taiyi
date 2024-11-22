@@ -107,6 +107,8 @@ namespace taiyi { namespace chain {
         void transfer_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
         void withdraw_to(nfa_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);
         void withdraw_by_contract(nfa_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
+        void deposit_from(const account_name_type& from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
+        void deposit_by_contract(account_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
     };
 
     //合约本身被账号直接调用的角度来处理事务，隐含了合约调用账号

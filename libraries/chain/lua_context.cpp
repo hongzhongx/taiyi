@@ -285,6 +285,9 @@ namespace taiyi { namespace chain {
         registerFunction<contract_nfa_handler, void(int64_t to, double, const string&, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler._caller.id, to, amount, symbol, enable_logger);
         });
+        registerFunction<contract_nfa_handler, void(const string&, double, const string&, bool)>("deposit_from", [](contract_nfa_handler &handler, const string& from, double amount, const string& symbol, bool enable_logger = false) {
+            handler.deposit_from(from, handler._caller.id, amount, symbol, enable_logger);
+        });
         registerFunction<contract_nfa_handler, void(const string&, double, const string&, bool)>("withdraw_to", [](contract_nfa_handler &handler, const string& to, double amount, const string& symbol, bool enable_logger = false) {
             handler.withdraw_to(handler._caller.id, to, amount, symbol, enable_logger);
         });

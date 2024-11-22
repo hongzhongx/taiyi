@@ -34,8 +34,6 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( create_nfa_symbol )
     TAIYI_DEFINE_EVALUATOR( create_nfa )
     TAIYI_DEFINE_EVALUATOR( transfer_nfa )
-    TAIYI_DEFINE_EVALUATOR( deposit_qi_to_nfa )
-    TAIYI_DEFINE_EVALUATOR( withdraw_qi_from_nfa )
     TAIYI_DEFINE_EVALUATOR( action_nfa )
 
     TAIYI_DEFINE_EVALUATOR( create_actor )

@@ -114,60 +114,6 @@ namespace taiyi { namespace chain {
         return result;
     } FC_CAPTURE_AND_RETHROW( (o) ) }
     //=============================================================================
-    operation_result deposit_qi_to_nfa_evaluator::do_apply( const deposit_qi_to_nfa_operation& o )
-    {
-        const auto& account = _db.get_account(o.account);
-
-        const auto* nfa = _db.find<nfa_object, by_id>(o.id);
-        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
-
-        _db.adjust_balance( account, -o.amount );
-        
-        _db.modify(*nfa, [&](nfa_object& obj) {
-            obj.qi += o.amount;
-            util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
-        });
-
-        contract_result result;
-        
-        protocol::nfa_affected affected;
-        affected.affected_account = o.account;
-        affected.affected_item = nfa->id;
-        affected.action = nfa_affected_type::deposit_qi;
-        result.contract_affecteds.push_back(std::move(affected));
-
-        return result;
-    }
-    //=============================================================================
-    operation_result withdraw_qi_from_nfa_evaluator::do_apply( const withdraw_qi_from_nfa_operation& o )
-    {
-        const auto& owner = _db.get_account(o.owner);
-
-        const auto* nfa = _db.find<nfa_object, by_id>(o.id);
-        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
-        FC_ASSERT(owner.id == nfa->owner_account, "Can not withdraw from NFA not ownd by you.");
-        
-        FC_ASSERT(nfa->qi >= o.amount, "NFA has not enough Qi to withrawn.");
-
-
-        _db.modify(*nfa, [&](nfa_object& obj) {
-            obj.qi -= o.amount;
-            util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
-        });
-
-        _db.adjust_balance( owner, o.amount );
-                
-        contract_result result;
-        
-        protocol::nfa_affected affected;
-        affected.affected_account = o.owner;
-        affected.affected_item = nfa->id;
-        affected.action = nfa_affected_type::withdraw_qi;
-        result.contract_affecteds.push_back(std::move(affected));
-
-        return result;
-    }
-    //=============================================================================
     operation_result action_nfa_evaluator::do_apply( const action_nfa_operation& o )
     { try {
         

@@ -46,8 +46,6 @@ namespace taiyi { namespace protocol {
         create_nfa_symbol_operation,
         create_nfa_operation,
         transfer_nfa_operation,
-        deposit_qi_to_nfa_operation,
-        withdraw_qi_from_nfa_operation,
         action_nfa_operation,
     
         // actor

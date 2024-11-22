@@ -665,9 +665,6 @@ namespace taiyi { namespace xuanpin {
         baiyujing_api::legacy_signed_transaction create_nfa( const account_name_type& creator, const string& symbol, bool broadcast );
         baiyujing_api::legacy_signed_transaction transfer_nfa( const account_name_type& from, const account_name_type& to, int64_t nfa_id, bool broadcast );
         
-        baiyujing_api::legacy_signed_transaction deposit_qi_to_nfa(const account_name_type& account, int64_t nfa_id, baiyujing_api::legacy_asset amount, bool broadcast);
-        baiyujing_api::legacy_signed_transaction withdraw_qi_from_nfa(const account_name_type& owner, int64_t nfa_id, baiyujing_api::legacy_asset amount, bool broadcast);
-
         baiyujing_api::api_contract_action_info get_nfa_action_info(int64_t nfa_id, const string& action);
         
         //value_list 目前仅支持string, bool, double, int64
@@ -859,8 +856,6 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (create_nfa_symbol)
     (create_nfa)
     (transfer_nfa)
-    (deposit_qi_to_nfa)
-    (withdraw_qi_from_nfa)
     (action_nfa)
     (action_nfa_consequence)
     (list_nfas)

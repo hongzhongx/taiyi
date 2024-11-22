@@ -265,20 +265,6 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( from != to, "no need transfer NFA to self." );
     }
     
-    void deposit_qi_to_nfa_operation::validate() const
-    {
-        validate_account_name( account );
-        FC_ASSERT( amount.symbol == QI_SYMBOL, "Amount must be QI" );
-        FC_ASSERT( amount.amount > 0,  "Must deposit a nonzero amount" );
-    }
-
-    void withdraw_qi_from_nfa_operation::validate() const
-    {
-        validate_account_name( owner );
-        FC_ASSERT( amount.symbol == QI_SYMBOL, "Amount must be QI" );
-        FC_ASSERT( amount.amount > 0,  "Must withdraw a nonzero amount" );
-    }
-
     void action_nfa_operation::validate() const
     {
         validate_account_name( owner );
