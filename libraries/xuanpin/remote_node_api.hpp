@@ -64,8 +64,10 @@ namespace taiyi { namespace xuanpin {
         optional< database_api::api_actor_object > find_actor( const string& ) { FC_ASSERT( false ); }
         vector< database_api::api_actor_object > find_actors( vector< int64_t > ) { FC_ASSERT( false ); }
         vector< database_api::api_actor_object > list_actors(const account_name_type&, uint32_t) const { FC_ASSERT( false ); }
+        map< uint32_t, baiyujing_api::api_operation_object > get_actor_history(const string&, uint64_t, uint32_t ) { FC_ASSERT( false ); }
         vector< database_api::api_actor_object > list_actors_below_health(const int16_t&, uint32_t) const { FC_ASSERT( false ); }
         vector< database_api::api_actor_talent_rule_object > find_actor_talent_rules( vector< int64_t > ) { FC_ASSERT( false ); }
+        vector< database_api::api_actor_object > list_actors_on_zone(const string&, uint32_t) const { FC_ASSERT( false ); }
         vector< database_api::api_zone_object > find_zones( vector< int64_t > ) { FC_ASSERT( false ); }
         vector< database_api::api_zone_object > list_zones(const account_name_type&, uint32_t) const { FC_ASSERT( false ); }
         vector< database_api::api_zone_object > list_zones_by_type(E_ZONE_TYPE, uint32_t) const { FC_ASSERT( false ); }
@@ -128,7 +130,9 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (find_actor)
     (find_actors)
     (list_actors)
+    (get_actor_history)
     (list_actors_below_health)
+    (list_actors_on_zone)
     (find_actor_talent_rules)
     (find_zones)
     (list_zones)

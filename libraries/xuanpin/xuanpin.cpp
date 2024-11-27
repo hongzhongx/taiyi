@@ -180,6 +180,14 @@ namespace taiyi { namespace xuanpin {
                     result.push_back(lua_int(v.as_int64()));
                 else if(v.is_uint64())
                     result.push_back(lua_int(v.as_uint64()));
+                else if(v.is_array()) {
+                    const auto sub_list = v.as<vector<fc::variant>>();
+                    vector<lua_types> values = from_variants_to_lua_types(sub_list);
+                    lua_table vt;
+                    for(size_t k=0; k<values.size(); k++)
+                        vt.v[lua_key(lua_int(k+1))] = values[k]; //lua 数组下表从1开始
+                    result.push_back(vt);
+                }
                 else
                     FC_ASSERT(false, "#${i} value type in value list is not supported.", ("i", i));
             }
@@ -1998,6 +2006,20 @@ namespace taiyi { namespace xuanpin {
        return my->_remote_api->get_nfa_history( nfa_id, from, limit );
     }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor_talent_rule(account_name_type creator, const string& contract, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        create_actor_talent_rule_operation op;
+        op.creator = creator;
+        op.contract = contract;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (creator)(contract) ) }
+
     baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor( const account_name_type& creator, const string& family_name, const string& last_name, bool broadcast )
     { try {
         FC_ASSERT( !is_locked() );
@@ -2031,14 +2053,24 @@ namespace taiyi { namespace xuanpin {
        return my->_remote_api->list_actors( owner, limit );
     }
 
+    map< uint32_t, baiyujing_api::api_operation_object > xuanpin_api::get_actor_history( const string& name, uint32_t from, uint32_t limit )
+    {
+       return my->_remote_api->get_actor_history( name, from, limit );
+    }
+
     vector< database_api::api_actor_object > xuanpin_api::list_actors_below_health(const int16_t& health, uint32_t limit)
     {
         return my->_remote_api->list_actors_below_health( health, limit );
     }
 
-    baiyujing_api::find_actor_talent_rules_return xuanpin_api::find_actor_talent_rules( vector< int64_t > uuids )
+    vector< database_api::api_actor_object > xuanpin_api::list_actors_on_zone(const string& zone_name, uint32_t limit)
     {
-        return my->_remote_api->find_actor_talent_rules( uuids );
+        return my->_remote_api->list_actors_on_zone( zone_name, limit );
+    }
+
+    baiyujing_api::find_actor_talent_rules_return xuanpin_api::find_actor_talent_rules( vector< int64_t > ids )
+    {
+        return my->_remote_api->find_actor_talent_rules( ids );
     }
 
     baiyujing_api::legacy_signed_transaction xuanpin_api::create_zone(const account_name_type& creator, const string& name, bool broadcast )

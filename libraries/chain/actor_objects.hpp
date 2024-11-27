@@ -42,6 +42,7 @@ namespace taiyi { namespace chain {
         uint16_t            age         = 0;        //年龄
         int16_t             health      = 100;      //健康
         int16_t             health_max  = 100;
+        uint16_t            init_attribute_amount_max = 0;  //出生时候角色属性初始化总点数上限，在创建角色时候决定
 
         bool                born        = false;    //是否出生
         int                 gender      = 0;        //-2=男生女相，-1=男，0=无性，1=女，2=女生男相, 3=双性
@@ -49,15 +50,15 @@ namespace taiyi { namespace chain {
         bool is_female() const { return gender == 1 || gender == 2 || gender == 3; }
 
         int                 sexuality   = 0;        //0=无性取向，1=喜欢男性，2=喜欢女性，3=双性恋
-
         int                 fertility   = 100;      //基础生育能力
         
         time_point_sec      born_time;
-        int                 born_vyears;
-        int                 born_vtimes;            //solar term, 0-23
-        int                 five_phase;             //0-4
-        uint                standpoint = 500;       //立场, [0,1000]
-        int32_t             loyalty = 300;          //忠贞
+        int                 born_vyears     = 0;
+        int                 born_vmonths    = 0;
+        int                 born_vtimes     = 0;    //solar term, 0-23
+        int                 five_phase      = 0;    //0-4
+        uint                standpoint      = 500;  //立场, [0,1000]
+        int32_t             loyalty         = 300;  //忠贞
         
         zone_id_type        location = zone_id_type::max();
         zone_id_type        base = zone_id_type::max();     //从属地
@@ -68,10 +69,10 @@ namespace taiyi { namespace chain {
         actor_id_type       need_bullying_target;           //欺辱需求对象
         uint32_t            need_bullying_end_block_num = 0;//欺辱需求截止时间
         
-        bool                is_pregnant = false;
-        actor_id_type       pregnant_father;
-        actor_id_type       pregnant_mother;
-        uint32_t            pregnant_end_block_num = 0;         //孕期结束时间
+        bool                is_pregnant                 = false;
+        actor_id_type       pregnant_father             = actor_id_type::max();
+        actor_id_type       pregnant_mother             = actor_id_type::max();
+        uint32_t            pregnant_end_block_num      = 0;    //孕期结束时间
         uint32_t            pregnant_lock_end_block_num = 0;    //怀孕锁定期结束时间
 
         time_point_sec      last_update;
@@ -224,56 +225,29 @@ namespace taiyi { namespace chain {
     public:
         template< typename Constructor, typename Allocator >
         actor_talent_rule_object(Constructor&& c, allocator< Allocator > a)
-            : title(a), description(a), exclude(a)
+            : title(a), description(a)
         {
             c(*this);
         }
 
         id_type             id;
-        //comment_id_type     proposal_id;
+        contract_id_type    main_contract;
 
-        uint32_t            uuid;        //talent universally unique identifier
         std::string         title;
         std::string         description;
-        contract_id_type    main_contract = contract_id_type::max();
-
-        //talent effect attributes' limit(max)
-        int16_t             health      = 0;
-        int16_t             strength    = 0;
-        int16_t             physique    = 0;
-        int16_t             agility     = 0;
-        int16_t             vitality    = 0;
-        int16_t             comprehension = 0;
-        int16_t             willpower   = 0;
-        
-        int16_t             charm       = 0;
-        int16_t             mood        = 0;
-        
-        int16_t             random      = 0;
-        
-        int64_t             gold        = 0;
-        int64_t             food        = 0;
-        int64_t             wood        = 0;
-        int64_t             fabric      = 0;
-        int64_t             herb        = 0;
-
-        std::vector<uint16_t>  exclude;
-        int                 status;
-
+        int                 init_attribute_amount_modifier = 0; //对角色出生时候初始化属性的总点数加成
         bool                removed = false;
-
+        
         time_point_sec      last_update;
         time_point_sec      created;
     };
 
-    //struct by_proposal_id;
-    struct by_uuid;
+    struct by_contract;
     typedef multi_index_container<
         actor_talent_rule_object,
         indexed_by<
             ordered_unique< tag< by_id >, member< actor_talent_rule_object, actor_talent_rule_id_type, &actor_talent_rule_object::id > >,
-            ordered_unique< tag< by_uuid >, member< actor_talent_rule_object, uint32_t, &actor_talent_rule_object::uuid > >
-            //,ordered_unique< tag< by_proposal_id >, member< actor_talent_rule_object, comment_id_type, &actor_talent_rule_object::proposal_id > >
+            ordered_unique< tag< by_contract >, member< actor_talent_rule_object, contract_id_type, &actor_talent_rule_object::main_contract > >
         >,
         allocator< actor_talent_rule_object >
     > actor_talent_rule_index;
@@ -296,7 +270,7 @@ namespace taiyi { namespace chain {
 
         actor_id_type       actor;
 
-        t_flat_map< uint32_t, uint16_t >   talents; //uuids -> trigger number
+        t_flat_map< actor_talent_rule_id_type, uint16_t >   talents; //rule id -> trigger number
 
         time_point_sec      last_update;
         time_point_sec      created;
@@ -321,7 +295,7 @@ namespace mira {
 
 FC_REFLECT_ENUM( taiyi::chain::E_ACTOR_STANDPOINT_TYPE, (UPRIGHT)(KINDNESS)(MIDDLEBROW)(REBEL)(SOLIPSISM) )
 
-FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vtimes)(five_phase)(standpoint)(loyalty)(location)(base)(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update))
+FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(init_attribute_amount_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(loyalty)(location)(base)(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_object, taiyi::chain::actor_index)
 
 FC_REFLECT(taiyi::chain::actor_core_attributes_object, (id)(actor)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(last_update)(created))
@@ -330,7 +304,7 @@ CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_core_attributes_object, taiyi::chai
 FC_REFLECT(taiyi::chain::actor_group_object, (id)(actor)(leader))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_group_object, taiyi::chain::actor_group_index)
 
-FC_REFLECT(taiyi::chain::actor_talent_rule_object, (id)/*(proposal_id)*/(uuid)(title)(description)(main_contract)(health)(strength)(physique)(agility)(vitality)(comprehension)(willpower)(charm)(mood)(random)(gold)(food)(wood)(fabric)(herb)(exclude)(status)(removed)(last_update)(created))
+FC_REFLECT(taiyi::chain::actor_talent_rule_object, (id)(main_contract)(title)(description)(init_attribute_amount_modifier)(removed)(last_update)(created))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_talent_rule_object, taiyi::chain::actor_talent_rule_index)
 
 FC_REFLECT(taiyi::chain::actor_talents_object, (id)(actor)(talents)(last_update)(created))

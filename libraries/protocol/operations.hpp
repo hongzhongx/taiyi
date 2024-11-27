@@ -48,11 +48,12 @@ namespace taiyi { namespace protocol {
         transfer_nfa_operation,
         action_nfa_operation,
     
-        // actor
-        create_actor_operation,
-    
         // zone
         create_zone_operation,
+
+        // actor
+        create_actor_talent_rule_operation,
+        create_actor_operation,    
 
         //**** virtual operations below this point
         hardfork_operation,
@@ -67,7 +68,9 @@ namespace taiyi { namespace protocol {
     
         tiandao_year_change_operation,
         tiandao_month_change_operation,
-        tiandao_time_change_operation
+        tiandao_time_change_operation,
+
+        actor_born_operation
 
     > operation;
 

@@ -491,6 +491,15 @@ namespace taiyi { namespace protocol {
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
     };
     
+    struct create_actor_talent_rule_operation : public base_operation
+    {
+        account_name_type   creator;
+        string              contract;
+
+        void validate()const;
+        void get_required_posting_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
+    };
+    
     struct create_actor_operation : public base_operation
     {
         asset             fee;          ///< must be QI
@@ -543,5 +552,6 @@ FC_REFLECT( taiyi::protocol::create_nfa_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::transfer_nfa_operation, (from)(to)(id) )
 FC_REFLECT( taiyi::protocol::action_nfa_operation, (owner)(id)(action)(value_list) )
 
+FC_REFLECT( taiyi::protocol::create_actor_talent_rule_operation, (creator)(contract) )
 FC_REFLECT( taiyi::protocol::create_actor_operation, (fee)(creator)(family_name)(last_name) )
 FC_REFLECT( taiyi::protocol::create_zone_operation, (fee)(creator)(name) )

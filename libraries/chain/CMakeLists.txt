@@ -34,6 +34,7 @@ add_library( taiyi_chain
 
              actor_evaluator.cpp
              database_actor.cpp
+             contract_actor_handler.cpp
 
              zone_evaluator.cpp
              database_zone.cpp

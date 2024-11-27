@@ -251,6 +251,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
     typedef map< uint32_t, api_operation_object > get_account_history_return_type;
     typedef get_account_history_return_type get_nfa_history_return_type;
+    typedef get_account_history_return_type get_actor_history_return_type;
 
     typedef vector< variant > broadcast_transaction_synchronous_args;
     struct broadcast_transaction_synchronous_return
@@ -380,8 +381,10 @@ DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, vector<st
 DEFINE_API_ARGS( find_actor,                        vector< variant >, optional< database_api::api_actor_object > )
 DEFINE_API_ARGS( find_actors,                       vector< variant >, vector< database_api::api_actor_object > )
 DEFINE_API_ARGS( list_actors,                       vector< variant >, vector< database_api::api_actor_object > )
+DEFINE_API_ARGS( get_actor_history,                 vector< variant >, get_actor_history_return_type )
 DEFINE_API_ARGS( list_actors_below_health,          vector< variant >, vector< database_api::api_actor_object > )
 DEFINE_API_ARGS( find_actor_talent_rules,           vector< variant >, vector< database_api::api_actor_talent_rule_object > )
+DEFINE_API_ARGS( list_actors_on_zone,               vector< variant >, vector< database_api::api_actor_object > )
 
 DEFINE_API_ARGS( get_tiandao_properties,            vector< variant >, database_api::api_tiandao_property_object )
 DEFINE_API_ARGS( find_zones,                        vector< variant >, vector< database_api::api_zone_object > )
@@ -452,9 +455,11 @@ DEFINE_API_ARGS( find_way_to_zone,                  vector< variant >, database_
             (find_actor)
             (find_actors)
             (list_actors)
+            (get_actor_history)
             (list_actors_below_health)
             (find_actor_talent_rules)
-                   
+            (list_actors_on_zone)
+
             (get_tiandao_properties)
             (find_zones)
             (find_zones_by_name)

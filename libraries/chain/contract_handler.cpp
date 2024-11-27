@@ -10,6 +10,7 @@
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/zone_objects.hpp>
+#include <chain/actor_objects.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -1008,8 +1009,9 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            const auto& zone = db.get<zone_object, by_nfa_id>(nfa_id);
-            return contract_zone_base_info(zone, db);
+            const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
+            FC_ASSERT(zone != nullptr, "NFA #${i} is not a zone", ("i", nfa_id));
+            return contract_zone_base_info(*zone, db);
         }
         catch (fc::exception e)
         {
@@ -1021,8 +1023,9 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            const auto& zone = db.get<zone_object, by_name>(name);
-            return contract_zone_base_info(zone, db);
+            const auto* zone = db.find<zone_object, by_name>(name);
+            FC_ASSERT(zone != nullptr, "Zone named ${n} is not exist", ("n", name));
+            return contract_zone_base_info(*zone, db);
         }
         catch (fc::exception e)
         {
@@ -1069,5 +1072,86 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
     }
-    
+    //=============================================================================
+    bool contract_handler::is_actor_valid(const string& name)
+    {
+        return db.find_actor(name) != nullptr;
+    }
+    //=============================================================================
+    contract_actor_base_info contract_handler::get_actor_info(int64_t nfa_id)
+    {
+        try
+        {
+            const auto* actor = db.find<actor_object, by_nfa_id>(nfa_id);
+            FC_ASSERT(actor != nullptr, "NFA #${i} is not an actor", ("i", nfa_id));
+            return contract_actor_base_info(*actor, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    contract_actor_base_info contract_handler::get_actor_info_by_name(const string& name)
+    {
+        try
+        {
+            const auto* actor = db.find<actor_object, by_name>(name);
+            FC_ASSERT(actor != nullptr, "Actor named ${n} is not exist", ("n", name));
+            return contract_actor_base_info(*actor, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::born_actor(const string& name, int gender, int sexuality, const lua_map& init_attrs, const string& zone_name)
+    {
+        try
+        {
+            const auto* actor = db.find<actor_object, by_name>(name);
+            FC_ASSERT(actor != nullptr, "Actor named ${n} is not exist", ("n", name));
+            FC_ASSERT(!actor->born, "Actor named ${n} is already born", ("n", name));
+            
+            const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
+            FC_ASSERT(actor_nfa.owner_account == caller.id, "Caller account is not the owner of actor");
+            
+            const auto* zone = db.find<zone_object, by_name>(zone_name);
+            FC_ASSERT(zone != nullptr, "Zone named ${n} is not exist", ("n", zone_name));
+
+            //转换初始属性值列表
+            FC_ASSERT(init_attrs.size() == 8, "the number of actor init attributes is not 8");
+            vector<uint16_t> value_list;
+            for(int i=1; i<=8; i++) {
+                auto p = init_attrs.find(lua_key(lua_int(i)));
+                FC_ASSERT(p != init_attrs.end(), "born_actor input invalid init attributes");
+                value_list.push_back(p->second.get<lua_int>().v);
+            }
+            
+            const auto* check_core_attrs = db.find< actor_core_attributes_object, by_actor >( actor->id );
+            FC_ASSERT( check_core_attrs == nullptr, "Core attributes should not exist before actor born" );
+
+            uint16_t amount = 0;
+            for(auto i : value_list)
+                amount += i;
+            FC_ASSERT(amount <= actor->init_attribute_amount_max, "Amount of init attribute values is more than ${m}.", ("m", actor->init_attribute_amount_max));
+
+            //create attributes
+            db.initialize_actor_attributes( *actor, value_list );
+            
+            //born on zone
+            db.born_actor( *actor, gender, sexuality, *zone );
+            
+            //设定从属
+            db.modify( *actor, [&]( actor_object& obj ) {
+                obj.base = zone->id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+
 } } // namespace taiyi::chain

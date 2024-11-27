@@ -269,7 +269,15 @@ namespace taiyi { namespace protocol {
     {
         validate_account_name( owner );
     }
-    
+
+    void create_actor_talent_rule_operation::validate() const
+    {
+        validate_account_name( creator );
+        
+        FC_ASSERT(memcmp(contract.data(), "contract.", 9) == 0);
+        FC_ASSERT( is_valid_contract_name( contract ), "contract name ${n} is invalid", ("n", contract) );
+    }
+
     void create_actor_operation::validate() const
     {
         validate_account_name( creator );

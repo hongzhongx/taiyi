@@ -91,9 +91,11 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (find_actor)
                 (find_actors)
                 (list_actors)
+                (get_actor_history)
                 (list_actors_below_health)
                 (find_actor_talent_rules)
-                             
+                (list_actors_on_zone)
+
                 (get_tiandao_properties)
                 (find_zones)
                 (find_zones_by_name)
@@ -896,11 +898,41 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return _database_api->list_actors( { args[0], args[1].as< uint32_t >(), database_api::by_health } ).result;
         }
         
+        DEFINE_API_IMPL( baiyujing_api_impl, get_actor_history )
+        {
+            CHECK_ARG_SIZE( 3 )
+            FC_ASSERT( _account_history_api, "account_history_api_plugin not enabled." );
+            
+            const actor_object& actor = _db.get_actor(args[0].as< string >());
+            
+            auto history = _account_history_api->get_nfa_history( { actor.nfa_id._id, args[1].as< uint64_t >(), args[2].as< uint32_t >() } ).history;
+            get_actor_history_return result;
+            
+            legacy_operation l_op;
+            legacy_operation_conversion_visitor visitor( l_op );
+            
+            for( auto& entry : history )
+            {
+                if( entry.second.op.visit( visitor ) )
+                {
+                    result.emplace( entry.first, api_operation_object( entry.second, visitor.l_op ) );
+                }
+            }
+            
+            return result;
+        }
+
         DEFINE_API_IMPL( baiyujing_api_impl, find_actor_talent_rules )
         {
             CHECK_ARG_SIZE( 1 )
 
             return _database_api->find_actor_talent_rules( { args[0].as< vector< taiyi::plugins::database_api::api_id_type > >() } ).rules;
+        }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, list_actors_on_zone )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_actors( { args[0], args[1].as< uint32_t >(), database_api::by_location } ).result;
         }
 
         DEFINE_API_IMPL( baiyujing_api_impl, find_zones )
@@ -1098,9 +1130,11 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (find_actor)
         (find_actors)
         (list_actors)
+        (get_actor_history)
         (list_actors_below_health)
         (find_actor_talent_rules)
-                     
+        (list_actors_on_zone)
+
         (get_tiandao_properties)
         (find_zones)
         (find_zones_by_name)

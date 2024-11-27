@@ -1,16 +1,16 @@
 #pragma once
-#include <chain/account_object.hpp>
 #include <chain/block_summary_object.hpp>
+#include <chain/database.hpp>
 #include <chain/global_property_object.hpp>
 #include <chain/taiyi_objects.hpp>
 #include <chain/transaction_object.hpp>
 #include <chain/siming_objects.hpp>
 #include <chain/tiandao_property_object.hpp>
+#include <chain/account_object.hpp>
 #include <chain/nfa_objects.hpp>
-#include <chain/contract_objects.hpp>
-#include <chain/zone_objects.hpp>
 #include <chain/actor_objects.hpp>
-#include <chain/database.hpp>
+#include <chain/zone_objects.hpp>
+#include <chain/contract_objects.hpp>
 
 namespace taiyi { namespace plugins { namespace database_api {
 
@@ -273,14 +273,12 @@ namespace taiyi { namespace plugins { namespace database_api {
         
     struct api_actor_object
     {
-        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vtimes(a.born_vtimes), five_phase(a.five_phase), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update)
+        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), init_attribute_amount_max(a.init_attribute_amount_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vtimes(a.born_vtimes), five_phase(a.five_phase), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update)
         {
-            const auto* maybe_talents = db.find< actor_talents_object, by_actor >( id );
-            if( maybe_talents ) {
-                for(auto it = maybe_talents->talents.begin(); it!=maybe_talents->talents.end(); it++)
-                    talents.push_back(it->first);
-            }
-            
+            const auto& talents_obj = db.get< actor_talents_object, by_actor >( id );
+            for(auto it = talents_obj.talents.begin(); it!=talents_obj.talents.end(); it++)
+                talents.push_back(it->first);
+
             const auto* maybe_core_attrs = db.find< actor_core_attributes_object, by_actor >( id );
             if( maybe_core_attrs ) {
                 strength = maybe_core_attrs->strength;
@@ -301,13 +299,13 @@ namespace taiyi { namespace plugins { namespace database_api {
                 charm_max = maybe_core_attrs->charm_max;
                 mood_max = maybe_core_attrs->mood_max;
             }
-                                    
-            max_init_attribute_amount = db.get_actor_init_attribute_amount_max(name);
             
             standpoint_type = a.get_standpoint_type();
-            
-            location = db.get<zone_object, by_id>(a.location).name;
-            base_name = db.get<zone_object, by_id>(a.base).name;
+                    
+            if(born) {
+                location = db.get<zone_object, by_id>(a.location).name;
+                base_name = db.get<zone_object, by_id>(a.base).name;
+            }
         }
         
         api_actor_object(){}
@@ -320,7 +318,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         uint16_t            age;
         int16_t             health;
         int16_t             health_max;
-
+        uint16_t            init_attribute_amount_max;
+        
         //core attributes
         int16_t             strength        = 0;
         int16_t             strength_max    = 0;
@@ -339,8 +338,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         int16_t             mood            = 0;
         int16_t             mood_max        = 0;
 
-        vector< uint32_t >  talents;
-        uint16_t            max_init_attribute_amount;
+        vector<actor_talent_rule_id_type>  talents;
         
         bool                born;
         int                 gender;
@@ -349,6 +347,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                 
         time_point_sec      born_time;
         int                 born_vyears;
+        int                 born_vmonths;
         int                 born_vtimes;
         int                 five_phase;
         uint                standpoint;
@@ -381,4 +380,4 @@ FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(pro
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
 
-FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(max_init_attribute_amount)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update) )
+FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update) )

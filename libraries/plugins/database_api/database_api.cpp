@@ -178,7 +178,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     {
         get_reward_funds_return result;
         
-        const auto& rf_idx = _db.get_index< reward_fund_index, by_id >();
+        const auto& rf_idx = _db.get_index< reward_fund_index, chain::by_id >();
         auto itr = rf_idx.begin();
         
         while( itr != rf_idx.end() )
@@ -1162,13 +1162,13 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     DEFINE_API_IMPL( database_api_impl, find_actor_talent_rules )
     {
-        FC_ASSERT( args.uuids.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
+        FC_ASSERT( args.ids.size() <= DATABASE_API_SINGLE_QUERY_LIMIT );
 
         find_actor_talent_rules_return result;
-        result.rules.reserve( args.uuids.size() );
+        result.rules.reserve( args.ids.size() );
 
-        std::for_each( args.uuids.begin(), args.uuids.end(), [&](auto& id) {
-            auto po = _db.find< chain::actor_talent_rule_object, chain::by_uuid >( id );
+        std::for_each( args.ids.begin(), args.ids.end(), [&](auto& id) {
+            auto po = _db.find< chain::actor_talent_rule_object, chain::by_id >( id );
             if( po != nullptr && !po->removed )
             {
                 result.rules.push_back( *po );
@@ -1295,11 +1295,11 @@ namespace taiyi { namespace plugins { namespace database_api {
                 break;
             if(itz->to != pre_from) {
                 if(itz->to == dest) {
-                    way_points.push_back(db.get< chain::zone_object, by_id >(dest).name);
+                    way_points.push_back(db.get< chain::zone_object, chain::by_id >(dest).name);
                     return true;
                 }
                 if(is_connect(itz->to, dest, from, depth+1, zone_connect_by_from_idx, way_points, db)) {
-                    way_points.insert(way_points.begin(), db.get< chain::zone_object, by_id >(itz->to).name);
+                    way_points.insert(way_points.begin(), db.get< chain::zone_object, chain::by_id >(itz->to).name);
                     return true;
                 }
             }
@@ -1326,7 +1326,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                 break;
             }
             if(is_connect(itz->to, to_zone->id, from_zone->id, 1, zone_connect_by_from_idx, result.way_points, _db)) {
-                result.way_points.insert(result.way_points.begin(), _db.get< chain::zone_object, by_id >(itz->to).name);
+                result.way_points.insert(result.way_points.begin(), _db.get< chain::zone_object, chain::by_id >(itz->to).name);
                 break;
             }
             itz++;

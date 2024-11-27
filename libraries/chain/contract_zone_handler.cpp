@@ -16,7 +16,7 @@
 
 namespace taiyi { namespace chain {
 
-    contract_zone_base_info::contract_zone_base_info(const zone_object& z, const database& db)
+    contract_zone_base_info::contract_zone_base_info(const zone_object& z, database& db)
     : nfa_id(z.nfa_id), name(z.name)
     {
         type = get_zone_type_string(z.type);

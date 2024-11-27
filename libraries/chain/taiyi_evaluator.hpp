@@ -36,6 +36,7 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( transfer_nfa )
     TAIYI_DEFINE_EVALUATOR( action_nfa )
 
+    TAIYI_DEFINE_EVALUATOR( create_actor_talent_rule )
     TAIYI_DEFINE_EVALUATOR( create_actor )
     TAIYI_DEFINE_EVALUATOR( create_zone )
 

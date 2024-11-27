@@ -483,7 +483,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         /// Allows to start immediate data import (outside replay process).
         void importData(unsigned int blockLimit);
         
-        void find_account_history_data(const account_name_type& name, uint64_t start, uint32_t limit, std::function<void(unsigned int, const rocksdb_operation_object&)> processor) const;
+        void find_account_history_data(const account_name_type& name, uint64_t start, uint32_t limit, std::function<bool(unsigned int, const rocksdb_operation_object&)> processor) const;
         bool find_operation_object(size_t opId, rocksdb_operation_object* op) const;
         /// Allows to look for all operations present in given block and call `processor` for them.
         void find_operations_by_block(size_t blockNum, std::function<void(const rocksdb_operation_object&)> processor) const;
@@ -868,7 +868,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         }
     }
     
-    void account_history_plugin::impl::find_account_history_data(const account_name_type& name, uint64_t start, uint32_t limit, std::function<void(unsigned int, const rocksdb_operation_object&)> processor) const
+    void account_history_plugin::impl::find_account_history_data(const account_name_type& name, uint64_t start, uint32_t limit, std::function<bool(unsigned int, const rocksdb_operation_object&)> processor) const
     {
         ReadOptions rOptions;
         
@@ -903,8 +903,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         auto keySlice = it->key();
         auto keyValue = ah_op_by_id_slice_t::unpackSlice(keySlice);
         
-        auto lowerBound = keyValue.second > limit ? keyValue.second - limit : 0;
-        
+        uint32_t valid_process_num = 0;
         for(; it->Valid(); it->Prev())
         {
             auto keySlice = it->key();
@@ -919,9 +918,13 @@ namespace taiyi { namespace plugins { namespace account_history {
             bool found = find_operation_object(opId, &oObj);
             FC_ASSERT(found, "Missing operation?");
             
-            processor(keyValue.second, oObj);
+            if(processor(keyValue.second, oObj))
+                valid_process_num++;
             
-            if(keyValue.second <= lowerBound)
+            if(valid_process_num >= limit)
+                break;
+            
+            if(keyValue.second <= 0)
                 break;
         }
     }
@@ -1530,7 +1533,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         _my->shutdownDb();
     }
 
-    void account_history_plugin::find_account_history_data(const account_name_type& name, uint64_t start, uint32_t limit, std::function<void(unsigned int, const rocksdb_operation_object&)> processor) const
+    void account_history_plugin::find_account_history_data(const account_name_type& name, uint64_t start, uint32_t limit, std::function<bool(unsigned int, const rocksdb_operation_object&)> processor) const
     {
         _my->find_account_history_data(name, start, limit, processor);
     }

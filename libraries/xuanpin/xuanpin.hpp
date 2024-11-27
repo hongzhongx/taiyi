@@ -692,6 +692,13 @@ namespace taiyi { namespace xuanpin {
         map< uint32_t, baiyujing_api::api_operation_object > get_nfa_history( const int64_t& nfa_id, uint32_t from, uint32_t limit );
 
         /**
+         *  This method will create new talent rule proposal.
+         *
+         *  @param creator The account creating the new rule
+         */
+        baiyujing_api::legacy_signed_transaction create_actor_talent_rule(account_name_type creator, const string& contract, bool broadcast );
+
+        /**
          *  This method will create new actor. There is a fee associated with actor creation
          *  that is paid by the creator. The current actor creation fee can be found with the
          *  'info' xuanpin command.
@@ -721,12 +728,15 @@ namespace taiyi { namespace xuanpin {
          */
         vector< database_api::api_actor_object > list_actors(const account_name_type& owner, uint32_t limit);
         vector< database_api::api_actor_object > list_actors_below_health(const int16_t& health, uint32_t limit);
+        vector< database_api::api_actor_object > list_actors_on_zone(const string& zone_name, uint32_t limit);
 
+        map< uint32_t, baiyujing_api::api_operation_object > get_actor_history( const string& name, uint32_t from, uint32_t limit );
+        
         /**
          * Find actor talent rule with given id
-         * @param _ids - array with ids of wanted rules to be founded.
+         * @param ids - array with ids of wanted rules to be founded.
          */
-        baiyujing_api::find_actor_talent_rules_return find_actor_talent_rules( vector< int64_t > uuids );
+        baiyujing_api::find_actor_talent_rules_return find_actor_talent_rules( vector< int64_t > ids );
 
         /**
          *  This method will create new empty zone（虚空）. There is a fee associated with zone creation
@@ -865,11 +875,14 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (get_nfa_action_info)
        
     //actor
+    (create_actor_talent_rule)
     (create_actor)
     (find_actor)
     (find_actors)
     (list_actors)
+    (get_actor_history)
     (list_actors_below_health)
+    (list_actors_on_zone)
     (find_actor_talent_rules)
        
     //zone

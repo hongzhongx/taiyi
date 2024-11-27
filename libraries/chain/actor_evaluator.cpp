@@ -7,6 +7,7 @@
 #include <chain/account_object.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/actor_objects.hpp>
+#include <chain/contract_objects.hpp>
 
 #include <chain/lua_context.hpp>
 #include <chain/contract_worker.hpp>
@@ -24,6 +25,35 @@ namespace taiyi { namespace chain {
 
     extern std::string s_debug_actor;
     
+    //=============================================================================
+    operation_result create_actor_talent_rule_evaluator::do_apply( const create_actor_talent_rule_operation& o )
+    { try {
+        const auto& creator = _db.get_account( o.creator );
+        _db.modify( creator, [&]( account_object& a ) {
+            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
+        });
+
+        const auto& contract = _db.get<contract_object, by_name>(o.contract);
+        auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME)));
+        FC_ASSERT(abi_itr != contract.contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract.name)("i", TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME));
+
+        auto now = _db.head_block_time();
+        const auto& new_rule = _db.create< actor_talent_rule_object >( [&]( actor_talent_rule_object& tr ) {
+            tr.main_contract = contract.id;
+            tr.last_update = now;
+            tr.created = tr.last_update;
+            
+            _db.initialize_actor_talent_rule_object(creator, tr);
+        });
+        
+        int64_t used_mana = fc::raw::pack_size(new_rule) * TAIYI_USEMANA_STATE_BYTES_SCALE + 2000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create actor talent rule." );
+        _db.modify( creator, [&]( account_object& a ) {
+            a.manabar.use_mana( used_mana );
+        });
+
+        return void_result();
+    } FC_CAPTURE_AND_RETHROW( (o) ) }
     //=============================================================================
     operation_result create_actor_evaluator::do_apply( const create_actor_operation& o )
     {
@@ -74,6 +104,8 @@ namespace taiyi { namespace chain {
             act.family_name = o.family_name;
             act.last_name = o.last_name;
         });
+        
+        _db.initialize_actor_talents(new_actor);
                 
         if( o.fee.amount > 0 ) {
             _db.modify(nfa, [&](nfa_object& obj) {

@@ -249,6 +249,10 @@ namespace taiyi { namespace chain {
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
         registerFunction("connect_zones", &contract_handler::connect_zones);
+        registerFunction("is_actor_valid", &contract_handler::is_actor_valid);        
+        registerFunction("get_actor_info", &contract_handler::get_actor_info);
+        registerFunction("get_actor_info_by_name", &contract_handler::get_actor_info_by_name);
+        registerFunction("born_actor", &contract_handler::born_actor);        
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
@@ -296,6 +300,22 @@ namespace taiyi { namespace chain {
         registerMember("nfa_id", &contract_zone_base_info::nfa_id);
         registerMember("name", &contract_zone_base_info::name);
         registerMember("type", &contract_zone_base_info::type);
+        
+        //actor base info
+        registerMember("nfa_id", &contract_actor_base_info::nfa_id);
+        registerMember("name", &contract_actor_base_info::name);
+        registerMember("age", &contract_actor_base_info::age);
+        registerMember("health", &contract_actor_base_info::health);
+        registerMember("health_max", &contract_actor_base_info::health_max);
+        registerMember("born", &contract_actor_base_info::born);
+        registerMember("born_vyears", &contract_actor_base_info::born_vyears);
+        registerMember("born_vmonths", &contract_actor_base_info::born_vmonths);
+        registerMember("born_vtimes", &contract_actor_base_info::born_vtimes);
+        registerMember("five_phase", &contract_actor_base_info::five_phase);
+        registerMember("gender", &contract_actor_base_info::gender);
+        registerMember("standpoint_type", &contract_actor_base_info::standpoint_type);
+        registerMember("location", &contract_actor_base_info::location);
+        registerMember("base", &contract_actor_base_info::base);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

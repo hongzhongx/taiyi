@@ -28,7 +28,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         virtual void plugin_startup() override;
         virtual void plugin_shutdown() override;
         
-        void find_account_history_data(const protocol::account_name_type& name, uint64_t start, uint32_t limit, std::function<void(unsigned int, const rocksdb_operation_object&)> processor) const;
+        void find_account_history_data(const protocol::account_name_type& name, uint64_t start, uint32_t limit, std::function<bool(unsigned int, const rocksdb_operation_object&)> processor) const;
         bool find_operation_object(size_t opId, rocksdb_operation_object* data) const;
         void find_operations_by_block(size_t blockNum, std::function<void(const rocksdb_operation_object&)> processor) const;
         uint32_t enum_operations_from_block_range(uint32_t blockRangeBegin, uint32_t blockRangeEnd, std::function<void(const rocksdb_operation_object&)> processor) const;

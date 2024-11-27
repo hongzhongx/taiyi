@@ -341,12 +341,13 @@ namespace taiyi { namespace chain {
         //************ database_actor.cpp ************//
 
         void initialize_actor_object( actor_object& act, const std::string& name, const nfa_object& nfa );
-        void initialize_actor_talents( const actor_object& act, int gender, int sexuality );
+        void initialize_actor_talents( const actor_object& act );
         void initialize_actor_attributes( const actor_object& act, const vector<uint16_t>& init_attrs );
         const actor_object&  get_actor( const std::string& name )const;
         const actor_object*  find_actor( const std::string& name )const;
-        uint16_t get_actor_init_attribute_amount_max( const actor_object& actor )const;
-        uint16_t get_actor_init_attribute_amount_max( const std::string& name )const;
+        void initialize_actor_talent_rule_object(const account_object& creator, actor_talent_rule_object& rule);
+        void born_actor( const actor_object& act, int gender, int sexuality, const zone_object& zone );
+        void born_actor( const actor_object& act, int gender, int sexuality, const string& zone_name );
 
         //************ database_zone.cpp ************//
 

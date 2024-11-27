@@ -43,35 +43,59 @@ namespace taiyi { namespace chain {
     
     struct contract_asset_resources
     {
-        int64_t               gold;
-        int64_t               food;
-        int64_t               wood;
-        int64_t               fabric;
-        int64_t               herb;
+        int64_t     gold;
+        int64_t     food;
+        int64_t     wood;
+        int64_t     fabric;
+        int64_t     herb;
 
         contract_asset_resources(const nfa_object& nfa, database& db);
     };
 
     struct contract_nfa_base_info
     {
-        int64_t id;     //nfa id
-        string symbol;
-        string owner_account;
-        string creator_account;
-        int64_t qi;
-        int64_t parent;
-        lua_map data;
+        int64_t     id;     //nfa id
+        string      symbol;
+        string      owner_account;
+        string      creator_account;
+        int64_t     qi;
+        int64_t     parent;
+        lua_map     data;
                 
         contract_nfa_base_info(const nfa_object& nfa, database& db);
     };
     
     struct contract_zone_base_info
     {
-        int64_t nfa_id;
-        string name;
-        string type;
+        int64_t     nfa_id;
+        string      name;
+        string      type;
         
-        contract_zone_base_info(const zone_object& z, const database& db);        
+        contract_zone_base_info(const zone_object& z, database& db);        
+    };
+    
+    struct contract_actor_base_info
+    {
+        int64_t     nfa_id;
+        string      name;
+
+        uint16_t    age;
+        int16_t     health;
+        int16_t     health_max;
+
+        bool        born;
+        int         born_vyears;
+        int         born_vmonths;
+        int         born_vtimes;            //solar term, 0-23
+        int         five_phase;
+
+        int         gender;
+        int         standpoint_type;
+        
+        string      location;   //current zone name
+        string      base;       //从属地名称
+
+        contract_actor_base_info(const actor_object& act, database& db);
     };
 
     //=========================================================================
@@ -109,6 +133,20 @@ namespace taiyi { namespace chain {
         void withdraw_by_contract(nfa_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
         void deposit_from(const account_name_type& from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
         void deposit_by_contract(account_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
+    };
+    
+    //Actor NFA绑定合约被调用的角度来处理事务，隐含了发起这个调用相关的Actor对象
+    struct contract_actor_handler
+    {
+        const account_object&               _caller_account;
+        const actor_object&                 _caller;
+        LuaContext&                         _context;
+        database&                           _db;
+        contract_handler&                   _ch;
+
+        contract_actor_handler(const account_object& caller_account, const actor_object& caller, LuaContext &context, database &db, contract_handler& ch)
+            : _caller_account(caller_account), _caller(caller), _context(context), _db(db), _ch(ch)
+        {}
     };
 
     //合约本身被账号直接调用的角度来处理事务，隐含了合约调用账号
@@ -168,7 +206,13 @@ namespace taiyi { namespace chain {
         contract_zone_base_info get_zone_info(int64_t nfa_id);
         contract_zone_base_info get_zone_info_by_name(const string& name);
         void connect_zones(int64_t from_zone_nfa_id, int64_t to_zone_nfa_id);
-                
+        
+        //Actor
+        bool is_actor_valid(const string& name);
+        contract_actor_base_info get_actor_info(int64_t nfa_id);
+        contract_actor_base_info get_actor_info_by_name(const string& name);
+        void born_actor(const string& name, int gender, int sexuality, const lua_map& init_attrs, const string& zone_name);
+
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(account_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);
         void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);

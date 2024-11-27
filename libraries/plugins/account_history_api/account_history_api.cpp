@@ -39,13 +39,14 @@ namespace taiyi { namespace plugins { namespace account_history {
 
     DEFINE_API_IMPL( account_history_api_impl, get_account_history )
     {
-        FC_ASSERT( args.limit <= 10000, "limit of ${l} is greater than maxmimum allowed", ("l",args.limit) );
+        FC_ASSERT( args.limit <= 1000, "limit of ${l} is greater than maxmimum allowed", ("l",args.limit) );
         FC_ASSERT( args.start >= args.limit, "start must be greater than limit" );
         
         get_account_history_return result;
         
-        _dataSource.find_account_history_data(args.account, args.start, args.limit, [&result](unsigned int sequence, const account_history::rocksdb_operation_object& op) {
+        _dataSource.find_account_history_data(args.account, args.start, args.limit, [&result](unsigned int sequence, const account_history::rocksdb_operation_object& op) -> bool {
             result.history[sequence] = api_operation_object( op );
+            return true;
         });
         
         return result;
@@ -53,7 +54,7 @@ namespace taiyi { namespace plugins { namespace account_history {
 
     DEFINE_API_IMPL( account_history_api_impl, get_nfa_history )
     {
-        FC_ASSERT( args.limit <= 10000, "limit of ${l} is greater than maxmimum allowed", ("l",args.limit) );
+        FC_ASSERT( args.limit <= 1000, "limit of ${l} is greater than maxmimum allowed", ("l",args.limit) );
         FC_ASSERT( args.start >= args.limit, "start must be greater than limit" );
 
         get_nfa_history_return result;
