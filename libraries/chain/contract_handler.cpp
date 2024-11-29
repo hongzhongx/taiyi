@@ -663,6 +663,29 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    void contract_handler::change_nfa_contract(int64_t nfa_id, const string& contract_name)
+    {
+        try
+        {
+            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa.owner_account == caller.id, "caller account not the nfa #${n}'s owner", ("n", nfa_id));
+
+            const auto* contract = db.find<contract_object, by_name>(contract_name);
+            FC_ASSERT(contract != nullptr, "contract named ${a} is not exist", ("a", contract_name));
+            auto abi_itr = contract->contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
+            FC_ASSERT(abi_itr != contract->contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract_name)("i", TAIYI_NFA_INIT_FUNC_NAME));
+            
+            //仅仅改变主合约，不改变nfa的symbol
+            db.modify(nfa, [&](nfa_object& obj) {
+                obj.main_contract = contract->id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     //find_luaContext:按深度查找合约树形结构上下文
     //context:树形结构合约相关上下文
     //keys:目标路径(树形结构的某一条分支)

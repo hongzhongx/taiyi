@@ -200,6 +200,7 @@ namespace taiyi { namespace chain {
 
         void eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        void change_nfa_contract(int64_t nfa_id, const string& contract_name);
         
         //Zone
         void change_zone_type(int64_t nfa_id, const string& type);

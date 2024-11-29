@@ -839,7 +839,20 @@ namespace taiyi { namespace xuanpin {
                     
                     return ss.str();
                 };
-                
+
+                m["action_actor"] = []( variant result, const fc::variants& a )
+                {
+                    vector<string> results = result.as<vector<string>>();
+                    
+                    string ss;
+                    for(const string& s : results)
+                        ss += s + "\n" + NOR;
+                    
+                    ansi(ss);
+                    
+                    return ss;
+                };
+
                 return m;
             }
             
@@ -2072,6 +2085,26 @@ namespace taiyi { namespace xuanpin {
     {
         return my->_remote_api->find_actor_talent_rules( ids );
     }
+
+    vector<string> xuanpin_api::action_actor(const account_name_type& account, const string& actor_name, const string& action, const vector<fc::variant>& value_list)
+    {
+        auto actor_info = find_actor(actor_name);
+        if(!actor_info.valid())
+            return {FORMAT_MESSAGE("角色\"${a}\"不存在", ("a", actor_name))};
+
+        return action_nfa(account, actor_info->nfa_id, action, value_list);
+    }
+
+    baiyujing_api::legacy_signed_transaction xuanpin_api::action_actor_consequence(const account_name_type& account, const string& actor_name, const string& action, const vector<fc::variant>& value_list, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+        
+        auto actor_info = find_actor(actor_name);
+        FC_ASSERT(actor_info.valid(), "角色\"${a}\"不存在", ("a", actor_name));
+        
+        return action_nfa_consequence(account, actor_info->nfa_id, action, value_list, broadcast);
+
+    } FC_CAPTURE_AND_RETHROW( (account)(actor_name)(action)(value_list) ) }
 
     baiyujing_api::legacy_signed_transaction xuanpin_api::create_zone(const account_name_type& creator, const string& name, bool broadcast )
     { try {

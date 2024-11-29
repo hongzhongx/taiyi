@@ -47,14 +47,17 @@
     welcome = { consequence = false }       \
     look = { consequence = false }          \
     go = { consequence = true }             \
-    function do_welcome(me, params)         \
-        chainhelper:log(string.format('- 欢迎&YEL&%s&NOR&进入游戏 -', me.name))  \
+    function do_welcome()                   \
+        local nfa = nfa_helper:get_info()   \
+        contract_helper:log(string.format('- 欢迎&YEL&%s&NOR&进入游戏 -', contract_helper:get_actor_info(nfa.id).name))  \
     end                                     \
-    function do_look(me, params)            \
-        chainhelper:log(string.format('&YEL&%s&NOR&看了看四周。', me.name))      \
+    function do_look()                      \
+        local nfa = nfa_helper:get_info()   \
+        contract_helper:log(string.format('&YEL&%s&NOR&看了看四周。', contract_helper:get_actor_info(nfa.id).name)) \
     end                                     \
-    function do_go(me, params)              \
-        chainhelper:log(string.format('&YEL&%s&NOR&不会走路。', me.name))       \
+    function do_go()                        \
+        local nfa = nfa_helper:get_info()   \
+        contract_helper:log(string.format('&YEL&%s&NOR&不会走路。', contract_helper:get_actor_info(nfa.id).name)) \
     end                                     \
     function init_data()                    \
         return {                            \
@@ -65,9 +68,9 @@
 "
 
 #define CONTRACT_BASE_ZONE "                \
-    function short(me) return '' end        \
-    function long(me) return '' end         \
-    function exits(me) return {} end        \
+    function short() return '' end          \
+    function long() return '' end           \
+    function exits() return {} end          \
     function init_data()                    \
         return {                            \
             is_zone = true,                 \

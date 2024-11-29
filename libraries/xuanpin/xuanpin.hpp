@@ -667,7 +667,7 @@ namespace taiyi { namespace xuanpin {
         
         baiyujing_api::api_contract_action_info get_nfa_action_info(int64_t nfa_id, const string& action);
         
-        //value_list 目前仅支持string, bool, double, int64
+        //value_list 目前仅支持string, bool, double, int64, array
         vector<string> action_nfa(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list);
         baiyujing_api::legacy_signed_transaction action_nfa_consequence(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast);
 
@@ -731,6 +731,10 @@ namespace taiyi { namespace xuanpin {
         vector< database_api::api_actor_object > list_actors_on_zone(const string& zone_name, uint32_t limit);
 
         map< uint32_t, baiyujing_api::api_operation_object > get_actor_history( const string& name, uint32_t from, uint32_t limit );
+        
+        //value_list 目前仅支持string, bool, double, int64, array
+        vector<string> action_actor(const account_name_type& account, const string& actor_name, const string& action, const vector<fc::variant>& value_list);
+        baiyujing_api::legacy_signed_transaction action_actor_consequence(const account_name_type& account, const string& actor_name, const string& action, const vector<fc::variant>& value_list, bool broadcast);
         
         /**
          * Find actor talent rule with given id
@@ -884,7 +888,9 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (list_actors_below_health)
     (list_actors_on_zone)
     (find_actor_talent_rules)
-       
+    (action_actor)
+    (action_actor_consequence)
+
     //zone
     (create_zone)
     (list_zones)

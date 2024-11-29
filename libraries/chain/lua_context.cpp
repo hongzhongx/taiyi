@@ -252,7 +252,8 @@ namespace taiyi { namespace chain {
         registerFunction("is_actor_valid", &contract_handler::is_actor_valid);        
         registerFunction("get_actor_info", &contract_handler::get_actor_info);
         registerFunction("get_actor_info_by_name", &contract_handler::get_actor_info_by_name);
-        registerFunction("born_actor", &contract_handler::born_actor);        
+        registerFunction("born_actor", &contract_handler::born_actor);
+        registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);        
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
