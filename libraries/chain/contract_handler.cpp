@@ -442,7 +442,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_handler::eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
+    lua_map contract_handler::eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
     {
         LuaContext nfa_context;
         
@@ -471,7 +471,7 @@ namespace taiyi { namespace chain {
             if(def_itr != action_def.end())
                 FC_ASSERT(def_itr->second.get<lua_bool>().v == false, "Can not eval action ${a} in nfa ${nfa} with consequence history. should signing it in transaction.", ("a", action)("nfa", nfa_id));
             
-            string function_name = "do_" + action;
+            string function_name = "eval_" + action;
             
             //准备参数
             vector<lua_types> value_list;
@@ -523,12 +523,17 @@ namespace taiyi { namespace chain {
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
                 LuaContext::Pusher<lua_types>::push(nfa_context.mState, *itr).release();
             
-            int err = lua_pcall(nfa_context.mState, value_list.size(), 0, 0);
+            int err = lua_pcall(nfa_context.mState, value_list.size(), 1, 0);
             lua_types error_message;
+            lua_table result_table;
             try
             {
                 if (err)
                     error_message = LuaContext::readTopAndPop<lua_types>(nfa_context.mState, -1);
+                else {
+                    if(lua_istable(nfa_context.mState, -1))
+                        result_table = LuaContext::readTopAndPop<lua_table>(nfa_context.mState, -1);
+                }
             }
             catch (...)
             {
@@ -546,6 +551,8 @@ namespace taiyi { namespace chain {
                     ch.result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
             ch.result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(ch.result.contract_affecteds);
+
+            return result_table.v;
         }
         catch(fc::exception e)
         {
@@ -557,7 +564,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_handler::do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
+    lua_map contract_handler::do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
     {
         //TODO: do的权限以及产生的消耗
         LuaContext nfa_context;
@@ -635,10 +642,15 @@ namespace taiyi { namespace chain {
             
             int err = lua_pcall(nfa_context.mState, value_list.size(), 0, 0);
             lua_types error_message;
+            lua_table result_table;
             try
             {
                 if (err)
                     error_message = LuaContext::readTopAndPop<lua_types>(nfa_context.mState, -1);
+                else {
+                    if(lua_istable(nfa_context.mState, -1))
+                        result_table = LuaContext::readTopAndPop<lua_table>(nfa_context.mState, -1);
+                }
             }
             catch (...)
             {
@@ -656,6 +668,8 @@ namespace taiyi { namespace chain {
                     ch.result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
             ch.result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(ch.result.contract_affecteds);
+
+            return result_table.v;
         }
         catch (fc::exception e)
         {
@@ -1049,6 +1063,35 @@ namespace taiyi { namespace chain {
             const auto* zone = db.find<zone_object, by_name>(name);
             FC_ASSERT(zone != nullptr, "Zone named ${n} is not exist", ("n", name));
             return contract_zone_base_info(*zone, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    vector<contract_actor_base_info> contract_handler::list_actors_on_zone(int64_t nfa_id)
+    {
+        try
+        {
+            const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
+            FC_ASSERT(zone != nullptr, "NFA #${i} is not a zone", ("i", nfa_id));
+            
+            vector<contract_actor_base_info> result;
+            const auto& actor_by_location_idx = db.get_index< chain::actor_index, chain::by_location >();
+            auto itr = actor_by_location_idx.lower_bound( zone->id );
+            auto end = actor_by_location_idx.end();
+            while( itr != end )
+            {
+                const actor_object& act = *itr;
+                ++itr;
+                
+                if( act.location != zone_id_type(zone->id) )
+                    break;
+                
+                result.emplace_back(contract_actor_base_info(act, db));
+            }
+            return result;
         }
         catch (fc::exception e)
         {

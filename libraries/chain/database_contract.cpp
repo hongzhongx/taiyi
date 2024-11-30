@@ -47,11 +47,11 @@
     welcome = { consequence = false }       \
     look = { consequence = false }          \
     go = { consequence = true }             \
-    function do_welcome()                   \
+    function eval_welcome()                   \
         local nfa = nfa_helper:get_info()   \
         contract_helper:log(string.format('- 欢迎&YEL&%s&NOR&进入游戏 -', contract_helper:get_actor_info(nfa.id).name))  \
     end                                     \
-    function do_look()                      \
+    function eval_look()                      \
         local nfa = nfa_helper:get_info()   \
         contract_helper:log(string.format('&YEL&%s&NOR&看了看四周。', contract_helper:get_actor_info(nfa.id).name)) \
     end                                     \
@@ -68,9 +68,20 @@
 "
 
 #define CONTRACT_BASE_ZONE "                \
-    function short() return '' end          \
-    function long() return '' end           \
-    function exits() return {} end          \
+    short = { consequence = false }         \
+    long = { consequence = false }          \
+    exists = { consequence = false }        \
+    function eval_short()                     \
+        local nfa = nfa_helper:get_info()   \
+        local zone_me = contract_helper:get_zone_info(nfa.id)   \
+        return { zone_me.name }             \
+    end                                     \
+    function eval_long()                         \
+        local nfa = nfa_helper:get_info()   \
+        local zone_me = contract_helper:get_zone_info(nfa.id)   \
+        return { string.format('这是一片&CYN&%s&NOR&', zone_me.type) }  \
+    end                                     \
+    function eval_exits() return {} end          \
     function init_data()                    \
         return {                            \
             is_zone = true,                 \

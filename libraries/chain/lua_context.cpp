@@ -119,7 +119,9 @@ namespace taiyi { namespace chain {
                 context.writeVariable(contract->name, "contract_base_info", cbi);
                 auto ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
                 if(ch) context.writeVariable(contract->name, "contract_helper", ch);
-                
+                auto cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
+                if(cnh) context.writeVariable(contract->name, "nfa_helper", cnh);
+
                 FC_ASSERT(lua_getglobal(context.mState, current_contract_name.c_str()) == LUA_TTABLE);
                 FC_ASSERT(lua_getfield(context.mState, -1, contract->name.c_str()) == LUA_TNIL); //just check
                 lua_pop(context.mState, 1);
@@ -249,7 +251,8 @@ namespace taiyi { namespace chain {
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
         registerFunction("connect_zones", &contract_handler::connect_zones);
-        registerFunction("is_actor_valid", &contract_handler::is_actor_valid);        
+        registerFunction("list_actors_on_zone", &contract_handler::list_actors_on_zone);        
+        registerFunction("is_actor_valid", &contract_handler::is_actor_valid);
         registerFunction("get_actor_info", &contract_handler::get_actor_info);
         registerFunction("get_actor_info_by_name", &contract_handler::get_actor_info_by_name);
         registerFunction("born_actor", &contract_handler::born_actor);

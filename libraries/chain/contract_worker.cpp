@@ -327,6 +327,7 @@ namespace taiyi { namespace chain {
             context.writeVariable("current_contract", name);
             context.writeVariable(name, "_G", "protected");
             context.writeVariable(name, "contract_helper", (contract_handler*)0);
+            context.writeVariable(name, "nfa_helper", (contract_nfa_handler*)0);
             context.writeVariable(name, "contract_base_info", &cbi);
             
             //load code as A function
@@ -384,7 +385,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(contract_ptr->can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract_ptr->name));
                             
         flat_set<public_key_type> sigkeys; //no signature keys
-        string function_name = "do_" + action;
+        string function_name = "eval_" + action;
         do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db);
         
         return "";        

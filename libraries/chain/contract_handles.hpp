@@ -198,8 +198,8 @@ namespace taiyi { namespace chain {
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
         contract_asset_resources get_nfa_resources(int64_t id);
 
-        void eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
-        void do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
         
         //Zone
@@ -207,7 +207,8 @@ namespace taiyi { namespace chain {
         contract_zone_base_info get_zone_info(int64_t nfa_id);
         contract_zone_base_info get_zone_info_by_name(const string& name);
         void connect_zones(int64_t from_zone_nfa_id, int64_t to_zone_nfa_id);
-        
+        vector<contract_actor_base_info> list_actors_on_zone(int64_t nfa_id);
+
         //Actor
         bool is_actor_valid(const string& name);
         contract_actor_base_info get_actor_info(int64_t nfa_id);
