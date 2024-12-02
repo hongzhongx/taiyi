@@ -25,5 +25,29 @@ namespace taiyi { namespace chain {
             base = db.get< zone_object, by_id >(a.base).name;
         }
     }
+    //=========================================================================
+    contract_actor_core_attributes::contract_actor_core_attributes(const actor_object & act, database& db)
+    {
+        const auto* maybe_core_attrs = db.find< actor_core_attributes_object, by_actor >( act.id );
+        if( maybe_core_attrs ) {
+            strength = maybe_core_attrs->strength;
+            physique = maybe_core_attrs->physique;
+            agility = maybe_core_attrs->agility;
+            vitality = maybe_core_attrs->vitality;
+            comprehension = maybe_core_attrs->comprehension;
+            willpower = maybe_core_attrs->willpower;
+            charm = maybe_core_attrs->charm;
+            mood = maybe_core_attrs->mood;
+
+            strength_max = maybe_core_attrs->strength_max;
+            physique_max = maybe_core_attrs->physique_max;
+            agility_max = maybe_core_attrs->agility_max;
+            vitality_max = maybe_core_attrs->vitality_max;
+            comprehension_max = maybe_core_attrs->comprehension_max;
+            willpower_max = maybe_core_attrs->willpower_max;
+            charm_max = maybe_core_attrs->charm_max;
+            mood_max = maybe_core_attrs->mood_max;
+        }
+    }
 
 } } // namespace taiyi::chain

@@ -160,26 +160,6 @@ namespace taiyi { namespace chain {
         return get< tiandao_property_object >();
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
-    void database::grow_zone( const zone_object& zone )
-    {
-        const auto& tiandao = get_tiandao_properties();
-        uint32_t vmonth = tiandao.v_years * 12 + tiandao.v_months;
-        if(zone.last_grow_vmonth >= vmonth)
-            return;
-
-        uint32_t dvm = vmonth - zone.last_grow_vmonth;
-        //TODO: 需要法宝来转化
-//        t.gold = std::min( tiandao.zone_gold_max_map[(int)t.type], t.gold + dvm * tiandao.zone_grow_gold_speed_map[(int)t.type] );
-//        t.food = std::min( tiandao.zone_food_max_map[(int)t.type], t.food + dvm * tiandao.zone_grow_food_speed_map[(int)t.type] );
-//        t.wood = std::min( tiandao.zone_wood_max_map[(int)t.type], t.wood + dvm * tiandao.zone_grow_wood_speed_map[(int)t.type] );
-//        t.fabric = std::min( tiandao.zone_fabric_max_map[(int)t.type], t.fabric + dvm * tiandao.zone_grow_fabric_speed_map[(int)t.type] );
-//        t.herb = std::min( tiandao.zone_herb_max_map[(int)t.type], t.herb + dvm * tiandao.zone_grow_herb_speed_map[(int)t.type] );
-
-        modify(zone, [&]( zone_object& t ) {
-            t.last_grow_vmonth = vmonth;
-        });
-    }
-    //=============================================================================
     int database::calculate_moving_days_to_zone( const zone_object& zone )
     {
         const auto& tiandao = get_tiandao_properties();

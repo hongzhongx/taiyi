@@ -201,3 +201,5 @@
 #define TAIYI_MAX_ZONE_CREATION_FEE             int64_t(1000000000000)
 #define TAIYI_ZONE_NAME_LIMIT                   (256)
 #define TAIYI_ZONE_TYPE_NAME_LIMIT              (128)
+
+#define TAIYI_USEMANA_ACTOR_MOVING_SCALE        1000

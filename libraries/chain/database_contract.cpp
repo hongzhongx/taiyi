@@ -51,11 +51,11 @@
         local nfa = nfa_helper:get_info()   \
         contract_helper:log(string.format('- 欢迎&YEL&%s&NOR&进入游戏 -', contract_helper:get_actor_info(nfa.id).name))  \
     end                                     \
-    function eval_look()                      \
+    function eval_look(target)              \
         local nfa = nfa_helper:get_info()   \
         contract_helper:log(string.format('&YEL&%s&NOR&看了看四周。', contract_helper:get_actor_info(nfa.id).name)) \
     end                                     \
-    function do_go()                        \
+    function do_go(dir)                     \
         local nfa = nfa_helper:get_info()   \
         contract_helper:log(string.format('&YEL&%s&NOR&不会走路。', contract_helper:get_actor_info(nfa.id).name)) \
     end                                     \
@@ -70,8 +70,10 @@
 #define CONTRACT_BASE_ZONE "                \
     short = { consequence = false }         \
     long = { consequence = false }          \
-    exists = { consequence = false }        \
-    function eval_short()                     \
+    exits = { consequence = false }         \
+    map = { consequence = false }           \
+    on_actor_enter = { consequence = true } \
+    function eval_short()                   \
         local nfa = nfa_helper:get_info()   \
         local zone_me = contract_helper:get_zone_info(nfa.id)   \
         return { zone_me.name }             \
@@ -81,7 +83,10 @@
         local zone_me = contract_helper:get_zone_info(nfa.id)   \
         return { string.format('这是一片&CYN&%s&NOR&', zone_me.type) }  \
     end                                     \
-    function eval_exits() return {} end          \
+    function eval_exits() return {} end     \
+    function eval_map() return {""} end     \
+    function do_on_actor_enter(actor_nfa)   \
+    end                                     \
     function init_data()                    \
         return {                            \
             is_zone = true,                 \

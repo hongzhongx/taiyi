@@ -70,7 +70,8 @@ namespace taiyi { namespace protocol {
         tiandao_month_change_operation,
         tiandao_time_change_operation,
 
-        actor_born_operation
+        actor_born_operation,
+        actor_movement_operation
 
     > operation;
 

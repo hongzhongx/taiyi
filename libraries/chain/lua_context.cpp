@@ -242,21 +242,27 @@ namespace taiyi { namespace chain {
         registerFunction("change_contract_authority", &contract_handler::change_contract_authority);
         registerFunction("get_contract_public_data", &contract_handler::get_contract_public_data);
         registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);
+        registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);
         registerFunction("eval_nfa_action", &contract_handler::eval_nfa_action);
         registerFunction("do_nfa_action", &contract_handler::do_nfa_action);
         registerFunction("get_nfa_info", &contract_handler::get_nfa_info);
         registerFunction("is_nfa_valid", &contract_handler::is_nfa_valid);        
         registerFunction("get_nfa_resources", &contract_handler::get_nfa_resources);
+        registerFunction("list_nfa_inventory", &contract_handler::list_nfa_inventory);        
         registerFunction("change_zone_type", &contract_handler::change_zone_type);
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
+        registerFunction("is_zone_valid", &contract_handler::is_zone_valid);        
+        registerFunction("is_zone_valid_by_name", &contract_handler::is_zone_valid_by_name);
         registerFunction("connect_zones", &contract_handler::connect_zones);
         registerFunction("list_actors_on_zone", &contract_handler::list_actors_on_zone);        
         registerFunction("is_actor_valid", &contract_handler::is_actor_valid);
+        registerFunction("is_actor_valid_by_name", &contract_handler::is_actor_valid_by_name);
         registerFunction("get_actor_info", &contract_handler::get_actor_info);
         registerFunction("get_actor_info_by_name", &contract_handler::get_actor_info_by_name);
+        registerFunction("get_actor_core_attributes", &contract_handler::get_actor_core_attributes);        
         registerFunction("born_actor", &contract_handler::born_actor);
-        registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);        
+        registerFunction("move_actor", &contract_handler::move_actor);        
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
@@ -320,6 +326,24 @@ namespace taiyi { namespace chain {
         registerMember("standpoint_type", &contract_actor_base_info::standpoint_type);
         registerMember("location", &contract_actor_base_info::location);
         registerMember("base", &contract_actor_base_info::base);
+
+        //actor core attributes
+        registerMember("strength", &contract_actor_core_attributes::strength);
+        registerMember("strength_max", &contract_actor_core_attributes::strength_max);
+        registerMember("physique", &contract_actor_core_attributes::physique);
+        registerMember("physique_max", &contract_actor_core_attributes::physique_max);
+        registerMember("agility", &contract_actor_core_attributes::agility);
+        registerMember("agility_max", &contract_actor_core_attributes::agility_max);
+        registerMember("vitality", &contract_actor_core_attributes::vitality);
+        registerMember("vitality_max", &contract_actor_core_attributes::vitality_max);
+        registerMember("comprehension", &contract_actor_core_attributes::comprehension);
+        registerMember("comprehension_max", &contract_actor_core_attributes::comprehension_max);
+        registerMember("willpower", &contract_actor_core_attributes::willpower);
+        registerMember("willpower_max", &contract_actor_core_attributes::willpower_max);
+        registerMember("charm", &contract_actor_core_attributes::charm);
+        registerMember("charm_max", &contract_actor_core_attributes::charm_max);
+        registerMember("mood", &contract_actor_core_attributes::mood);
+        registerMember("mood_max", &contract_actor_core_attributes::mood_max);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

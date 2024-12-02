@@ -153,6 +153,19 @@ namespace taiyi { namespace protocol {
         string                      zone;
         int64_t                     nfa;
     };
+    
+    struct actor_movement_operation : public virtual_operation
+    {
+        actor_movement_operation() {}
+        actor_movement_operation( const account_name_type& a, const string& n, const string& fz, const string& tz, const int64_t& nf)
+            : owner(a), name(n), from_zone(fz), to_zone(tz), nfa(nf) {}
+        
+        account_name_type           owner;
+        string                      name;        
+        string                      from_zone;
+        string                      to_zone;
+        int64_t                     nfa;
+    };
 
 } } //taiyi::protocol
 
@@ -168,3 +181,4 @@ FC_REFLECT( taiyi::protocol::tiandao_year_change_operation, (messager)(years)(mo
 FC_REFLECT( taiyi::protocol::tiandao_month_change_operation, (messager)(years)(months)(times) )
 FC_REFLECT( taiyi::protocol::tiandao_time_change_operation, (messager)(years)(months)(times) )
 FC_REFLECT( taiyi::protocol::actor_born_operation, (owner)(name)(zone)(nfa) )
+FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(to_zone)(nfa) )

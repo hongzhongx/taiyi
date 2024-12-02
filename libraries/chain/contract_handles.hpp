@@ -98,6 +98,28 @@ namespace taiyi { namespace chain {
         contract_actor_base_info(const actor_object& act, database& db);
     };
 
+    struct contract_actor_core_attributes
+    {
+        int16_t             strength        = 0;
+        int16_t             strength_max    = 0;
+        int16_t             physique        = 0;
+        int16_t             physique_max    = 0;
+        int16_t             agility         = 0;
+        int16_t             agility_max     = 0;
+        int16_t             vitality        = 0;
+        int16_t             vitality_max    = 0;
+        int16_t             comprehension   = 0;
+        int16_t             comprehension_max   = 0;
+        int16_t             willpower       = 0;
+        int16_t             willpower_max   = 0;
+        int16_t             charm           = 0;
+        int16_t             charm_max       = 0;
+        int16_t             mood            = 0;
+        int16_t             mood_max        = 0;
+
+        contract_actor_core_attributes(const actor_object& act, database& db);
+    };
+
     //=========================================================================
     //NFA绑定合约被调用的角度来处理事务，隐含了发起这个调用相关的NFA对象
     struct contract_nfa_handler
@@ -197,12 +219,15 @@ namespace taiyi { namespace chain {
         bool is_nfa_valid(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
         contract_asset_resources get_nfa_resources(int64_t id);
+        vector<contract_nfa_base_info> list_nfa_inventory(int64_t nfa_id);
 
         lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
         
         //Zone
+        bool is_zone_valid(int64_t nfa_id);
+        bool is_zone_valid_by_name(const string& name);
         void change_zone_type(int64_t nfa_id, const string& type);
         contract_zone_base_info get_zone_info(int64_t nfa_id);
         contract_zone_base_info get_zone_info_by_name(const string& name);
@@ -210,10 +235,13 @@ namespace taiyi { namespace chain {
         vector<contract_actor_base_info> list_actors_on_zone(int64_t nfa_id);
 
         //Actor
-        bool is_actor_valid(const string& name);
+        bool is_actor_valid(int64_t nfa_id);
+        bool is_actor_valid_by_name(const string& name);
         contract_actor_base_info get_actor_info(int64_t nfa_id);
         contract_actor_base_info get_actor_info_by_name(const string& name);
+        contract_actor_core_attributes get_actor_core_attributes(int64_t nfa_id);
         void born_actor(const string& name, int gender, int sexuality, const lua_map& init_attrs, const string& zone_name);
+        string move_actor(const string& actor_name, const string& zone_name);
 
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(account_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);

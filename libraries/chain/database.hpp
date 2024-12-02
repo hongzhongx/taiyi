@@ -355,7 +355,6 @@ namespace taiyi { namespace chain {
         void initialize_zone_object( zone_object& zone, const std::string& name, const nfa_object& nfa, E_ZONE_TYPE type );
         const zone_object&  get_zone(  const std::string& name )const;
         const zone_object*  find_zone( const std::string& name )const;
-        void grow_zone( const zone_object& zone );
         int calculate_moving_days_to_zone( const zone_object& zone );
         void process_tiandao();
 

@@ -458,13 +458,13 @@ namespace taiyi { namespace chain {
             //check existence and consequence type
             const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.main_contract);
             if(contract_ptr == nullptr)
-                return;
+                return lua_map();
             
             auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
             if(abi_itr == contract_ptr->contract_ABI.end())
-                return;
+                return lua_map();
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
-                return;
+                return lua_map();
             
             lua_map action_def = abi_itr->second.get<lua_table>().v;
             auto def_itr = action_def.find(lua_types(lua_string("consequence")));
@@ -575,13 +575,13 @@ namespace taiyi { namespace chain {
             //check existence and consequence type
             const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.main_contract);
             if(contract_ptr == nullptr)
-                return;
+                return lua_map();
             
             auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
             if(abi_itr == contract_ptr->contract_ABI.end())
-                return;
+                return lua_map();
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
-                return;
+                return lua_map();
             
             lua_map action_def = abi_itr->second.get<lua_table>().v;
             auto def_itr = action_def.find(lua_types(lua_string("consequence")));
@@ -1020,6 +1020,29 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    vector<contract_nfa_base_info> contract_handler::list_nfa_inventory(int64_t nfa_id)
+    {
+        try
+        {
+            std::vector<contract_nfa_base_info> result;
+            const auto& nfa_by_parent_idx = db.get_index<nfa_index, by_parent>();
+            auto itr = nfa_by_parent_idx.lower_bound( nfa_id );
+            while(itr != nfa_by_parent_idx.end())
+            {
+                if(itr->parent != nfa_id_type(nfa_id))
+                    break;
+                result.emplace_back(contract_nfa_base_info(*itr, db));
+                itr++;
+            }
+
+            return result;
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     void contract_handler::change_zone_type(int64_t nfa_id, const string& type)
     {
         try
@@ -1040,6 +1063,16 @@ namespace taiyi { namespace chain {
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
+    }
+    //=============================================================================
+    bool contract_handler::is_zone_valid(int64_t nfa_id)
+    {
+        return db.find<zone_object, by_nfa_id>(nfa_id) != nullptr;
+    }
+    //=============================================================================
+    bool contract_handler::is_zone_valid_by_name(const string& name)
+    {
+        return db.find<zone_object, by_name>(name) != nullptr;
     }
     //=============================================================================
     contract_zone_base_info contract_handler::get_zone_info(int64_t nfa_id)
@@ -1139,7 +1172,12 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    bool contract_handler::is_actor_valid(const string& name)
+    bool contract_handler::is_actor_valid(int64_t nfa_id)
+    {
+        return db.find<actor_object, by_nfa_id>(nfa_id) != nullptr;
+    }
+    //=============================================================================
+    bool contract_handler::is_actor_valid_by_name(const string& name)
     {
         return db.find_actor(name) != nullptr;
     }
@@ -1165,6 +1203,20 @@ namespace taiyi { namespace chain {
             const auto* actor = db.find<actor_object, by_name>(name);
             FC_ASSERT(actor != nullptr, "Actor named ${n} is not exist", ("n", name));
             return contract_actor_base_info(*actor, db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    contract_actor_core_attributes contract_handler::get_actor_core_attributes(int64_t nfa_id)
+    {
+        try
+        {
+            const auto* actor = db.find<actor_object, by_nfa_id>(nfa_id);
+            FC_ASSERT(actor != nullptr, "NFA #${i} is not an actor", ("i", nfa_id));
+            return contract_actor_core_attributes(*actor, db);
         }
         catch (fc::exception e)
         {
@@ -1218,6 +1270,55 @@ namespace taiyi { namespace chain {
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
+    }
+    //=========================================================================
+    string contract_handler::move_actor(const string& actor_name, const string& zone_name)
+    {
+        try
+        {
+            const auto* actor = db.find<actor_object, by_name>(actor_name);
+            if(actor == nullptr)
+                return FORMAT_MESSAGE("名为${n}的角色不存在", ("n", actor_name));
+            if(!actor->born)
+                return FORMAT_MESSAGE("${a}还未出生", ("a", actor_name));
+
+            const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
+            if(actor_nfa.owner_account != caller.id)
+                return FORMAT_MESSAGE("无权移动角色");
+
+            const auto& current_zone = db.get< zone_object, by_id >(actor->location);
+            if(current_zone.name == zone_name)
+                return FORMAT_MESSAGE("${a}已经在${z}了", ("a", actor_name)("z", zone_name));
+
+            const auto* target_zone = db.find< zone_object, by_name >( zone_name );
+            if(target_zone == nullptr)
+                return FORMAT_MESSAGE("没有名叫\"${a}\"的地方", ("a", zone_name));
+                    
+            const auto* zone_connection = db.find< zone_connect_object, by_zone_from >(boost::make_tuple(actor->location, target_zone->id));
+            if(zone_connection == nullptr)
+                return FORMAT_MESSAGE("${a}无法直接通往${b}", ("a", current_zone.name)("b", target_zone->name));
+
+            int take_days = db.calculate_moving_days_to_zone(*target_zone);
+            int64_t take_mana = take_days * TAIYI_USEMANA_ACTOR_MOVING_SCALE;
+            db.modify(actor_nfa, [&]( nfa_object& obj ) { util::update_manabar( db.get_dynamic_global_properties(), obj, true ); });
+            if( take_mana > actor_nfa.manabar.current_mana )
+                return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_mana)("t", take_days)("c", actor_nfa.manabar.current_mana));
+            db.modify(actor_nfa, [&]( nfa_object& obj ) { obj.manabar.current_mana -= take_mana; });
+
+            //finish movement
+            auto now = db.head_block_time();
+            db.modify( *actor, [&]( actor_object& act ) {
+                act.location = target_zone->id;
+                act.last_update = now;
+            });
+            db.push_virtual_operation( actor_movement_operation( caller.name, actor->name, current_zone.name, target_zone->name, actor_nfa.id ) );
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+        
+        return "";
     }
 
 } } // namespace taiyi::chain
