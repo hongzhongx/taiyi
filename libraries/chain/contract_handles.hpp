@@ -224,7 +224,8 @@ namespace taiyi { namespace chain {
         lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
-        
+        int64_t create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger);
+
         //Zone
         bool is_zone_valid(int64_t nfa_id);
         bool is_zone_valid_by_name(const string& name);
@@ -248,6 +249,7 @@ namespace taiyi { namespace chain {
         void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
         void flush_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
         void read_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
+        lua_map call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params);
     };
     
     asset_symbol_type s_get_symbol_type_from_string(const string name);
