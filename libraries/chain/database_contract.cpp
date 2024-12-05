@@ -72,7 +72,6 @@
     long = { consequence = false }          \
     exits = { consequence = false }         \
     map = { consequence = false }           \
-    on_actor_enter = { consequence = true } \
     function eval_short()                   \
         local nfa = nfa_helper:get_info()   \
         local zone_me = contract_helper:get_zone_info(nfa.id)   \
@@ -85,7 +84,7 @@
     end                                     \
     function eval_exits() return {} end     \
     function eval_map() return {""} end     \
-    function do_on_actor_enter(actor_nfa)   \
+    function on_actor_enter(actor_nfa_id)   \
     end                                     \
     function init_data()                    \
         return {                            \
