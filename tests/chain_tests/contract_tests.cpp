@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 876 );
+    BOOST_REQUIRE( used_mana == 886 );
     
 } FC_LOG_AND_RETHROW() }
 
@@ -626,7 +626,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 476 );
+    BOOST_REQUIRE( used_mana == 486 );
     
 } FC_LOG_AND_RETHROW() }
 

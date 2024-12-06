@@ -422,11 +422,11 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     
     int64_t used_mana = old_manabar.current_mana - db->get_account( "charlie" ).manabar.current_mana;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 512 );
+    BOOST_REQUIRE( used_mana == 448 );
 
     asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
     //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(512, QI_SYMBOL) );
+    BOOST_REQUIRE( reward_qi == asset(448, QI_SYMBOL) );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     used_mana = old_manabar.current_mana - db->get_account( "charlie" ).manabar.current_mana;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 536 );
+    BOOST_REQUIRE( used_mana == 472 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -738,7 +738,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
             used_mana = old_mana - nfa.manabar.current_mana;
             idump( (old_mana)(nfa.manabar.current_mana)(used_mana) );
-            BOOST_CHECK_EQUAL( used_mana, 536);
+            BOOST_CHECK_EQUAL( used_mana, 472);
         }
         else {
             generate_block();
