@@ -303,7 +303,7 @@ namespace taiyi { namespace xuanpin {
                 return true;
             }
             
-            bool is_locked()const
+            bool is_locked() const
             {
                 return _checksum == fc::sha512();
             }
@@ -676,6 +676,7 @@ namespace taiyi { namespace xuanpin {
                         approving_key_set.insert( approving_key );
                     }
                 }
+                
                 for( const authority& a : other_auths )
                 {
                     for( const auto& k : a.key_auths )

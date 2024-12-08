@@ -1,9 +1,9 @@
 #include <iomanip>
 #include <boost/algorithm/string/join.hpp>
-#include <xuanpin/xuanpin.hpp>
-#include <xuanpin/api_documentation.hpp>
+#include <danuo/danuo.hpp>
+#include <danuo/api_documentation.hpp>
 
-namespace taiyi { namespace xuanpin {
+namespace taiyi { namespace danuo {
    namespace detail {
       namespace
       {
@@ -58,11 +58,11 @@ namespace taiyi { namespace xuanpin {
 
    api_documentation::api_documentation()
    {
-      fc::api<xuanpin_api> tmp;
+      fc::api<danuo_api> tmp;
       detail::help_visitor visitor;
       tmp->visit(visitor);
       std::copy(visitor.method_descriptions.begin(), visitor.method_descriptions.end(),
                 std::inserter(method_descriptions, method_descriptions.end()));
    }
 
-} } // end namespace taiyi::xuanpin
+} } // end namespace taiyi::danuo

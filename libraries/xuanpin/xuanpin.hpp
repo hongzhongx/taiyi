@@ -314,7 +314,9 @@ namespace taiyi { namespace xuanpin {
          * @returns the brain key in its normalized form
          */
         string normalize_brain_key(string s) const;
-        
+
+        std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
+
         /**
          *  This method will genrate new owner, active, and memo keys for the new account which
          *  will be controlable by this xuanpin. There is a fee associated with account creation
@@ -619,9 +621,7 @@ namespace taiyi { namespace xuanpin {
          *  @param limit - the maximum number of items that can be queried (0 to 1000], must be less than from
          */
         map< uint32_t, baiyujing_api::api_operation_object > get_account_history( string account, uint32_t from, uint32_t limit );
-        
-        std::map<string,std::function<string(fc::variant,const fc::variants&)>> get_result_formatters() const;
-        
+                
         void encrypt_keys();
         
         /**
