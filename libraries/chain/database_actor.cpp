@@ -171,6 +171,7 @@ namespace taiyi { namespace chain {
             a.age = 0;
             
             a.location = zone.id;
+            a.base = zone.id;
             
             a.born = true;
             a.born_time = now;
@@ -186,8 +187,12 @@ namespace taiyi { namespace chain {
             a.standpoint = (hasher::hash( seed + a.id + 1619) % 1000);
 
             a.last_update = now;
+            a.next_tick_time = now; //will active actor tick
         });
                         
+        //grow as first birthday
+        try_trigger_actor_talents(act, 0);
+        
         push_virtual_operation( actor_born_operation( get<account_object, by_id>(get<nfa_object, by_id>(act.nfa_id).owner_account).name, act.name, zone.name, act.nfa_id ) );
     }
     //=============================================================================
@@ -195,6 +200,169 @@ namespace taiyi { namespace chain {
     {
         const auto& zone = get_zone(zone_name);
         return born_actor(act, gender, sexuality, zone);
+    }
+    //=============================================================================
+    void database::process_actor_tick()
+    {
+        uint32_t hbn = head_block_num();
+        const auto& tiandao = get_tiandao_properties();
+        auto now = head_block_time();
+
+        //list Actors this tick will sim
+        const auto& actor_idx = get_index< actor_index, by_tick_time >();
+        auto run_num = actor_idx.size() / TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM + 1;
+        auto itactor = actor_idx.begin();
+        auto endactor = actor_idx.end();
+        std::vector<const actor_object*> tick_actors;
+        tick_actors.reserve(run_num);
+        while( itactor != endactor && run_num > 0  )
+        {
+            if(itactor->next_tick_time > now)
+                break;
+            
+            tick_actors.push_back(&(*itactor));
+            run_num--;
+            
+            ++itactor;
+        }
+        
+        for(const auto* a : tick_actors) {
+            const auto& actor = *a;
+            
+            modify(actor, [&]( actor_object& obj ) {
+                obj.next_tick_time = now + TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL;
+            });
+
+            if(actor.health <= 0) {
+                //dead
+                //wlog("actor ${a} is dead!", ("a", actor.name));
+            }
+            else {
+                //try grow
+                int should_age = tiandao.v_years - actor.born_vyears;
+                if(actor.age < should_age) {
+                    if(tiandao.v_times >= actor.born_vtimes) {
+                        uint16_t age = actor.age + 1;
+                        //process talents
+                        try_trigger_actor_talents(actor, age);
+                                            
+                        modify( actor, [&]( actor_object& act ) {
+                            act.age = age; //note age may be changed in event processing
+                            
+                            if(act.age >= 30) {
+                                //healthy down
+                                act.health_max = std::max(0, act.health_max - 1);
+                                act.health = std::min(act.health, act.health_max);
+                            }
+                            
+                            act.last_update = now;
+                        });
+                        //TODO: 回调合约生长函数
+                        wlog("${y}年${m}月，${a}成长到${age}岁，健康${h}.", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor.name)("age", age)("h", actor.health));
+                    }
+                }
+                                        
+                //procreate（生育）
+                //try_procreate(npc, actor, *this);
+            }
+        }
+    }
+    //=============================================================================
+    void database::try_trigger_actor_talents( const actor_object& act, uint16_t age )
+    {
+        const auto& nfa = get< nfa_object, by_id >( act.nfa_id );
+        const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
+
+        modify(nfa, [&]( nfa_object& obj ) {
+            util::update_manabar( get_dynamic_global_properties(), obj, true );
+        });
+
+        //process talents
+        const actor_talents_object& actor_talents = get< actor_talents_object, by_actor >( act.id );
+        
+        std::map<int64_t, int> talent_trgger_numbers;
+        for(auto itlt = actor_talents.talents.begin(); itlt != actor_talents.talents.end(); itlt++) {
+            const actor_talent_rule_object& tobj = get< actor_talent_rule_object, by_id >(itlt->first);
+            
+            if(itlt->second >= tobj.max_triggers)
+                continue;
+            
+            const auto* contract_ptr = find<contract_object, by_id>(tobj.main_contract);
+            if(contract_ptr == nullptr)
+                continue;
+            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("trigger")));
+            if(abi_itr == contract_ptr->contract_ABI.end())
+                continue;
+            
+            //触发天赋合约函数
+            {
+                vector<lua_types> value_list; //no params.
+                contract_worker worker;
+
+                LuaContext context;
+                initialize_VM_baseENV(context);
+                flat_set<public_key_type> sigkeys;
+
+                //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+                long long old_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+                long long vm_drops = old_drops;
+                bool trigger_fail = false;
+                bool triggered = false;
+                try {
+                    lua_table result_table = worker.do_nfa_contract_function_return_table(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+                    
+                    auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
+                    if(it_triggered == result_table.v.end()) {
+                        trigger_fail = true;
+                        wlog("Actor (${a}) trigger talent #${t} return invalid result, need \"triggered\"", ("a", act.name)("t", tobj.id));
+                    }
+                    else
+                        triggered = it_triggered->second.get<lua_bool>().v;
+                }
+                catch (fc::exception e) {
+                    //任何错误都不能照成核心循环崩溃
+                    trigger_fail = true;
+                    wlog("Actor (${a}) trigger talent #${t} fail. err: ${e}", ("a", act.name)("t", tobj.id)("e", e.to_string()));
+                }
+                catch (...) {
+                    //任何错误都不能照成核心循环崩溃
+                    trigger_fail = true;
+                    wlog("Actor (${a}) trigger talent #${t} fail.", ("a", act.name)("t", tobj.id));
+                }
+                int64_t used_drops = old_drops - vm_drops;
+
+                //执行错误仍然要扣费，但是不影响下次触发
+                int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+                modify( nfa, [&]( nfa_object& obj ) {
+                    if( obj.manabar.current_mana < used_mana )
+                        obj.manabar.current_mana = 0;
+                    else
+                        obj.manabar.current_mana -= used_mana;
+                });
+                
+                //reward contract owner
+                const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
+                reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+                
+                if (!triggered)
+                    continue;
+            }
+            
+            //trigger number
+            talent_trgger_numbers[itlt->first] = itlt->second + 1;
+        }
+        
+        //update talent trigger numbers
+        modify(actor_talents, [&]( actor_talents_object& tobj ) {
+            for(auto p : talent_trgger_numbers)
+                tobj.talents[p.first] = p.second;
+        });
+        
+        //push talent trigger event message
+        for(auto p : talent_trgger_numbers) {
+            auto const& t = get< actor_talent_rule_object, by_id >(p.first);
+            push_virtual_operation( actor_talent_trigger_operation( owner_account.name, act.name, act.nfa_id, p.first, t.title, t.description, age ) );
+        }
     }
 
 } } //taiyi::chain

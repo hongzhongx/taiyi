@@ -71,6 +71,7 @@ namespace taiyi { namespace protocol {
         tiandao_time_change_operation,
 
         actor_born_operation,
+        actor_talent_trigger_operation,
         actor_movement_operation
 
     > operation;

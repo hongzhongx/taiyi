@@ -76,6 +76,7 @@ namespace taiyi { namespace chain {
         uint32_t            pregnant_lock_end_block_num = 0;    //怀孕锁定期结束时间
 
         time_point_sec      last_update;
+        time_point_sec      next_tick_time;
 
         E_ACTOR_STANDPOINT_TYPE get_standpoint_type() const {
             if(standpoint <= 124)
@@ -97,6 +98,7 @@ namespace taiyi { namespace chain {
     struct by_base;
     struct by_health;
     struct by_solor_term;
+    struct by_tick_time;
     typedef multi_index_container<
         actor_object,
         indexed_by<
@@ -125,6 +127,12 @@ namespace taiyi { namespace chain {
             ordered_unique< tag< by_solor_term >,
                 composite_key< actor_object,
                     member< actor_object, int, &actor_object::born_vtimes >,
+                    member< actor_object, actor_id_type, &actor_object::id >
+                >
+            >,
+            ordered_unique< tag< by_tick_time >,
+                composite_key< actor_object,
+                    member< actor_object, time_point_sec, &actor_object::next_tick_time >,
                     member< actor_object, actor_id_type, &actor_object::id >
                 >
             >
@@ -236,6 +244,7 @@ namespace taiyi { namespace chain {
         std::string         title;
         std::string         description;
         int                 init_attribute_amount_modifier = 0; //对角色出生时候初始化属性的总点数加成
+        int                 max_triggers = 1;   //最大触发次数
         bool                removed = false;
         
         time_point_sec      last_update;
@@ -295,7 +304,7 @@ namespace mira {
 
 FC_REFLECT_ENUM( taiyi::chain::E_ACTOR_STANDPOINT_TYPE, (UPRIGHT)(KINDNESS)(MIDDLEBROW)(REBEL)(SOLIPSISM) )
 
-FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(init_attribute_amount_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(loyalty)(location)(base)(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update))
+FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(init_attribute_amount_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(loyalty)(location)(base)(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update)(next_tick_time))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_object, taiyi::chain::actor_index)
 
 FC_REFLECT(taiyi::chain::actor_core_attributes_object, (id)(actor)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(last_update)(created))
@@ -304,7 +313,7 @@ CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_core_attributes_object, taiyi::chai
 FC_REFLECT(taiyi::chain::actor_group_object, (id)(actor)(leader))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_group_object, taiyi::chain::actor_group_index)
 
-FC_REFLECT(taiyi::chain::actor_talent_rule_object, (id)(main_contract)(title)(description)(init_attribute_amount_modifier)(removed)(last_update)(created))
+FC_REFLECT(taiyi::chain::actor_talent_rule_object, (id)(main_contract)(title)(description)(init_attribute_amount_modifier)(max_triggers)(removed)(last_update)(created))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_talent_rule_object, taiyi::chain::actor_talent_rule_index)
 
 FC_REFLECT(taiyi::chain::actor_talents_object, (id)(actor)(talents)(last_update)(created))

@@ -220,6 +220,12 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
         
+        void operator()( const actor_talent_trigger_operation& op )
+        {
+            _impacted.insert( op.owner );
+            _impacted_nfas.insert( op.nfa );
+        }
+        
         void operator()( const actor_movement_operation& op )
         {
             _impacted.insert( op.owner );

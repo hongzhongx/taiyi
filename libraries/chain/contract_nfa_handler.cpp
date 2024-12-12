@@ -8,6 +8,7 @@
 #include <chain/account_object.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
+#include <chain/actor_objects.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -424,6 +425,136 @@ namespace taiyi { namespace chain {
         catch (fc::exception e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::modify_actor_attributes(const lua_map& values)
+    {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            
+            auto now = _db.head_block_time();
+
+            static string health_key    = "health";
+            static string strength_key  = "strength";
+            static string physique_key  = "physique";
+            static string agility_key   = "agility";
+            static string vitality_key  = "vitality";
+            static string comprehension_key  = "comprehension";
+            static string willpower_key = "willpower";
+            static string charm_key     = "charm";
+            static string mood_key      = "mood";
+
+            
+            const actor_object& actor = _db.get< actor_object, by_nfa_id >( _caller.id );
+            const actor_core_attributes_object& core_attrs = _db.get< actor_core_attributes_object, by_actor >( actor.id );
+
+            for (auto itr = values.begin(); itr != values.end(); itr++)
+            {
+                lua_types key = itr->first.cast_to_lua_types();
+                if (key.which() == lua_types::tag<lua_string>::value) {
+                    auto k = key.get<lua_string>().v;
+                    if( k == strength_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.strength_max = std::max<int16_t>(0, attrs.strength_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == physique_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.physique_max = std::max<int16_t>(0, attrs.physique_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == agility_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.agility_max = std::max<int16_t>(0, attrs.agility_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == vitality_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.vitality_max = std::max<int16_t>(0, attrs.vitality_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == comprehension_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.comprehension_max = std::max<int16_t>(0, attrs.comprehension_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == willpower_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.willpower_max = std::max<int16_t>(0, attrs.willpower_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == charm_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.charm_max = std::max<int16_t>(0, attrs.charm_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == mood_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(core_attrs, [&]( actor_core_attributes_object& attrs ) {
+                                attrs.mood_max = std::max<int16_t>(0, attrs.mood_max + v);
+                                attrs.last_update = now;
+                            });
+                        }
+                    }
+                    else if( k == health_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "attributes value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify( actor, [&]( actor_object& obj ) {
+                                obj.health_max = std::max<int16_t>(0, obj.health_max + v);
+                                obj.last_update = now;
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.what());
         }
     }
 

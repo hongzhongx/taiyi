@@ -348,6 +348,7 @@ namespace taiyi { namespace chain {
         void initialize_actor_talent_rule_object(const account_object& creator, actor_talent_rule_object& rule);
         void born_actor( const actor_object& act, int gender, int sexuality, const zone_object& zone );
         void born_actor( const actor_object& act, int gender, int sexuality, const string& zone_name );
+        void try_trigger_actor_talents( const actor_object& act, uint16_t age );
 
         //************ database_zone.cpp ************//
 
@@ -421,6 +422,7 @@ namespace taiyi { namespace chain {
         void notify_changed_objects();
 
         void process_nfa_tick();
+        void process_actor_tick();
 
     private:
         optional< chainbase::database::session > _pending_tx_session;

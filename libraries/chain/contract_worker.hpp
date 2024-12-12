@@ -22,7 +22,8 @@ namespace taiyi { namespace chain {
         std::string eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db);
         std::string do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db);
         void do_nfa_contract_function(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db);
-        
+        protocol::lua_table do_nfa_contract_function_return_table(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db);
+
         const contract_result& get_result() { return result; }
         
     protected:

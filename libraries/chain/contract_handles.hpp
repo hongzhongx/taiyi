@@ -147,6 +147,7 @@ namespace taiyi { namespace chain {
         void read_chain(const lua_map& read_list);
         void write_chain(const lua_map& write_list);
         void destroy();
+        void modify_actor_attributes(const lua_map& values);
 
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);

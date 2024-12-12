@@ -296,7 +296,9 @@ namespace taiyi { namespace chain {
         registerFunction("remove_from_parent", &contract_nfa_handler::remove_from_parent);        
         registerFunction("read_chain", &contract_nfa_handler::read_chain);
         registerFunction("write_chain", &contract_nfa_handler::write_chain);
-        registerFunction("destroy", &contract_nfa_handler::destroy);        
+        registerFunction("destroy", &contract_nfa_handler::destroy);
+        registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
+        
         registerFunction<contract_nfa_handler, void(int64_t to, double, const string&, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler._caller.id, to, amount, symbol, enable_logger);
         });

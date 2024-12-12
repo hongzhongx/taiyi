@@ -1745,7 +1745,8 @@ namespace taiyi { namespace chain {
         
         process_tiandao();
         process_nfa_tick();
-        
+        process_actor_tick();
+
         process_hardforks();
         
         // notify observers that the block has been applied
