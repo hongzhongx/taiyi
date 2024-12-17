@@ -114,16 +114,48 @@ namespace taiyi { namespace chain {
         return result;
     } FC_CAPTURE_AND_RETHROW( (o) ) }
     //=============================================================================
+    operation_result approve_nfa_active_evaluator::do_apply( const approve_nfa_active_operation& o )
+    { try {
+        const auto& owner_account = _db.get_account(o.owner);
+        const auto& to_account = _db.get_account(o.active_account);
+        
+        const auto* nfa = _db.find<nfa_object, by_id>(o.id);
+        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found", ("i", o.id));
+        
+        FC_ASSERT(owner_account.id == nfa->owner_account, "Can not change active operator of NFA not ownd by you");
+        
+        _db.modify(*nfa, [&](nfa_object &obj) {
+            obj.active_account = to_account.id;
+        });
+                
+        contract_result result;
+        
+        protocol::nfa_affected affected;
+        affected.affected_account = o.owner;
+        affected.affected_item = nfa->id;
+        affected.action = nfa_affected_type::modified;
+        result.contract_affecteds.push_back(std::move(affected));
+        
+        if(o.owner != o.active_account) {
+            affected.affected_account = o.active_account;
+            affected.affected_item = nfa->id;
+            affected.action = nfa_affected_type::modified;
+            result.contract_affecteds.push_back(std::move(affected));
+        }
+        
+        return result;
+    } FC_CAPTURE_AND_RETHROW( (o) ) }
+    //=============================================================================
     operation_result action_nfa_evaluator::do_apply( const action_nfa_operation& o )
     { try {
         
-        const auto& owner = _db.get_account( o.owner );
+        const auto& caller = _db.get_account( o.caller );
 
         const auto* nfa = _db.find<nfa_object, by_id>(o.id);
         FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
-        FC_ASSERT(owner.id == nfa->owner_account, "Can not action NFA not ownd by you.");
+        FC_ASSERT(caller.id == nfa->owner_account || caller.id == nfa->active_account, "Can not action NFA not owned or actived by you.");
 
-        _db.modify( owner, [&]( account_object& a ) {
+        _db.modify( caller, [&]( account_object& a ) {
             util::update_manabar( _db.get_dynamic_global_properties(), a, true );
         });
         
@@ -133,15 +165,15 @@ namespace taiyi { namespace chain {
         _db.initialize_VM_baseENV(context);
         
         //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
-        long long old_drops = owner.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long old_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         string err = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, vm_drops, true, context, _db);
         FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
         int64_t used_drops = old_drops - vm_drops;
 
         int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( owner.manabar.has_mana(used_mana), "caller account does not have enough mana to action nfa." );
-        _db.modify( owner, [&]( account_object& a ) {
+        FC_ASSERT( caller.manabar.has_mana(used_mana), "caller account does not have enough mana to action nfa." );
+        _db.modify( caller, [&]( account_object& a ) {
             a.manabar.use_mana( used_mana );
         });
         

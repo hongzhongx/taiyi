@@ -243,7 +243,7 @@ namespace taiyi { namespace danuo {
         
         //value_list 目前仅支持string, bool, double, int64, array
         string action_actor(const account_name_type& account, const string& actor_name, const string& action, const vector<fc::variant>& value_list);
-        baiyujing_api::legacy_signed_transaction action_nfa_consequence(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast);
+        baiyujing_api::legacy_signed_transaction action_nfa_consequence(const account_name_type& caller, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast);
     };
     
 } }

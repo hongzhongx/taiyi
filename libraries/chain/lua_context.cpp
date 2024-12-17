@@ -220,6 +220,11 @@ namespace taiyi { namespace chain {
         registerMember("wood", &contract_asset_resources::wood);
         registerMember("fabric", &contract_asset_resources::fabric);
         registerMember("herb", &contract_asset_resources::herb);
+        
+        //tiandao
+        registerMember("v_years", &contract_tiandao_property::v_years);
+        registerMember("v_months", &contract_tiandao_property::v_months);
+        registerMember("v_times", &contract_tiandao_property::v_times);
 
         //contract handler
         registerFunction("log", &contract_handler::log);
@@ -230,6 +235,7 @@ namespace taiyi { namespace chain {
         registerFunction("time", &contract_handler::head_block_time);
         registerFunction("hash256", &contract_handler::hash256);
         registerFunction("hash512", &contract_handler::hash512);
+        registerFunction("generate_hash", &contract_handler::generate_hash);        
         registerFunction("make_memo", &contract_handler::make_memo);
         registerFunction("make_release", &contract_handler::make_release);
         registerFunction("random", &contract_handler::contract_random);
@@ -263,7 +269,9 @@ namespace taiyi { namespace chain {
         registerFunction("get_actor_info_by_name", &contract_handler::get_actor_info_by_name);
         registerFunction("get_actor_core_attributes", &contract_handler::get_actor_core_attributes);        
         registerFunction("born_actor", &contract_handler::born_actor);
-        registerFunction("move_actor", &contract_handler::move_actor);        
+        registerFunction("move_actor", &contract_handler::move_actor);
+        registerFunction("exploit_zone", &contract_handler::exploit_zone);
+        registerFunction("get_tiandao_property", &contract_handler::get_tiandao_property);        
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);
@@ -281,6 +289,7 @@ namespace taiyi { namespace chain {
         registerMember("symbol", &contract_nfa_base_info::symbol);
         registerMember("creator_account", &contract_nfa_base_info::creator_account);
         registerMember("owner_account", &contract_nfa_base_info::owner_account);
+        registerMember("active_account", &contract_nfa_base_info::active_account);
         registerMember("qi", &contract_nfa_base_info::qi);
         registerMember("parent", &contract_nfa_base_info::parent);
         registerMember("data", &contract_nfa_base_info::data);

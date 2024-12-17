@@ -37,7 +37,7 @@ namespace taiyi { namespace chain {
 
     void database::create_basic_nfa_symbol_objects()
     {
-        const auto& creator = get_account( TAIYI_YEMING_ACCOUNT );
+        const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
         create_nfa_symbol_object(creator, "nfa.actor.default", "默认的角色", "contract.actor.default");
         create_nfa_symbol_object(creator, "nfa.zone.default", "默认的区域", "contract.zone.default");
     }
@@ -72,6 +72,7 @@ namespace taiyi { namespace chain {
         const auto& nfa = create<nfa_object>([&](nfa_object& obj) {
             obj.creator_account = creator.id;
             obj.owner_account = creator.id;
+            obj.active_account = creator.id;
             
             obj.symbol_id = nfa_symbol.id;
             obj.main_contract = nfa_symbol.default_contract;

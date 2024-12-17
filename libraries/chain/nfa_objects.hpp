@@ -61,6 +61,7 @@ namespace taiyi { namespace chain {
         
         account_id_type             creator_account;
         account_id_type             owner_account;
+        account_id_type             active_account; // the account who has the usage rights of the nfa
 
         nfa_symbol_id_type          symbol_id;
         
@@ -129,5 +130,5 @@ namespace taiyi { namespace chain {
 FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
-FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(manabar)(created_time)(next_tick_time))
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(manabar)(created_time)(next_tick_time))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)

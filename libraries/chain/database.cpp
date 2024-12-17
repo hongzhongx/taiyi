@@ -1359,6 +1359,7 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< create_nfa_symbol_evaluator              >();
         _my->_evaluator_registry.register_evaluator< create_nfa_evaluator                     >();
         _my->_evaluator_registry.register_evaluator< transfer_nfa_evaluator                   >();
+        _my->_evaluator_registry.register_evaluator< approve_nfa_active_evaluator                 >();
         _my->_evaluator_registry.register_evaluator< action_nfa_evaluator                     >();
         
         _my->_evaluator_registry.register_evaluator< create_actor_talent_rule_evaluator       >();
@@ -1427,11 +1428,11 @@ namespace taiyi { namespace chain {
         });
         
         create< account_object >( [&]( account_object& a ) {
-            a.name = TAIYI_YEMING_ACCOUNT;
-            a.recovery_account = TAIYI_YEMING_ACCOUNT;
+            a.name = TAIYI_DANUO_ACCOUNT;
+            a.recovery_account = TAIYI_DANUO_ACCOUNT;
         } );
         create< account_authority_object >( [&]( account_authority_object& auth ) {
-            auth.account = TAIYI_YEMING_ACCOUNT;
+            auth.account = TAIYI_DANUO_ACCOUNT;
             auth.owner.weight_threshold = 1;
             auth.active.weight_threshold = 1;
             auth.posting.weight_threshold = 1;

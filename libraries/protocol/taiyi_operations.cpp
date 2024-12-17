@@ -264,10 +264,16 @@ namespace taiyi { namespace protocol {
         
         FC_ASSERT( from != to, "no need transfer NFA to self." );
     }
-    
-    void action_nfa_operation::validate() const
+
+    void approve_nfa_active_operation::validate() const
     {
         validate_account_name( owner );
+        validate_account_name( active_account );        
+    }
+
+    void action_nfa_operation::validate() const
+    {
+        validate_account_name( caller );
     }
 
     void create_actor_talent_rule_operation::validate() const

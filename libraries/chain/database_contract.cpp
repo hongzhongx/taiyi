@@ -141,7 +141,7 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void database::create_basic_contract_objects()
     {
-        const auto& owner = get_account( TAIYI_YEMING_ACCOUNT );
+        const auto& owner = get_account( TAIYI_DANUO_ACCOUNT );
         long long vm_drops = 1000000;
         create_contract_objects(owner, "contract.baseENV", CONTRACT_BASE_ENV, public_key_type(), vm_drops);
 

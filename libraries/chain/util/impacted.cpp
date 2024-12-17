@@ -149,9 +149,17 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.id );
         }
 
-        void operator()( const action_nfa_operation& op )
+        void operator()( const approve_nfa_active_operation& op )
         {
             _impacted.insert( op.owner );
+            _impacted.insert( op.active_account );
+
+            _impacted_nfas.insert( op.id );
+        }
+        
+        void operator()( const action_nfa_operation& op )
+        {
+            _impacted.insert( op.caller );
 
             _impacted_nfas.insert( op.id );
         }

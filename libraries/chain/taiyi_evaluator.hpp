@@ -34,6 +34,7 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( create_nfa_symbol )
     TAIYI_DEFINE_EVALUATOR( create_nfa )
     TAIYI_DEFINE_EVALUATOR( transfer_nfa )
+    TAIYI_DEFINE_EVALUATOR( approve_nfa_active )
     TAIYI_DEFINE_EVALUATOR( action_nfa )
 
     TAIYI_DEFINE_EVALUATOR( create_actor_talent_rule )

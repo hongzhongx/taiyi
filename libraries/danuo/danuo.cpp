@@ -1062,6 +1062,7 @@ namespace taiyi { namespace danuo {
             for(const string& s : results)
                 ss += s + "\n" + NOR;
             
+            ss += "\n" + NOR;            
             ansi(ss);
             return ss;
         }
@@ -1101,11 +1102,11 @@ namespace taiyi { namespace danuo {
         }
     }
     //=============================================================================
-    baiyujing_api::legacy_signed_transaction danuo_api::action_nfa_consequence(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast)
+    baiyujing_api::legacy_signed_transaction danuo_api::action_nfa_consequence(const account_name_type& caller, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast)
     { try {
         FC_ASSERT( !is_locked() );
         action_nfa_operation op;
-        op.owner = owner;
+        op.caller = caller;
         op.id = nfa_id;
         op.action = action;
         op.value_list = detail::from_variants_to_lua_types(value_list);
@@ -1117,6 +1118,6 @@ namespace taiyi { namespace danuo {
         auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
         transaction.operation_results = get_transaction_results(transaction.transaction_id);
         return transaction;
-    } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(action)(value_list) ) }
+    } FC_CAPTURE_AND_RETHROW( (caller)(nfa_id)(action)(value_list) ) }
 
 } } // taiyi::danuo

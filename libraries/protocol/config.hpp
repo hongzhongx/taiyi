@@ -170,10 +170,10 @@
 #define TAIYI_PROXY_TO_SELF_ACCOUNT             ""
 /// Represents the canonical root post parent account
 #define TAIYI_ROOT_POST_PARENT                  (account_name_type())
-/// Represents the account with NO authority which holds resources for payouts according to given proposals
+/// Represents the account with NO authority who holds resources for payouts according to given proposals
 #define TAIYI_TREASURY_ACCOUNT                  "zuowang.dao"
-/// Represents the account with NO authority which records tiandao
-#define TAIYI_YEMING_ACCOUNT                    "taiyi.yeming"
+/// Represents the account with NO authority who can operate tiandao
+#define TAIYI_DANUO_ACCOUNT                     "taiyi.danuo"
 
 #define TAIYI_COMMITTEE_ACCOUNT                 "sifu"
 ///@}
@@ -204,4 +204,4 @@
 #define TAIYI_ZONE_NAME_LIMIT                   (256)
 #define TAIYI_ZONE_TYPE_NAME_LIMIT              (128)
 
-#define TAIYI_USEMANA_ACTOR_MOVING_SCALE        1000
+#define TAIYI_USEMANA_ACTOR_ACTION_SCALE        1000

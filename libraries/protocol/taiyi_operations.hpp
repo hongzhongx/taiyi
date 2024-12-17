@@ -480,15 +480,26 @@ namespace taiyi { namespace protocol {
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(from); }
     };
         
+    struct approve_nfa_active_operation : public base_operation
+    {
+        account_name_type       owner;
+        account_name_type       active_account;
+
+        int64_t                 id; ///nfa id
+        
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
+    };
+    
     struct action_nfa_operation : public base_operation
     {
-        account_name_type   owner;      ///nfa owner
+        account_name_type   caller;     ///nfa operator account name
         int64_t             id;         ///nfa id
         string              action;     ///action name
         vector<lua_types>   value_list; ///action function parameter value list
         
         void validate()const;
-        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(caller); }
     };
     
     struct create_actor_talent_rule_operation : public base_operation
@@ -550,7 +561,8 @@ FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)
 FC_REFLECT( taiyi::protocol::create_nfa_symbol_operation, (creator)(symbol)(describe)(default_contract) )
 FC_REFLECT( taiyi::protocol::create_nfa_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::transfer_nfa_operation, (from)(to)(id) )
-FC_REFLECT( taiyi::protocol::action_nfa_operation, (owner)(id)(action)(value_list) )
+FC_REFLECT( taiyi::protocol::approve_nfa_active_operation, (owner)(active_account)(id) )
+FC_REFLECT( taiyi::protocol::action_nfa_operation, (caller)(id)(action)(value_list) )
 
 FC_REFLECT( taiyi::protocol::create_actor_talent_rule_operation, (creator)(contract) )
 FC_REFLECT( taiyi::protocol::create_actor_operation, (fee)(creator)(family_name)(last_name) )

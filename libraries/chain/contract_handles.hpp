@@ -51,6 +51,15 @@ namespace taiyi { namespace chain {
 
         contract_asset_resources(const nfa_object& nfa, database& db);
     };
+    
+    struct contract_tiandao_property
+    {
+        uint32_t    v_years;
+        uint32_t    v_months;
+        uint32_t    v_times; //same as solar term number
+
+        contract_tiandao_property(const tiandao_property_object& obj, database& db);
+    };
 
     struct contract_nfa_base_info
     {
@@ -58,6 +67,7 @@ namespace taiyi { namespace chain {
         string      symbol;
         string      owner_account;
         string      creator_account;
+        string      active_account;
         int64_t     qi;
         int64_t     parent;
         lua_map     data;
@@ -202,6 +212,7 @@ namespace taiyi { namespace chain {
         string hash256(string source);
         string hash512(string source);
         uint32_t head_block_time();
+        int64_t generate_hash(uint32_t offset);
         const account_object& get_account(string name);
         int64_t get_account_balance(account_id_type account, asset_symbol_type symbol);
         void change_contract_authority(string authority);
@@ -209,6 +220,7 @@ namespace taiyi { namespace chain {
         void invoke_contract_function(string contract_id_or_name, string function_name, string value_list_json);
         const contract_object& get_contract(string name);
         void make_release();
+        contract_tiandao_property get_tiandao_property();
 
         lua_map get_contract_public_data(string name_or_id);
         
@@ -235,6 +247,7 @@ namespace taiyi { namespace chain {
         contract_zone_base_info get_zone_info_by_name(const string& name);
         void connect_zones(int64_t from_zone_nfa_id, int64_t to_zone_nfa_id);
         vector<contract_actor_base_info> list_actors_on_zone(int64_t nfa_id);
+        string exploit_zone(const string& actor_name, const string& zone_name);
 
         //Actor
         bool is_actor_valid(int64_t nfa_id);
@@ -250,7 +263,8 @@ namespace taiyi { namespace chain {
         void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
         void flush_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
         void read_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
-        lua_map call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params);
+        lua_map call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist = true);
+        lua_map call_nfa_function_with_caller(const account_object& caller, int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist = true);
     };
     
     asset_symbol_type s_get_symbol_type_from_string(const string name);

@@ -1950,6 +1950,21 @@ namespace taiyi { namespace xuanpin {
         return my->sign_transaction( tx, broadcast );
     } FC_CAPTURE_AND_RETHROW( (from)(to)(nfa_id)(broadcast) ) }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::approve_nfa_active( const account_name_type& owner, const account_name_type& active_account, int64_t nfa_id, bool broadcast )
+    { try {
+        FC_ASSERT( !is_locked() );
+        approve_nfa_active_operation op;
+        op.owner = owner;
+        op.active_account = active_account;
+        op.id = nfa_id;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (owner)(active_account)(nfa_id)(broadcast) ) }
+
     baiyujing_api::api_contract_action_info xuanpin_api::get_nfa_action_info(int64_t nfa_id, const string& action)
     {
         return my->_remote_api->get_nfa_action_info( nfa_id, action );
@@ -1982,11 +1997,11 @@ namespace taiyi { namespace xuanpin {
         }
     }
     
-    baiyujing_api::legacy_signed_transaction xuanpin_api::action_nfa_consequence(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast)
+    baiyujing_api::legacy_signed_transaction xuanpin_api::action_nfa_consequence(const account_name_type& caller, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast)
     { try {
         FC_ASSERT( !is_locked() );
         action_nfa_operation op;
-        op.owner = owner;
+        op.caller = caller;
         op.id = nfa_id;
         op.action = action;
         op.value_list = detail::from_variants_to_lua_types(value_list);
@@ -1998,7 +2013,7 @@ namespace taiyi { namespace xuanpin {
         auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
         transaction.operation_results = get_transaction_results(transaction.transaction_id);
         return transaction;
-    } FC_CAPTURE_AND_RETHROW( (owner)(nfa_id)(action)(value_list) ) }
+    } FC_CAPTURE_AND_RETHROW( (caller)(nfa_id)(action)(value_list) ) }
 
     baiyujing_api::find_nfas_return xuanpin_api::find_nfas( vector< int64_t > ids )
     {

@@ -45,6 +45,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef create_nfa_symbol_operation             legacy_create_nfa_symbol_operation;
     typedef create_nfa_operation                    legacy_create_nfa_operation;
     typedef transfer_nfa_operation                  legacy_transfer_nfa_operation;
+    typedef approve_nfa_active_operation                legacy_approve_nfa_active_operation;
     typedef action_nfa_operation                    legacy_action_nfa_operation;
     typedef tiandao_year_change_operation           legacy_tiandao_year_change_operation;
     typedef tiandao_month_change_operation          legacy_tiandao_month_change_operation;
@@ -447,6 +448,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_create_nfa_symbol_operation,
         legacy_create_nfa_operation,
         legacy_transfer_nfa_operation,
+        legacy_approve_nfa_active_operation,
         legacy_action_nfa_operation,
 
         legacy_create_zone_operation,
@@ -500,6 +502,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const create_nfa_symbol_operation& op )const               { l_op = op; return true; }
         bool operator()( const create_nfa_operation& op )const                      { l_op = op; return true; }
         bool operator()( const transfer_nfa_operation& op )const                    { l_op = op; return true; }
+        bool operator()( const approve_nfa_active_operation& op )const                  { l_op = op; return true; }
         bool operator()( const action_nfa_operation& op )const                      { l_op = op; return true; }
         bool operator()( const tiandao_year_change_operation& op )const             { l_op = op; return true; }
         bool operator()( const tiandao_month_change_operation& op )const            { l_op = op; return true; }

@@ -24,6 +24,7 @@ namespace taiyi { namespace chain {
         
         owner_account = db.get<account_object, by_id>(nfa.owner_account).name;
         creator_account = db.get<account_object, by_id>(nfa.creator_account).name;
+        active_account = db.get<account_object, by_id>(nfa.active_account).name;
     }
     //=============================================================================
     contract_nfa_handler::contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch)
@@ -97,7 +98,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
 
             asset qi(amount, QI_SYMBOL);
             FC_ASSERT(_db.get_nfa_balance(_caller, QI_SYMBOL) >= qi, "NFA not have enough qi to convert.");
@@ -146,7 +147,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
 
             const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
             FC_ASSERT(child_nfa.owner_account == _caller_account.id, "caller account not the input nfa's owner");
@@ -166,7 +167,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
 
             const auto& parent_nfa = _db.get<nfa_object, by_id>(parent_nfa_id);
@@ -186,7 +187,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             FC_ASSERT(_caller.parent != nfa_id_type::max(), "caller have no parent");
 
             const auto& parent_nfa = _db.get<nfa_object, by_id>(_caller.parent);
@@ -223,6 +224,7 @@ namespace taiyi { namespace chain {
         {
             FC_ASSERT(from != to, "It's no use transferring resource to yourself");
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
             try
             {
@@ -280,6 +282,7 @@ namespace taiyi { namespace chain {
         try
         {
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
             const account_object &to_account = _db.get<account_object, by_id>(to);
             try
             {
@@ -333,6 +336,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(_caller_account.id == from, "caller have no authority to transfer assets from this account");
             const account_object &from_account = _db.get<account_object, by_id>(from);
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
             try
@@ -391,6 +395,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            
             vector<lua_types> stacks = { lua_string("nfa_data") };
             _ch.flush_context(write_list, _contract_data_cache, stacks, _ch.contract.name);
         }
@@ -419,6 +425,7 @@ namespace taiyi { namespace chain {
                         
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 obj.owner_account = _db.get_account(TAIYI_NULL_ACCOUNT).id;
+                obj.active_account = obj.owner_account;
                 obj.next_tick_time = time_point_sec::maximum(); //disable tick
             });
         }
@@ -432,8 +439,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
-            
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+
             auto now = _db.head_block_time();
 
             static string health_key    = "health";

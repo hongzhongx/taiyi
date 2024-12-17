@@ -46,6 +46,7 @@ namespace taiyi { namespace protocol {
         create_nfa_symbol_operation,
         create_nfa_operation,
         transfer_nfa_operation,
+        approve_nfa_active_operation,
         action_nfa_operation,
     
         // zone

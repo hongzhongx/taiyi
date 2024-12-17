@@ -222,6 +222,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         {
             creator_account = db.get<account_object, by_id>(o.creator_account).name;
             owner_account = db.get<account_object, by_id>(o.owner_account).name;
+            active_account = db.get<account_object, by_id>(o.active_account).name;
             
             symbol = db.get<nfa_symbol_object, by_id>(o.symbol_id).symbol;
             
@@ -249,6 +250,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         
         account_name_type   creator_account;
         account_name_type   owner_account;
+        account_name_type   active_account;
 
         string              symbol;
         
@@ -379,6 +381,6 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(manabar)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_time) )

@@ -213,9 +213,9 @@ namespace taiyi { namespace chain {
             
             wlog("${y}年，世界人口数=${n}，出生=${m}，死亡=${d}", ("y", yn)("n", live_num)("m", born_this_year)("d", dead_this_year));
 
-            push_virtual_operation( tiandao_year_change_operation( TAIYI_YEMING_ACCOUNT, yn, mn, tn, live_num, dead_num ) );
-            push_virtual_operation( tiandao_month_change_operation( TAIYI_YEMING_ACCOUNT, yn, mn, tn ) );
-            push_virtual_operation( tiandao_time_change_operation( TAIYI_YEMING_ACCOUNT, yn, mn, tn ) );
+            push_virtual_operation( tiandao_year_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn, live_num, dead_num ) );
+            push_virtual_operation( tiandao_month_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn ) );
+            push_virtual_operation( tiandao_time_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn ) );
         }
         else {
             FC_ASSERT(tiandao.v_months <= mn, "virtual month number (${tn}) bigger than now (${mn}).", ("tn", tiandao.v_months)("mn", mn));
@@ -228,8 +228,8 @@ namespace taiyi { namespace chain {
                     t.v_times = tn;
                 });
 
-                push_virtual_operation( tiandao_month_change_operation( TAIYI_YEMING_ACCOUNT, yn, mn, tn ) );
-                push_virtual_operation( tiandao_time_change_operation( TAIYI_YEMING_ACCOUNT, yn, mn, tn ) );
+                push_virtual_operation( tiandao_month_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn ) );
+                push_virtual_operation( tiandao_time_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn ) );
             }
             else {
                 FC_ASSERT(tiandao.v_times <= tn, "virtual time number (${tn}) bigger than now (${tnn}).", ("tn", tiandao.v_times)("tnn", tn));
@@ -240,7 +240,7 @@ namespace taiyi { namespace chain {
                         t.v_times = tn;
                     });
 
-                    push_virtual_operation( tiandao_time_change_operation( TAIYI_YEMING_ACCOUNT, yn, mn, tn ) );
+                    push_virtual_operation( tiandao_time_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn ) );
                 }
             }
         }

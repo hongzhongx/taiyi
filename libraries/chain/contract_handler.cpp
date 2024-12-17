@@ -82,6 +82,11 @@ namespace taiyi { namespace chain {
         herb = db.get_nfa_balance(nfa, HERB_SYMBOL).amount.value;
     }
     //=============================================================================
+    contract_tiandao_property::contract_tiandao_property(const tiandao_property_object& obj, database& db)
+    : v_years(obj.v_years), v_months(obj.v_months), v_times(obj.v_times)
+    {
+    }
+    //=============================================================================
     contract_handler::contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys)
         : db(db), contract(contract), caller(caller), result(result), context(context), sigkeys(sigkeys)
     {
@@ -294,6 +299,13 @@ namespace taiyi { namespace chain {
         return db.head_block_time().sec_since_epoch();
     }
     //=============================================================================
+    int64_t contract_handler::generate_hash(uint32_t offset)
+    {
+        auto hblock_id = db.head_block_id();
+        uint32_t seed = hblock_id._hash[4];
+        return (int64_t)hasher::hash(seed + offset);
+    }
+    //=============================================================================
     string contract_handler::hash256(string source)
     {
         return fc::sha256::hash(source).str();
@@ -345,7 +357,18 @@ namespace taiyi { namespace chain {
         catch (fc::exception e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
-            std::terminate();
+        }
+    }
+    //=============================================================================
+    contract_tiandao_property contract_handler::get_tiandao_property()
+    {
+        try
+        {
+            return contract_tiandao_property(db.get_tiandao_properties(), db);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
     }
     //=============================================================================
@@ -677,7 +700,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    lua_map contract_handler::call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params)
+    lua_map contract_handler::call_nfa_function_with_caller(const account_object& caller, int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist)
     {
         //TODO: call产生的消耗
         LuaContext nfa_context;
@@ -700,7 +723,12 @@ namespace taiyi { namespace chain {
             }
                         
             auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
-            FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
+            if(func_abi_itr == contract_ptr->contract_ABI.end()) {
+                if (assert_when_function_not_exist)
+                    FC_ASSERT(false, "${f} not found", ("f", function_name));
+                else
+                    return lua_map();
+            }
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
@@ -714,9 +742,9 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys);
-            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db, ch);
+            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, caller.name, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
+            contract_handler ch(db, caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys);
+            contract_nfa_handler cnh(caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
             nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -777,12 +805,19 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    lua_map contract_handler::call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist)
+    {
+        auto current_contract_name = context.readVariable<string>("current_contract");
+        auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
+        return call_nfa_function_with_caller(current_ch->caller, nfa_id, function_name, params, assert_when_function_not_exist);
+    }
+    //=============================================================================
     void contract_handler::change_nfa_contract(int64_t nfa_id, const string& contract_name)
     {
         try
         {
             const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa.owner_account == caller.id, "caller account not the nfa #${n}'s owner", ("n", nfa_id));
+            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the nfa #${n}'s owner or active operator", ("n", nfa_id));
 
             const auto* contract = db.find<contract_object, by_name>(contract_name);
             FC_ASSERT(contract != nullptr, "contract named ${a} is not exist", ("a", contract_name));
@@ -1192,7 +1227,7 @@ namespace taiyi { namespace chain {
         try
         {
             const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa.owner_account == caller.id, "caller account not the zone nfa #${z}'s owner", ("z", nfa_id));
+            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", nfa_id));
             
             const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
             FC_ASSERT(zone != nullptr, "nfa #${z} is not a zone", ("z", nfa_id));
@@ -1281,9 +1316,9 @@ namespace taiyi { namespace chain {
         try
         {
             const auto& from_zone_nfa = db.get<nfa_object, by_id>(from_zone_nfa_id);
-            FC_ASSERT(from_zone_nfa.owner_account == caller.id, "caller account not the from zone nfa #${z}'s owner", ("z", from_zone_nfa));
+            FC_ASSERT(from_zone_nfa.owner_account == caller.id || from_zone_nfa.active_account == caller.id, "caller account not the from zone nfa #${z}'s owner or active operator", ("z", from_zone_nfa));
             const auto& to_zone_nfa = db.get<nfa_object, by_id>(to_zone_nfa_id);
-            FC_ASSERT(to_zone_nfa.owner_account == caller.id, "caller account not the to zone nfa #${z}'s owner", ("z", to_zone_nfa_id));
+            FC_ASSERT(to_zone_nfa.owner_account == caller.id || to_zone_nfa.active_account == caller.id, "caller account not the to zone nfa #${z}'s owner or active operator", ("z", to_zone_nfa_id));
 
             const auto* from_zone = db.find<zone_object, by_nfa_id>(from_zone_nfa_id);
             FC_ASSERT(from_zone != nullptr, "from nfa #${z} is not a zone", ("z", from_zone_nfa_id));
@@ -1377,8 +1412,9 @@ namespace taiyi { namespace chain {
             FC_ASSERT(!actor->born, "Actor named ${n} is already born", ("n", name));
             
             const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
-            FC_ASSERT(actor_nfa.owner_account == caller.id, "Caller account is not the owner of actor");
-            
+            if(actor_nfa.owner_account != caller.id && actor_nfa.active_account != caller.id)
+                return FORMAT_MESSAGE("无权操作角色");
+
             const auto* zone = db.find<zone_object, by_name>(zone_name);
             FC_ASSERT(zone != nullptr, "Zone named ${n} is not exist", ("n", zone_name));
 
@@ -1427,8 +1463,8 @@ namespace taiyi { namespace chain {
                 return FORMAT_MESSAGE("${a}还未出生", ("a", actor_name));
 
             const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
-            if(actor_nfa.owner_account != caller.id)
-                return FORMAT_MESSAGE("无权移动角色");
+            if(actor_nfa.owner_account != caller.id && actor_nfa.active_account != caller.id)
+                return FORMAT_MESSAGE("无权操作角色");
 
             const auto& current_zone = db.get< zone_object, by_id >(actor->location);
             if(current_zone.name == zone_name)
@@ -1443,7 +1479,7 @@ namespace taiyi { namespace chain {
                 return FORMAT_MESSAGE("${a}无法直接通往${b}", ("a", current_zone.name)("b", target_zone->name));
 
             int take_days = db.calculate_moving_days_to_zone(*target_zone);
-            int64_t take_mana = take_days * TAIYI_USEMANA_ACTOR_MOVING_SCALE;
+            int64_t take_mana = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
             db.modify(actor_nfa, [&]( nfa_object& obj ) { util::update_manabar( db.get_dynamic_global_properties(), obj, true ); });
             if( take_mana > actor_nfa.manabar.current_mana )
                 return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_mana)("t", take_days)("c", actor_nfa.manabar.current_mana));
@@ -1457,11 +1493,53 @@ namespace taiyi { namespace chain {
             });
             
             //以目的地视角回调目的地函数：on_actor_enter
-            lua_map enter_param;
-            enter_param[lua_key(lua_int(1))] = lua_types(lua_int(actor_nfa.id));
-            call_nfa_function(target_zone->nfa_id, "on_actor_enter", enter_param);
+            lua_map param;
+            param[lua_key(lua_int(1))] = lua_types(lua_int(actor_nfa.id));
+            call_nfa_function(target_zone->nfa_id, "on_actor_enter", param);
             
             db.push_virtual_operation( actor_movement_operation( caller.name, actor->name, current_zone.name, target_zone->name, actor_nfa.id ) );
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+        
+        return "";
+    }
+    //=========================================================================
+    string contract_handler::exploit_zone(const string& actor_name, const string& zone_name)
+    {
+        try
+        {
+            const auto* actor = db.find<actor_object, by_name>(actor_name);
+            if(actor == nullptr)
+                return FORMAT_MESSAGE("名为${n}的角色不存在", ("n", actor_name));
+            if(!actor->born)
+                return FORMAT_MESSAGE("${a}还未出生", ("a", actor_name));
+
+            const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
+            if(actor_nfa.owner_account != caller.id && actor_nfa.active_account != caller.id)
+                return FORMAT_MESSAGE("无权操作角色");
+
+            const auto* target_zone = db.find< zone_object, by_name >( zone_name );
+            if(target_zone == nullptr)
+                return FORMAT_MESSAGE("没有名叫\"${a}\"的地方", ("a", zone_name));
+
+            const auto& current_zone = db.get< zone_object, by_id >(actor->location);
+            if(current_zone.name != zone_name)
+                return FORMAT_MESSAGE("${a}不能探索${z}，因为${a}不在${z}", ("a", actor_name)("z", zone_name));
+                    
+            int take_days = 1;
+            int64_t take_mana = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
+            db.modify(actor_nfa, [&]( nfa_object& obj ) { util::update_manabar( db.get_dynamic_global_properties(), obj, true ); });
+            if( take_mana > actor_nfa.manabar.current_mana )
+                return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_mana)("t", take_days)("c", actor_nfa.manabar.current_mana));
+            db.modify(actor_nfa, [&]( nfa_object& obj ) { obj.manabar.current_mana -= take_mana; });
+
+            //以目的地视角回调目的地函数：on_actor_exploit
+            lua_map param;
+            param[lua_key(lua_int(1))] = lua_types(lua_int(actor_nfa.id));
+            call_nfa_function_with_caller(db.get_account(TAIYI_DANUO_ACCOUNT), target_zone->nfa_id, "on_actor_exploit", param, false);
         }
         catch (fc::exception e)
         {
