@@ -150,7 +150,7 @@ namespace taiyi { namespace chain {
             const auto* contract_ptr = find<contract_object, by_id>(nfa.main_contract);
             if(contract_ptr == nullptr)
                 continue;
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("heart_beat")));
+            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));
             if(abi_itr == contract_ptr->contract_ABI.end()) {
                 modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
                 continue;
@@ -166,13 +166,14 @@ namespace taiyi { namespace chain {
 
             LuaContext context;
             initialize_VM_baseENV(context);
-            
+            flat_set<public_key_type> sigkeys;
+
             //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
             long long old_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
             bool beat_fail = false;
             try {
-                worker.do_nfa_contract_action(nfa, "heart_beat", value_list, vm_drops, true, context, *this);
+                worker.do_nfa_contract_function(nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
             }
             catch (fc::exception e) {
                 //任何错误都不能照成核心循环崩溃

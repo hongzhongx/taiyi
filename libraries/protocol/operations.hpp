@@ -73,7 +73,8 @@ namespace taiyi { namespace protocol {
 
         actor_born_operation,
         actor_talent_trigger_operation,
-        actor_movement_operation
+        actor_movement_operation,
+        actor_grown_operation
 
     > operation;
 

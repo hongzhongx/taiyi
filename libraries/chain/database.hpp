@@ -349,6 +349,7 @@ namespace taiyi { namespace chain {
         void born_actor( const actor_object& act, int gender, int sexuality, const zone_object& zone );
         void born_actor( const actor_object& act, int gender, int sexuality, const string& zone_name );
         void try_trigger_actor_talents( const actor_object& act, uint16_t age );
+        void try_trigger_actor_contract_grow( const actor_object& act );
 
         //************ database_zone.cpp ************//
 

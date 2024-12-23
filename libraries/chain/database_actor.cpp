@@ -257,8 +257,12 @@ namespace taiyi { namespace chain {
                             
                             act.last_update = now;
                         });
-                        //TODO: 回调合约生长函数
-                        wlog("${y}年${m}月，${a}成长到${age}岁，健康${h}.", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor.name)("age", age)("h", actor.health));
+
+                        //trigger actor grow
+                        try_trigger_actor_contract_grow(actor);
+                        
+                        //push event message
+                        push_virtual_operation( actor_grown_operation( get<account_object, by_id>(get<nfa_object, by_id>(actor.nfa_id).owner_account).name, actor.name, actor.nfa_id, tiandao.v_years, tiandao.v_months, tiandao.v_times, actor.age, actor.health ) );
                     }
                 }
                                         
@@ -362,6 +366,66 @@ namespace taiyi { namespace chain {
         for(auto p : talent_trgger_numbers) {
             auto const& t = get< actor_talent_rule_object, by_id >(p.first);
             push_virtual_operation( actor_talent_trigger_operation( owner_account.name, act.name, act.nfa_id, p.first, t.title, t.description, age ) );
+        }
+    }
+    //=============================================================================
+    void database::try_trigger_actor_contract_grow( const actor_object& act )
+    {
+        const auto& nfa = get< nfa_object, by_id >( act.nfa_id );
+        
+        const auto* contract_ptr = find<contract_object, by_id>(nfa.main_contract);
+        if(contract_ptr == nullptr)
+            return;
+        auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_grown")));
+        if(abi_itr == contract_ptr->contract_ABI.end())
+            return;
+
+        const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
+
+        modify(nfa, [&]( nfa_object& obj ) {
+            util::update_manabar( get_dynamic_global_properties(), obj, true );
+        });
+
+        //回调合约生长函数
+        {
+            vector<lua_types> value_list; //no params.
+            contract_worker worker;
+
+            LuaContext context;
+            initialize_VM_baseENV(context);
+            flat_set<public_key_type> sigkeys;
+
+            //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
+            long long old_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+            long long vm_drops = old_drops;
+            bool trigger_fail = false;
+            try {
+                worker.do_nfa_contract_function(nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+            }
+            catch (fc::exception e) {
+                //任何错误都不能照成核心循环崩溃
+                trigger_fail = true;
+                wlog("Actor (${a}) trigger on_grown fail. err: ${e}", ("a", act.name)("e", e.to_string()));
+            }
+            catch (...) {
+                //任何错误都不能照成核心循环崩溃
+                trigger_fail = true;
+                wlog("Actor (${a}) trigger on_grown fail.", ("a", act.name));
+            }
+            int64_t used_drops = old_drops - vm_drops;
+
+            //执行错误仍然要扣费，但是不影响下次触发
+            int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+            modify( nfa, [&]( nfa_object& obj ) {
+                if( obj.manabar.current_mana < used_mana )
+                    obj.manabar.current_mana = 0;
+                else
+                    obj.manabar.current_mana -= used_mana;
+            });
+            
+            //reward contract owner
+            const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
+            reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
         }
     }
 

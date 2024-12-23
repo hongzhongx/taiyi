@@ -279,7 +279,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         {
             const auto& talents_obj = db.get< actor_talents_object, by_actor >( id );
             for(auto it = talents_obj.talents.begin(); it!=talents_obj.talents.end(); it++)
-                talents.push_back(it->first);
+                talents[it->first] = it->second;
 
             const auto* maybe_core_attrs = db.find< actor_core_attributes_object, by_actor >( id );
             if( maybe_core_attrs ) {
@@ -340,7 +340,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         int16_t             mood            = 0;
         int16_t             mood_max        = 0;
 
-        vector<actor_talent_rule_id_type>  talents;
+        t_flat_map< actor_talent_rule_id_type, uint16_t >   talents;
         
         bool                born;
         int                 gender;

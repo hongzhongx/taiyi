@@ -184,6 +184,24 @@ namespace taiyi { namespace protocol {
         int64_t                     nfa;
     };
 
+    struct actor_grown_operation : public virtual_operation
+    {
+        actor_grown_operation() {}
+        actor_grown_operation( const account_name_type& a, const string& n, const int64_t& nf, const uint32_t& y, const uint32_t& m, const uint32_t& t, const uint32_t& ag, const int32_t& h)
+            : owner(a), name(n), nfa(nf), years(y), months(m), times(t), age(ag), health(h) {}
+        
+        account_name_type           owner;
+        string                      name;
+        int64_t                     nfa;
+
+        uint32_t                    years;
+        uint32_t                    months;
+        uint32_t                    times;
+
+        uint32_t                    age;
+        int32_t                     health;
+    };
+    
 } } //taiyi::protocol
 
 FC_REFLECT( taiyi::protocol::fill_qi_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
@@ -200,3 +218,4 @@ FC_REFLECT( taiyi::protocol::tiandao_time_change_operation, (messager)(years)(mo
 FC_REFLECT( taiyi::protocol::actor_born_operation, (owner)(name)(zone)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_talent_trigger_operation, (owner)(name)(nfa)(tid)(title)(desc)(age) )
 FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(to_zone)(nfa) )
+FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(months)(times)(age)(health) )
