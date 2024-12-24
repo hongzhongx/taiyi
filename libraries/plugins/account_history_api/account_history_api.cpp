@@ -80,9 +80,6 @@ namespace taiyi { namespace plugins { namespace account_history {
 
     DEFINE_API_IMPL( account_history_api_impl, get_transaction )
     {
-#ifdef SKIP_BY_TX_ID
-        FC_ASSERT(false, "This node's operator has disabled operation indexing by transaction_id");
-#else
         uint32_t blockNo = 0;
         uint32_t txInBlock = 0;
         
@@ -104,7 +101,6 @@ namespace taiyi { namespace plugins { namespace account_history {
         {
             FC_ASSERT(false, "Unknown Transaction ${t}", ("t", args.id));
         }
-#endif
     }
     
     DEFINE_API_IMPL( account_history_api_impl, enum_virtual_ops)

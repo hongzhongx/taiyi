@@ -1412,8 +1412,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(!actor->born, "Actor named ${n} is already born", ("n", name));
             
             const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
-            if(actor_nfa.owner_account != caller.id && actor_nfa.active_account != caller.id)
-                return FORMAT_MESSAGE("无权操作角色");
+            FC_ASSERT(actor_nfa.owner_account == caller.id || actor_nfa.active_account == caller.id, "无权操作角色\"${n}\"", ("n", name));
 
             const auto* zone = db.find<zone_object, by_name>(zone_name);
             FC_ASSERT(zone != nullptr, "Zone named ${n} is not exist", ("n", zone_name));

@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as builder
+FROM ubuntu:22.04 AS builder
 
 # https://askubuntu.com/questions/909277/avoiding-user-interaction-with-tzdata-when-installing-certbot-in-a-docker-contai
 ARG DEBIAN_FRONTEND=noninteractive
@@ -9,7 +9,6 @@ ARG CMAKE_BUILD_TYPE=Release
 ARG BUILD_TAG=main
 ARG TAIYI_STATIC_BUILD=ON
 ARG LOW_MEMORY_MODE=ON
-ARG SKIP_BY_TX_ID=ON
 ARG BUILD_TAIYI_TESTNET=OFF
 ARG ENABLE_COVERAGE_TESTING=OFF
 ARG CHAINBASE_CHECK_LOCKING=OFF
@@ -56,7 +55,6 @@ RUN mkdir build && \
         -DCMAKE_INSTALL_PREFIX=/usr/local/taiyin \
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
         -DLOW_MEMORY_NODE=${LOW_MEMORY_MODE} \
-        -DSKIP_BY_TX_ID=${SKIP_BY_TX_ID} \
         -DBUILD_TAIYI_TESTNET=${BUILD_TAIYI_TESTNET} \
         -DENABLE_COVERAGE_TESTING=${ENABLE_COVERAGE_TESTING} \
         -DCHAINBASE_CHECK_LOCKING=${CHAINBASE_CHECK_LOCKING} \
@@ -80,13 +78,12 @@ RUN if [ "${DOXYGEN}" = "ON" ] ; then \
         programs/build_helpers/get_config_check.sh; \
     fi
 
-FROM ubuntu:22.04 as final
+FROM ubuntu:22.04 AS final
 
 ARG CMAKE_BUILD_TYPE=Release
 ARG BUILD_TAG=main
 ARG TAIYI_STATIC_BUILD=ON
 ARG LOW_MEMORY_MODE=ON
-ARG SKIP_BY_TX_ID=ON
 ARG BUILD_TAIYI_TESTNET=OFF
 ARG ENABLE_COVERAGE_TESTING=OFF
 ARG CHAINBASE_CHECK_LOCKING=OFF
@@ -96,7 +93,6 @@ RUN echo "BUILD_TAG: ${BUILD_TAG}" >> /etc/build_info&& \
     echo "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}" >> /etc/build_info && \
     echo "TAIYI_STATIC_BUILD: ${TAIYI_STATIC_BUILD}" >> /etc/build_info && \
     echo "LOW_MEMORY_MODE: ${LOW_MEMORY_MODE}" >> /etc/build_info && \
-    echo "SKIP_BY_TX_ID: ${SKIP_BY_TX_ID}" >> /etc/build_info && \
     echo "BUILD_TAIYI_TESTNET: ${BUILD_TAIYI_TESTNET}" >> /etc/build_info && \
     echo "ENABLE_COVERAGE_TESTING: ${ENABLE_COVERAGE_TESTING}" >> /etc/build_info && \
     echo "DOXYGEN: ${DOXYGEN}" >> /etc/build_info

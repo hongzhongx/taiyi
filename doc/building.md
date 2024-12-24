@@ -16,10 +16,6 @@
 
 为测试网络编译太乙系统，这也用于构建单元测试。
 
-### SKIP_BY_TX_ID=[OFF/ON]
-
-这个开关默认是关闭的。打开这个开关后，会禁止账号历史数据库插件（account history plugin）根据ID查询区块中的交易操作，这种方式可以在索引计算时降低大于65%的CPU开销。如果你不需要这种查询功能，打开这个开关会获得极好的性能节点。
-
 ## Docker中编译
 
 这里提供了一个Docker文件（Dockerfile），能构建各种常用节点的二进制文件。
@@ -27,6 +23,10 @@
     git clone https://github.com/hongzhongx/taiyi
     cd taiyi
     docker build -t zuowangdao/taiyi .
+
+注意，如果你是最新的Apple Silicon芯片的Macos，可以运行模拟的amd64编译环境：
+
+    docker buildx build --platform linux/amd64 -t zuowangdao/taiyi .
 
 ## 在 Ubuntu 22.04 操作系统上编译
 
