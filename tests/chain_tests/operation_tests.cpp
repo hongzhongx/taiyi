@@ -2176,6 +2176,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
             db.modify( db.get_account( "alice" ), []( account_object& a ) {
                 a.reward_yang_balance = ASSET( "10.000 YANG" );
                 a.reward_qi_balance = ASSET( "10.000000 QI" );
+                a.reward_feigang_balance = ASSET( "10.000000 QI");
             });
             
             db.modify( db.get_dynamic_global_properties(), []( dynamic_global_property_object& gpo ) {
@@ -2199,6 +2200,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         op.account = "alice";
         op.reward_yang = ASSET( "20.000 YANG" );
         op.reward_qi = ASSET( "0.000000 QI" );
+        op.reward_feigang = ASSET( "0.000000 QI" );
         
         tx.operations.push_back( op );
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
@@ -2210,6 +2212,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         
         op.reward_yang = ASSET( "0.000 YANG" );
         op.reward_qi = ASSET( "5.000000 QI" );
+        op.reward_feigang = ASSET( "5.000000 QI" );
         tx.clear();
         tx.operations.push_back( op );
         sign( tx, alice_private_key );
@@ -2217,11 +2220,12 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         
         BOOST_REQUIRE( db->get_account( "alice" ).balance == alice_taiyi + op.reward_yang );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_yang_balance == ASSET( "10.000 YANG" ) );
-        BOOST_REQUIRE( db->get_account( "alice" ).qi == alice_qi + op.reward_qi );
+        BOOST_REQUIRE( db->get_account( "alice" ).qi == alice_qi + op.reward_qi + op.reward_feigang );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_balance == ASSET( "5.000000 QI" ) );
+        BOOST_REQUIRE( db->get_account( "alice" ).reward_feigang_balance == ASSET( "5.000000 QI" ) );
         validate_database();
         
-        alice_qi += op.reward_qi;
+        alice_qi += op.reward_qi + op.reward_feigang;
         
         
         BOOST_TEST_MESSAGE( "--- Claiming the full reward balance" );
@@ -2234,8 +2238,9 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
         
         BOOST_REQUIRE( db->get_account( "alice" ).balance == alice_taiyi + op.reward_yang );
         BOOST_REQUIRE( db->get_account( "alice" ).reward_yang_balance == ASSET( "0.000 YANG" ) );
-        BOOST_REQUIRE( db->get_account( "alice" ).qi == alice_qi + op.reward_qi );
+        BOOST_REQUIRE( db->get_account( "alice" ).qi == alice_qi + op.reward_qi + op.reward_feigang);
         BOOST_REQUIRE( db->get_account( "alice" ).reward_qi_balance == ASSET( "0.000000 QI" ) );
+        BOOST_REQUIRE( db->get_account( "alice" ).reward_feigang_balance == ASSET( "0.000000 QI" ) );
         validate_database();
     }
     FC_LOG_AND_RETHROW()

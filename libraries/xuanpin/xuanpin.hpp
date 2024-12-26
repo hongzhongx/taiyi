@@ -641,7 +641,7 @@ namespace taiyi { namespace xuanpin {
         
         baiyujing_api::legacy_signed_transaction decline_adoring_rights( string account, bool decline, bool broadcast );
         
-        baiyujing_api::legacy_signed_transaction claim_reward_balance(string account, baiyujing_api::legacy_asset reward_yang, baiyujing_api::legacy_asset reward_qi, bool broadcast );
+        baiyujing_api::legacy_signed_transaction claim_reward_balance(string account, baiyujing_api::legacy_asset reward_yang, baiyujing_api::legacy_asset reward_qi, baiyujing_api::legacy_asset reward_feigang, bool broadcast );
         
         /** get resources of accounts
          * This returns a list of all resource assets owned by account names.

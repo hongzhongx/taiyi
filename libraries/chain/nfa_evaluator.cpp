@@ -31,19 +31,17 @@ namespace taiyi { namespace chain {
     operation_result create_nfa_symbol_evaluator::do_apply( const create_nfa_symbol_operation& o )
     { try {
         const auto& creator = _db.get_account( o.creator );
-        
-        _db.modify( creator, [&]( account_object& a ) {
-            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
-        });
-        
+                
         size_t new_state_size = _db.create_nfa_symbol_object(creator, o.symbol, o.describe, o.default_contract);
         
-        int64_t used_mana = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create nfa symbol." );
-        _db.modify( creator, [&]( account_object& a ) {
-            a.manabar.use_mana( used_mana );
-        });
-        
+        int64_t used_qi = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create nfa symbol." );
+
+        //reward contract owner
+        const auto& contract = _db.get<contract_object, by_name>(o.default_contract);
+        const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
+        _db.reward_contract_owner_from_account(contract_owner, creator, asset(used_qi, QI_SYMBOL));
+
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
     //=============================================================================
@@ -94,7 +92,7 @@ namespace taiyi { namespace chain {
             obj.owner_account = to_account.id;
         });
         
-        //TODO: 转移子节点里面所有子节点的所有权，在NFA增加使用权账号后，是否也要转移使用权？
+        //TODO: 转移子节点里面所有子节点的所有权，是否同时也要转移使用权？
         std::set<nfa_id_type> look_checker;
         _db.modify_nfa_children_owner(*nfa, to_account, look_checker);
         
@@ -154,33 +152,26 @@ namespace taiyi { namespace chain {
         const auto* nfa = _db.find<nfa_object, by_id>(o.id);
         FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
         FC_ASSERT(caller.id == nfa->owner_account || caller.id == nfa->active_account, "Can not action NFA not owned or actived by you.");
-
-        _db.modify( caller, [&]( account_object& a ) {
-            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
-        });
         
         contract_worker worker;
 
         LuaContext context;
         _db.initialize_VM_baseENV(context);
         
-        //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
-        long long old_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
+        long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         string err = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, vm_drops, true, context, _db);
         FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
         int64_t used_drops = old_drops - vm_drops;
 
-        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( caller.manabar.has_mana(used_mana), "caller account does not have enough mana to action nfa." );
-        _db.modify( caller, [&]( account_object& a ) {
-            a.manabar.use_mana( used_mana );
-        });
+        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( caller.qi.amount.value >= used_qi, "caller account does not have enough qi to action nfa." );
         
         //reward contract owner
         const auto& contract = _db.get<contract_object, by_id>(nfa->main_contract);
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
-        _db.reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+        _db.reward_contract_owner_from_account(contract_owner, caller, asset(used_qi, QI_SYMBOL));
 
         return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }

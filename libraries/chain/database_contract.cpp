@@ -163,41 +163,35 @@ namespace taiyi { namespace chain {
         return acd->contract_data;
     }
     //=========================================================================
-    void database::reward_contract_owner(const account_name_type& account_name, const asset& qi )
+    void database::reward_contract_owner_from_account(const account_object& contract_owner, const account_object& from_account, const asset& feigang )
     {
-        FC_ASSERT(qi.symbol == QI_SYMBOL);
-        FC_ASSERT(qi.amount.value > 0);
+        FC_ASSERT(feigang.symbol == QI_SYMBOL);
+        FC_ASSERT(feigang.amount.value > 0);
         
-        const reward_fund_object& rf = get< reward_fund_object, by_name >( TAIYI_CONTENT_REWARD_FUND_NAME );
-        if(rf.reward_qi_balance.amount <= 0)
-            return; //no reward fund
+        adjust_balance( from_account, -feigang );
+        adjust_proxied_siming_adores( from_account, -feigang.amount );
+
+        reward_qi_operation vop = reward_qi_operation( contract_owner.name, feigang );
+        pre_push_virtual_operation( vop );
+
+        modify_reward_balance(contract_owner, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
+
+        post_push_virtual_operation( vop );        
+    }
+    //=========================================================================
+    void database::reward_contract_owner_from_nfa(const account_object& contract_owner, const nfa_object& from_nfa, const asset& feigang )
+    {
+        FC_ASSERT(feigang.symbol == QI_SYMBOL);
+        FC_ASSERT(feigang.amount.value > 0);
         
-        const account_object& account = get_account(account_name);
-        
-        if(qi > rf.reward_qi_balance) {
-            reward_qi_operation vop = reward_qi_operation( account.name, rf.reward_qi_balance );
-            pre_push_virtual_operation( vop );
+        adjust_nfa_balance( from_nfa, -feigang );
 
-            modify_reward_balance(account, asset(0, YANG_SYMBOL), rf.reward_qi_balance, true);
+        reward_qi_operation vop = reward_qi_operation( contract_owner.name, feigang );
+        pre_push_virtual_operation( vop );
 
-            modify(rf, [&](reward_fund_object& rfo) {
-                rfo.reward_qi_balance.amount = 0;
-            });
+        modify_reward_balance(contract_owner, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
 
-            post_push_virtual_operation( vop );
-        }
-        else {
-            reward_qi_operation vop = reward_qi_operation( account.name, qi );
-            pre_push_virtual_operation( vop );
-
-            modify_reward_balance(account, asset(0, YANG_SYMBOL), qi, true);
-
-            modify(rf, [&](reward_fund_object& rfo) {
-                rfo.reward_qi_balance -= qi;
-            });
-
-            post_push_virtual_operation( vop );
-        }
+        post_push_virtual_operation( vop );
     }
 
 } } //taiyi::chain

@@ -388,6 +388,7 @@ namespace taiyi { namespace protocol {
         account_name_type account;
         asset             reward_yang;
         asset             reward_qi;
+        asset             reward_feigang;
 
         void get_required_posting_authorities( flat_set< account_name_type >& a )const{ a.insert( account ); }
         void validate() const;
@@ -551,7 +552,7 @@ FC_REFLECT( taiyi::protocol::request_account_recovery_operation, (recovery_accou
 FC_REFLECT( taiyi::protocol::recover_account_operation, (account_to_recover)(new_owner_authority)(recent_owner_authority)(extensions) );
 FC_REFLECT( taiyi::protocol::change_recovery_account_operation, (account_to_recover)(new_recovery_account)(extensions) );
 FC_REFLECT( taiyi::protocol::decline_adoring_rights_operation, (account)(decline) );
-FC_REFLECT( taiyi::protocol::claim_reward_balance_operation, (account)(reward_yang)(reward_qi) )
+FC_REFLECT( taiyi::protocol::claim_reward_balance_operation, (account)(reward_yang)(reward_qi)(reward_feigang) )
 FC_REFLECT( taiyi::protocol::delegate_qi_operation, (delegator)(delegatee)(qi) );
 
 FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(contract_authority)(extensions) )

@@ -195,7 +195,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct legacy_claim_reward_balance_operation
     {
         legacy_claim_reward_balance_operation() {}
-        legacy_claim_reward_balance_operation( const claim_reward_balance_operation& op ) : account( op.account ), reward_yang(legacy_asset::from_asset( op.reward_yang ) ), reward_qi(legacy_asset::from_asset( op.reward_qi ) )
+        legacy_claim_reward_balance_operation( const claim_reward_balance_operation& op ) : account( op.account ), reward_yang(legacy_asset::from_asset( op.reward_yang ) ), reward_qi(legacy_asset::from_asset( op.reward_qi ) ), reward_feigang(legacy_asset::from_asset( op.reward_feigang ) )
         {}
 
         operator claim_reward_balance_operation()const
@@ -203,13 +203,14 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             claim_reward_balance_operation op;
             op.account = account;
             op.reward_yang = reward_yang;
-            op.reward_qi = reward_qi;
+            op.reward_feigang = reward_feigang;
             return op;
         }
 
         account_name_type account;
         legacy_asset      reward_yang;
         legacy_asset      reward_qi;
+        legacy_asset      reward_feigang;
     };
 
     struct legacy_delegate_qi_operation
@@ -769,7 +770,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_transfer_operation, (from)(to)
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_transfer_to_qi_operation, (from)(to)(amount) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_withdraw_qi_operation, (account)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_siming_update_operation, (owner)(url)(block_signing_key)(props)(fee) )
-FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_claim_reward_balance_operation, (account)(reward_yang)(reward_qi) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_claim_reward_balance_operation, (account)(reward_yang)(reward_qi)(reward_feigang) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_delegate_qi_operation, (delegator)(delegatee)(qi) );
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_fill_qi_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_return_qi_delegation_operation, (account)(qi) )

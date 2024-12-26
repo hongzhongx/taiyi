@@ -1206,6 +1206,7 @@ namespace taiyi { namespace chain {
     
     std::tuple<share_type, share_type> database::pay_reward_funds( share_type reward_yang, share_type reward_qi_fund )
     {
+        auto now = head_block_time();
         auto gpo = get_dynamic_global_properties();
         const auto& reward_idx = get_index< reward_fund_index, by_id >();
         share_type used_rewards_yang = 0;
@@ -1224,6 +1225,7 @@ namespace taiyi { namespace chain {
             modify( *itr, [&]( reward_fund_object& rfo ) {
                 rfo.reward_balance += asset( ryang, YANG_SYMBOL );
                 rfo.reward_qi_balance += reward_qi;
+                rfo.last_update = now;
             });
             
             modify( gpo, [&]( dynamic_global_property_object& o ) {
@@ -1508,12 +1510,9 @@ namespace taiyi { namespace chain {
         } );
         
         auto content_rf = create< reward_fund_object >( [&]( reward_fund_object& rfo ) {
-            rfo.name = TAIYI_CONTENT_REWARD_FUND_NAME;
+            rfo.name = TAIYI_CULTIVATION_REWARD_FUND_NAME;
             rfo.last_update = head_block_time();
             rfo.percent_content_rewards = TAIYI_100_PERCENT;
-#ifndef  IS_TEST_NET
-            rfo.recent_claims = TAIYI_CONVERGENT_LINEAR_RECENT_CLAIMS;
-#endif
         });
         // As a shortcut in payout processing, we use the id as an array index.
         // The IDs must be assigned this way. The assertion is a dummy check to ensure this happens.
@@ -2350,12 +2349,13 @@ namespace taiyi { namespace chain {
         } );
     }
 
-    void database::modify_reward_balance( const account_object& a, const asset& value_delta, const asset& share_delta, bool check_balance )
+    void database::modify_reward_balance( const account_object& a, const asset& value_delta, const asset& share_delta, const asset& feigang_delta, bool check_balance )
     {
         modify( a, [&]( account_object& acnt ) {
             switch( value_delta.symbol.asset_num )
             {
                 case TAIYI_ASSET_NUM_YANG:
+                {
                     if( share_delta.amount.value == 0 )
                     {
                         acnt.reward_yang_balance += value_delta;
@@ -2368,9 +2368,15 @@ namespace taiyi { namespace chain {
                         if( check_balance )
                             FC_ASSERT( acnt.reward_qi_balance.amount.value >= 0, "Insufficient reward QI funds" );
                     }
+
+                    acnt.reward_feigang_balance += feigang_delta;
+                    if( check_balance )
+                        FC_ASSERT( acnt.reward_feigang_balance.amount.value >= 0, "Insufficient reward QI (Feigang) funds" );
+                    
                     break;
+                }
                 default:
-                    FC_ASSERT( false, "invalid symbol" );
+                    FC_ASSERT( false, "invalid value symbol" );
             }
         });
     }
@@ -2494,9 +2500,9 @@ namespace taiyi { namespace chain {
             modify_balance( get_account( name ), delta, true );
     }
     
-    void database::adjust_reward_balance( const account_object& a, const asset& liquid_delta, const asset& share_delta )
+    void database::adjust_reward_balance( const account_object& a, const asset& liquid_delta, const asset& share_delta, const asset& feigang_delta )
     {
-        FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
+        FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() && feigang_delta.symbol.is_qi() );
         
         // No account object modification for asset balance, hence separate handling here.
         if( liquid_delta.symbol.space() == asset_symbol_type::fai_space
@@ -2506,16 +2512,17 @@ namespace taiyi { namespace chain {
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_HERB )
         {
+            FC_ASSERT(feigang_delta.amount.value == 0, "not support feigang");
             asset_reward_balance_operator balance_operator( liquid_delta, share_delta );
             adjust_asset_balance< account_rewards_balance_object >( a.name, liquid_delta, false, balance_operator );
         }
         else
-            modify_reward_balance(a, liquid_delta, share_delta, true);
+            modify_reward_balance(a, liquid_delta, share_delta, feigang_delta, true);
     }
     
-    void database::adjust_reward_balance( const account_name_type& name, const asset& liquid_delta, const asset& share_delta )
+    void database::adjust_reward_balance( const account_name_type& name, const asset& liquid_delta, const asset& share_delta, const asset& feigang_delta )
     {
-        FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() );
+        FC_ASSERT( liquid_delta.symbol.is_qi() == false && share_delta.symbol.is_qi() && feigang_delta.symbol.is_qi() );
         
         // No account object modification for asset balance, hence separate handling here.
         if( liquid_delta.symbol.space() == asset_symbol_type::fai_space
@@ -2525,11 +2532,12 @@ namespace taiyi { namespace chain {
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC
            || liquid_delta.symbol.asset_num == TAIYI_ASSET_NUM_HERB )
         {
+            FC_ASSERT(feigang_delta.amount.value == 0, "not support feigang");
             asset_reward_balance_operator balance_operator( liquid_delta, share_delta );
             adjust_asset_balance< account_rewards_balance_object >( name, liquid_delta, true, balance_operator );
         }
         else
-            modify_reward_balance(get_account( name ), liquid_delta, share_delta, true);
+            modify_reward_balance(get_account( name ), liquid_delta, share_delta, feigang_delta, true);
     }
     
     void database::adjust_supply( const asset& delta, bool adjust_qi )
@@ -2727,6 +2735,41 @@ namespace taiyi { namespace chain {
     optional< chainbase::database::session >& database::pending_transaction_session()
     {
         return _pending_tx_session;
+    }
+    
+    void database::reward_cultivation_account(const account_object& account, const asset& qi )
+    {
+        FC_ASSERT(qi.symbol == QI_SYMBOL);
+        FC_ASSERT(qi.amount.value > 0);
+        
+        const reward_fund_object& rf = get< reward_fund_object, by_name >( TAIYI_CULTIVATION_REWARD_FUND_NAME );
+        if(rf.reward_qi_balance.amount <= 0)
+            return; //no reward fund
+                
+        if(qi > rf.reward_qi_balance) {
+            reward_qi_operation vop = reward_qi_operation( account.name, rf.reward_qi_balance );
+            pre_push_virtual_operation( vop );
+
+            modify_reward_balance(account, asset(0, YANG_SYMBOL), rf.reward_qi_balance, asset(0, QI_SYMBOL), false);
+
+            modify(rf, [&](reward_fund_object& rfo) {
+                rfo.reward_qi_balance.amount = 0;
+            });
+
+            post_push_virtual_operation( vop );
+        }
+        else {
+            reward_qi_operation vop = reward_qi_operation( account.name, qi );
+            pre_push_virtual_operation( vop );
+
+            modify_reward_balance(account, asset(0, YANG_SYMBOL), qi, asset(0, QI_SYMBOL), false);
+
+            modify(rf, [&](reward_fund_object& rfo) {
+                rfo.reward_qi_balance -= qi;
+            });
+
+            post_push_virtual_operation( vop );
+        }
     }
     
 } } //taiyi::chain

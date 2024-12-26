@@ -707,22 +707,26 @@ namespace taiyi { namespace chain {
         
         FC_ASSERT( op.reward_yang <= acnt.reward_yang_balance, "Cannot claim that much YANG. Claim: ${c} Actual: ${a}", ("c", op.reward_yang)("a", acnt.reward_yang_balance) );
         FC_ASSERT( op.reward_qi <= acnt.reward_qi_balance, "Cannot claim that much QI. Claim: ${c} Actual: ${a}", ("c", op.reward_qi)("a", acnt.reward_qi_balance) );
-                
+        FC_ASSERT( op.reward_feigang <= acnt.reward_feigang_balance, "Cannot claim that much QI(Feigang). Claim: ${c} Actual: ${a}", ("c", op.reward_feigang)("a", acnt.reward_feigang_balance) );
+
+        //reward yang
         _db.adjust_reward_balance( acnt, -op.reward_yang );
         _db.adjust_balance( acnt, op.reward_yang );
         
-        _db.modify( acnt, [&]( account_object& a ) {            
-            util::update_manabar( _db.get_dynamic_global_properties(), a, true, op.reward_qi.amount.value );
-            a.qi += op.reward_qi;            
-            a.reward_qi_balance -= op.reward_qi;
-        });
-        
+        //reward qi then update global pending
+        _db.adjust_reward_balance( acnt, asset(0, YANG_SYMBOL), -op.reward_qi );
+        _db.adjust_balance( acnt, op.reward_qi );
         _db.modify( _db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
             gpo.total_qi += op.reward_qi;            
             gpo.pending_rewarded_qi -= op.reward_qi;
         });
         
-        _db.adjust_proxied_siming_adores( acnt, op.reward_qi.amount );
+        //reward feigang as qi
+        _db.adjust_reward_balance( acnt, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), -op.reward_feigang );
+        _db.adjust_balance( acnt, op.reward_feigang ); //convert to qi immediately
+        
+        //update adores
+        _db.adjust_proxied_siming_adores( acnt, op.reward_qi.amount + op.reward_feigang.amount);
         
         return void_result();
     }

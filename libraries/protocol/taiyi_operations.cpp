@@ -195,11 +195,15 @@ namespace taiyi { namespace protocol {
     void claim_reward_balance_operation::validate()const
     {
         validate_account_name( account );
-        FC_ASSERT( is_asset_type( reward_yang, YANG_SYMBOL ), "Reward Taiyi must be YANG" );
-        FC_ASSERT( is_asset_type( reward_qi, QI_SYMBOL ), "Reward Taiyi must be QI" );
-        FC_ASSERT( reward_yang.amount >= 0, "Cannot claim a negative amount" );
-        FC_ASSERT( reward_qi.amount >= 0, "Cannot claim a negative amount" );
-        FC_ASSERT( reward_yang.amount > 0 || reward_qi.amount > 0, "Must claim something." );
+        FC_ASSERT( is_asset_type( reward_yang, YANG_SYMBOL ), "Reward yang must be YANG" );
+        FC_ASSERT( is_asset_type( reward_qi, QI_SYMBOL ), "Reward qi must be QI" );
+        FC_ASSERT( is_asset_type( reward_feigang, QI_SYMBOL ), "Reward feigang must be QI" );
+        
+        FC_ASSERT( reward_yang.amount >= 0, "Cannot claim a negative yang amount" );
+        FC_ASSERT( reward_qi.amount >= 0, "Cannot claim a negative qi amount" );
+        FC_ASSERT( reward_feigang.amount >= 0, "Cannot claim a negative feigang amount" );
+        
+        FC_ASSERT( reward_yang.amount > 0 || reward_qi.amount > 0 || reward_feigang.amount > 0, "Must claim something." );
     }
         
     void delegate_qi_operation::validate()const

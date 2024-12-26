@@ -29,9 +29,6 @@ namespace taiyi { namespace chain {
     operation_result create_actor_talent_rule_evaluator::do_apply( const create_actor_talent_rule_operation& o )
     { try {
         const auto& creator = _db.get_account( o.creator );
-        _db.modify( creator, [&]( account_object& a ) {
-            util::update_manabar( _db.get_dynamic_global_properties(), a, true );
-        });
 
         const auto& contract = _db.get<contract_object, by_name>(o.contract);
         auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME)));
@@ -46,11 +43,12 @@ namespace taiyi { namespace chain {
             _db.initialize_actor_talent_rule_object(creator, tr);
         });
         
-        int64_t used_mana = fc::raw::pack_size(new_rule) * TAIYI_USEMANA_STATE_BYTES_SCALE + 2000 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( creator.manabar.has_mana(used_mana), "Creator account does not have enough mana to create actor talent rule." );
-        _db.modify( creator, [&]( account_object& a ) {
-            a.manabar.use_mana( used_mana );
-        });
+        int64_t used_qi = fc::raw::pack_size(new_rule) * TAIYI_USEMANA_STATE_BYTES_SCALE + 2000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create actor talent rule." );
+
+        //reward contract owner
+        const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
+        _db.reward_contract_owner_from_account(contract_owner, creator, asset(used_qi, QI_SYMBOL));
 
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -110,7 +108,6 @@ namespace taiyi { namespace chain {
         if( o.fee.amount > 0 ) {
             _db.modify(nfa, [&](nfa_object& obj) {
                 obj.qi += o.fee;
-                util::update_manabar( props, obj, true );
             });
         }
         
@@ -118,6 +115,12 @@ namespace taiyi { namespace chain {
         affected.affected_item = nfa.id;
         affected.action = nfa_affected_type::deposit_qi;
         result.contract_affecteds.push_back(std::move(affected));
+        
+        int64_t used_qi = fc::raw::pack_size(new_actor) * TAIYI_USEMANA_STATE_BYTES_SCALE + 2000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create actor." );
+
+        //reward to treasury
+        _db.reward_contract_owner_from_account(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
 
         return result;
     }

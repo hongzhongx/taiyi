@@ -47,15 +47,16 @@ namespace taiyi { namespace chain {
         const auto* nfa_symbol = find<nfa_symbol_object, by_symbol>(symbol);
         FC_ASSERT(nfa_symbol == nullptr, "NFA symbol named \"${n}\" is already exist.", ("n", symbol));
         
-        const auto& contract = get<contract_object, by_name>(default_contract);
-        auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
-        FC_ASSERT(abi_itr != contract.contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract.name)("i", TAIYI_NFA_INIT_FUNC_NAME));
+        const auto& contract = find<contract_object, by_name>(default_contract);
+        FC_ASSERT(contract != nullptr, "contract object named \"${n}\" is not exist.", ("n", default_contract));
+        auto abi_itr = contract->contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
+        FC_ASSERT(abi_itr != contract->contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract->name)("i", TAIYI_NFA_INIT_FUNC_NAME));
         
         const auto& nfa_symbol_obj = create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
             obj.creator = creator.name;
             obj.symbol = symbol;
             obj.describe = describe;
-            obj.default_contract = contract.id;
+            obj.default_contract = contract->id;
             obj.count = 0;
         });
         
@@ -65,9 +66,6 @@ namespace taiyi { namespace chain {
     const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context)
     {
         const auto& caller = creator;
-        modify( caller, [&]( account_object& a ) {
-            util::update_manabar( get_dynamic_global_properties(), a, true );
-        });
         
         const auto& nfa = create<nfa_object>([&](nfa_object& obj) {
             obj.creator_account = creator.id;
@@ -97,22 +95,19 @@ namespace taiyi { namespace chain {
         contract_worker worker;
         vector<lua_types> value_list;
         
-        //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
-        long long old_drops = caller.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
+        long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         lua_table result_table = worker.do_contract_function_return_table(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, reset_vm_memused, context, *this);
         int64_t used_drops = old_drops - vm_drops;
         
         size_t new_state_size = fc::raw::pack_size(nfa);
-        int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( caller.manabar.has_mana(used_mana), "Creator account does not have enough mana to create nfa." );
-        modify( caller, [&]( account_object& a ) {
-            a.manabar.use_mana( used_mana );
-        });
+        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( caller.qi.amount.value >= used_qi, "Creator account does not have enough qi to create nfa." );
         
         //reward contract owner
         const auto& contract_owner = get<account_object, by_id>(contract.owner);
-        reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+        reward_contract_owner_from_account(contract_owner, caller, asset(used_qi, QI_SYMBOL));
                         
         //init nfa from result table
         modify(nfa, [&](nfa_object& obj) {
@@ -158,7 +153,6 @@ namespace taiyi { namespace chain {
 
             modify(nfa, [&]( nfa_object& obj ) {
                 obj.next_tick_time = now + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL;
-                util::update_manabar( get_dynamic_global_properties(), obj, true );
             });
 
             vector<lua_types> value_list; //no params.
@@ -168,8 +162,8 @@ namespace taiyi { namespace chain {
             initialize_VM_baseENV(context);
             flat_set<public_key_type> sigkeys;
 
-            //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
-            long long old_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+            //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
+            long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
             bool beat_fail = false;
             try {
@@ -187,20 +181,18 @@ namespace taiyi { namespace chain {
             }
             int64_t used_drops = old_drops - vm_drops;
 
-            int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-            modify( nfa, [&]( nfa_object& obj ) {
-                if( obj.manabar.current_mana < used_mana )
-                    obj.manabar.current_mana = 0;
-                else
-                    obj.manabar.current_mana -= used_mana;
-                //执行错误不仅要扣费，还会将NFA重置为关闭心跳状态
-                if(beat_fail)
-                    obj.next_tick_time = time_point_sec::maximum();
-            });
+            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
             
             //reward contract owner
             const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-            reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+            reward_contract_owner_from_nfa(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+
+            //执行错误不仅要扣费，还会将NFA重置为关闭心跳状态
+            if(beat_fail)  {
+                modify( nfa, [&]( nfa_object& obj ) {
+                    obj.next_tick_time = time_point_sec::maximum();
+                });
+            }
         }
     }
     //=========================================================================

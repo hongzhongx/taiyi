@@ -321,7 +321,7 @@ namespace taiyi { namespace xuanpin {
                                                                                     " old");
                 result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
                 result["account_creation_fee"] = _remote_api->get_chain_properties().account_creation_fee;
-                result["content_reward_fund"] = fc::variant(_remote_api->get_reward_fund( TAIYI_CONTENT_REWARD_FUND_NAME )).get_object();
+                result["content_reward_fund"] = fc::variant(_remote_api->get_reward_fund( TAIYI_CULTIVATION_REWARD_FUND_NAME )).get_object();
                 return result;
             }
             
@@ -1768,13 +1768,14 @@ namespace taiyi { namespace xuanpin {
         return my->sign_transaction( tx, broadcast );
     }
     
-    baiyujing_api::legacy_signed_transaction xuanpin_api::claim_reward_balance( string account, baiyujing_api::legacy_asset reward_yang, baiyujing_api::legacy_asset reward_qi, bool broadcast )
+    baiyujing_api::legacy_signed_transaction xuanpin_api::claim_reward_balance( string account, baiyujing_api::legacy_asset reward_yang, baiyujing_api::legacy_asset reward_qi, baiyujing_api::legacy_asset reward_feigang, bool broadcast )
     {
         FC_ASSERT( !is_locked() );
         claim_reward_balance_operation op;
         op.account = account;
         op.reward_yang = reward_yang.to_asset();
         op.reward_qi = reward_qi.to_asset();
+        op.reward_feigang = reward_feigang.to_asset();
         
         signed_transaction tx;
         tx.operations.push_back( op );

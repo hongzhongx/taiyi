@@ -128,10 +128,15 @@ namespace taiyi { namespace chain {
         if( o.fee.amount > 0 ) {
             _db.modify(nfa, [&](nfa_object& obj) {
                 obj.qi += o.fee;
-                util::update_manabar( props, obj, true );
             });
         }
-        
+
+        int64_t used_qi = fc::raw::pack_size(new_zone) * TAIYI_USEMANA_STATE_BYTES_SCALE + 2000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create zone." );
+
+        //reward to treasury
+        _db.reward_contract_owner_from_account(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+
         affected.affected_account = creator.name;
         affected.affected_item = nfa.id;
         affected.action = nfa_affected_type::deposit_qi;

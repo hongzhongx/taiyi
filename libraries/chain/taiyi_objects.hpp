@@ -73,9 +73,7 @@ namespace taiyi { namespace chain {
         asset                   reward_balance = asset( 0, YANG_SYMBOL );
         asset                   reward_qi_balance = asset( 0, QI_SYMBOL );
         
-        fc::uint128_t           recent_claims = 0;
         time_point_sec          last_update;
-        uint128_t               content_constant = 0;
         uint16_t                percent_content_rewards = 0;
     };
 
@@ -147,5 +145,5 @@ CHAINBASE_SET_INDEX_TYPE( taiyi::chain::withdraw_qi_route_object, taiyi::chain::
 FC_REFLECT( taiyi::chain::decline_adoring_rights_request_object, (id)(account)(effective_date) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::decline_adoring_rights_request_object, taiyi::chain::decline_adoring_rights_request_index )
 
-FC_REFLECT( taiyi::chain::reward_fund_object, (id)(name)(reward_balance)(reward_qi_balance)(recent_claims)(last_update)(content_constant)(percent_content_rewards) )
+FC_REFLECT( taiyi::chain::reward_fund_object, (id)(name)(reward_balance)(reward_qi_balance)(last_update)(percent_content_rewards) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::reward_fund_object, taiyi::chain::reward_fund_index )

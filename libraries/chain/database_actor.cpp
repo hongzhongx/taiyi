@@ -277,10 +277,6 @@ namespace taiyi { namespace chain {
         const auto& nfa = get< nfa_object, by_id >( act.nfa_id );
         const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
 
-        modify(nfa, [&]( nfa_object& obj ) {
-            util::update_manabar( get_dynamic_global_properties(), obj, true );
-        });
-
         //process talents
         const actor_talents_object& actor_talents = get< actor_talents_object, by_actor >( act.id );
         
@@ -307,8 +303,8 @@ namespace taiyi { namespace chain {
                 initialize_VM_baseENV(context);
                 flat_set<public_key_type> sigkeys;
 
-                //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
-                long long old_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+                //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
+                long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
                 long long vm_drops = old_drops;
                 bool trigger_fail = false;
                 bool triggered = false;
@@ -336,17 +332,11 @@ namespace taiyi { namespace chain {
                 int64_t used_drops = old_drops - vm_drops;
 
                 //执行错误仍然要扣费，但是不影响下次触发
-                int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-                modify( nfa, [&]( nfa_object& obj ) {
-                    if( obj.manabar.current_mana < used_mana )
-                        obj.manabar.current_mana = 0;
-                    else
-                        obj.manabar.current_mana -= used_mana;
-                });
+                int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
                 
                 //reward contract owner
                 const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-                reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+                reward_contract_owner_from_nfa(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
                 
                 if (!triggered)
                     continue;
@@ -382,10 +372,6 @@ namespace taiyi { namespace chain {
 
         const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
 
-        modify(nfa, [&]( nfa_object& obj ) {
-            util::update_manabar( get_dynamic_global_properties(), obj, true );
-        });
-
         //回调合约生长函数
         {
             vector<lua_types> value_list; //no params.
@@ -395,8 +381,8 @@ namespace taiyi { namespace chain {
             initialize_VM_baseENV(context);
             flat_set<public_key_type> sigkeys;
 
-            //mana可能在执行合约中被进一步使用，所以这里记录当前的mana来计算虚拟机的执行消耗
-            long long old_drops = nfa.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+            //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
+            long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
             bool trigger_fail = false;
             try {
@@ -415,17 +401,11 @@ namespace taiyi { namespace chain {
             int64_t used_drops = old_drops - vm_drops;
 
             //执行错误仍然要扣费，但是不影响下次触发
-            int64_t used_mana = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-            modify( nfa, [&]( nfa_object& obj ) {
-                if( obj.manabar.current_mana < used_mana )
-                    obj.manabar.current_mana = 0;
-                else
-                    obj.manabar.current_mana -= used_mana;
-            });
+            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
             
             //reward contract owner
             const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-            reward_contract_owner(contract_owner.name, asset(used_mana, QI_SYMBOL));
+            reward_contract_owner_from_nfa(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
         }
     }
 

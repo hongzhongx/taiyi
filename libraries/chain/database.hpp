@@ -294,8 +294,8 @@ namespace taiyi { namespace chain {
 
         void adjust_balance( const account_object& a, const asset& delta );
         void adjust_balance( const account_name_type& name, const asset& delta );
-        void adjust_reward_balance( const account_object& a, const asset& value_delta, const asset& share_delta = asset(0,QI_SYMBOL) );
-        void adjust_reward_balance( const account_name_type& name, const asset& value_delta, const asset& share_delta = asset(0,QI_SYMBOL) );
+        void adjust_reward_balance( const account_object& a, const asset& value_delta, const asset& share_delta = asset(0, QI_SYMBOL), const asset& feigang_delta = asset(0, QI_SYMBOL) );
+        void adjust_reward_balance( const account_name_type& name, const asset& value_delta, const asset& share_delta = asset(0, QI_SYMBOL), const asset& feigang_delta = asset(0, QI_SYMBOL) );
         void adjust_supply( const asset& delta, bool adjust_qi = false );
         void update_owner_authority( const account_object& account, const authority& owner_authority );
 
@@ -410,8 +410,13 @@ namespace taiyi { namespace chain {
         size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
         lua_map prepare_account_contract_data(const account_object& account, const contract_object& contract);
         
-        void reward_contract_owner(const account_name_type& account_name, const asset& qi );
-        
+        //奖励合约创作者非罡
+        void reward_contract_owner_from_account(const account_object& contract_owner, const account_object& from_account, const asset& feigang );
+        void reward_contract_owner_from_nfa(const account_object& contract_owner, const nfa_object& from_nfa, const asset& feigang );
+        //奖励修真者真气
+        void reward_cultivation_account(const account_object& account, const asset& qi );
+        //void reward_cultivation_nfa(const nfa_object& nfa, const asset& qi );
+
         // nfa
         void create_basic_nfa_symbol_objects();
         size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract);
@@ -456,7 +461,7 @@ namespace taiyi { namespace chain {
         template< typename asset_balance_object_type, class balance_operator_type >
         void adjust_asset_balance(const account_name_type& name, const asset& delta, bool check_account, balance_operator_type balance_operator);
         void modify_balance(const account_object& a, const asset& delta, bool check_balance);
-        void modify_reward_balance(const account_object& a, const asset& value_delta, const asset& share_delta, bool check_balance);
+        void modify_reward_balance(const account_object& a, const asset& value_delta, const asset& share_delta, const asset& feigang_delta, bool check_balance);
 
         template< typename nfa_balance_object_type, class balance_operator_type >
         void adjust_nfa_balance(const nfa_id_type& nfa_id, const asset& delta, balance_operator_type balance_operator);

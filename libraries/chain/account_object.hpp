@@ -47,7 +47,8 @@ namespace taiyi { namespace chain {
         
         asset             reward_yang_balance = asset( 0, YANG_SYMBOL );
         asset             reward_qi_balance = asset( 0, QI_SYMBOL );
-        
+        asset             reward_feigang_balance = asset( 0, QI_SYMBOL );
+
         asset             qi = asset( 0, QI_SYMBOL ); ///< total qi shares held by this account, controls its voting or adoring power
         asset             delegated_qi = asset( 0, QI_SYMBOL );
         asset             received_qi = asset( 0, QI_SYMBOL );
@@ -377,7 +378,7 @@ namespace mira {
 
 } // mira
 
-FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_object, taiyi::chain::account_index )
 
 FC_REFLECT( taiyi::chain::account_metadata_object, (id)(account)(json_metadata) )
