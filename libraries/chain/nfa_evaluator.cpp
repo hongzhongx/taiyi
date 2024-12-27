@@ -11,8 +11,6 @@
 #include <chain/lua_context.hpp>
 #include <chain/contract_worker.hpp>
 
-#include <chain/util/manabar.hpp>
-
 #include <fc/macros.hpp>
 
 extern std::wstring utf8_to_wstring(const std::string& str);
@@ -20,12 +18,9 @@ extern std::string wstring_to_utf8(const std::wstring& str);
 
 namespace taiyi { namespace chain {
     
-    namespace util {
-        //对get_effective_qi模版函数的特化
-        template<> int64_t get_effective_qi<nfa_object>( const nfa_object& obj )
-        {
-            return obj.qi.amount.value;
-        }
+    int64_t get_effective_qi( const nfa_object& obj )
+    {
+        return obj.qi.amount.value;
     }
 
     operation_result create_nfa_symbol_evaluator::do_apply( const create_nfa_symbol_operation& o )
@@ -40,7 +35,7 @@ namespace taiyi { namespace chain {
         //reward contract owner
         const auto& contract = _db.get<contract_object, by_name>(o.default_contract);
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
-        _db.reward_contract_owner_from_account(contract_owner, creator, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(contract_owner, creator, asset(used_qi, QI_SYMBOL));
 
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -171,7 +166,7 @@ namespace taiyi { namespace chain {
         //reward contract owner
         const auto& contract = _db.get<contract_object, by_id>(nfa->main_contract);
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
-        _db.reward_contract_owner_from_account(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
 
         return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }

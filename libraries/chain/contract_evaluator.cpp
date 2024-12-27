@@ -51,7 +51,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create contract. need ${n}", ("n", used_qi) );
         
         //reward to treasury
-        _db.reward_contract_owner_from_account(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
         
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -73,7 +73,7 @@ namespace taiyi { namespace chain {
         contract_worker worker;
 
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
-        long long old_drops = reviser.manabar.current_mana / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long old_drops = reviser.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         lua_table aco = worker.do_contract(old_contract.id, old_contract.name, o.data, lua_code_b, vm_drops, _db);
         int64_t used_drops = old_drops - vm_drops;
@@ -83,7 +83,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT( reviser.qi.amount.value >= used_qi, "reviser account does not have enough qi to revise contract." );
 
         //reward to treasury
-        _db.reward_contract_owner_from_account(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), reviser, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), reviser, asset(used_qi, QI_SYMBOL));
 
         const auto& old_code_bin_object = _db.get<contract_bin_code_object, by_id>(old_contract.lua_code_b_id);
         _db.modify(old_code_bin_object, [&](contract_bin_code_object&cbo) { cbo.lua_code_b = lua_code_b; });
@@ -135,7 +135,7 @@ namespace taiyi { namespace chain {
         
         //reward contract owner
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
-        _db.reward_contract_owner_from_account(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
                 
         return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }

@@ -13,8 +13,6 @@
 #include <chain/lua_context.hpp>
 #include <chain/contract_worker.hpp>
 
-#include <chain/util/manabar.hpp>
-
 #include <fc/macros.hpp>
 
 #include <limits>
@@ -135,7 +133,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create zone." );
 
         //reward to treasury
-        _db.reward_contract_owner_from_account(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
 
         affected.affected_account = creator.name;
         affected.affected_item = nfa.id;

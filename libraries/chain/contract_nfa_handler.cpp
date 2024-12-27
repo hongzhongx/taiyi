@@ -242,13 +242,6 @@ namespace taiyi { namespace chain {
 
             _db.post_push_virtual_operation( vop );
             
-            _db.modify(from_nfa, [&](nfa_object& obj) {
-                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
-            });
-            _db.modify(to_nfa, [&](nfa_object& obj) {
-                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
-            });
-
             if(enable_logger) {
                 variant v;
                 fc::to_variant(token, v);
@@ -300,10 +293,6 @@ namespace taiyi { namespace chain {
 
             _db.post_push_virtual_operation( vop );
 
-            _db.modify(from_nfa, [&](nfa_object& obj) {
-                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
-            });
-
             if(enable_logger) {
                 variant v;
                 fc::to_variant(token, v);
@@ -354,10 +343,6 @@ namespace taiyi { namespace chain {
             _db.adjust_nfa_balance(to_nfa, token);
 
             _db.post_push_virtual_operation( vop );
-
-            _db.modify(to_nfa, [&](nfa_object& obj) {
-                util::update_manabar( _db.get_dynamic_global_properties(), obj, true );
-            });
 
             if(enable_logger) {
                 variant v;

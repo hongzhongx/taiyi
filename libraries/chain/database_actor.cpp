@@ -22,7 +22,6 @@
 #include <chain/contract_worker.hpp>
 
 #include <chain/util/uint256.hpp>
-#include <chain/util/manabar.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -336,7 +335,7 @@ namespace taiyi { namespace chain {
                 
                 //reward contract owner
                 const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-                reward_contract_owner_from_nfa(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+                reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
                 
                 if (!triggered)
                     continue;
@@ -405,7 +404,7 @@ namespace taiyi { namespace chain {
             
             //reward contract owner
             const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-            reward_contract_owner_from_nfa(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+            reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
         }
     }
 

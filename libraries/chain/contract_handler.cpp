@@ -1478,11 +1478,11 @@ namespace taiyi { namespace chain {
                 return FORMAT_MESSAGE("${a}无法直接通往${b}", ("a", current_zone.name)("b", target_zone->name));
 
             int take_days = db.calculate_moving_days_to_zone(*target_zone);
-            int64_t take_mana = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
-            db.modify(actor_nfa, [&]( nfa_object& obj ) { util::update_manabar( db.get_dynamic_global_properties(), obj, true ); });
-            if( take_mana > actor_nfa.manabar.current_mana )
-                return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_mana)("t", take_days)("c", actor_nfa.manabar.current_mana));
-            db.modify(actor_nfa, [&]( nfa_object& obj ) { obj.manabar.current_mana -= take_mana; });
+            int64_t take_qi = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
+            if( take_qi > actor_nfa.qi.amount.value )
+                return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_qi)("t", take_days)("c", actor_nfa.qi.amount.value));
+            //reward take_qi to treasury
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
 
             //finish movement
             auto now = db.head_block_time();
@@ -1529,11 +1529,11 @@ namespace taiyi { namespace chain {
                 return FORMAT_MESSAGE("${a}不能探索${z}，因为${a}不在${z}", ("a", actor_name)("z", zone_name));
                     
             int take_days = 1;
-            int64_t take_mana = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
-            db.modify(actor_nfa, [&]( nfa_object& obj ) { util::update_manabar( db.get_dynamic_global_properties(), obj, true ); });
-            if( take_mana > actor_nfa.manabar.current_mana )
-                return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_mana)("t", take_days)("c", actor_nfa.manabar.current_mana));
-            db.modify(actor_nfa, [&]( nfa_object& obj ) { obj.manabar.current_mana -= take_mana; });
+            int64_t take_qi = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
+            if( take_qi > actor_nfa.qi.amount.value )
+                return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_qi)("t", take_days)("c", actor_nfa.qi.amount.value));
+            //reward take_qi to treasury
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
 
             //以目的地视角回调目的地函数：on_actor_exploit
             lua_map param;

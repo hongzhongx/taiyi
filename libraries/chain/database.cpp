@@ -20,7 +20,6 @@
 #include <chain/siming_schedule.hpp>
 
 #include <chain/util/uint256.hpp>
-#include <chain/util/manabar.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -861,25 +860,17 @@ namespace taiyi { namespace chain {
         before_qi_callback( new_qi );
         
         // Add new qi to owner's balance.
-        if( to_reward_balance ) {
+        if( to_reward_balance )
             db.adjust_reward_balance( to_account, liquid, new_qi );
-        }
-        else {
-            db.modify( to_account, [&]( account_object& a ) {
-                util::update_manabar(cprops, a, true, new_qi.amount.value );
-            });
-
+        else
             db.adjust_balance( to_account, new_qi );
-        }
         
         // Update global qi pool numbers.
         db.modify( cprops, [&]( dynamic_global_property_object& props ) {
-            if( to_reward_balance ) {
+            if( to_reward_balance )
                 props.pending_rewarded_qi += new_qi;
-            }
-            else {
+            else
                 props.total_qi += new_qi;
-            }
         } );
         
         // Update siming adoring numbers.
@@ -2269,7 +2260,6 @@ namespace taiyi { namespace chain {
                 pre_push_virtual_operation( vop );
                 
                 modify( get_account( itr->delegator ), [&]( account_object& a ) {
-                    util::update_manabar(gpo, a, true, itr->qi.amount.value );
                     a.delegated_qi -= itr->qi;
                 });
                 
@@ -2699,6 +2689,7 @@ namespace taiyi { namespace chain {
             total_supply += itr->reward_yang_balance;
             total_qi += itr->qi;
             total_qi += itr->reward_qi_balance;
+            total_qi += itr->reward_feigang_balance;
             total_vsf_adores += ( itr->proxy == TAIYI_PROXY_TO_SELF_ACCOUNT ?
                 itr->siming_adore_weight() :
                 ( TAIYI_MAX_PROXY_RECURSION_DEPTH > 0 ? itr->proxied_vsf_adores[TAIYI_MAX_PROXY_RECURSION_DEPTH - 1] : itr->qi.amount ) );
@@ -2710,10 +2701,10 @@ namespace taiyi { namespace chain {
             total_qi += itr->reward_qi_balance;
         }
         
-        total_supply += (gpo.total_qi + gpo.pending_rewarded_qi) * TAIYI_QI_SHARE_PRICE;
+        total_supply += (gpo.total_qi + gpo.pending_rewarded_qi + gpo.pending_rewarded_feigang) * TAIYI_QI_SHARE_PRICE;
         
         FC_ASSERT( gpo.current_supply == total_supply, "", ("gpo.current_supply",gpo.current_supply)("total_supply",total_supply) );
-        FC_ASSERT( gpo.total_qi + gpo.pending_rewarded_qi == total_qi, "", ("gpo.total_qi",gpo.total_qi)("total_qi",total_qi) );
+        FC_ASSERT( gpo.total_qi + gpo.pending_rewarded_qi + gpo.pending_rewarded_feigang == total_qi, "", ("gpo.total_qi",gpo.total_qi)("total_qi",total_qi) );
         FC_ASSERT( gpo.total_qi.amount == total_vsf_adores, "", ("total_qi",gpo.total_qi)("total_vsf_adores",total_vsf_adores) );
         
     } FC_CAPTURE_LOG_AND_RETHROW( (head_block_num()) ); }

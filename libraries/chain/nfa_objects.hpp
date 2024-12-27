@@ -6,8 +6,6 @@
 
 #include <chain/taiyi_object_types.hpp>
 
-#include <chain/util/manabar.hpp>
-
 namespace taiyi { namespace chain {
 
     using protocol::lua_map;
@@ -71,7 +69,6 @@ namespace taiyi { namespace chain {
         lua_map                     contract_data;
         
         asset                       qi = asset( 0, QI_SYMBOL ); /// total qi shares held by this nfa, controls its heart_beat power
-        util::manabar               manabar;
 
         time_point_sec              created_time;
         time_point_sec              next_tick_time = time_point_sec::maximum();
@@ -120,15 +117,12 @@ namespace taiyi { namespace chain {
         allocator< nfa_object >
     > nfa_index;
     
-    namespace util {
-        //对get_effective_qi模版函数的特化
-        template<> int64_t get_effective_qi<nfa_object>( const nfa_object& obj );
-    }
+    int64_t get_effective_qi( const nfa_object& obj );
 
 } } // taiyi::chain
 
 FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
-FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(manabar)(created_time)(next_tick_time))
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(created_time)(next_tick_time))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)

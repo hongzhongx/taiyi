@@ -12,8 +12,6 @@
 #include <chain/lua_context.hpp>
 #include <chain/contract_worker.hpp>
 
-#include <chain/util/manabar.hpp>
-
 #include <fc/macros.hpp>
 
 #include <limits>
@@ -46,9 +44,8 @@ namespace taiyi { namespace chain {
         int64_t used_qi = fc::raw::pack_size(new_rule) * TAIYI_USEMANA_STATE_BYTES_SCALE + 2000 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create actor talent rule." );
 
-        //reward contract owner
-        const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
-        _db.reward_contract_owner_from_account(contract_owner, creator, asset(used_qi, QI_SYMBOL));
+        //reward to treasury
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
 
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -120,7 +117,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create actor." );
 
         //reward to treasury
-        _db.reward_contract_owner_from_account(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
 
         return result;
     }

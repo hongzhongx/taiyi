@@ -163,7 +163,7 @@ namespace taiyi { namespace chain {
         return acd->contract_data;
     }
     //=========================================================================
-    void database::reward_contract_owner_from_account(const account_object& contract_owner, const account_object& from_account, const asset& feigang )
+    void database::reward_feigang(const account_object& to_account, const account_object& from_account, const asset& feigang )
     {
         FC_ASSERT(feigang.symbol == QI_SYMBOL);
         FC_ASSERT(feigang.amount.value > 0);
@@ -171,27 +171,39 @@ namespace taiyi { namespace chain {
         adjust_balance( from_account, -feigang );
         adjust_proxied_siming_adores( from_account, -feigang.amount );
 
-        reward_qi_operation vop = reward_qi_operation( contract_owner.name, feigang );
+        reward_qi_operation vop = reward_qi_operation( to_account.name, feigang );
         pre_push_virtual_operation( vop );
 
-        modify_reward_balance(contract_owner, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
+        modify_reward_balance(to_account, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
 
-        post_push_virtual_operation( vop );        
+        post_push_virtual_operation( vop );
+        
+        // Update global feigang pool numbers.
+        modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& props ) {
+            props.pending_rewarded_feigang += feigang;
+            props.total_qi -= feigang;
+        } );
     }
     //=========================================================================
-    void database::reward_contract_owner_from_nfa(const account_object& contract_owner, const nfa_object& from_nfa, const asset& feigang )
+    void database::reward_feigang(const account_object& to_account, const nfa_object& from_nfa, const asset& feigang )
     {
         FC_ASSERT(feigang.symbol == QI_SYMBOL);
         FC_ASSERT(feigang.amount.value > 0);
         
         adjust_nfa_balance( from_nfa, -feigang );
 
-        reward_qi_operation vop = reward_qi_operation( contract_owner.name, feigang );
+        reward_qi_operation vop = reward_qi_operation( to_account.name, feigang );
         pre_push_virtual_operation( vop );
 
-        modify_reward_balance(contract_owner, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
+        modify_reward_balance(to_account, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
 
         post_push_virtual_operation( vop );
+
+        // Update global feigang pool numbers.
+        modify( get_dynamic_global_properties(), [&]( dynamic_global_property_object& props ) {
+            props.pending_rewarded_feigang += feigang;
+            props.total_qi -= feigang;
+        } );
     }
 
 } } //taiyi::chain

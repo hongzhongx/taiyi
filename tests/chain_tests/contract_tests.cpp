@@ -513,12 +513,18 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     sign( tx, alice_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
 
-    BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
+    BOOST_TEST_MESSAGE( "--- Test failure not enough qi" );
 
-    db_plugin->debug_update( [=]( database& db ) {
+    auto org_alice_qi = db->get_account( "alice" ).qi;
+    idump((org_alice_qi));
+
+    db_plugin->debug_update( [&]( database& db ) {
         db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = 100;
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+            a.qi.amount = 100;
+        });
+        db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
+            gpo.current_supply -= org_alice_qi * TAIYI_QI_SHARE_PRICE;
+            gpo.total_qi += -org_alice_qi + ASSET( "0.000100 QI" );
         });
     });
 
@@ -535,14 +541,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     generate_block();
 
-    db_plugin->debug_update( [=]( database& db ) {
-        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi(a);
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
-        });
-    });
-
-    util::manabar old_manabar = db->get_account( "alice" ).manabar;
+    auto old_mana = db->get_account( "alice" ).qi.amount;
         
     tx.operations.clear();
     tx.signatures.clear();
@@ -552,10 +551,12 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     db->push_transaction( tx, 0 );
     
     const account_object& alice_acc = db->get_account( "alice" );
-    int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
+    int64_t used_mana = old_mana.value - alice_acc.qi.amount.value;
     idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 886 );
-    
+
+    validate_database();
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( revise_contract_apply )
@@ -573,8 +574,6 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     BOOST_TEST_MESSAGE( "Testing: revise_contract_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
-    generate_block();
         
     signed_transaction tx;
 
@@ -588,13 +587,13 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     generate_block();
-
+    validate_database();
+    
     BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
 
-    db_plugin->debug_update( [=]( database& db ) {
+    db_plugin->debug_update( [&]( database& db ) {
         db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = 100;
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+            a.qi.amount = 100;
         });
     });
 
@@ -612,22 +611,20 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
 
     BOOST_TEST_MESSAGE( "--- Test use mana" );
 
-    db_plugin->debug_update( [=]( database& db ) {
-        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi(a);
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
-        });
-    });
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    generate_block();
 
-    util::manabar old_manabar = db->get_account( "alice" ).manabar;
+    auto old_mana = db->get_account( "alice" ).qi.amount;
     
     db->push_transaction( tx, 0 );
     
     const account_object& alice_acc = db->get_account( "alice" );
-    int64_t used_mana = old_manabar.current_mana - alice_acc.manabar.current_mana;
+    int64_t used_mana = old_mana.value - alice_acc.qi.amount.value;
     idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 486 );
-    
+
+    //validate_database(); 由于前面强制修改账号的qi，所以这里是通不过的，仅用于测试
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( call_contract_function_apply )
@@ -645,7 +642,6 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     BOOST_TEST_MESSAGE( "Testing: call_contract_function_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
         
@@ -665,11 +661,17 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     generate_block();
 
     BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
+    
+    auto org_alice_qi = db->get_account( "alice" ).qi;
+    idump((org_alice_qi));
 
-    db_plugin->debug_update( [=]( database& db ) {
+    db_plugin->debug_update( [&]( database& db ) {
         db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = 100;
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+            a.qi.amount.value = 100;
+        });
+        db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
+            gpo.current_supply -= org_alice_qi * TAIYI_QI_SHARE_PRICE;
+            gpo.total_qi += -org_alice_qi + ASSET( "0.000100 QI" );
         });
     });
 
@@ -687,42 +689,32 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     BOOST_TEST_MESSAGE( "--- Test use mana" );
 
-    db_plugin->debug_update( [=]( database& db ) {
-        db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.manabar.current_mana = util::get_effective_qi(a);
-            a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
-        });
-    });
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    generate_block();
 
-    util::manabar old_manabar = db->get_account( "alice" ).manabar;
-    asset old_reward_qi = db->get_account("bob").reward_qi_balance;
+    auto init_mana = db->get_account( "alice" ).qi;
+    auto old_mana = db->get_account( "alice" ).qi;
+    asset old_reward_feigang = db->get_account("bob").reward_feigang_balance;
     
     db->push_transaction( tx, 0 );
     validate_database();
 
-    int64_t used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
+    int64_t used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
     idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 411 );
     
-    asset reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
-    //idump( (reward_qi) );
-    BOOST_REQUIRE( reward_qi == asset(411, QI_SYMBOL) );
-
+    asset reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
+    idump( (reward_feigang.amount) );
+    BOOST_REQUIRE( reward_feigang.amount == 411 );
+    
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     
     for(int i = 0; i<3; i++) {
 
         generate_block();
-
-        db_plugin->debug_update( [=]( database& db ) {
-            db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-                a.manabar.current_mana = util::get_effective_qi(a);
-                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
-            });
-        });
         
-        old_manabar = db->get_account( "alice" ).manabar;
-        old_reward_qi = db->get_account("bob").reward_qi_balance;
+        old_mana = db->get_account( "alice" ).qi;
+        old_reward_feigang = db->get_account("bob").reward_feigang_balance;
         
         tx.signatures.clear();
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
@@ -730,13 +722,13 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
         db->push_transaction( tx, 0 );
         validate_database();
         
-        used_mana = old_manabar.current_mana - db->get_account( "alice" ).manabar.current_mana;
+        used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
         //idump( (used_mana) );
         BOOST_REQUIRE( used_mana == 411 );
         
-        reward_qi = db->get_account("bob").reward_qi_balance - old_reward_qi;
-        //idump( (reward_qi) );
-        BOOST_REQUIRE( reward_qi == asset(411, QI_SYMBOL) );
+        reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
+        //idump( (reward_feigang) );
+        BOOST_REQUIRE( reward_feigang.amount == 411 );
     }
     
 } FC_LOG_AND_RETHROW() }

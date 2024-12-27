@@ -410,9 +410,9 @@ namespace taiyi { namespace chain {
         size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
         lua_map prepare_account_contract_data(const account_object& account, const contract_object& contract);
         
-        //奖励合约创作者非罡
-        void reward_contract_owner_from_account(const account_object& contract_owner, const account_object& from_account, const asset& feigang );
-        void reward_contract_owner_from_nfa(const account_object& contract_owner, const nfa_object& from_nfa, const asset& feigang );
+        //奖励账号非罡
+        void reward_feigang(const account_object& to_account, const account_object& from_account, const asset& feigang );
+        void reward_feigang(const account_object& to_account, const nfa_object& from_nfa, const asset& feigang );
         //奖励修真者真气
         void reward_cultivation_account(const account_object& account, const asset& qi );
         //void reward_cultivation_nfa(const nfa_object& nfa, const asset& qi );

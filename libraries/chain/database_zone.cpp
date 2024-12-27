@@ -20,7 +20,6 @@
 #include <chain/contract_worker.hpp>
 
 #include <chain/util/uint256.hpp>
-#include <chain/util/manabar.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>

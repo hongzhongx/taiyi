@@ -16,7 +16,6 @@
 #include <chain/contract_worker.hpp>
 
 #include <chain/util/uint256.hpp>
-#include <chain/util/manabar.hpp>
 
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
@@ -107,7 +106,7 @@ namespace taiyi { namespace chain {
         
         //reward contract owner
         const auto& contract_owner = get<account_object, by_id>(contract.owner);
-        reward_contract_owner_from_account(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+        reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
                         
         //init nfa from result table
         modify(nfa, [&](nfa_object& obj) {
@@ -182,10 +181,17 @@ namespace taiyi { namespace chain {
             int64_t used_drops = old_drops - vm_drops;
 
             int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+            if(used_qi > nfa.qi.amount.value) {
+                if(!beat_fail) {
+                    beat_fail = true;
+                    wlog("NFA (${i}) process heart beat fail. not enough qi", ("i", nfa.id));
+                }
+                used_qi = std::min(nfa.qi.amount.value, used_qi);
+            }
             
             //reward contract owner
             const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-            reward_contract_owner_from_nfa(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+            reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
 
             //执行错误不仅要扣费，还会将NFA重置为关闭心跳状态
             if(beat_fail)  {

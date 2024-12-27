@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE( account_create_apply )
     {
         BOOST_TEST_MESSAGE( "Testing: account_create_apply" );
         
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_siming_schedule_object(), [&]( siming_schedule_object& wso ) {
                 wso.median_props.account_creation_fee = ASSET( "0.100 YANG" );
             });
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE( account_create_apply )
         
         BOOST_TEST_MESSAGE( "--- Test failure covering siming fee" );
         generate_block();
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_siming_schedule_object(), [&]( siming_schedule_object& wso ) {
                 wso.median_props.account_creation_fee = ASSET( "10.000 YANG" );
             });
@@ -887,7 +887,7 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             generate_block();
         }
         
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             auto& wso = db.get_siming_schedule_object();
             db.modify( wso, [&]( siming_schedule_object& w ) {
                 w.median_props.account_creation_fee = ASSET( "10.000 YANG" );
@@ -1607,7 +1607,7 @@ BOOST_AUTO_TEST_CASE( account_recovery )
         fund( "alice", 1000000 );
         generate_block();
         
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_siming_schedule_object(), [&]( siming_schedule_object& wso ) {
                 wso.median_props.account_creation_fee = ASSET( "0.100 YANG" );
             });
@@ -2103,7 +2103,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_validate )
         op.account = "alice";
         op.reward_yang = ASSET( "0.000 YANG" );
         op.reward_qi = ASSET( "0.000000 QI" );
-        
+        op.reward_feigang = ASSET( "0.000000 QI" );
         
         BOOST_TEST_MESSAGE( "Testing all 0 amounts" );
         TAIYI_REQUIRE_THROW( op.validate(), fc::assert_exception );
@@ -2180,8 +2180,9 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
             });
             
             db.modify( db.get_dynamic_global_properties(), []( dynamic_global_property_object& gpo ) {
-                gpo.current_supply += ASSET( "20.000 YANG" );
+                gpo.current_supply += ASSET( "30.000 YANG" );
                 gpo.pending_rewarded_qi += ASSET( "10.000000 QI" );
+                gpo.pending_rewarded_feigang += ASSET( "10.000000 QI" );
             });
         });
         
@@ -2321,7 +2322,7 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         
         generate_block();
         
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_siming_schedule_object(), [&]( siming_schedule_object& w ) {
                 w.median_props.account_creation_fee = ASSET( "1.000 YANG" );
             });
@@ -2334,13 +2335,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         op.delegator = "alice";
         op.delegatee = "bob";
         
-        util::manabar old_manabar = db->get_account( "alice" ).manabar;
-        util::manabar_params params( util::get_effective_qi( db->get_account( "alice" ) ), TAIYI_MANA_REGENERATION_SECONDS );
-        old_manabar.regenerate_mana( params, db->head_block_time() );
-
-        util::manabar old_bob_manabar = db->get_account( "bob" ).manabar;
-        params.max_mana = util::get_effective_qi( db->get_account( "bob" ) );
-        old_bob_manabar.regenerate_mana( params, db->head_block_time() );
+        auto old_mana = get_effective_qi(db->get_account( "alice" ));
+        auto old_bob_mana = get_effective_qi(db->get_account( "bob" ));
 
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         tx.operations.push_back( op );
@@ -2351,9 +2347,9 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         const account_object& bob_acc = db->get_account( "bob" );
         
         BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "10000.000000 QI" ) );
-        BOOST_REQUIRE( alice_acc.manabar.current_mana == old_manabar.current_mana - op.qi.amount.value );
+        BOOST_REQUIRE( get_effective_qi(alice_acc) == old_mana - op.qi.amount.value );
         BOOST_REQUIRE( bob_acc.received_qi == ASSET( "10000.000000 QI" ) );
-        BOOST_REQUIRE( bob_acc.manabar.current_mana == old_bob_manabar.current_mana + op.qi.amount.value );
+        BOOST_REQUIRE( get_effective_qi(bob_acc) == old_bob_mana + op.qi.amount.value );
 
         BOOST_TEST_MESSAGE( "--- Test that the delegation object is correct. " );
         auto delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
@@ -2362,13 +2358,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         BOOST_REQUIRE( delegation->delegator == op.delegator);
         BOOST_REQUIRE( delegation->qi  == ASSET( "10000.000000 QI"));
         
-        old_manabar = db->get_account( "alice" ).manabar;
-        params.max_mana = util::get_effective_qi( db->get_account( "alice" ) );
-        old_manabar.regenerate_mana( params, db->head_block_time() );
-
-        old_bob_manabar = db->get_account( "bob" ).manabar;
-        params.max_mana = util::get_effective_qi( db->get_account( "bob" ) );
-        old_bob_manabar.regenerate_mana( params, db->head_block_time() );
+        old_mana = get_effective_qi(db->get_account( "alice" ));
+        old_bob_mana = get_effective_qi(db->get_account( "bob" ));
 
         int64_t delta = 10000000000;
         
@@ -2381,15 +2372,15 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         db->push_transaction( tx, 0 );
         generate_blocks(1);
         
-        idump( (alice_acc.manabar)(old_manabar)(delta) );
+        idump( (get_effective_qi(alice_acc))(old_mana)(delta) );
 
         BOOST_REQUIRE( delegation != nullptr );
         BOOST_REQUIRE( delegation->delegator == op.delegator);
         BOOST_REQUIRE( delegation->qi == ASSET( "20000.000000 QI"));
         BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "20000.000000 QI"));
-        BOOST_REQUIRE( alice_acc.manabar.current_mana == old_manabar.current_mana - delta );
+        BOOST_REQUIRE( get_effective_qi(alice_acc) == old_mana - delta );
         BOOST_REQUIRE( bob_acc.received_qi == ASSET( "20000.000000 QI"));
-        BOOST_REQUIRE( bob_acc.manabar.current_mana == old_bob_manabar.current_mana + delta );
+        BOOST_REQUIRE( get_effective_qi(bob_acc) == old_bob_mana + delta );
 
         BOOST_TEST_MESSAGE( "--- Test failure delegating delgated QI." );
         
@@ -2432,10 +2423,9 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         BOOST_TEST_MESSAGE( "--- Testing failure delegating when there is not enough mana" );
 
         generate_block();
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
-                a.manabar.current_mana = a.manabar.current_mana * 3 / 4;
-                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+                a.qi.amount.value = sam_vest.amount.value * 3 / 4;
             });
         });
         
@@ -2447,10 +2437,9 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
 
         BOOST_TEST_MESSAGE( "--- Test failure delegating qi shares that are part of a power down" );
         generate_block();
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
-                a.manabar.current_mana = util::get_effective_qi( a ) / 4;
-                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+                a.qi = sam_vest;
             });
         });
         
@@ -2476,10 +2465,9 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         db->push_transaction( tx, 0 );
 
         BOOST_TEST_MESSAGE( "--- Test failure powering down qi shares that are delegated" );
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
-                a.manabar.current_mana = sam_vest.amount.value * 2;
-                a.manabar.last_update_time = db.head_block_time().sec_since_epoch();
+                a.qi.amount.value = sam_vest.amount.value * 2;
             });
         });
 
@@ -2498,11 +2486,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
 
         BOOST_TEST_MESSAGE( "--- Remove a delegation and ensure it is returned after 1 week" );
 
-        util::manabar old_sam_manabar = db->get_account( "sam" ).manabar;
-        util::manabar old_dave_manabar = db->get_account( "dave" ).manabar;
-
-        util::manabar_params sam_params( util::get_effective_qi( db->get_account( "sam" ) ), TAIYI_MANA_REGENERATION_SECONDS );
-        util::manabar_params dave_params( util::get_effective_qi( db->get_account( "dave" ) ), TAIYI_MANA_REGENERATION_SECONDS );
+        auto old_sam_mana = get_effective_qi(db->get_account( "sam" ));
+        auto old_dave_mana = get_effective_qi(db->get_account( "dave" ));
 
         tx.clear();
         op.qi = ASSET( "0.000000 QI" );
@@ -2525,36 +2510,21 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
         BOOST_REQUIRE( delegation == nullptr );
 
-        old_sam_manabar.regenerate_mana( sam_params, db->head_block_time() );
-        sam_params.max_mana /= 4;
+        BOOST_REQUIRE( get_effective_qi(db->get_account( "sam" )) == old_sam_mana );
+        BOOST_REQUIRE( get_effective_qi(db->get_account( "dave" )) == old_dave_mana - sam_vest.amount.value );
 
-        old_dave_manabar.regenerate_mana( dave_params, db->head_block_time() );
-        dave_params.max_mana /= 4;
-
-        BOOST_REQUIRE( db->get_account( "sam" ).manabar.current_mana == old_sam_manabar.current_mana );
-        BOOST_REQUIRE( db->get_account( "dave" ).manabar.current_mana == old_dave_manabar.current_mana - sam_vest.amount.value );
-
-        old_sam_manabar = db->get_account( "sam" ).manabar;
-        old_dave_manabar = db->get_account( "dave" ).manabar;
-
-        sam_params.max_mana = util::get_effective_qi( db->get_account( "sam" ) );
-        dave_params.max_mana = util::get_effective_qi( db->get_account( "dave" ) );
+        old_sam_mana = get_effective_qi(db->get_account( "sam" ));
+        old_dave_mana = get_effective_qi(db->get_account( "dave" ));
 
         generate_blocks( exp_obj->expiration + TAIYI_BLOCK_INTERVAL );
-
-        old_sam_manabar.regenerate_mana( sam_params, db->head_block_time() );
-        sam_params.max_mana /= 4;
-
-        old_dave_manabar.regenerate_mana( dave_params, db->head_block_time() );
-        dave_params.max_mana /= 4;
 
         exp_obj = db->get_index< qi_delegation_expiration_index, by_id >().begin();
         end = db->get_index< qi_delegation_expiration_index, by_id >().end();
 
         BOOST_REQUIRE( exp_obj == end );
         BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi == ASSET( "0.000000 QI" ) );
-        BOOST_REQUIRE( db->get_account( "sam" ).manabar.current_mana == old_sam_manabar.current_mana + sam_vest.amount.value );
-        BOOST_REQUIRE( db->get_account( "dave" ).manabar.current_mana == old_dave_manabar.current_mana );
+        BOOST_REQUIRE( get_effective_qi(db->get_account( "sam" )) == old_sam_mana + sam_vest.amount.value );
+        BOOST_REQUIRE( get_effective_qi(db->get_account( "dave" )) == old_dave_mana );
     }
     FC_LOG_AND_RETHROW()
 }
@@ -2572,7 +2542,7 @@ BOOST_AUTO_TEST_CASE( issue_971_qi_removal )
         
         generate_block();
         
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_siming_schedule_object(), [&]( siming_schedule_object& w ) {
                 w.median_props.account_creation_fee = ASSET( "1.000 YANG" );
             });
@@ -2599,7 +2569,7 @@ BOOST_AUTO_TEST_CASE( issue_971_qi_removal )
         
         generate_block();
         
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_siming_schedule_object(), [&]( siming_schedule_object& w ) {
                 w.median_props.account_creation_fee = ASSET( "100.000 YANG" );
             });
@@ -2837,7 +2807,7 @@ BOOST_AUTO_TEST_CASE( account_auth_tests )
         private_key_type charlie_active_private_key = charlie_private_key;
         private_key_type charlie_posting_private_key = generate_private_key( "charlie_posting" );
         
-        db_plugin->debug_update( [=]( database& db ) {
+        db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get< account_authority_object, by_account >( "alice"), [&]( account_authority_object& auth ) {
                 auth.active.add_authority( "bob", 1 );
                 auth.posting.add_authority( "charlie", 1 );

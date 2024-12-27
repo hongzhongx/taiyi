@@ -10,8 +10,6 @@
 #include <chain/siming_objects.hpp>
 #include <chain/shared_authority.hpp>
 
-#include <chain/util/manabar.hpp>
-
 #include <numeric>
 
 namespace taiyi { namespace chain {
@@ -41,7 +39,6 @@ namespace taiyi { namespace chain {
         time_point_sec    last_account_recovery;
         
         bool              can_adore = true;
-        util::manabar     manabar;
 
         asset             balance = asset( 0, YANG_SYMBOL );  ///< total liquid shares held by this account
         
@@ -94,6 +91,8 @@ namespace taiyi { namespace chain {
         >,
         allocator< account_object >
     > account_index;
+    
+    int64_t get_effective_qi( const account_object& account );
     
     //=========================================================================
 
@@ -378,7 +377,7 @@ namespace mira {
 
 } // mira
 
-FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(manabar)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_object, taiyi::chain::account_index )
 
 FC_REFLECT( taiyi::chain::account_metadata_object, (id)(account)(json_metadata) )
