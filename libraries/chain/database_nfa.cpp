@@ -140,6 +140,27 @@ namespace taiyi { namespace chain {
         
         for(const auto* n : tick_nfas) {
             const auto& nfa = *n;
+
+            //欠费限制
+            if(nfa.debt_value > 0) {
+                //try pay back
+                if(nfa.debt_value > nfa.qi.amount.value) {
+                    modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
+                    continue;
+                }
+                
+                //reward contract owner
+                const auto& to_contract = get<contract_object, by_id>(nfa.debt_contract);
+                const auto& contract_owner = get<account_object, by_id>(to_contract.owner);
+                reward_feigang(contract_owner, nfa, asset(nfa.debt_value, QI_SYMBOL));
+                
+                modify(nfa, [&](nfa_object& obj) {
+                    obj.debt_value = 0;
+                    obj.debt_contract = contract_id_type::max();
+                });
+                
+                wlog("NFA (${i}) pay debt ${v}", ("i", nfa.id)("v", nfa.debt_value));
+            }
             
             const auto* contract_ptr = find<contract_object, by_id>(nfa.main_contract);
             if(contract_ptr == nullptr)
@@ -166,7 +187,9 @@ namespace taiyi { namespace chain {
             long long vm_drops = old_drops;
             bool beat_fail = false;
             try {
+                auto session = start_undo_session();
                 worker.do_nfa_contract_function(nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+                session.push();
             }
             catch (fc::exception e) {
                 //任何错误都不能照成核心循环崩溃
@@ -181,21 +204,32 @@ namespace taiyi { namespace chain {
             int64_t used_drops = old_drops - vm_drops;
 
             int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+            int64_t debt_qi = 0;
             if(used_qi > nfa.qi.amount.value) {
+                debt_qi = used_qi - nfa.qi.amount.value;
+                used_qi = nfa.qi.amount.value;
                 if(!beat_fail) {
                     beat_fail = true;
-                    wlog("NFA (${i}) process heart beat fail. not enough qi", ("i", nfa.id));
+                    wlog("NFA (${i}) process heart beat successfully, but have not enough qi to next trigger.", ("i", nfa.id));
                 }
-                used_qi = std::min(nfa.qi.amount.value, used_qi);
+                else {
+                    wlog("NFA (${i}) process heart beat failed, and have not enough qi to next trigger.", ("i", nfa.id));
+                }
             }
             
             //reward contract owner
-            const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-            reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+            if( used_qi > 0) {
+                const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
+                reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+            }
 
             //执行错误不仅要扣费，还会将NFA重置为关闭心跳状态
             if(beat_fail)  {
                 modify( nfa, [&]( nfa_object& obj ) {
+                    if(debt_qi > 0) {
+                        obj.debt_value = debt_qi;
+                        obj.debt_contract = contract_ptr->id;
+                    }
                     obj.next_tick_time = time_point_sec::maximum();
                 });
             }

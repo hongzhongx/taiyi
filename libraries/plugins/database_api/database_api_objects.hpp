@@ -218,7 +218,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     struct api_nfa_object
     {
-        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), contract_data(o.contract_data), qi(o.qi), created_time(o.created_time), next_tick_time(o.next_tick_time)
+        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), contract_data(o.contract_data), qi(o.qi), debt_value(o.debt_value), created_time(o.created_time), next_tick_time(o.next_tick_time)
         {
             creator_account = db.get<account_object, by_id>(o.creator_account).name;
             owner_account = db.get<account_object, by_id>(o.owner_account).name;
@@ -227,6 +227,9 @@ namespace taiyi { namespace plugins { namespace database_api {
             symbol = db.get<nfa_symbol_object, by_id>(o.symbol_id).symbol;
             
             main_contract = db.get<contract_object, by_id>(o.main_contract).name;
+            const auto* cp = db.find<contract_object, by_id>(o.debt_contract);
+            if(cp)
+                debt_contract = cp->name;
             
             gold = db.get_nfa_balance(o, GOLD_SYMBOL);
             food = db.get_nfa_balance(o, FOOD_SYMBOL);
@@ -261,6 +264,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         lua_map             contract_data;
         
         asset               qi;
+        int64_t             debt_value; /// 欠费的真气值
+        string              debt_contract; /// 欠费的债主合约
 
         time_point_sec      created_time;
         time_point_sec      next_tick_time;
@@ -380,6 +385,6 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_time) )

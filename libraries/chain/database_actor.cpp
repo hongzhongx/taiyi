@@ -231,7 +231,7 @@ namespace taiyi { namespace chain {
             modify(actor, [&]( actor_object& obj ) {
                 obj.next_tick_time = now + TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL;
             });
-
+            
             if(actor.health <= 0) {
                 //dead
                 //wlog("actor ${a} is dead!", ("a", actor.name));
@@ -274,6 +274,26 @@ namespace taiyi { namespace chain {
     void database::try_trigger_actor_talents( const actor_object& act, uint16_t age )
     {
         const auto& nfa = get< nfa_object, by_id >( act.nfa_id );
+        
+        //欠费限制
+        if(nfa.debt_value > 0) {
+            //try pay back
+            if(nfa.debt_value > nfa.qi.amount.value)
+                return;
+            
+            //reward contract owner
+            const auto& to_contract = get<contract_object, by_id>(nfa.debt_contract);
+            const auto& contract_owner = get<account_object, by_id>(to_contract.owner);
+            reward_feigang(contract_owner, nfa, asset(nfa.debt_value, QI_SYMBOL));
+            
+            modify(nfa, [&](nfa_object& obj) {
+                obj.debt_value = 0;
+                obj.debt_contract = contract_id_type::max();
+            });
+            
+            wlog("NFA (${i}) pay debt ${v}", ("i", nfa.id)("v", nfa.debt_value));
+        }
+
         const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
 
         //process talents
@@ -308,6 +328,7 @@ namespace taiyi { namespace chain {
                 bool trigger_fail = false;
                 bool triggered = false;
                 try {
+                    auto session = start_undo_session();
                     lua_table result_table = worker.do_nfa_contract_function_return_table(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
                     
                     auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
@@ -317,6 +338,7 @@ namespace taiyi { namespace chain {
                     }
                     else
                         triggered = it_triggered->second.get<lua_bool>().v;
+                    session.push();
                 }
                 catch (fc::exception e) {
                     //任何错误都不能照成核心循环崩溃
@@ -332,10 +354,31 @@ namespace taiyi { namespace chain {
 
                 //执行错误仍然要扣费，但是不影响下次触发
                 int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-                
+                int64_t debt_qi = 0;
+                if(used_qi > nfa.qi.amount.value) {
+                    debt_qi = used_qi - nfa.qi.amount.value;
+                    used_qi = nfa.qi.amount.value;
+                    if(!trigger_fail) {
+                        trigger_fail = true;
+                        wlog("Actor (${a}) trigger talent #${t} successfully, but have not enough qi to next trigger.", ("a", act.name)("t", tobj.id));
+                    }
+                    else {
+                        wlog("Actor (${a}) trigger talent #${t} failed, and have not enough qi to next trigger.", ("a", act.name)("t", tobj.id));
+                    }
+                }
+
                 //reward contract owner
-                const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-                reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+                if( used_qi > 0) {
+                    const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
+                    reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+                }
+                
+                if(debt_qi > 0) {
+                    modify( nfa, [&]( nfa_object& obj ) {
+                        obj.debt_value = debt_qi;
+                        obj.debt_contract = contract_ptr->id;
+                    });
+                }
                 
                 if (!triggered)
                     continue;
@@ -361,7 +404,26 @@ namespace taiyi { namespace chain {
     void database::try_trigger_actor_contract_grow( const actor_object& act )
     {
         const auto& nfa = get< nfa_object, by_id >( act.nfa_id );
-        
+
+        //欠费限制
+        if(nfa.debt_value > 0) {
+            //try pay back
+            if(nfa.debt_value > nfa.qi.amount.value)
+                return;
+            
+            //reward contract owner
+            const auto& to_contract = get<contract_object, by_id>(nfa.debt_contract);
+            const auto& contract_owner = get<account_object, by_id>(to_contract.owner);
+            reward_feigang(contract_owner, nfa, asset(nfa.debt_value, QI_SYMBOL));
+            
+            modify(nfa, [&](nfa_object& obj) {
+                obj.debt_value = 0;
+                obj.debt_contract = contract_id_type::max();
+            });
+            
+            wlog("NFA (${i}) pay debt ${v}", ("i", nfa.id)("v", nfa.debt_value));
+        }
+
         const auto* contract_ptr = find<contract_object, by_id>(nfa.main_contract);
         if(contract_ptr == nullptr)
             return;
@@ -385,7 +447,9 @@ namespace taiyi { namespace chain {
             long long vm_drops = old_drops;
             bool trigger_fail = false;
             try {
+                auto session = start_undo_session();
                 worker.do_nfa_contract_function(nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+                session.push();
             }
             catch (fc::exception e) {
                 //任何错误都不能照成核心循环崩溃
@@ -401,10 +465,31 @@ namespace taiyi { namespace chain {
 
             //执行错误仍然要扣费，但是不影响下次触发
             int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-            
+            int64_t debt_qi = 0;
+            if(used_qi > nfa.qi.amount.value) {
+                debt_qi = used_qi - nfa.qi.amount.value;
+                used_qi = nfa.qi.amount.value;
+                if(!trigger_fail) {
+                    trigger_fail = true;
+                    wlog("Actor (${a}) trigger on_grown successfully, but have not enough qi to next trigger.", ("a", act.name));
+                }
+                else {
+                    wlog("Actor (${a}) trigger on_grown failed, and have not enough qi to next trigger.", ("a", act.name));
+                }
+            }
+
             //reward contract owner
-            const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-            reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+            if( used_qi > 0) {
+                const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
+                reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
+            }
+            
+            if(debt_qi > 0) {
+                modify( nfa, [&]( nfa_object& obj ) {
+                    obj.debt_value = debt_qi;
+                    obj.debt_contract = contract_ptr->id;
+                });
+            }
         }
     }
 
