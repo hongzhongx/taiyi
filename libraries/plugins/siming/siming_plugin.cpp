@@ -70,7 +70,7 @@ namespace taiyi { namespace plugins { namespace siming {
             
             bool     _production_enabled                = false;
             uint32_t _required_siming_participation     = 33 * TAIYI_1_PERCENT;
-            uint32_t _production_skip_flags             = chain::database::skip_nothing;
+            uint32_t _production_skip_flags             = chain::database::skip_validate_invariants;
             
             std::map< taiyi::protocol::public_key_type, fc::ecc::private_key > _private_keys;
             std::set< taiyi::protocol::account_name_type >                     _simings;

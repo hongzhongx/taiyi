@@ -363,21 +363,41 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     };
 
 
-    struct legacy_reward_qi_operation
+    struct legacy_reward_feigang_operation
     {
-        legacy_reward_qi_operation() {}
-        legacy_reward_qi_operation( const reward_qi_operation& op ) : account( op.account ), qi(legacy_asset::from_asset( op.qi ))
+        legacy_reward_feigang_operation() {}
+        legacy_reward_feigang_operation( const reward_feigang_operation& op ) : account( op.account ), qi(legacy_asset::from_asset( op.qi ))
         {}
 
-        operator reward_qi_operation()const
+        operator reward_feigang_operation()const
         {
-            reward_qi_operation op;
+            reward_feigang_operation op;
             op.account = account;
             op.qi = qi;
             return op;
         }
 
         account_name_type   account;
+        legacy_asset        qi;
+    };
+    
+    struct legacy_reward_cultivation_operation
+    {
+        legacy_reward_cultivation_operation() {}
+        legacy_reward_cultivation_operation( const reward_cultivation_operation& op ) : account( op.account ), nfa( op.nfa ), qi(legacy_asset::from_asset( op.qi ))
+        {}
+
+        operator reward_cultivation_operation()const
+        {
+            reward_cultivation_operation op;
+            op.account = account;
+            op.nfa = nfa;
+            op.qi = qi;
+            return op;
+        }
+
+        account_name_type   account;
+        int64_t             nfa;
         legacy_asset        qi;
     };
     
@@ -466,7 +486,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_nfa_convert_qi_to_resources_operation,
         legacy_nfa_trasfer_operation,
         legacy_nfa_deposit_withdraw_operation,
-        legacy_reward_qi_operation,
+        legacy_reward_feigang_operation,
+        legacy_reward_cultivation_operation,
 
         legacy_tiandao_year_change_operation,
         legacy_tiandao_month_change_operation,
@@ -594,9 +615,15 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return true;
         }
 
-        bool operator()( const reward_qi_operation& op )const
+        bool operator()( const reward_feigang_operation& op )const
         {
-            l_op = legacy_reward_qi_operation( op );
+            l_op = legacy_reward_feigang_operation( op );
+            return true;
+        }
+        
+        bool operator()( const reward_cultivation_operation& op )const
+        {
+            l_op = legacy_reward_cultivation_operation( op );
             return true;
         }
 
@@ -694,9 +721,14 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return operation( nfa_deposit_withdraw_operation( op ) );
         }
 
-        operation operator()( const legacy_reward_qi_operation& op )const
+        operation operator()( const legacy_reward_feigang_operation& op )const
         {
-            return operation( reward_qi_operation( op ) );
+            return operation( reward_feigang_operation( op ) );
+        }
+        
+        operation operator()( const legacy_reward_cultivation_operation& op )const
+        {
+            return operation( reward_cultivation_operation( op ) );
         }
 
         operation operator()( const legacy_create_actor_operation& op )const
@@ -778,7 +810,8 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_producer_reward_operation, (pr
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_convert_qi_to_resources_operation, (nfa)(owner)(qi_converted)(new_resource) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_trasfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
-FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_qi_operation, (account)(qi) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_feigang_operation, (account)(qi) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_cultivation_operation, (account)(nfa)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_actor_operation, (fee)(creator)(family_name)(last_name) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_zone_operation, (fee)(creator)(name) )
 

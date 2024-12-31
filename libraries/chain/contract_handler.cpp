@@ -11,6 +11,7 @@
 #include <chain/nfa_objects.hpp>
 #include <chain/zone_objects.hpp>
 #include <chain/actor_objects.hpp>
+#include <chain/cultivation_objects.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -1545,6 +1546,98 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
         
+        return "";
+    }
+    //=========================================================================
+    int64_t contract_handler::create_cultivation(int64_t nfa_id, const lua_map& beneficiaries, uint64_t prepare_time_seconds)
+    {
+        try
+        {
+            const auto& manager_nfa = db.get<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(manager_nfa.owner_account == caller.id || manager_nfa.active_account == caller.id, "无权操作NFA");
+            
+            chainbase::t_flat_map<nfa_id_type, uint> beneficiaries_map;
+            uint64_t total_share_check = 0;
+            for (const auto& b: beneficiaries) {
+                FC_ASSERT(b.first.key.which() == lua_key_variant::tag<lua_int>::value, "传入受益者NFA ID参数类型错误");
+                const auto* check_nfa = db.find<nfa_object, by_id>(b.first.key.get<lua_int>().v);
+                FC_ASSERT(check_nfa != nullptr, "传入不存在的受益者NFA ID");
+                
+                FC_ASSERT(b.second.which() == lua_key_variant::tag<lua_int>::value, "传入受益者分配比率参数类型错误");
+                int64_t share = b.second.get<lua_int>().v;
+                FC_ASSERT(share > 0, "传入受益者分配比率参数无效");
+                beneficiaries_map[check_nfa->id] = uint(share);
+                total_share_check += share;
+            }
+            
+            FC_ASSERT(total_share_check == TAIYI_100_PERCENT, "传入受益者分配比率总合不等于${a}", ("a", TAIYI_100_PERCENT));
+            
+            FC_ASSERT(prepare_time_seconds >= TAIYI_CULTIVATION_PREPARE_MIN_SECONDS, "传入准备时间不够，必须大于${a}秒", ("a", TAIYI_CULTIVATION_PREPARE_MIN_SECONDS));
+            
+            return db.create_cultivation(manager_nfa, beneficiaries_map, prepare_time_seconds).id;
+
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    string contract_handler::participate_cultivation(int64_t cult_id, int64_t nfa_id, uint64_t value)
+    {
+        try
+        {
+            const auto* cult = db.find<cultivation_object, by_id>(cult_id);
+            if(cult == nullptr)
+                return "指定修真活动不存在";
+            if(cult->start_time != time_point_sec::maximum())
+                return "修真活动已经开始，不能再加入了";
+            
+            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
+            if(nfa.owner_account != caller.id && nfa.active_account != caller.id)
+                return "无权操作NFA";
+            if(nfa.cultivation_value != 0)
+                return "指定参与者已经在修真了，不能再参加新的修真活动";
+            if(value == 0)
+                return "参与者没有设置参与修着活动的有效真气";
+            if(nfa.qi.amount.value < value)
+                return "参与者体内真气不够";
+            
+            db.participate_cultivation(*cult, nfa, value);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+        return "";
+    }
+    //=========================================================================
+    string contract_handler::stop_and_close_cultivation(int64_t cult_id)
+    {
+        try
+        {
+            const auto* cult = db.find<cultivation_object, by_id>(cult_id);
+            if(cult == nullptr)
+                return "指定修真活动不存在";
+            const auto& manager_nfa = db.get<nfa_object, by_id>(cult->manager_nfa_id);
+            if(manager_nfa.owner_account != caller.id && manager_nfa.active_account != caller.id)
+                return "无权操作修真活动";
+            
+            if(cult->start_time != time_point_sec::maximum()) {
+                //修真活动已经开始，结束修真获得奖励
+                db.stop_cultivation(*cult);
+            }
+            else {
+                //修真活动还未开始，直接解散
+                db.dissolve_cultivation(*cult);
+            }
+            
+            db.remove(*cult);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
         return "";
     }
 

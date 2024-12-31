@@ -25,7 +25,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_operation_object
     {
         api_operation_object() {}
-        api_operation_object( const account_history::api_operation_object& obj, const legacy_operation& l_op ) : trx_id( obj.trx_id ), block( obj.block ), trx_in_block( obj.trx_in_block ), virtual_op( obj.virtual_op ), timestamp( obj.timestamp ), op( l_op )
+        api_operation_object(const account_history::api_operation_object& obj, const legacy_operation& l_op) : trx_id(obj.trx_id), block(obj.block), trx_in_block(obj.trx_in_block), virtual_op(obj.virtual_op), timestamp(obj.timestamp), op(l_op)
         {}
         
         transaction_id_type  trx_id;
@@ -39,9 +39,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
     struct api_account_object
     {
-        api_account_object( const database_api::api_account_object& a ) : id( a.id ), name( a.name ), owner( a.owner ), active( a.active ), posting( a.posting ), memo_key( a.memo_key ), json_metadata( a.json_metadata ), proxy( a.proxy ), last_owner_update( a.last_owner_update ), last_account_update( a.last_account_update ), created( a.created ), recovery_account( a.recovery_account ), last_account_recovery( a.last_account_recovery ), can_adore( a.can_adore ), balance( legacy_asset::from_asset( a.balance ) ), reward_yang_balance( legacy_asset::from_asset( a.reward_yang_balance ) ), reward_qi_balance( legacy_asset::from_asset( a.reward_qi_balance ) ), reward_feigang_balance( legacy_asset::from_asset( a.reward_feigang_balance ) ), qi( legacy_asset::from_asset( a.qi ) ), delegated_qi( legacy_asset::from_asset( a.delegated_qi ) ), received_qi( legacy_asset::from_asset( a.received_qi ) ), qi_withdraw_rate( legacy_asset::from_asset( a.qi_withdraw_rate ) ), next_qi_withdrawal_time( a.next_qi_withdrawal_time ), withdrawn( a.withdrawn ), to_withdraw( a.to_withdraw ), withdraw_routes( a.withdraw_routes ), simings_adored_for( a.simings_adored_for )
+        api_account_object(const database_api::api_account_object& a) : id(a.id), name(a.name), owner(a.owner), active(a.active), posting(a.posting), memo_key(a.memo_key), json_metadata(a.json_metadata), proxy(a.proxy), last_owner_update(a.last_owner_update), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), balance(legacy_asset::from_asset(a.balance)), reward_yang_balance(legacy_asset::from_asset(a.reward_yang_balance)), reward_qi_balance(legacy_asset::from_asset(a.reward_qi_balance)), reward_feigang_balance(legacy_asset::from_asset(a.reward_feigang_balance)), qi(legacy_asset::from_asset(a.qi)), delegated_qi(legacy_asset::from_asset(a.delegated_qi)), received_qi(legacy_asset::from_asset(a.received_qi)), qi_withdraw_rate(legacy_asset::from_asset(a.qi_withdraw_rate)), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for)
         {
-            proxied_vsf_adores.insert( proxied_vsf_adores.end(), a.proxied_vsf_adores.begin(), a.proxied_vsf_adores.end() );
+            proxied_vsf_adores.insert(proxied_vsf_adores.end(), a.proxied_vsf_adores.begin(), a.proxied_vsf_adores.end());
         }
         
         api_account_object(){}
@@ -88,7 +88,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct extended_account : public api_account_object
     {
         extended_account(){}
-        extended_account( const database_api::api_account_object& a ) : api_account_object( a ) {}
+        extended_account(const database_api::api_account_object& a) : api_account_object(a) {}
         
         legacy_asset                            qi_balance;  /// convert qi to qi taiyi
         map< uint64_t, api_operation_object >   transfer_history; /// transfer to/from qi
@@ -99,7 +99,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct extended_dynamic_global_properties
     {
         extended_dynamic_global_properties() {}
-        extended_dynamic_global_properties( const database_api::api_dynamic_global_property_object& o ) : head_block_number( o.head_block_number ), head_block_id( o.head_block_id ), time( o.time ), current_siming( o.current_siming ), current_supply( legacy_asset::from_asset( o.current_supply ) ), total_qi( legacy_asset::from_asset( o.total_qi ) ), pending_rewarded_qi( legacy_asset::from_asset( o.pending_rewarded_qi ) ), pending_rewarded_feigang( legacy_asset::from_asset( o.pending_rewarded_feigang ) ), maximum_block_size( o.maximum_block_size ), current_aslot( o.current_aslot ), recent_slots_filled( o.recent_slots_filled ), participation_count( o.participation_count ), last_irreversible_block_num( o.last_irreversible_block_num ), delegation_return_period( o.delegation_return_period ), content_reward_yang_percent( o.content_reward_yang_percent ), content_reward_qi_fund_percent( o.content_reward_qi_fund_percent )
+        extended_dynamic_global_properties(const database_api::api_dynamic_global_property_object& o) : head_block_number(o.head_block_number), head_block_id(o.head_block_id), time(o.time), current_siming(o.current_siming), current_supply(legacy_asset::from_asset(o.current_supply)), total_qi(legacy_asset::from_asset(o.total_qi)), pending_rewarded_qi(legacy_asset::from_asset(o.pending_rewarded_qi)), pending_rewarded_feigang(legacy_asset::from_asset(o.pending_rewarded_feigang)), pending_cultivation_qi(legacy_asset::from_asset(o.pending_cultivation_qi)), total_gold(legacy_asset::from_asset(o.total_gold)), total_food(legacy_asset::from_asset(o.total_food)), total_wood(legacy_asset::from_asset(o.total_wood)), total_fabric(legacy_asset::from_asset(o.total_fabric)), total_herb(legacy_asset::from_asset(o.total_herb)), maximum_block_size(o.maximum_block_size), current_aslot(o.current_aslot), recent_slots_filled(o.recent_slots_filled), participation_count(o.participation_count), last_irreversible_block_num(o.last_irreversible_block_num), delegation_return_period(o.delegation_return_period), content_reward_yang_percent(o.content_reward_yang_percent), content_reward_qi_fund_percent(o.content_reward_qi_fund_percent)
         {}
         
         uint32_t          head_block_number = 0;
@@ -111,6 +111,13 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_asset      total_qi;
         legacy_asset      pending_rewarded_qi;
         legacy_asset      pending_rewarded_feigang;
+        legacy_asset      pending_cultivation_qi;
+        
+        legacy_asset      total_gold;
+        legacy_asset      total_food;
+        legacy_asset      total_wood;
+        legacy_asset      total_fabric;
+        legacy_asset      total_herb;
         
         uint32_t          maximum_block_size = 0;
         uint64_t          current_aslot = 0;
@@ -128,7 +135,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_siming_object
     {
         api_siming_object() {}
-        api_siming_object( const database_api::api_siming_object& w ) : id( w.id ), owner( w.owner ), created( w.created ), url( w.url ), total_missed( w.total_missed ), last_aslot( w.last_aslot ), last_confirmed_block_num( w.last_confirmed_block_num ), signing_key( w.signing_key ), props( w.props ), adores( w.adores ), virtual_last_update( w.virtual_last_update ), virtual_position( w.virtual_position ), virtual_scheduled_time( w.virtual_scheduled_time ), running_version( w.running_version ), hardfork_version_vote( w.hardfork_version_vote ), hardfork_time_vote( w.hardfork_time_vote )
+        api_siming_object(const database_api::api_siming_object& w) : id(w.id), owner(w.owner), created(w.created), url(w.url), total_missed(w.total_missed), last_aslot(w.last_aslot), last_confirmed_block_num(w.last_confirmed_block_num), signing_key(w.signing_key), props(w.props), adores(w.adores), virtual_last_update(w.virtual_last_update), virtual_position(w.virtual_position), virtual_scheduled_time(w.virtual_scheduled_time), running_version(w.running_version), hardfork_version_vote(w.hardfork_version_vote), hardfork_time_vote(w.hardfork_time_vote)
         {}
         
         siming_id_type  id;
@@ -152,9 +159,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_siming_schedule_object
     {
         api_siming_schedule_object() {}
-        api_siming_schedule_object( const database_api::api_siming_schedule_object& w ) : id( w.id ), current_virtual_time( w.current_virtual_time ), next_shuffle_block_num( w.next_shuffle_block_num ), num_scheduled_simings( w.num_scheduled_simings ), elected_weight( w.elected_weight ), timeshare_weight( w.timeshare_weight ), miner_weight( w.miner_weight ), siming_pay_normalization_factor( w.siming_pay_normalization_factor ), median_props( w.median_props ), majority_version( w.majority_version ), max_adored_simings( w.max_adored_simings ), hardfork_required_simings( w.hardfork_required_simings )
+        api_siming_schedule_object(const database_api::api_siming_schedule_object& w) : id(w.id), current_virtual_time(w.current_virtual_time), next_shuffle_block_num(w.next_shuffle_block_num), num_scheduled_simings(w.num_scheduled_simings), elected_weight(w.elected_weight), timeshare_weight(w.timeshare_weight), miner_weight(w.miner_weight), siming_pay_normalization_factor(w.siming_pay_normalization_factor), median_props(w.median_props), majority_version(w.majority_version), max_adored_simings(w.max_adored_simings), hardfork_required_simings(w.hardfork_required_simings)
         {
-            current_shuffled_simings.insert( current_shuffled_simings.begin(), w.current_shuffled_simings.begin(), w.current_shuffled_simings.end() );
+            current_shuffled_simings.insert(current_shuffled_simings.begin(), w.current_shuffled_simings.begin(), w.current_shuffled_simings.end());
         }
         
         siming_schedule_id_type      id;
@@ -175,7 +182,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_reward_fund_object
     {
         api_reward_fund_object() {}
-        api_reward_fund_object( const database_api::api_reward_fund_object& r ) : id( r.id ), name( r.name ), reward_balance( legacy_asset::from_asset( r.reward_balance ) ), reward_qi_balance( legacy_asset::from_asset( r.reward_qi_balance ) ), last_update( r.last_update ), percent_content_rewards( r.percent_content_rewards )
+        api_reward_fund_object(const database_api::api_reward_fund_object& r) : id(r.id), name(r.name), reward_balance(legacy_asset::from_asset(r.reward_balance)), reward_qi_balance(legacy_asset::from_asset(r.reward_qi_balance)), last_update(r.last_update), percent_content_rewards(r.percent_content_rewards)
         {}
         
         reward_fund_id_type     id;
@@ -189,7 +196,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_qi_delegation_object
     {
         api_qi_delegation_object() {}
-        api_qi_delegation_object( const database_api::api_qi_delegation_object& v ) : id( v.id ), delegator( v.delegator ), delegatee( v.delegatee ), qi( legacy_asset::from_asset( v.qi ) ), min_delegation_time( v.min_delegation_time )
+        api_qi_delegation_object(const database_api::api_qi_delegation_object& v) : id(v.id), delegator(v.delegator), delegatee(v.delegatee), qi(legacy_asset::from_asset(v.qi)), min_delegation_time(v.min_delegation_time)
         {}
         
         qi_delegation_id_type id;
@@ -202,7 +209,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_qi_delegation_expiration_object
     {
         api_qi_delegation_expiration_object() {}
-        api_qi_delegation_expiration_object( const database_api::api_qi_delegation_expiration_object& v ) : id( v.id ), delegator( v.delegator ), qi( legacy_asset::from_asset( v.qi ) ), expiration( v.expiration )
+        api_qi_delegation_expiration_object(const database_api::api_qi_delegation_expiration_object& v) : id(v.id), delegator(v.delegator), qi(legacy_asset::from_asset(v.qi)), expiration(v.expiration)
         {}
         
         qi_delegation_expiration_id_type id;
@@ -241,7 +248,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct get_version_return
     {
         get_version_return() {}
-        get_version_return( std::string bc_v, std::string s_v, std::string fc_v ) :blockchain_version( bc_v ), taiyi_revision( s_v ), fc_revision( fc_v ) {}
+        get_version_return(std::string bc_v, std::string s_v, std::string fc_v) :blockchain_version(bc_v), taiyi_revision(s_v), fc_revision(fc_v) {}
         
         std::string blockchain_version;
         std::string taiyi_revision;
@@ -256,7 +263,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct broadcast_transaction_synchronous_return
     {
         broadcast_transaction_synchronous_return() {}
-        broadcast_transaction_synchronous_return( transaction_id_type txid, int32_t bn, int32_t tn, bool ex ) : id(txid), block_num(bn), trx_num(tn), expired(ex) {}
+        broadcast_transaction_synchronous_return(transaction_id_type txid, int32_t bn, int32_t tn, bool ex) : id(txid), block_num(bn), trx_num(tn), expired(ex) {}
         
         transaction_id_type   id;
         int32_t               block_num = 0;
@@ -266,7 +273,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     
     struct api_resource_assets
     {
-        api_resource_assets( const database_api::resource_assets& r ) : gold( legacy_asset::from_asset( r.gold ) ), food( legacy_asset::from_asset( r.food ) ), wood( legacy_asset::from_asset( r.wood ) ), fabric( legacy_asset::from_asset( r.fabric ) ), herb( legacy_asset::from_asset( r.herb ) )
+        api_resource_assets(const database_api::resource_assets& r) : gold(legacy_asset::from_asset(r.gold)), food(legacy_asset::from_asset(r.food)), wood(legacy_asset::from_asset(r.wood)), fabric(legacy_asset::from_asset(r.fabric)), herb(legacy_asset::from_asset(r.herb))
         {}
 
         api_resource_assets() {}
@@ -280,7 +287,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     
     struct api_nfa_object
     {
-        api_nfa_object( const database_api::api_nfa_object& o ) : id(o.id), creator_account(o.creator_account), owner_account(o.owner_account), active_account(o.active_account), symbol(o.symbol), parent(o.parent), children(o.children), main_contract(o.main_contract), contract_data(o.contract_data), qi(legacy_asset::from_asset(o.qi)), debt_value(o.debt_value), debt_contract(o.debt_contract), created_time(o.created_time), next_tick_time(o.next_tick_time), gold(legacy_asset::from_asset(o.gold)), food(legacy_asset::from_asset(o.food)), wood(legacy_asset::from_asset(o.wood)), fabric(legacy_asset::from_asset(o.fabric)), herb(legacy_asset::from_asset(o.herb))
+        api_nfa_object(const database_api::api_nfa_object& o) : id(o.id), creator_account(o.creator_account), owner_account(o.owner_account), active_account(o.active_account), symbol(o.symbol), parent(o.parent), children(o.children), main_contract(o.main_contract), contract_data(o.contract_data), qi(legacy_asset::from_asset(o.qi)), debt_value(o.debt_value), debt_contract(o.debt_contract), cultivation_value(o.cultivation_value), created_time(o.created_time), next_tick_time(o.next_tick_time), gold(legacy_asset::from_asset(o.gold)), food(legacy_asset::from_asset(o.food)), wood(legacy_asset::from_asset(o.wood)), fabric(legacy_asset::from_asset(o.fabric)), herb(legacy_asset::from_asset(o.herb))
         {}
         
         api_nfa_object(){}
@@ -302,6 +309,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_asset        qi;
         int64_t             debt_value; /// 欠费的真气值
         string              debt_contract; /// 欠费的债主合约
+
+        uint64_t            cultivation_value; ///参与修真的真气值，> 0表示正在参与修真
 
         time_point_sec      created_time;
         time_point_sec      next_tick_time;
@@ -488,7 +497,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::api_account_object, (id)(name)(owner)
 
 FC_REFLECT_DERIVED( taiyi::plugins::baiyujing_api::extended_account, (taiyi::plugins::baiyujing_api::api_account_object),(qi_balance)(transfer_history)(other_history)(siming_adores) )
 
-FC_REFLECT( taiyi::plugins::baiyujing_api::extended_dynamic_global_properties, (head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::extended_dynamic_global_properties, (head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(pending_cultivation_qi)(total_gold)(total_food)(total_wood)(total_fabric)(total_herb)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_siming_object, (id)(owner)(created)(url)(adores)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)(last_aslot)(last_confirmed_block_num)(signing_key)(props)(running_version)(hardfork_version_vote)(hardfork_time_vote) )
 
@@ -510,7 +519,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::broadcast_transaction_synchronous_ret
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_resource_assets, (gold)(food)(wood)(fabric)(herb) )
 
-FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_contract_action_info, (exist)(consequence) )
 

@@ -6,6 +6,7 @@
 #include <chain/asset_objects/asset_objects.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
+#include <chain/cultivation_objects.hpp>
 
 namespace taiyi { namespace chain {
 
@@ -17,6 +18,8 @@ namespace taiyi { namespace chain {
 
         TAIYI_ADD_CORE_INDEX(db, nfa_symbol_index);
         TAIYI_ADD_CORE_INDEX(db, nfa_index);
+
+        TAIYI_ADD_CORE_INDEX(db, cultivation_index);
     }
 
 } }

@@ -2404,6 +2404,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         generate_block();
 
         auto sam_vest = db->get_account( "sam" ).qi;
+        auto old_supply = db->get_dynamic_global_properties().current_supply;
+        auto old_total_qi = db->get_dynamic_global_properties().total_qi;
 
         BOOST_TEST_MESSAGE( "--- Test failure when delegating 0 QI" );
         tx.clear();
@@ -2422,10 +2424,16 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
 
         BOOST_TEST_MESSAGE( "--- Testing failure delegating when there is not enough mana" );
 
+        auto yang_delta = asset(sam_vest.amount.value / 4, QI_SYMBOL) * TAIYI_QI_SHARE_PRICE;
+
         generate_block();
         db_plugin->debug_update( [&]( database& db ) {
+            db.modify( db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
+                obj.current_supply -= yang_delta;
+                obj.total_qi -= yang_delta * TAIYI_QI_SHARE_PRICE;
+            });
             db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
-                a.qi.amount.value = sam_vest.amount.value * 3 / 4;
+                a.qi -= yang_delta * TAIYI_QI_SHARE_PRICE;
             });
         });
         
@@ -2438,6 +2446,10 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         BOOST_TEST_MESSAGE( "--- Test failure delegating qi shares that are part of a power down" );
         generate_block();
         db_plugin->debug_update( [&]( database& db ) {
+            db.modify( db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
+                obj.current_supply += yang_delta;
+                obj.total_qi += yang_delta * TAIYI_QI_SHARE_PRICE;
+            });
             db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
                 a.qi = sam_vest;
             });
@@ -2465,13 +2477,9 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         db->push_transaction( tx, 0 );
 
         BOOST_TEST_MESSAGE( "--- Test failure powering down qi shares that are delegated" );
-        db_plugin->debug_update( [&]( database& db ) {
-            db.modify( db.get_account( "sam" ), [&]( account_object& a ) {
-                a.qi.amount.value = sam_vest.amount.value * 2;
-            });
-        });
 
-        sam_vest.amount += 1000;
+        sam_vest = db->get_account( "sam" ).qi;
+        
         op.qi = sam_vest;
         tx.clear();
         tx.operations.push_back( op );
@@ -2479,7 +2487,7 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         db->push_transaction( tx, 0 );
 
         tx.clear();
-        withdraw.qi = asset( sam_vest.amount, QI_SYMBOL );
+        withdraw.qi = asset( 1, QI_SYMBOL );
         tx.operations.push_back( withdraw );
         sign( tx, sam_private_key );
         TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::assert_exception );

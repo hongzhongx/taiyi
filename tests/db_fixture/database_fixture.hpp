@@ -144,9 +144,12 @@ extern uint32_t TAIYI_TESTING_GENESIS_TIMESTAMP;
 // To be incorporated into fund() method if deemed appropriate.
 // 'ASSET' would be dropped from the name then.
 #define FUND_ASSET_REWARDS( account_name, amount ) \
-   db->adjust_reward_balance( account_name, amount ); \
-   db->adjust_supply( amount ); \
-   generate_block();
+    db->adjust_reward_balance( account_name, amount ); \
+    db->modify(db->get_dynamic_global_properties(), [&]( dynamic_global_property_object& props ) { \
+        FC_ASSERT( amount.symbol.asset_num == TAIYI_ASSET_NUM_YANG, "invalid symbol" ); \
+        props.current_supply += amount; \
+    } ); \
+    generate_block();
 
 #define OP2TX(OP,TX,KEY) \
 TX.operations.push_back( OP ); \

@@ -21,12 +21,14 @@
 
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
 
-#define TAIYI_MANA_REGENERATION_SECONDS         (60*60*1) // 1 hour
+#define TAIYI_DELEGATION_RETURN_PERIOD          (60*60*1) // 1 hour
 
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (20) // about 60 seconds
 #define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (20) // about 60 seconds
 
 #define TAIYI_VMONTH_BLOCK_NUM                  (20*10) // 10 minutes
+
+#define TAIYI_CULTIVATION_MAX_SECONDS           (60*10) // 10 minutes
 
 #else // IS LIVE TAIYI NETWORK
 
@@ -43,12 +45,14 @@
 
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
 
-#define TAIYI_MANA_REGENERATION_SECONDS         (5*60*60*24) // 5 day
+#define TAIYI_DELEGATION_RETURN_PERIOD          (5*60*60*24) // 5 day
 
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
 #define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (100) // about 5 minutes
 
 #define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_BLOCKS_PER_HOUR*2)
+
+#define TAIYI_CULTIVATION_MAX_SECONDS           (60*60*24) // 1 day
 
 #endif // END LIVE TAIYI NETWORK
 
@@ -104,8 +108,8 @@
 #define TAIYI_INFLATION_RATE_START_PERCENT      (1000)  // 10%
 #define TAIYI_INFLATION_RATE_STOP_PERCENT       (100)   // 1%
 #define TAIYI_INFLATION_NARROWING_PERIOD        (233600) // Narrow 0.01% every 233.6k blocks
-#define TAIYI_CONTENT_REWARD_YANG_PERCENT       (75*TAIYI_1_PERCENT) //75% of inflation
-#define TAIYI_CONTENT_REWARD_QI_FUND_PERCENT    (15*TAIYI_1_PERCENT) //15% of inflation
+#define TAIYI_CONTENT_REWARD_YANG_PERCENT       (15*TAIYI_1_PERCENT) //15% of inflation
+#define TAIYI_CONTENT_REWARD_QI_FUND_PERCENT    (75*TAIYI_1_PERCENT) //75% of inflation
 
 #define TAIYI_CULTIVATION_REWARD_FUND_NAME      ("cultivation")
 
@@ -135,8 +139,6 @@
 #define TAIYI_IRREVERSIBLE_THRESHOLD            (75 * TAIYI_1_PERCENT)
 
 #define TAIYI_VIRTUAL_SCHEDULE_LAP_LENGTH       ( fc::uint128::max_value() )
-
-#define TAIYI_DELEGATION_RETURN_PERIOD          (TAIYI_MANA_REGENERATION_SECONDS)
 
 #define TAIYI_RD_MIN_DECAY_BITS                 6
 #define TAIYI_RD_MAX_DECAY_BITS                 32
@@ -203,3 +205,5 @@
 #define TAIYI_ZONE_TYPE_NAME_LIMIT              (128)
 
 #define TAIYI_USEMANA_ACTOR_ACTION_SCALE        1000
+
+#define TAIYI_CULTIVATION_PREPARE_MIN_SECONDS   60 // 60 seconds

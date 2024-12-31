@@ -40,11 +40,18 @@ namespace taiyi { namespace chain {
         account_name_type current_siming;
 
 
-        asset       current_supply              = asset( 0, YANG_SYMBOL );  ///当前总阳寿供应量（包含转换为真气的阳寿）
+        asset       current_supply              = asset( 0, YANG_SYMBOL );  ///当前总等价阳寿供应量（包含真气、物质所有的等价阳寿总量）
 
-        asset       total_qi             = asset( 0, QI_SYMBOL );    ///当前总的真气
-        asset       pending_rewarded_qi  = asset( 0, QI_SYMBOL );    ///当前待领取真气奖励总量
-        asset       pending_rewarded_feigang  = asset( 0, QI_SYMBOL );    ///当前待领取非罡奖励总量
+        asset       total_qi                    = asset( 0, QI_SYMBOL );    ///当前总的真气（自由真气）
+        asset       pending_rewarded_qi         = asset( 0, QI_SYMBOL );    ///当前待领取真气奖励总量
+        asset       pending_rewarded_feigang    = asset( 0, QI_SYMBOL );    ///当前待领取非罡奖励总量
+        asset       pending_cultivation_qi      = asset( 0, QI_SYMBOL );    ///当前参与修真的真气总量
+
+        asset       total_gold                  = asset( 0, GOLD_SYMBOL );  ///当前总的金石（包括NFA内含物质）
+        asset       total_food                  = asset( 0, FOOD_SYMBOL );  ///当前总的食物（包括NFA内含物质）
+        asset       total_wood                  = asset( 0, WOOD_SYMBOL );  ///当前总的木材（包括NFA内含物质）
+        asset       total_fabric                = asset( 0, FABRIC_SYMBOL );///当前总的织物（包括NFA内含物质）
+        asset       total_herb                  = asset( 0, HERB_SYMBOL );  ///当前总的药材（包括NFA内含物质）
 
         /**
          *  Maximum block size is decided by the set of active simings which change every round.
@@ -91,5 +98,5 @@ namespace mira {
     template<> struct is_static_length< taiyi::chain::dynamic_global_property_object > : public boost::true_type {};
 } // mira
 
-FC_REFLECT( taiyi::chain::dynamic_global_property_object, (id)(head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent) )
+FC_REFLECT( taiyi::chain::dynamic_global_property_object, (id)(head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(pending_cultivation_qi)(total_gold)(total_food)(total_wood)(total_fabric)(total_herb)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::dynamic_global_property_object, taiyi::chain::dynamic_global_property_index )

@@ -65,8 +65,9 @@ namespace taiyi { namespace protocol {
         nfa_convert_qi_to_resources_operation,
         nfa_trasfer_operation,
         nfa_deposit_withdraw_operation,
-        reward_qi_operation,
-    
+        reward_feigang_operation,
+        reward_cultivation_operation,
+
         tiandao_year_change_operation,
         tiandao_month_change_operation,
         tiandao_time_change_operation,

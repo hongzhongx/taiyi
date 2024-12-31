@@ -296,7 +296,6 @@ namespace taiyi { namespace chain {
         void adjust_balance( const account_name_type& name, const asset& delta );
         void adjust_reward_balance( const account_object& a, const asset& value_delta, const asset& share_delta = asset(0, QI_SYMBOL), const asset& feigang_delta = asset(0, QI_SYMBOL) );
         void adjust_reward_balance( const account_name_type& name, const asset& value_delta, const asset& share_delta = asset(0, QI_SYMBOL), const asset& feigang_delta = asset(0, QI_SYMBOL) );
-        void adjust_supply( const asset& delta, bool adjust_qi = false );
         void update_owner_authority( const account_object& account, const authority& owner_authority );
 
         asset get_balance( const account_object& a, asset_symbol_type symbol )const;
@@ -359,6 +358,14 @@ namespace taiyi { namespace chain {
         const zone_object*  find_zone( const std::string& name )const;
         int calculate_moving_days_to_zone( const zone_object& zone );
         void process_tiandao();
+        
+        //************ database_cultivation.cpp ************//
+        const cultivation_object& create_cultivation(const nfa_object& manager_nfa, const chainbase::t_flat_map<nfa_id_type, uint>& beneficiaries, uint64_t prepare_time_seconds);
+        void participate_cultivation(const cultivation_object& cult, const nfa_object& nfa, uint64_t value);
+        void start_cultivation(const cultivation_object& cult);
+        void stop_cultivation(const cultivation_object& cult);
+        void dissolve_cultivation(const cultivation_object& cult);
+        void process_cultivations();
 
         //************ database_init.cpp ************//
 
@@ -413,9 +420,6 @@ namespace taiyi { namespace chain {
         //奖励账号非罡
         void reward_feigang(const account_object& to_account, const account_object& from_account, const asset& feigang );
         void reward_feigang(const account_object& to_account, const nfa_object& from_nfa, const asset& feigang );
-        //奖励修真者真气
-        void reward_cultivation_account(const account_object& account, const asset& qi );
-        //void reward_cultivation_nfa(const nfa_object& nfa, const asset& qi );
 
         // nfa
         void create_basic_nfa_symbol_objects();

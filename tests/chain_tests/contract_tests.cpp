@@ -590,10 +590,17 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     validate_database();
     
     BOOST_TEST_MESSAGE( "--- Test failure not enough mana" );
+    
+    asset old_alice_qi = db->get_account( "alice" ).qi;
 
     db_plugin->debug_update( [&]( database& db ) {
         db.modify( db.get_account( "alice" ), [&]( account_object& a ) {
-            a.qi.amount = 100;
+            a.qi = asset(100, QI_SYMBOL);
+        });
+        db.modify( db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
+            obj.current_supply -= (old_alice_qi - asset(100, QI_SYMBOL)) * TAIYI_QI_SHARE_PRICE;
+            obj.current_supply.amount -= 1; //配平总量的整型误差
+            obj.total_qi -= (old_alice_qi - asset(100, QI_SYMBOL));
         });
     });
 

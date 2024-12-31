@@ -187,9 +187,15 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
 
-        void operator()( const reward_qi_operation& op )
+        void operator()( const reward_feigang_operation& op )
         {
             _impacted.insert( op.account );
+        }
+        
+        void operator()( const reward_cultivation_operation& op )
+        {
+            _impacted.insert( op.account );
+            _impacted_nfas.insert( op.nfa );
         }
 
         void operator()( const create_actor_talent_rule_operation& op )

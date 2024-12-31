@@ -99,6 +99,7 @@ namespace taiyi { namespace chain {
         try
         {
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(amount > 0, "convert qi is zero");
 
             asset qi(amount, QI_SYMBOL);
             FC_ASSERT(_db.get_nfa_balance(_caller, QI_SYMBOL) >= qi, "NFA not have enough qi to convert.");
@@ -126,6 +127,7 @@ namespace taiyi { namespace chain {
                     break;
             }
             asset new_resource = qi * p;
+            qi = new_resource * p; //计算实际消耗的气，避免整型除法导致的误差
             
             const auto& caller_owner = _db.get<account_object, by_id>(_caller.owner_account);
             operation vop = nfa_convert_qi_to_resources_operation( _caller.id, caller_owner.name, qi, new_resource );
@@ -135,6 +137,31 @@ namespace taiyi { namespace chain {
             _db.adjust_nfa_balance(_caller, new_resource);
             
             _db.post_push_virtual_operation( vop );
+            
+            //更新统计自由真气量
+            _db.modify( _db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
+                gpo.total_qi -= qi;
+                switch (symbol.asset_num) {
+                    case TAIYI_ASSET_NUM_GOLD:
+                        gpo.total_gold += new_resource;
+                        break;
+                    case TAIYI_ASSET_NUM_FOOD:
+                        gpo.total_food += new_resource;
+                        break;
+                    case TAIYI_ASSET_NUM_WOOD:
+                        gpo.total_wood += new_resource;
+                        break;
+                    case TAIYI_ASSET_NUM_FABRIC:
+                        gpo.total_fabric += new_resource;
+                        break;
+                    case TAIYI_ASSET_NUM_HERB:
+                        gpo.total_herb += new_resource;
+                        break;
+                    default:
+                        FC_ASSERT(false, "can not be here", ("a", resource_symbol_name));
+                        break;
+                }
+            });
         }
         catch (fc::exception e)
         {

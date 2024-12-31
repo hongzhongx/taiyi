@@ -40,6 +40,8 @@ add_library( taiyi_chain
              database_zone.cpp
              contract_zone_handler.cpp
 
+             database_cultivation.cpp
+
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp
 

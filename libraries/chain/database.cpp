@@ -16,6 +16,7 @@
 #include <chain/account_object.hpp>
 #include <chain/transaction_object.hpp>
 #include <chain/contract_objects.hpp>
+#include <chain/nfa_objects.hpp>
 #include <chain/siming_objects.hpp>
 #include <chain/siming_schedule.hpp>
 
@@ -188,7 +189,7 @@ namespace taiyi { namespace chain {
                 skip_siming_schedule_check |
                 skip_authority_check |
                 skip_validate | /// no need to validate operations
-                skip_validate_invariants |
+                (args.do_validate_invariants ? 0 : skip_validate_invariants) |
                 skip_block_log;
             
             with_write_lock( [&]() {
@@ -1569,13 +1570,13 @@ namespace taiyi { namespace chain {
             _apply_block( next_block );
         } );
         
-        /*try
+        try
         {
-            /// check invariants
-            if( is_producing() || !( skip & skip_validate_invariants ) )
+            // check invariants
+            if( /*is_producing() ||*/ !( skip & skip_validate_invariants ) )
                 validate_invariants();
-         }
-         FC_CAPTURE_AND_RETHROW( (next_block) );*/
+        }
+        FC_CAPTURE_AND_RETHROW( (next_block) );
 
         auto block_num = next_block.block_num();
 
@@ -1737,6 +1738,8 @@ namespace taiyi { namespace chain {
         process_tiandao();
         process_nfa_tick();
         process_actor_tick();
+        
+        process_cultivations();
 
         process_hardforks();
         
@@ -2529,29 +2532,7 @@ namespace taiyi { namespace chain {
         else
             modify_reward_balance(get_account( name ), liquid_delta, share_delta, feigang_delta, true);
     }
-    
-    void database::adjust_supply( const asset& delta, bool adjust_qi )
-    {
-        const auto& props = get_dynamic_global_properties();
-        if( props.head_block_number < TAIYI_BLOCKS_PER_DAY*7 )
-            adjust_qi = false;
         
-        modify( props, [&]( dynamic_global_property_object& props ) {
-            switch( delta.symbol.asset_num )
-            {
-                case TAIYI_ASSET_NUM_YANG:
-                {
-                    asset new_qi( (adjust_qi && delta.amount > 0) ? delta.amount * 9 : 0, YANG_SYMBOL );
-                    props.current_supply += delta + new_qi;
-                    FC_ASSERT( props.current_supply.amount.value >= 0 );
-                    break;
-                }
-                default:
-                    FC_ASSERT( false, "invalid symbol" );
-            }
-        } );
-    }
-    
     asset database::get_balance( const account_object& a, asset_symbol_type symbol )const
     {
         switch( symbol.asset_num )
@@ -2671,41 +2652,101 @@ namespace taiyi { namespace chain {
      */
     void database::validate_invariants()const
     { try {
-        const auto& account_idx = get_index< account_index, by_name >();
-        asset total_supply = asset( 0, YANG_SYMBOL );
-        asset total_qi = asset( 0, QI_SYMBOL );
+        asset total_supply = asset(0, YANG_SYMBOL);
         share_type total_vsf_adores = share_type( 0 );
         
+        asset total_gold = asset(0, GOLD_SYMBOL);
+        asset total_food = asset(0, FOOD_SYMBOL);
+        asset total_wood = asset(0, WOOD_SYMBOL);
+        asset total_fabric = asset(0, FABRIC_SYMBOL);
+        asset total_herb = asset(0, HERB_SYMBOL);
+
         auto gpo = get_dynamic_global_properties();
         
-        /// verify no siming has too many adores
+        // verify no siming has too many adores
         const auto& siming_idx = get_index< siming_index >().indices();
         for( auto itr = siming_idx.begin(); itr != siming_idx.end(); ++itr )
-            FC_ASSERT( itr->adores <= gpo.total_qi.amount, "", ("itr",*itr) );
+            FC_ASSERT(itr->adores <= gpo.total_qi.amount, "核对司命收到信仰总值的合理性失败");
         
+        asset total_account_qi = asset(0, QI_SYMBOL);
+        asset total_reward_qi = asset(0, QI_SYMBOL);
+        asset total_reward_feigang = asset(0, QI_SYMBOL);
+        const auto& account_idx = get_index< account_index, by_name >();
         for( auto itr = account_idx.begin(); itr != account_idx.end(); ++itr )
         {
             total_supply += itr->balance;
             total_supply += itr->reward_yang_balance;
-            total_qi += itr->qi;
-            total_qi += itr->reward_qi_balance;
-            total_qi += itr->reward_feigang_balance;
+            
+            total_account_qi += itr->qi;
+            total_reward_qi += itr->reward_qi_balance;
+            total_reward_feigang += itr->reward_feigang_balance;
+            
+            total_gold += get_balance(*itr, GOLD_SYMBOL);
+            total_food += get_balance(*itr, FOOD_SYMBOL);
+            total_wood += get_balance(*itr, WOOD_SYMBOL);
+            total_fabric += get_balance(*itr, FABRIC_SYMBOL);
+            total_herb += get_balance(*itr, HERB_SYMBOL);
+            
             total_vsf_adores += ( itr->proxy == TAIYI_PROXY_TO_SELF_ACCOUNT ?
                 itr->siming_adore_weight() :
-                ( TAIYI_MAX_PROXY_RECURSION_DEPTH > 0 ? itr->proxied_vsf_adores[TAIYI_MAX_PROXY_RECURSION_DEPTH - 1] : itr->qi.amount ) );
+                ( TAIYI_MAX_PROXY_RECURSION_DEPTH > 0 ?
+                    itr->proxied_vsf_adores[TAIYI_MAX_PROXY_RECURSION_DEPTH - 1] :
+                    itr->qi.amount
+                )
+            );
         }
-        
-        const auto& reward_idx = get_index< reward_fund_index, by_id >();        
+
+        FC_ASSERT(total_account_qi.amount == total_vsf_adores, "核对由所有账号产生的信仰总值失败", ("total_account_qi", total_account_qi)("total_vsf_adores", total_vsf_adores));
+        FC_ASSERT(gpo.pending_rewarded_feigang == total_reward_feigang, "核对所有账号的未领取非罡失败", ("gpo.pending_rewarded_feigang", gpo.pending_rewarded_feigang)("total_reward_feigang", total_reward_feigang));
+
+        asset total_nfa_qi = asset(0, QI_SYMBOL);
+        asset total_cultivation_qi = asset(0, QI_SYMBOL);
+        const auto& nfa_idx = get_index< nfa_index, by_id >();
+        for( auto itr = nfa_idx.begin(); itr != nfa_idx.end(); ++itr)
+        {
+            total_supply += get_nfa_balance(*itr, YANG_SYMBOL);
+            total_nfa_qi += itr->qi;
+            
+            total_gold += get_nfa_balance(*itr, GOLD_SYMBOL);
+            total_food += get_nfa_balance(*itr, FOOD_SYMBOL);
+            total_wood += get_nfa_balance(*itr, WOOD_SYMBOL);
+            total_fabric += get_nfa_balance(*itr, FABRIC_SYMBOL);
+            total_herb += get_nfa_balance(*itr, HERB_SYMBOL);
+
+            total_cultivation_qi.amount += itr->cultivation_value;
+        }
+
+        FC_ASSERT(gpo.pending_cultivation_qi == total_cultivation_qi, "核对参与修真的真气总量失败", ("gpo.pending_cultivation_qi", gpo.pending_cultivation_qi)("total_cultivation_qi", total_cultivation_qi));
+
+        const auto& reward_idx = get_index< reward_fund_index, by_id >();
         for( auto itr = reward_idx.begin(); itr != reward_idx.end(); ++itr ) {
             total_supply += itr->reward_balance;
-            total_qi += itr->reward_qi_balance;
+            total_reward_qi += itr->reward_qi_balance;
         }
+
+        FC_ASSERT(gpo.pending_rewarded_qi == total_reward_qi, "核对修真奖励池和账号未领取修真奖励真气失败", ("gpo.pending_rewarded_qi", gpo.pending_rewarded_qi)("total_reward_qi", total_reward_qi));
+
+        FC_ASSERT(gpo.total_qi == (total_account_qi + total_nfa_qi), "核对自由真气总量失败", ("gpo.total_qi", gpo.total_qi)("total_account_qi", total_account_qi)("total_nfa_qi", total_nfa_qi));
         
-        total_supply += (gpo.total_qi + gpo.pending_rewarded_qi + gpo.pending_rewarded_feigang) * TAIYI_QI_SHARE_PRICE;
+        //统计所有非阳寿相关的等价真气，避免最后换算阳寿时候的整型误差
+        asset total_qi = total_account_qi + total_reward_feigang + total_nfa_qi + total_cultivation_qi + total_reward_qi;
+        //换算物质到等价真气
+        total_qi += total_gold * TAIYI_GOLD_QI_PRICE;
+        total_qi += total_food * TAIYI_FOOD_QI_PRICE;
+        total_qi += total_wood * TAIYI_WOOD_QI_PRICE;
+        total_qi += total_fabric * TAIYI_FABRIC_QI_PRICE;
+        total_qi += total_herb * TAIYI_HERB_QI_PRICE;
+
+        //统计以阳寿表示的全局总量
+        total_supply += total_qi * TAIYI_QI_SHARE_PRICE;
+        FC_ASSERT(gpo.current_supply == total_supply, "核对系统总阳寿量失败", ("gpo.current_supply", gpo.current_supply)("total_supply", total_supply));
         
-        FC_ASSERT( gpo.current_supply == total_supply, "", ("gpo.current_supply",gpo.current_supply)("total_supply",total_supply) );
-        FC_ASSERT( gpo.total_qi + gpo.pending_rewarded_qi + gpo.pending_rewarded_feigang == total_qi, "", ("gpo.total_qi",gpo.total_qi)("total_qi",total_qi) );
-        FC_ASSERT( gpo.total_qi.amount == total_vsf_adores, "", ("total_qi",gpo.total_qi)("total_vsf_adores",total_vsf_adores) );
+        //核对系统总物质量
+        FC_ASSERT(gpo.total_gold == total_gold, "核对系统总金石含量失败", ("gpo.total_gold", gpo.total_gold)("total_gold", total_gold));
+        FC_ASSERT(gpo.total_food == total_food, "核对系统总食物含量失败", ("gpo.total_food", gpo.total_food)("total_food", total_food));
+        FC_ASSERT(gpo.total_wood == total_wood, "核对系统总木材含量失败", ("gpo.total_wood", gpo.total_wood)("total_wood", total_wood));
+        FC_ASSERT(gpo.total_fabric == total_fabric, "核对系统总织物含量失败", ("gpo.total_fabric", gpo.total_fabric)("total_fabric", total_fabric));
+        FC_ASSERT(gpo.total_herb == total_herb, "核对系统总药材含量失败", ("gpo.total_herb", gpo.total_herb)("total_herb", total_herb));
         
     } FC_CAPTURE_LOG_AND_RETHROW( (head_block_num()) ); }
 
@@ -2727,40 +2768,5 @@ namespace taiyi { namespace chain {
     {
         return _pending_tx_session;
     }
-    
-    void database::reward_cultivation_account(const account_object& account, const asset& qi )
-    {
-        FC_ASSERT(qi.symbol == QI_SYMBOL);
-        FC_ASSERT(qi.amount.value > 0);
         
-        const reward_fund_object& rf = get< reward_fund_object, by_name >( TAIYI_CULTIVATION_REWARD_FUND_NAME );
-        if(rf.reward_qi_balance.amount <= 0)
-            return; //no reward fund
-                
-        if(qi > rf.reward_qi_balance) {
-            reward_qi_operation vop = reward_qi_operation( account.name, rf.reward_qi_balance );
-            pre_push_virtual_operation( vop );
-
-            modify_reward_balance(account, asset(0, YANG_SYMBOL), rf.reward_qi_balance, asset(0, QI_SYMBOL), false);
-
-            modify(rf, [&](reward_fund_object& rfo) {
-                rfo.reward_qi_balance.amount = 0;
-            });
-
-            post_push_virtual_operation( vop );
-        }
-        else {
-            reward_qi_operation vop = reward_qi_operation( account.name, qi );
-            pre_push_virtual_operation( vop );
-
-            modify_reward_balance(account, asset(0, YANG_SYMBOL), qi, asset(0, QI_SYMBOL), false);
-
-            modify(rf, [&](reward_fund_object& rfo) {
-                rfo.reward_qi_balance -= qi;
-            });
-
-            post_push_virtual_operation( vop );
-        }
-    }
-    
 } } //taiyi::chain

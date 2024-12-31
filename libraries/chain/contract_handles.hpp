@@ -257,6 +257,11 @@ namespace taiyi { namespace chain {
         contract_actor_core_attributes get_actor_core_attributes(int64_t nfa_id);
         void born_actor(const string& name, int gender, int sexuality, const lua_map& init_attrs, const string& zone_name);
         string move_actor(const string& actor_name, const string& zone_name);
+        
+        //Cultivation
+        int64_t create_cultivation(int64_t nfa_id, const lua_map& beneficiaries, uint64_t prepare_time_seconds);
+        string participate_cultivation(int64_t cult_id, int64_t nfa_id, uint64_t value);
+        string stop_and_close_cultivation(int64_t cult_id);
 
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(account_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);

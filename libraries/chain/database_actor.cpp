@@ -281,6 +281,8 @@ namespace taiyi { namespace chain {
             if(nfa.debt_value > nfa.qi.amount.value)
                 return;
             
+            wlog("NFA (${i}) pay debt ${v}", ("i", nfa.id)("v", nfa.debt_value));
+
             //reward contract owner
             const auto& to_contract = get<contract_object, by_id>(nfa.debt_contract);
             const auto& contract_owner = get<account_object, by_id>(to_contract.owner);
@@ -290,8 +292,6 @@ namespace taiyi { namespace chain {
                 obj.debt_value = 0;
                 obj.debt_contract = contract_id_type::max();
             });
-            
-            wlog("NFA (${i}) pay debt ${v}", ("i", nfa.id)("v", nfa.debt_value));
         }
 
         const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
@@ -411,6 +411,8 @@ namespace taiyi { namespace chain {
             if(nfa.debt_value > nfa.qi.amount.value)
                 return;
             
+            wlog("NFA (${i}) pay debt ${v}", ("i", nfa.id)("v", nfa.debt_value));
+
             //reward contract owner
             const auto& to_contract = get<contract_object, by_id>(nfa.debt_contract);
             const auto& contract_owner = get<account_object, by_id>(to_contract.owner);
@@ -420,8 +422,6 @@ namespace taiyi { namespace chain {
                 obj.debt_value = 0;
                 obj.debt_contract = contract_id_type::max();
             });
-            
-            wlog("NFA (${i}) pay debt ${v}", ("i", nfa.id)("v", nfa.debt_value));
         }
 
         const auto* contract_ptr = find<contract_object, by_id>(nfa.main_contract);

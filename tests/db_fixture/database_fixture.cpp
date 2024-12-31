@@ -351,7 +351,6 @@ namespace taiyi { namespace chain {
                 if( amount.symbol.space() == asset_symbol_type::fai_space )
                 {
                     db.adjust_balance(account_name, amount);
-                    db.adjust_supply(amount);
                     return;
                 }
                 

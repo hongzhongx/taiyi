@@ -271,7 +271,10 @@ namespace taiyi { namespace chain {
         registerFunction("born_actor", &contract_handler::born_actor);
         registerFunction("move_actor", &contract_handler::move_actor);
         registerFunction("exploit_zone", &contract_handler::exploit_zone);
-        registerFunction("get_tiandao_property", &contract_handler::get_tiandao_property);        
+        registerFunction("get_tiandao_property", &contract_handler::get_tiandao_property);
+        registerFunction("create_cultivation", &contract_handler::create_cultivation);
+        registerFunction("participate_cultivation", &contract_handler::participate_cultivation);
+        registerFunction("stop_and_close_cultivation", &contract_handler::stop_and_close_cultivation);
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "get_account_contract_data", &get_account_contract_data);

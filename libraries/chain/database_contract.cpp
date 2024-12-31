@@ -171,7 +171,7 @@ namespace taiyi { namespace chain {
         adjust_balance( from_account, -feigang );
         adjust_proxied_siming_adores( from_account, -feigang.amount );
 
-        reward_qi_operation vop = reward_qi_operation( to_account.name, feigang );
+        reward_feigang_operation vop = reward_feigang_operation( to_account.name, feigang );
         pre_push_virtual_operation( vop );
 
         modify_reward_balance(to_account, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
@@ -192,7 +192,7 @@ namespace taiyi { namespace chain {
         
         adjust_nfa_balance( from_nfa, -feigang );
 
-        reward_qi_operation vop = reward_qi_operation( to_account.name, feigang );
+        reward_feigang_operation vop = reward_feigang_operation( to_account.name, feigang );
         pre_push_virtual_operation( vop );
 
         modify_reward_balance(to_account, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);

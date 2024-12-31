@@ -74,6 +74,8 @@ namespace taiyi { namespace chain {
         // 有欠费的情况下，针对NFA视角的任何调用都可能先扣除欠费，然后再继续进行
         int64_t             debt_value = 0; /// 欠费的真气值
         contract_id_type    debt_contract = contract_id_type::max(); /// 欠费的债主合约
+        
+        uint64_t            cultivation_value = 0; ///参与修真的真气值，> 0表示正在参与修真
 
         time_point_sec      created_time;
         time_point_sec      next_tick_time = time_point_sec::maximum();
@@ -84,6 +86,7 @@ namespace taiyi { namespace chain {
     struct by_creator;
     struct by_parent;
     struct by_tick_time;
+    //struct by_cultivation_value;
     typedef multi_index_container<
         nfa_object,
         indexed_by<
@@ -112,6 +115,13 @@ namespace taiyi { namespace chain {
                     member< nfa_object, nfa_id_type, &nfa_object::id >
                 >
             >,
+//            ordered_unique< tag< by_cultivation_value >,
+//                composite_key< nfa_object,
+//                    member< nfa_object, uint64_t, &nfa_object::cultivation_value >,
+//                    member< nfa_object, nfa_id_type, &nfa_object::id >
+//                >,
+//                composite_key_compare< std::greater< uint64_t >, std::less< nfa_id_type > >
+//            >,
             ordered_unique< tag< by_tick_time >,
                 composite_key< nfa_object,
                     member< nfa_object, time_point_sec, &nfa_object::next_tick_time >,
@@ -129,5 +139,5 @@ namespace taiyi { namespace chain {
 FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
-FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(created_time)(next_tick_time))
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_time))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)
