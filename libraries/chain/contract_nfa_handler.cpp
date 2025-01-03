@@ -30,12 +30,10 @@ namespace taiyi { namespace chain {
     contract_nfa_handler::contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch)
         : _caller_account(caller_account), _caller(caller), _context(context), _db(db), _ch(ch)
     {
-        _contract_data_cache = _caller.contract_data;
     }
     //=============================================================================
     contract_nfa_handler::~contract_nfa_handler()
     {
-        _db.modify(_caller, [&](nfa_object& obj){ obj.contract_data = _contract_data_cache; });
     }
     //=============================================================================
     void contract_nfa_handler::enable_tick()
@@ -384,12 +382,11 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_nfa_handler::read_chain(const lua_map& read_list)
+    lua_map contract_nfa_handler::read_contract_data(const lua_map& read_list)
     {
         try
         {
-            vector<lua_types> stacks = { lua_string("nfa_data") };
-            _ch.read_context(read_list, _contract_data_cache, stacks, _ch.contract.name);
+            return _ch.read_nfa_contract_data(_caller.id, read_list);
         }
         catch (fc::exception e)
         {
@@ -403,14 +400,13 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_nfa_handler::write_chain(const lua_map& write_list)
+    void contract_nfa_handler::write_contract_data(const lua_map& data, const lua_map& write_list)
     {
         try
         {
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             
-            vector<lua_types> stacks = { lua_string("nfa_data") };
-            _ch.flush_context(write_list, _contract_data_cache, stacks, _ch.contract.name);
+            _ch.write_nfa_contract_data(_caller.id, data, write_list);
         }
         catch (fc::exception e)
         {

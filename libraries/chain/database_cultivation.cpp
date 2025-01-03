@@ -182,6 +182,12 @@ namespace taiyi { namespace chain {
                 modify(rf, [&](reward_fund_object& rfo) {
                     rfo.reward_qi_balance.amount -= rv;
                 });
+                
+                //更新统计真气
+                modify(get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
+                    obj.pending_rewarded_qi.amount -= rv;
+                    obj.total_qi.amount += rv;
+                });
             }
         }
         

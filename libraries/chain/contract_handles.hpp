@@ -139,7 +139,6 @@ namespace taiyi { namespace chain {
         LuaContext&                         _context;
         database&                           _db;
         contract_handler&                   _ch;
-        lua_map                             _contract_data_cache;
 
         contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch);
         ~contract_nfa_handler();
@@ -154,8 +153,8 @@ namespace taiyi { namespace chain {
         void add_child(int64_t nfa_id);
         void add_to_parent(int64_t parent_nfa_id);
         void remove_from_parent();
-        void read_chain(const lua_map& read_list);
-        void write_chain(const lua_map& write_list);
+        lua_map read_contract_data(const lua_map& read_list);
+        void write_contract_data(const lua_map& data, const lua_map& write_list);
         void destroy();
         void modify_actor_attributes(const lua_map& values);
 
@@ -194,6 +193,8 @@ namespace taiyi { namespace chain {
         lua_map                             account_contract_data_cache;
         lua_map                             contract_data_cache;
         
+        std::vector<contract_handler*>      _sub_chs;
+        
         contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys);
         ~contract_handler();
     
@@ -203,8 +204,12 @@ namespace taiyi { namespace chain {
         int contract_random();
         void set_permissions_flag(bool flag);
         void set_invoke_share_percent(uint32_t percent);
-        void read_chain(const lua_map& read_list);
-        void write_chain(const lua_map& write_list);
+        lua_map get_contract_data(const string& contract_name, const lua_map& read_list);
+        lua_map read_contract_data(const lua_map& read_list);
+        void write_contract_data(const lua_map& data, const lua_map& write_list);
+        lua_map get_account_contract_data(const string& account_name, const string& contract_name, const lua_map& read_list);
+        lua_map read_account_contract_data(const lua_map& read_list);
+        void write_account_contract_data(const lua_map& data, const lua_map& write_list);
         lua_Number nummin();
         lua_Number nummax();
         int64_t integermax();
@@ -213,20 +218,18 @@ namespace taiyi { namespace chain {
         string hash512(string source);
         uint32_t head_block_time();
         int64_t generate_hash(uint32_t offset);
-        const account_object& get_account(string name);
         int64_t get_account_balance(account_id_type account, asset_symbol_type symbol);
         void change_contract_authority(string authority);
-        memo_data make_memo(string receiver_id_or_name, string key, string value, uint64_t ss, bool enable_logger=false);
-        void invoke_contract_function(string contract_id_or_name, string function_name, string value_list_json);
-        const contract_object& get_contract(string name);
+        memo_data make_memo(const string& receiver_account_name, const string& key, const string& value, uint64_t ss, bool enable_logger = false);
+        void invoke_contract_function(const string& contract_name, const string& function_name, const string& value_list_json);
         void make_release();
         contract_tiandao_property get_tiandao_property();
+        
+        static std::pair<bool, const lua_types*> search_in_table(const lua_map* table, const vector<lua_types>& path, int start = 0);
+        static std::pair<bool, lua_types*> get_in_table(lua_map* table, const vector<lua_types>& path, int start = 0);
+        static std::pair<bool, lua_types*> erase_in_table(lua_map* table, const vector<lua_types>& path, int start = 0);
+        static bool write_in_table(lua_map* table, const vector<lua_types>& path, const lua_types& value, int start = 0);
 
-        lua_map get_contract_public_data(string name_or_id);
-        
-        static void filter_context(const lua_map &data_table, lua_map keys,vector<lua_types>&stacks, lua_map *result_table);
-        static std::pair<bool, lua_types *> find_luaContext(lua_map* context, vector<lua_types> keys, int start=0, bool is_clean=false);
-        
         //NFA
         string get_nfa_contract(int64_t nfa_id);
         bool is_nfa_valid(int64_t nfa_id);
@@ -234,6 +237,8 @@ namespace taiyi { namespace chain {
         contract_asset_resources get_nfa_resources(int64_t id);
         vector<contract_nfa_base_info> list_nfa_inventory(int64_t nfa_id);
 
+        lua_map read_nfa_contract_data(int64_t nfa_id, const lua_map& read_list);
+        void write_nfa_contract_data(int64_t nfa_id, const lua_map& data, const lua_map& write_list);
         lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
@@ -259,15 +264,16 @@ namespace taiyi { namespace chain {
         string move_actor(const string& actor_name, const string& zone_name);
         
         //Cultivation
-        int64_t create_cultivation(int64_t nfa_id, const lua_map& beneficiaries, uint64_t prepare_time_seconds);
+        int64_t create_cultivation(int64_t nfa_id, const lua_map& beneficiary_nfa_ids, const lua_map& beneficiary_shares, uint64_t prepare_time_seconds);
         string participate_cultivation(int64_t cult_id, int64_t nfa_id, uint64_t value);
+        string start_cultivation(int64_t cult_id);
         string stop_and_close_cultivation(int64_t cult_id);
 
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(account_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);
         void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
-        void flush_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
-        void read_context(const lua_map& keys, lua_map &data_table, vector<lua_types>&stacks, string tablename);
+        void write_table_data(lua_map& target_table, const lua_map& keys, const lua_map& data, vector<lua_types>& stacks);
+        void read_table_data(lua_map& out_data, const lua_map& keys, const lua_map& target_table, vector<lua_types>& stacks);
         lua_map call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist = true);
         lua_map call_nfa_function_with_caller(const account_object& caller, int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist = true);
     };

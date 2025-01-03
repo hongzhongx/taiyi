@@ -47,8 +47,6 @@ namespace taiyi { namespace chain {
             
             context.writeVariable(name, "contract_helper", &ch);
             context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
-            context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
 
             bool bOK = context.get_function(name, function_name);
             FC_ASSERT(bOK);
@@ -136,8 +134,6 @@ namespace taiyi { namespace chain {
         
         context.writeVariable(name, "contract_helper", &ch);
         context.writeVariable(name, "contract_base_info", &cbi);
-        context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
-        context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
 
         bool bOK = context.get_function(name, function_name);
         FC_ASSERT(bOK);
@@ -455,11 +451,7 @@ namespace taiyi { namespace chain {
 
             context.writeVariable(name, "contract_helper", &ch);
             context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
-            context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
-
             context.writeVariable(name, "nfa_helper", &cnh);
-            context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
 
             context.get_function(name, function_name);
             //push function actual parameters
@@ -545,11 +537,7 @@ namespace taiyi { namespace chain {
 
             context.writeVariable(name, "contract_helper", &ch);
             context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
-            context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
-
             context.writeVariable(name, "nfa_helper", &cnh);
-            context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
 
             context.get_function(name, function_name);
             //push function actual parameters

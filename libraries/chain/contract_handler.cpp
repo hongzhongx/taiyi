@@ -101,6 +101,9 @@ namespace taiyi { namespace chain {
         const auto& acd = db.get<account_contract_data_object, by_account_contract>( boost::make_tuple(caller.id, contract.id) );
         db.modify(acd, [&](account_contract_data_object &obj) { obj.contract_data = account_contract_data_cache; });
         db.modify(contract, [&](contract_object& c) { c.contract_data = contract_data_cache; });
+        
+        for (auto c : _sub_chs)
+            delete c;
     }
     //=============================================================================
     void contract_handler::assert_contract_data_size()
@@ -193,9 +196,9 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    memo_data contract_handler::make_memo(string receiver_id_or_name, string key, string value, uint64_t ss, bool enable_logger)
+    memo_data contract_handler::make_memo(const string& receiver_account_name, const string& key, const string& value, uint64_t ss, bool enable_logger)
     {
-        auto &receiver = get_account(receiver_id_or_name);
+        auto &receiver = db.get_account(receiver_account_name);
         try
         {
             //Get_random_private_key();
@@ -221,19 +224,19 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_handler::invoke_contract_function(string contract_id_or_name, string function_name, string value_list_json)
+    void contract_handler::invoke_contract_function(const string& contract_name, const string& function_name, const string& value_list_json)
     {
-        auto &contract_obj = get_contract(contract_id_or_name);
-        auto contract_id = contract_obj.id;
+        const auto& contract = db.get<contract_object, by_name>(contract_name);
+        auto contract_id = contract.id;
         static vector<string> s_invoking_path;
         try
         {
-            if (std::find(s_invoking_path.begin(), s_invoking_path.end(), contract_obj.name) != s_invoking_path.end()) {
+            if (std::find(s_invoking_path.begin(), s_invoking_path.end(), contract.name) != s_invoking_path.end()) {
                 s_invoking_path.clear();
                 FC_THROW("Contract cicular references are prohibitted in invoking");
             }
             else {
-                s_invoking_path.push_back(contract_obj.name);
+                s_invoking_path.push_back(contract.name);
             }
             
             FC_ASSERT(contract_id != this->contract.id, " You can't use it to make recursive calls. ");
@@ -317,48 +320,33 @@ namespace taiyi { namespace chain {
         return fc::sha512::hash(source).str();
     }
     //=============================================================================
-    const contract_object& contract_handler::get_contract(string name)
-    {
-        try
-        {
-            const auto* contract = db.find<contract_object, by_name>(name);
-            FC_ASSERT(contract != nullptr, "not find contract: ${contract}", ("contract", name));
-            return *contract;
-        }
-        catch (fc::exception e)
-        {
-            LUA_C_ERR_THROW(this->context.mState, e.to_string());
-        }
-    }
-    //=============================================================================
     void contract_handler::make_release()
     {
         db.modify(contract, [](contract_object& cb) { cb.is_release = true; });
     }
     //=============================================================================
-    lua_map contract_handler::get_contract_public_data(string name_or_id)
+    lua_map contract_handler::get_contract_data(const string& contract_name, const lua_map& read_list)
     {
         try
         {
-            optional<contract_object> contract = get_contract(name_or_id);
-            return contract->contract_data;
+            const auto& contract = db.get<contract_object, by_name>(contract_name);
+
+            vector<lua_types> stacks = {};
+            lua_map result;
+            read_table_data(result, read_list, contract.contract_data, stacks);
+            return result;
         }
         catch (fc::exception e)
         {
+            wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
-    }
-    //=============================================================================
-    const account_object &contract_handler::get_account(string name)
-    {
-        try
+        catch (std::exception e)
         {
-            return db.get_account(name);
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
         }
-        catch (fc::exception e)
-        {
-            LUA_C_ERR_THROW(this->context.mState, e.to_string());
-        }
+
     }
     //=============================================================================
     contract_tiandao_property contract_handler::get_tiandao_property()
@@ -536,11 +524,7 @@ namespace taiyi { namespace chain {
 
             nfa_context.writeVariable(name, "contract_helper", &ch);
             nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
-            nfa_context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
-
             nfa_context.writeVariable(name, "nfa_helper", &cnh);
-            nfa_context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
 
             nfa_context.get_function(name, function_name);
             //push function actual parameters
@@ -653,11 +637,7 @@ namespace taiyi { namespace chain {
 
             nfa_context.writeVariable(name, "contract_helper", &ch);
             nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
-            nfa_context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
-
             nfa_context.writeVariable(name, "nfa_helper", &cnh);
-            nfa_context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
 
             nfa_context.get_function(name, function_name);
             //push function actual parameters
@@ -758,11 +738,7 @@ namespace taiyi { namespace chain {
 
             nfa_context.writeVariable(name, "contract_helper", &ch);
             nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "private_data", LuaContext::EmptyArray); //account_contract_data
-            nfa_context.writeVariable(name, "public_data", LuaContext::EmptyArray); //contract_data
-
             nfa_context.writeVariable(name, "nfa_helper", &cnh);
-            nfa_context.writeVariable(name, "nfa_data", LuaContext::EmptyArray); //nfa_contract_data
 
             nfa_context.get_function(name, function_name);
             //push function actual parameters
@@ -879,93 +855,123 @@ namespace taiyi { namespace chain {
             return -1;
         }
     }
-    //=============================================================================
-    //find_luaContext:按深度查找合约树形结构上下文
-    //context:树形结构合约相关上下文
-    //keys:目标路径(树形结构的某一条分支)
-    //start:指定查找路径的起点
-    //is_clean:是否清理目标
-    std::pair<bool, lua_types *> contract_handler::find_luaContext(lua_map *context, vector<lua_types> keys, int start, bool is_clean)
+    //=========================================================================
+    //按深度搜索表
+    //table: 待搜索表
+    //path: 查找路径(表树形结构的某一条分支)
+    //start: 指定查找路径的起点
+    std::pair<bool, const lua_types*> contract_handler::search_in_table(const lua_map* table, const vector<lua_types>& path, int start)
     {
-        lua_types *result = nullptr;
-        vector<lua_key> temp_keys;
-        lua_types *temp = nullptr;
-        for (unsigned int i = start; i < keys.size(); i++)
+        const lua_types* node = nullptr;
+        for (size_t i = start; i < path.size(); i++)
         {
-            auto reslut_itr = context->find(keys[i]);
-            if (reslut_itr != context->end())
-            {
-                temp_keys.push_back(keys[i]);
-                result = &reslut_itr->second;
-                if (i == keys.size() - 1)
-                {
-                    if (is_clean)
-                    {
-                        context->erase(reslut_itr);        //找到目标并清理目标
-                        return std::make_pair(true, temp); //返回上一级树形结构节点指针，temp=nullptr时表示路径查找从start处失败
-                    }
-                    else
-                        return std::make_pair(true, result); //返回目标节点指针
-                }
-                if (reslut_itr->second.which() == lua_types::tag<lua_table>::value)
-                {
-                    temp = &reslut_itr->second;
-                    context = &reslut_itr->second.get<lua_table>().v; //深度递进
-                }
-                else
-                    return std::make_pair(false, result); //原目标不是table对象，返回上级table地址
-            }
-            else
-                return std::make_pair(false, result); //路径查找keys[i]失败，返回上一级节点指针，result=nullptr时表示路径查找从start处失败
-        }
-        return std::make_pair(false, result); //start值超出keys深度，未进行查找
-    }
-    //=============================================================================
-    void contract_handler::read_chain(const lua_map& read_list)
-    {
-        try
-        {
-            for (auto &itr : read_list)
-            {
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "private_data") {
-                    vector<lua_types> stacks = { lua_string("private_data") };
-                    read_context(itr.second.get<lua_table>().v, account_contract_data_cache, stacks, contract.name);
-                }
-                
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "public_data") {
-                    vector<lua_types> stacks = { lua_string("public_data") };
-                    read_context(itr.second.get<lua_table>().v, contract_data_cache, stacks, contract.name);
-                }
-            }
-        }
-        catch (fc::exception e)
-        {
-            wdump((e.to_string()));
-            LUA_C_ERR_THROW(this->context.mState, e.to_string());
-        }
-        catch (std::exception e)
-        {
-            wdump((e.what()));
-            LUA_C_ERR_THROW(this->context.mState, e.what());
-        }
-    }
-    //=============================================================================
-    void contract_handler::write_chain(const lua_map& write_list)
-    {
-        try
-        {
-            for (auto &itr : write_list)
-            {
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "private_data") {
-                    vector<lua_types> stacks = { lua_string("private_data") };
-                    flush_context(itr.second.get<lua_table>().v, account_contract_data_cache, stacks, contract.name);
-                }
+            auto itr = table->find(path[i]);
+            if (itr == table->end())
+                return std::make_pair(false, node); //未找到路径节点，返回上一级节点指针，nullptr时则表示路径查找从start处就失败了
 
-                if (itr.first.key.which() == lua_key_variant::tag<lua_string>::value && itr.first.key.get<lua_string>().v == "public_data") {
-                    vector<lua_types> stacks = { lua_string("public_data") };
-                    flush_context(itr.second.get<lua_table>().v, contract_data_cache, stacks, contract.name);
-                }
+            node = &itr->second;
+            if (i == (path.size() - 1))
+                return std::make_pair(true, node);
+
+            if (node->which() != lua_types::tag<lua_table>::value)
+                return std::make_pair(false, node); //因为下一层不再是table，按原目标路径无法深入，返回上级table地址
+
+            table = &node->get<lua_table>().v; //继续下一层搜索
+        }
+        
+        return std::make_pair(false, node);
+    }
+    //=========================================================================
+    std::pair<bool, lua_types*> contract_handler::get_in_table(lua_map* table, const vector<lua_types>& path, int start)
+    {
+        lua_types* node = nullptr;
+        for (size_t i = start; i < path.size(); i++)
+        {
+            auto itr = table->find(path[i]);
+            if (itr == table->end())
+                return std::make_pair(false, node); //未找到路径节点，返回上一级节点指针，nullptr时则表示路径查找从start处就失败了
+
+            node = &itr->second;
+            if (i == (path.size() - 1))
+                return std::make_pair(true, node);
+
+            if (node->which() != lua_types::tag<lua_table>::value)
+                return std::make_pair(false, node); //因为下一层不再是table，按原目标路径无法深入，返回上级table地址
+
+            table = &node->get<lua_table>().v; //继续下一层搜索
+        }
+        
+        return std::make_pair(false, node);
+    }
+    //=========================================================================
+    //按深度搜索表并删除目标
+    //table: 待搜索表
+    //path: 查找路径(表树形结构的某一条分支)
+    //start: 指定查找路径的起点
+    std::pair<bool, lua_types*> contract_handler::erase_in_table(lua_map* table, const vector<lua_types>& path, int start)
+    {
+        lua_types* node = nullptr;
+        for (size_t i = start; i < path.size(); i++)
+        {
+            auto itr = table->find(path[i]);
+            if (itr == table->end())
+                return std::make_pair(false, node); //未找到路径节点，返回上一级节点指针，nullptr时则表示路径查找从start处就失败了
+
+            if (i == (path.size() - 1))
+            {
+                table->erase(itr); //找到目标，删除之
+                return std::make_pair(true, node); //返回上一级节点指针，nullptr时表示从start处删除的
             }
+
+            node = &itr->second;
+            if (node->which() != lua_types::tag<lua_table>::value)
+                return std::make_pair(false, node); //因为下一层不再是table，按原目标路径无法深入，返回上级table地址
+
+            table = &node->get<lua_table>().v; //继续下一层搜索
+        }
+
+        return std::make_pair(false, node);
+    }
+    //=========================================================================
+    //按深度搜索表并写入目标
+    //table: 待写入表
+    //path: 写入路径(表树形结构的某一条分支)
+    //value: 写入路径最后一个key对应的value
+    //start: 指定写入路径的起点
+    bool contract_handler::write_in_table(lua_map* table, const vector<lua_types>& path, const lua_types& value, int start)
+    {
+        lua_types* node = nullptr;
+        for (size_t i = start; i < path.size(); i++)
+        {
+            auto itr = table->find(path[i]);
+            if (itr == table->end())
+                return false; //未找到路径节点
+
+            if (i == (path.size() - 1))
+            {
+                //找到目标，写入值（或者覆盖原值）
+                (*table)[itr->first] = value;
+                return true;
+            }
+
+            node = &itr->second;
+            if (node->which() != lua_types::tag<lua_table>::value)
+                return false; //因为下一层不再是table，按原目标路径无法深入
+
+            table = &node->get<lua_table>().v; //继续下一层搜索
+        }
+
+        return false;
+    }
+    //=============================================================================
+    lua_map contract_handler::read_contract_data(const lua_map& read_list)
+    {
+        try
+        {
+            vector<lua_types> stacks = {};
+            lua_map result;
+            read_table_data(result, read_list, contract_data_cache, stacks);
+            return result;
         }
         catch (fc::exception e)
         {
@@ -978,118 +984,280 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(this->context.mState, e.what());
         }
     }
-    /******************************************************************************
-     *read_context:按指定的树型表推送对应的合约上下文
-     *keys:指定的需要推送的树形结构路径图
-     *data_table:树形结构合约上下文数据源
-     *stacks:将keys树型路径图分割为单一路径的路径缓存栈
-     *tablename:指定VM指定的环境目标
-     ************************************************************************************************************************/
-    void contract_handler::read_context(const lua_map &rkeys, lua_map &data_table, vector<lua_types> &stacks, string tablename)
+    //=========================================================================
+    void contract_handler::write_contract_data(const lua_map& data, const lua_map& write_list)
+    {
+        try
+        {
+            vector<lua_types> stacks = {};
+            write_table_data(contract_data_cache, write_list, data, stacks);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
+        }
+    }
+    //=========================================================================
+    lua_map contract_handler::get_account_contract_data(const string& account_name, const string& contract_name, const lua_map& read_list)
+    {
+        try
+        {
+            const auto& account = db.get_account(account_name);
+            const auto& contract = db.get<contract_object, by_name>(contract_name);
+            auto account_contract_data = db.prepare_account_contract_data(account, contract);
+
+            vector<lua_types> stacks = {};
+            lua_map result;
+            read_table_data(result, read_list, account_contract_data, stacks);
+            return result;
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
+        }
+    }
+    //=========================================================================
+    lua_map contract_handler::read_account_contract_data(const lua_map& read_list)
+    {
+        try
+        {
+            vector<lua_types> stacks = {};
+            lua_map result;
+            read_table_data(result, read_list, account_contract_data_cache, stacks);
+            return result;
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
+        }
+    }
+    //=========================================================================
+    void contract_handler::write_account_contract_data(const lua_map& data, const lua_map& write_list)
+    {
+        try
+        {
+            vector<lua_types> stacks = {};
+            write_table_data(account_contract_data_cache, write_list, data, stacks);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
+        }
+    }
+    //=========================================================================
+    lua_map contract_handler::read_nfa_contract_data(int64_t nfa_id, const lua_map& read_list)
+    {
+        try
+        {
+            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
+            
+            vector<lua_types> stacks = {};
+            lua_map result;
+            read_table_data(result, read_list, nfa.contract_data, stacks);
+            return result;
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
+        }
+    }
+    //=========================================================================
+    void contract_handler::write_nfa_contract_data(int64_t nfa_id, const lua_map& data, const lua_map& write_list)
+    {
+        try
+        {
+            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "无权操作NFA");
+
+            db.modify(nfa, [&](nfa_object& obj) {
+                vector<lua_types> stacks = {};
+                write_table_data(obj.contract_data, write_list, data, stacks);
+            });
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
+        }
+    }
+    //=========================================================================
+    void contract_handler::read_table_data(lua_map& out_data, const lua_map& rkeys, const lua_map& target_table, vector<lua_types>& stacks)
     {
         static auto start_key = lua_types(lua_string("start"));
         static auto stop_key = lua_types(lua_string("stop"));
         uint32_t start = 0, stop = 0, index = 0;
         lua_map keys = rkeys;
-        if (keys.find(start_key) != keys.end() && keys[start_key].which() == lua_types::tag<lua_int>::value)
-        {
+        
+        if (keys.find(start_key) != keys.end() && keys[start_key].which() == lua_types::tag<lua_int>::value) {
             start = keys[start_key].get<lua_int>().v;
             keys.erase(start_key);
         }
-        if (keys.find(stop_key) != keys.end() && keys[stop_key].which() == lua_types::tag<lua_int>::value)
-        {
+        
+        if (keys.find(stop_key) != keys.end() && keys[stop_key].which() == lua_types::tag<lua_int>::value) {
             stop = keys[stop_key].get<lua_int>().v;
             keys.erase(stop_key);
         }
+        
         if (start || stop)
         {
-            lua_map *itr_prt = nullptr;
-            if (stacks.size() == 1)
-                itr_prt = &data_table;
-            else
-            {
-                auto finded = find_luaContext(&data_table, stacks, 1);
+            const lua_map *prt = nullptr;
+            if (stacks.size() == 0)
+                prt = &target_table;
+            else {
+                auto finded = search_in_table(&target_table, stacks);
                 if (finded.first && finded.second->which() == lua_types::tag<lua_table>::value)
-                    itr_prt = &finded.second->get<lua_table>().v;
+                    prt = &finded.second->get<lua_table>().v;
             }
-            if (itr_prt)
-                for (auto &itr_index : *itr_prt)
+            
+            if (prt) {
+                for (auto& itr : *prt)
                 {
                     if (index >= start && stop > index)
                     {
-                        stacks.push_back(itr_index.first.cast_to_lua_types());
-                        stacks.push_back(itr_index.second);
-                        LuaContext::push_key_and_value_stack(context, lua_string(tablename), stacks);
-                        stacks.pop_back();
+                        stacks.push_back(itr.first.cast_to_lua_types());
+
+                        auto finded = get_in_table(&out_data, stacks);
+                        if (finded.first)
+                        {
+                            bool bOK = write_in_table(&out_data, stacks, itr.second);
+                            FC_ASSERT(bOK, "write_table_data error, should not be here!");
+                        }
+                        else if (finded.second)
+                        {
+                            lua_table &temp_table = finded.second->get<lua_table>();
+                            temp_table.v[itr.first] = itr.second;
+                        }
+                        else
+                        {
+                            auto data_finded = search_in_table(&target_table, vector<lua_types>{stacks[0]});
+                            FC_ASSERT(data_finded.first == true, "failed in write_table_data while path in data is not exist");
+                            out_data[itr.first] = *data_finded.second;
+                        }
+
                         stacks.pop_back();
                     }
+                    
                     if (stop <= index)
                         break;
+                    
                     index++;
                 }
+            }
         }
+        
         for (auto itr = keys.begin(); itr != keys.end(); itr++)
         {
             if (itr->second.which() != lua_types::tag<lua_table>::value || itr->second.get<lua_table>().v.size() == 0)
             {
                 lua_key key = itr->first;
                 stacks.push_back(key.cast_to_lua_types());
-                auto finded = find_luaContext(&data_table, stacks, 1);
-                if (finded.first)
+                auto data_finded = search_in_table(&target_table, stacks);
+                if (data_finded.first)
                 {
-                    stacks.push_back(*finded.second);
-                    LuaContext::push_key_and_value_stack(context, lua_string(tablename), stacks);
-                    stacks.pop_back();
+                    auto finded = get_in_table(&out_data, stacks);
+                    if (finded.first)
+                    {
+                        bool bOK = write_in_table(&out_data, stacks, *data_finded.second);
+                        FC_ASSERT(bOK, "write_table_data error, should not be here!");
+                    }
+                    else if (finded.second)
+                    {
+                        lua_table &temp_table = finded.second->get<lua_table>();
+                        temp_table.v[key] = *data_finded.second;
+                    }
+                    else
+                    {
+                        auto data_finded = search_in_table(&target_table, vector<lua_types>{stacks[0]});
+                        FC_ASSERT(data_finded.first == true, "failed in write_table_data while path in data is not exist");
+                        out_data[key] = *data_finded.second;
+                    }
+
                 }
                 stacks.pop_back();
             }
             else if (itr->second.which() == lua_types::tag<lua_table>::value && itr->second.get<lua_table>().v.size() > 0)
             {
                 stacks.push_back(itr->first.cast_to_lua_types());
-                read_context(itr->second.get<lua_table>().v, data_table, stacks, tablename);
+                read_table_data(out_data, itr->second.get<lua_table>().v, target_table, stacks);
                 stacks.pop_back();
             }
         }
-        if (keys.size() == 0 && stacks.size() == 1 && !(start || stop))
-        {
-            LuaContext::push_key_and_value_stack(context, lua_string(tablename), vector<lua_types>{stacks[0], lua_table(data_table)});
-        }
+        
+        if (keys.size() == 0 && stacks.size() == 0 && !(start || stop))
+            out_data = target_table;
     }
-    /******************************************************************************
-     *flush_context:按指定的树型表更新链上对应的合约上下文
-     *keys:指定的需要推送的树形结构路径图
-     *data_table:树形结构合约上下文数据源
-     *stacks:将keys树型路径图分割为单一路径的路径缓存栈
-     *tablename:指定VM指定的环境目标
-     ************************************************************************************************************************/
-    void contract_handler::flush_context(const lua_map &keys, lua_map &data_table, vector<lua_types> &stacks, string table_name)
+    //=========================================================================
+    void contract_handler::write_table_data(lua_map& target_table, const lua_map& keys, const lua_map& data, vector<lua_types>& stacks)
     {
         for (auto itr = keys.begin(); itr != keys.end(); itr++)
         {
             if (itr->second.which() != lua_types::tag<lua_table>::value || itr->second.get<lua_table>().v.size() == 0)
             {
                 lua_key key = itr->first;
-                bool flag = (itr->second.which() == lua_types::tag<lua_bool>::value) ? itr->second.get<lua_bool>().v : true; //默认不清理对应的上下文
+                bool flag = (itr->second.which() == lua_types::tag<lua_bool>::value) ? itr->second.get<lua_bool>().v : true; //默认不清除对应的目标
                 stacks.push_back(key.cast_to_lua_types());
                 if (!flag)
                 {
-                    find_luaContext(&data_table, stacks, 1, true);
+                    erase_in_table(&target_table, stacks);
                 }
                 else
                 {
-                    auto finded = find_luaContext(&data_table, stacks, 1);
+                    auto finded = get_in_table(&target_table, stacks);
                     if (finded.first)
                     {
-                        *finded.second = LuaContext::read_lua_value<lua_types>(context, table_name.data(), stacks);
+                        auto data_finded = search_in_table(&data, stacks);
+                        FC_ASSERT(data_finded.first == true, "failed in write_table_data while path in data is not exist");
+                        bool bOK = write_in_table(&target_table, stacks, *data_finded.second);
+                        FC_ASSERT(bOK, "write_table_data error, should not be here!");
                     }
                     else if (finded.second)
                     {
+                        auto data_finded = search_in_table(&data, stacks);
+                        FC_ASSERT(data_finded.first == true, "failed in write_table_data while path in data is not exist");
+
                         lua_table &temp_table = finded.second->get<lua_table>();
-                        temp_table.v[key] = LuaContext::read_lua_value<lua_types>(context, table_name.data(), stacks);
+                        temp_table.v[key] = *data_finded.second;
                     }
                     else
                     {
-                        data_table[key] = LuaContext::read_lua_value<lua_types>(context, table_name.data(), vector<lua_types>{stacks[0], stacks[1]});
+                        auto data_finded = search_in_table(&data, vector<lua_types>{stacks[0]});
+                        FC_ASSERT(data_finded.first == true, "failed in write_table_data while path in data is not exist");
+                        target_table[key] = *data_finded.second;
                     }
                 }
                 stacks.pop_back();
@@ -1098,93 +1266,31 @@ namespace taiyi { namespace chain {
             {
                 lua_key key = itr->first;
                 stacks.push_back(key.cast_to_lua_types());
-                auto finded = find_luaContext(&data_table, stacks, 1);
+                auto finded = get_in_table(&target_table, stacks);
                 if (finded.first)
                 {
-                    flush_context(itr->second.get<lua_table>().v, data_table, stacks, table_name);
+                    write_table_data(target_table, itr->second.get<lua_table>().v, data, stacks);
                 }
                 else if (finded.second)
                 {
+                    auto data_finded = search_in_table(&data, stacks);
+                    FC_ASSERT(data_finded.first == true, "failed in write_table_data while path in data is not exist");
+                    
                     lua_table &temp_table = finded.second->get<lua_table>();
-                    temp_table.v[key] = LuaContext::read_lua_value<lua_types>(context, table_name.data(), stacks);
+                    temp_table.v[key] = *data_finded.second;
                 }
                 else
                 {
-                    data_table[key] = LuaContext::read_lua_value<lua_types>(context, table_name.data(), vector<lua_types>{stacks[0], stacks[1]});
+                    auto data_finded = search_in_table(&data, vector<lua_types>{stacks[0]});
+                    FC_ASSERT(data_finded.first == true, "failed in write_table_data while path in data is not exist");
+                    target_table[key] = *data_finded.second;
                 }
                 stacks.pop_back();
             }
         }
+        
         if (keys.size() == 0)
-        {
-            data_table = LuaContext::read_lua_value<lua_table>(context, table_name.data(), vector<lua_types>{stacks[0]}).v;
-        }
-    }
-    /******************************************************************************
-     *filter_context:按指定的树型表筛选对应的合约上下文
-     *data_table:树形结构合约上下文数据源
-     *keys:指定的需要推送的树形结构路径图
-     *stacks:将keys树型路径图分割为单一路径的路径缓存栈
-     *result:存储筛选结果
-     ************************************************************************************************************************/
-    void contract_handler::filter_context(const lua_map &data_table,  lua_map keys, vector<lua_types> &stacks, lua_map *result)
-    {
-        static auto start_key = lua_types(lua_string("start"));
-        static auto stop_key = lua_types(lua_string("stop"));
-        uint32_t start = 0, stop = 0, index = 0;
-        if (keys.find(start_key) != keys.end() && keys[start_key].which() == lua_types::tag<lua_int>::value)
-        {
-            start = keys[start_key].get<lua_int>().v;
-            keys.erase(start_key);
-        }
-        if (keys.find(stop_key) != keys.end() && keys[stop_key].which() == lua_types::tag<lua_int>::value)
-        {
-            stop = keys[stop_key].get<lua_int>().v;
-            keys.erase(stop_key);
-        }
-        if (start || stop)
-        {
-            const lua_map *itr_prt = nullptr;
-            if (stacks.size() == 0)
-                itr_prt = &data_table;
-            else
-            {
-                auto finded = find_luaContext(const_cast< lua_map* >(&data_table), stacks);
-                if (finded.first && finded.second->which() == lua_types::tag<lua_table>::value)
-                    itr_prt = &finded.second->get<lua_table>().v;
-            }
-            if (itr_prt)
-                for (auto &itr_index : *itr_prt)
-                {
-                    if (index >= start && stop > index)
-                        (*result)[itr_index.first] = itr_index.second;
-                    if (stop <= index)
-                        break;
-                    index++;
-                }
-        }
-        for (auto itr = keys.begin(); itr != keys.end(); itr++)
-        {
-            if (itr->second.which() != lua_types::tag<lua_table>::value || itr->second.get<lua_table>().v.size() == 0)
-            {
-                lua_key key = itr->first;
-                stacks.push_back(key.cast_to_lua_types());
-                auto finded = find_luaContext(const_cast<lua_map *>(&data_table), stacks);
-                if (finded.first)
-                    (*result)[key] = *finded.second;
-                stacks.pop_back();
-            }
-            else if (itr->second.which() == lua_types::tag<lua_table>::value && itr->second.get<lua_table>().v.size() > 0)
-            {
-                lua_key key = itr->first;
-                stacks.push_back(key.cast_to_lua_types());
-                (*result)[key] = lua_table();
-                filter_context(data_table, itr->second.get<lua_table>().v, stacks, &(*result)[key].get<lua_table>().v);
-                if ((*result)[key].get<lua_table>().v.size() == 0)
-                    result->erase(key);
-                stacks.pop_back();
-            }
-        }
+            target_table = data;
     }
     //=============================================================================
     contract_asset_resources contract_handler::get_nfa_resources(int64_t id)
@@ -1549,27 +1655,32 @@ namespace taiyi { namespace chain {
         return "";
     }
     //=========================================================================
-    int64_t contract_handler::create_cultivation(int64_t nfa_id, const lua_map& beneficiaries, uint64_t prepare_time_seconds)
+    int64_t contract_handler::create_cultivation(int64_t nfa_id, const lua_map& beneficiary_nfa_ids, const lua_map& beneficiary_shares, uint64_t prepare_time_seconds)
     {
         try
         {
             const auto& manager_nfa = db.get<nfa_object, by_id>(nfa_id);
             FC_ASSERT(manager_nfa.owner_account == caller.id || manager_nfa.active_account == caller.id, "无权操作NFA");
             
+            FC_ASSERT(beneficiary_nfa_ids.size() == beneficiary_shares.size(), "受益者ID列表和分配列表不匹配");
             chainbase::t_flat_map<nfa_id_type, uint> beneficiaries_map;
             uint64_t total_share_check = 0;
-            for (const auto& b: beneficiaries) {
-                FC_ASSERT(b.first.key.which() == lua_key_variant::tag<lua_int>::value, "传入受益者NFA ID参数类型错误");
-                const auto* check_nfa = db.find<nfa_object, by_id>(b.first.key.get<lua_int>().v);
-                FC_ASSERT(check_nfa != nullptr, "传入不存在的受益者NFA ID");
+            for (size_t i=0; i<beneficiary_nfa_ids.size(); ++i) {
+                auto itr_id = beneficiary_nfa_ids.find(lua_key(lua_int(i+1)));
+                FC_ASSERT(itr_id != beneficiary_nfa_ids.end(), "受益者ID列表参数${i}无效", ("i", i));
+                FC_ASSERT(itr_id->second.which() == lua_key_variant::tag<lua_int>::value, "受益者ID列表参数${i}类型错误", ("i", i));
+                const auto* check_nfa = db.find<nfa_object, by_id>(itr_id->second.get<lua_int>().v);
+                FC_ASSERT(check_nfa != nullptr, "传入不存在的受益者NFA ID（参数${i}）", ("i", i));
                 
-                FC_ASSERT(b.second.which() == lua_key_variant::tag<lua_int>::value, "传入受益者分配比率参数类型错误");
-                int64_t share = b.second.get<lua_int>().v;
-                FC_ASSERT(share > 0, "传入受益者分配比率参数无效");
+                auto itr_share = beneficiary_shares.find(lua_key(lua_int(i+1)));
+                FC_ASSERT(itr_share != beneficiary_shares.end(), "受益者分配比率列表参数${i}无效", ("i", i));
+                FC_ASSERT(itr_share->second.which() == lua_key_variant::tag<lua_int>::value, "传入受益者分配比率表参数${i}类型错误", ("i", i));
+                int64_t share = itr_share->second.get<lua_int>().v;
+                FC_ASSERT(share > 0, "传入受益者分配比率表参数${i}无效", ("i", i));
                 beneficiaries_map[check_nfa->id] = uint(share);
                 total_share_check += share;
             }
-            
+                        
             FC_ASSERT(total_share_check == TAIYI_100_PERCENT, "传入受益者分配比率总合不等于${a}", ("a", TAIYI_100_PERCENT));
             
             FC_ASSERT(prepare_time_seconds >= TAIYI_CULTIVATION_PREPARE_MIN_SECONDS, "传入准备时间不够，必须大于${a}秒", ("a", TAIYI_CULTIVATION_PREPARE_MIN_SECONDS));
@@ -1604,6 +1715,31 @@ namespace taiyi { namespace chain {
                 return "参与者体内真气不够";
             
             db.participate_cultivation(*cult, nfa, value);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+        return "";
+    }
+    //=========================================================================
+    string contract_handler::start_cultivation(int64_t cult_id)
+    {
+        try
+        {
+            const auto* cult = db.find<cultivation_object, by_id>(cult_id);
+            if(cult == nullptr)
+                return "指定修真活动不存在";
+            const auto& manager_nfa = db.get<nfa_object, by_id>(cult->manager_nfa_id);
+            if(manager_nfa.owner_account != caller.id && manager_nfa.active_account != caller.id)
+                return "无权操作修真活动";
+            
+            if(cult->start_time != time_point_sec::maximum())
+                return "指定修真活动已经开始";
+            if(cult->participants.empty())
+                return "指定修真活动没有任何参与者";
+
+            db.start_cultivation(*cult);
         }
         catch (fc::exception e)
         {

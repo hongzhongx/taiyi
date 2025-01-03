@@ -42,48 +42,6 @@ void* Allocator(void* ud, void* ptr, size_t osize, size_t nsize)
 
 namespace taiyi { namespace chain {
 
-    static int get_account_contract_data(lua_State *L)
-    {
-        try
-        {
-            LuaContext context(L);
-            
-            FC_ASSERT(lua_isstring(L, -2) && lua_istable(L, -1));
-            auto name_or_id = LuaContext::readTopAndPop<string>(L, -2);
-            auto read_list = LuaContext::readTopAndPop<lua_table>(L, -1);
-            auto current_contract_name = context.readVariable<string>("current_contract");
-            auto ch = context.readVariable<contract_handler *>(current_contract_name, "contract_helper");
-            auto &temp_account = ch->get_account(name_or_id);
-            const auto* contract_udata = ch->db.find<account_contract_data_object, by_account_contract>(boost::make_tuple(temp_account.id, ch->contract.id));
-            optional<account_contract_data_object> op_acd;
-            if (contract_udata != nullptr)
-                op_acd = *contract_udata;
-            else
-                op_acd = account_contract_data_object();
-            if (read_list.v.size() > 0)
-            {
-                vector<lua_types> stacks;
-                lua_map result_table;
-                contract_handler::filter_context(op_acd->contract_data, read_list.v, stacks, &result_table);
-                LuaContext::Pusher<lua_types>::push(L, lua_table(result_table)).release();
-            }
-            else
-            {
-                LuaContext::Pusher<lua_types>::push(L, lua_table(op_acd->contract_data)).release();
-            }
-            return 1;
-        }
-        catch (fc::exception e)
-        {
-            LUA_C_ERR_THROW(L, e.to_string());
-        }
-        catch (std::exception e)
-        {
-            LUA_C_ERR_THROW(L, e.what());
-        }
-        return 0;
-    }
-    //=============================================================================
     static int import_contract(lua_State *L)
     {
         const contract_object* contract = nullptr;
@@ -109,18 +67,28 @@ namespace taiyi { namespace chain {
                 //创建新合约环境
                 LuaContext context(L);
                 
-                auto cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
-                FC_ASSERT(cbi, "contract_base_info must be available!");
-                contract = &cbi->get_contract(imported_contract_name);
+                auto current_cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
+                FC_ASSERT(current_cbi, "contract_base_info must be available!");
+                contract = &current_cbi->get_contract(imported_contract_name);
                 
-                const auto &baseENV = cbi->db.get<contract_bin_code_object, by_id>(0);
+                const auto &baseENV = current_cbi->db.get<contract_bin_code_object, by_id>(0);
                 context.new_sandbox(contract->name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
                 
-                context.writeVariable(contract->name, "contract_base_info", cbi);
-                auto ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
-                if(ch) context.writeVariable(contract->name, "contract_helper", ch);
-                auto cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
-                if(cnh) context.writeVariable(contract->name, "nfa_helper", cnh);
+                contract_base_info cbi(current_cbi->db, context, current_cbi->db.get<account_object, by_id>(contract->owner).name, contract->name, current_cbi->caller, string(contract->creation_date), string(contract->contract_authority), current_cbi->invoker_contract_name);
+                context.writeVariable(contract->name, "contract_base_info", &cbi);
+                
+                auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
+                contract_result tmp_result;
+                flat_set<public_key_type> tmp_sigkeys;
+                contract_handler* ch = 0;
+                if(current_ch) {
+                    //导入的合约需要创建新的ch，由于在导入后会对合约函数进行调用，因此这里创建的ch必须有效，因此需要保留在上层ch中，直到上层ch释放时释放
+                    ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), *contract, current_ch->result, current_ch->context, current_ch->sigkeys);
+                    current_ch->_sub_chs.push_back(ch);
+                    context.writeVariable(contract->name, "contract_helper", ch);
+                }
+                auto current_cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
+                if(current_cnh) context.writeVariable(contract->name, "nfa_helper", current_cnh);
 
                 FC_ASSERT(lua_getglobal(context.mState, current_contract_name.c_str()) == LUA_TTABLE);
                 FC_ASSERT(lua_getfield(context.mState, -1, contract->name.c_str()) == LUA_TNIL); //just check
@@ -130,7 +98,7 @@ namespace taiyi { namespace chain {
                 lua_pushnil(context.mState);
                 lua_setglobal(context.mState, contract->name.c_str());
                 
-                const auto &contract_code = cbi->db.get<contract_bin_code_object, by_id>(contract->lua_code_b_id);
+                const auto &contract_code = cbi.db.get<contract_bin_code_object, by_id>(contract->lua_code_b_id);
                 //lua加载脚本之后会返回一个函数(即此时栈顶的chunk块)，lua_pcall将默认调用此块
                 luaL_loadbuffer(context.mState, contract_code.lua_code_b.data(), contract_code.lua_code_b.size(), contract->name.data());
                 lua_getglobal(context.mState, current_contract_name.c_str());
@@ -240,16 +208,21 @@ namespace taiyi { namespace chain {
         registerFunction("make_release", &contract_handler::make_release);
         registerFunction("random", &contract_handler::contract_random);
         registerFunction("is_owner", &contract_handler::is_owner);
-        registerFunction("read_chain", &contract_handler::read_chain);
-        registerFunction("write_chain", &contract_handler::write_chain);
+        registerFunction("read_contract_data", &contract_handler::read_contract_data);
+        registerFunction("write_contract_data", &contract_handler::write_contract_data);
+        registerFunction("get_account_contract_data", &contract_handler::get_account_contract_data);
+        registerFunction("read_account_contract_data", &contract_handler::read_account_contract_data);
+        registerFunction("write_account_contract_data", &contract_handler::write_account_contract_data);
         registerFunction("set_permissions_flag", &contract_handler::set_permissions_flag);
         registerFunction("set_invoke_share_percent", &contract_handler::set_invoke_share_percent);
         registerFunction("invoke_contract_function", &contract_handler::invoke_contract_function);
         registerFunction("change_contract_authority", &contract_handler::change_contract_authority);
-        registerFunction("get_contract_public_data", &contract_handler::get_contract_public_data);
+        registerFunction("get_contract_data", &contract_handler::get_contract_data);
         registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);
         registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);
         registerFunction("create_nfa", &contract_handler::create_nfa);        
+        registerFunction("read_nfa_contract_data", &contract_handler::read_nfa_contract_data);
+        registerFunction("write_nfa_contract_data", &contract_handler::write_nfa_contract_data);
         registerFunction("eval_nfa_action", &contract_handler::eval_nfa_action);
         registerFunction("do_nfa_action", &contract_handler::do_nfa_action);
         registerFunction("get_nfa_info", &contract_handler::get_nfa_info);
@@ -274,10 +247,10 @@ namespace taiyi { namespace chain {
         registerFunction("get_tiandao_property", &contract_handler::get_tiandao_property);
         registerFunction("create_cultivation", &contract_handler::create_cultivation);
         registerFunction("participate_cultivation", &contract_handler::participate_cultivation);
+        registerFunction("start_cultivation", &contract_handler::start_cultivation);
         registerFunction("stop_and_close_cultivation", &contract_handler::stop_and_close_cultivation);
 
         lua_register(mState, "import_contract", &import_contract);
-        lua_register(mState, "get_account_contract_data", &get_account_contract_data);
         lua_register(mState, "format_vector_with_table", &format_vector_with_table);
         
         registerFunction<contract_handler, void(const string&, double, const string&, bool)>("transfer_from_owner", [](contract_handler &handler, const string& to, double amount, const string& symbol, bool enable_logger = false) {
@@ -305,9 +278,9 @@ namespace taiyi { namespace chain {
         registerFunction("convert_qi_to_resource", &contract_nfa_handler::convert_qi_to_resource);
         registerFunction("add_child", &contract_nfa_handler::add_child);
         registerFunction("add_to_parent", &contract_nfa_handler::add_to_parent);
-        registerFunction("remove_from_parent", &contract_nfa_handler::remove_from_parent);        
-        registerFunction("read_chain", &contract_nfa_handler::read_chain);
-        registerFunction("write_chain", &contract_nfa_handler::write_chain);
+        registerFunction("remove_from_parent", &contract_nfa_handler::remove_from_parent);
+        registerFunction("read_contract_data", &contract_nfa_handler::read_contract_data);
+        registerFunction("write_contract_data", &contract_nfa_handler::write_contract_data);
         registerFunction("destroy", &contract_nfa_handler::destroy);
         registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
         
