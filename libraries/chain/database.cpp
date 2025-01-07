@@ -2715,6 +2715,16 @@ namespace taiyi { namespace chain {
 
             total_cultivation_qi.amount += itr->cultivation_value;
         }
+        
+        const auto& nfa_material_idx = get_index< nfa_material_index, by_id >();
+        for( auto itr = nfa_material_idx.begin(); itr != nfa_material_idx.end(); ++itr)
+        {
+            total_gold += itr->gold;
+            total_food += itr->food;
+            total_wood += itr->wood;
+            total_fabric += itr->fabric;
+            total_herb += itr->herb;
+        }
 
         FC_ASSERT(gpo.pending_cultivation_qi == total_cultivation_qi, "核对参与修真的真气总量失败", ("gpo.pending_cultivation_qi", gpo.pending_cultivation_qi)("total_cultivation_qi", total_cultivation_qi));
 

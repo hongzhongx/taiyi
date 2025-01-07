@@ -18,12 +18,14 @@
 namespace taiyi { namespace chain {
 
     contract_actor_base_info::contract_actor_base_info(const actor_object& a, database& db)
-    : nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), born(a.born), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vtimes(a.born_vtimes), five_phase(a.five_phase), gender(a.gender), standpoint_type(a.get_standpoint_type())
+    : nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), born(a.born), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vtimes(a.born_vtimes), gender(a.gender), standpoint_type(a.get_standpoint_type())
     {
         if(born) {
             location = db.get<zone_object, by_id>(a.location).name;
             base = db.get< zone_object, by_id >(a.base).name;
         }
+        
+        five_phase = db.get_nfa_five_phase(db.get<nfa_object, by_id>(a.nfa_id));
     }
     //=========================================================================
     contract_actor_core_attributes::contract_actor_core_attributes(const actor_object & act, database& db)

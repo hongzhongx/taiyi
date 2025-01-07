@@ -63,6 +63,8 @@ namespace taiyi { namespace chain {
         /// This function should be used only when the account adores for a siming directly
         share_type        siming_adore_weight()const { return std::accumulate( proxied_vsf_adores.begin(), proxied_vsf_adores.end(), qi.amount ); }
         share_type        proxied_vsf_adores_total()const { return std::accumulate( proxied_vsf_adores.begin(), proxied_vsf_adores.end(), share_type() ); }
+        
+        int64_t get_effective_qi() const;
     };
     
     struct by_proxy;
@@ -91,9 +93,7 @@ namespace taiyi { namespace chain {
         >,
         allocator< account_object >
     > account_index;
-    
-    int64_t get_effective_qi( const account_object& account );
-    
+        
     //=========================================================================
 
     class account_metadata_object : public object< account_metadata_object_type, account_metadata_object >

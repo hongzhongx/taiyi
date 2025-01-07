@@ -18,11 +18,6 @@ extern std::string wstring_to_utf8(const std::wstring& str);
 
 namespace taiyi { namespace chain {
     
-    int64_t get_effective_qi( const nfa_object& obj )
-    {
-        return obj.qi.amount.value;
-    }
-
     operation_result create_nfa_symbol_evaluator::do_apply( const create_nfa_symbol_operation& o )
     { try {
         const auto& creator = _db.get_account( o.creator );

@@ -88,6 +88,7 @@ namespace taiyi {
             //nfa objects
             nfa_symbol_object_type,
             nfa_object_type,
+            nfa_material_object_type,
             
             //actor objects
             actor_object_type,
@@ -140,6 +141,7 @@ namespace taiyi {
 
         class nfa_symbol_object;
         class nfa_object;
+        class nfa_material_object;
         
         class actor_object;
         class actor_core_attributes_object;
@@ -187,6 +189,7 @@ namespace taiyi {
 
         typedef oid< nfa_symbol_object                      > nfa_symbol_id_type;
         typedef oid< nfa_object                             > nfa_id_type;
+        typedef oid< nfa_material_object                    > nfa_material_id_type;
         
         typedef oid< actor_object                           > actor_id_type;
         typedef oid< actor_core_attributes_object           > actor_core_attributes_id_type;
@@ -387,6 +390,7 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     //nfa objects
     (nfa_symbol_object_type)
     (nfa_object_type)
+    (nfa_material_object_type)
                 
     //actor objects
     (actor_object_type)

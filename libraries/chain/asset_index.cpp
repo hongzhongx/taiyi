@@ -18,6 +18,7 @@ namespace taiyi { namespace chain {
 
         TAIYI_ADD_CORE_INDEX(db, nfa_symbol_index);
         TAIYI_ADD_CORE_INDEX(db, nfa_index);
+        TAIYI_ADD_CORE_INDEX(db, nfa_material_index);
 
         TAIYI_ADD_CORE_INDEX(db, cultivation_index);
     }

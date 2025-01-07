@@ -33,7 +33,18 @@
 
 
 namespace taiyi { namespace chain {
-
+    
+    int64_t nfa_material_object::get_material_qi() const
+    {
+        asset mqi(0, QI_SYMBOL);
+        mqi += gold * TAIYI_GOLD_QI_PRICE;
+        mqi += food * TAIYI_FOOD_QI_PRICE;
+        mqi += wood * TAIYI_WOOD_QI_PRICE;
+        mqi += fabric * TAIYI_FABRIC_QI_PRICE;
+        mqi += herb * TAIYI_HERB_QI_PRICE;
+        return mqi.amount.value;
+    }
+    //=========================================================================
     void database::create_basic_nfa_symbol_objects()
     {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
@@ -111,6 +122,11 @@ namespace taiyi { namespace chain {
         //init nfa from result table
         modify(nfa, [&](nfa_object& obj) {
             obj.contract_data = result_table.v;
+        });
+        
+        //create material
+        create<nfa_material_object>([&](nfa_material_object& obj) {
+            obj.nfa = nfa.id;
         });
         
         return nfa;
@@ -365,6 +381,36 @@ namespace taiyi { namespace chain {
             
             modify_nfa_children_owner(child_nfa, new_owner, recursion_loop_check);
         }
+    }
+    //=========================================================================
+    int database::get_nfa_five_phase(const nfa_object& nfa) const
+    {
+        auto hblock_id = head_block_id();
+        
+        //金木食织药，分别对应金木水火土
+        const auto& material = get<nfa_material_object, by_nfa_id>(nfa.id);
+        int64_t phases[5] = {
+            material.gold.amount.value,
+            material.wood.amount.value,
+            material.food.amount.value,
+            material.fabric.amount.value,
+            material.herb.amount.value
+        };
+        
+        //最大量的一种材料决定五行，如果最大量同时有几种材料，则五行不稳，随机一种
+        std::vector<int> maxones; maxones.reserve(5);
+        maxones.push_back( 0 );
+        for (int i=1; i<5; ++i) {
+            if (phases[i] >= phases[maxones[0]]) {
+                if (phases[i] > phases[maxones[0]])
+                    maxones.clear();
+                maxones.push_back(i);
+            }
+        }
+        assert(maxones.size() > 0);
+        
+        uint32_t p = hasher::hash( hblock_id._hash[4] + nfa.id ) % maxones.size();
+        return maxones[p];
     }
 
 } } //taiyi::chain

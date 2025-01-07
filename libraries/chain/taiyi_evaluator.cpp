@@ -63,22 +63,6 @@ namespace taiyi { namespace chain {
         }
     }
     
-    int64_t get_effective_qi( const account_object& account )
-    {
-        int64_t effective_qi = account.qi.amount.value              // base qi shares
-            + account.received_qi.amount.value    // incoming delegations
-            - account.delegated_qi.amount.value;  // outgoing delegations
-        
-        // If there is a power down occuring, also reduce effective qi shares by this week's power down amount
-        if( account.next_qi_withdrawal_time != fc::time_point_sec::maximum() )
-        {
-            effective_qi -= std::min(account.qi_withdraw_rate.amount.value,                  // Weekly amount
-                                            account.to_withdraw.value - account.withdrawn.value);   // Or remainder
-        }
-        
-        return effective_qi;
-    }
-
     template< bool force_canon >
     void copy_legacy_chain_properties( chain_properties& dest, const legacy_chain_properties& src )
     {
@@ -126,6 +110,22 @@ namespace taiyi { namespace chain {
         uint32_t key_changed                    : 1;
         uint32_t url_changed                    : 1;
     };
+    
+    int64_t account_object::get_effective_qi() const
+    {
+        int64_t effective_qi = qi.amount.value              // base qi shares
+            + received_qi.amount.value    // incoming delegations
+            - delegated_qi.amount.value;  // outgoing delegations
+        
+        // If there is a power down occuring, also reduce effective qi shares by this week's power down amount
+        if( next_qi_withdrawal_time != fc::time_point_sec::maximum() )
+        {
+            effective_qi -= std::min(qi_withdraw_rate.amount.value,          // Weekly amount
+                                     to_withdraw.value - withdrawn.value);   // Or remainder
+        }
+        
+        return effective_qi;
+    }
 
     operation_result siming_set_properties_evaluator::do_apply( const siming_set_properties_operation& o )
     {
@@ -755,7 +755,7 @@ namespace taiyi { namespace chain {
         
         const auto& gpo = _db.get_dynamic_global_properties();
         
-        auto max_mana = get_effective_qi( delegator );
+        auto max_mana = delegator.get_effective_qi();
 
         asset available_shares = delegator.qi;
 

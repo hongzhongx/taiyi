@@ -39,7 +39,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
     struct api_account_object
     {
-        api_account_object(const database_api::api_account_object& a) : id(a.id), name(a.name), owner(a.owner), active(a.active), posting(a.posting), memo_key(a.memo_key), json_metadata(a.json_metadata), proxy(a.proxy), last_owner_update(a.last_owner_update), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), balance(legacy_asset::from_asset(a.balance)), reward_yang_balance(legacy_asset::from_asset(a.reward_yang_balance)), reward_qi_balance(legacy_asset::from_asset(a.reward_qi_balance)), reward_feigang_balance(legacy_asset::from_asset(a.reward_feigang_balance)), qi(legacy_asset::from_asset(a.qi)), delegated_qi(legacy_asset::from_asset(a.delegated_qi)), received_qi(legacy_asset::from_asset(a.received_qi)), qi_withdraw_rate(legacy_asset::from_asset(a.qi_withdraw_rate)), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for)
+        api_account_object(const database_api::api_account_object& a) : id(a.id), name(a.name), owner(a.owner), active(a.active), posting(a.posting), memo_key(a.memo_key), json_metadata(a.json_metadata), proxy(a.proxy), last_owner_update(a.last_owner_update), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), balance(legacy_asset::from_asset(a.balance)), reward_yang_balance(legacy_asset::from_asset(a.reward_yang_balance)), reward_qi_balance(legacy_asset::from_asset(a.reward_qi_balance)), reward_feigang_balance(legacy_asset::from_asset(a.reward_feigang_balance)), qi(legacy_asset::from_asset(a.qi)), delegated_qi(legacy_asset::from_asset(a.delegated_qi)), received_qi(legacy_asset::from_asset(a.received_qi)), qi_withdraw_rate(legacy_asset::from_asset(a.qi_withdraw_rate)), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for), gold(legacy_asset::from_asset(a.gold)), food(legacy_asset::from_asset(a.food)), wood(legacy_asset::from_asset(a.wood)), fabric(legacy_asset::from_asset(a.fabric)), herb(legacy_asset::from_asset(a.herb))
         {
             proxied_vsf_adores.insert(proxied_vsf_adores.end(), a.proxied_vsf_adores.begin(), a.proxied_vsf_adores.end());
         }
@@ -83,6 +83,12 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         vector< share_type > proxied_vsf_adores;
         
         uint16_t          simings_adored_for = 0;
+
+        legacy_asset        gold;
+        legacy_asset        food;
+        legacy_asset        wood;
+        legacy_asset        fabric;
+        legacy_asset        herb;
     };
 
     struct extended_account : public api_account_object
@@ -287,7 +293,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     
     struct api_nfa_object
     {
-        api_nfa_object(const database_api::api_nfa_object& o) : id(o.id), creator_account(o.creator_account), owner_account(o.owner_account), active_account(o.active_account), symbol(o.symbol), parent(o.parent), children(o.children), main_contract(o.main_contract), contract_data(o.contract_data), qi(legacy_asset::from_asset(o.qi)), debt_value(o.debt_value), debt_contract(o.debt_contract), cultivation_value(o.cultivation_value), created_time(o.created_time), next_tick_time(o.next_tick_time), gold(legacy_asset::from_asset(o.gold)), food(legacy_asset::from_asset(o.food)), wood(legacy_asset::from_asset(o.wood)), fabric(legacy_asset::from_asset(o.fabric)), herb(legacy_asset::from_asset(o.herb))
+        api_nfa_object(const database_api::api_nfa_object& o) : id(o.id), creator_account(o.creator_account), owner_account(o.owner_account), active_account(o.active_account), symbol(o.symbol), parent(o.parent), children(o.children), main_contract(o.main_contract), contract_data(o.contract_data), qi(legacy_asset::from_asset(o.qi)), debt_value(o.debt_value), debt_contract(o.debt_contract), cultivation_value(o.cultivation_value), created_time(o.created_time), next_tick_time(o.next_tick_time), gold(legacy_asset::from_asset(o.gold)), food(legacy_asset::from_asset(o.food)), wood(legacy_asset::from_asset(o.wood)), fabric(legacy_asset::from_asset(o.fabric)), herb(legacy_asset::from_asset(o.herb)), material_gold(legacy_asset::from_asset(o.material_gold)), material_food(legacy_asset::from_asset(o.material_food)), material_wood(legacy_asset::from_asset(o.material_wood)), material_fabric(legacy_asset::from_asset(o.material_fabric)), material_herb(legacy_asset::from_asset(o.material_herb)), five_phase(o.five_phase)
         {}
         
         api_nfa_object(){}
@@ -320,6 +326,14 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_asset        wood;
         legacy_asset        fabric;
         legacy_asset        herb;
+
+        legacy_asset        material_gold;
+        legacy_asset        material_food;
+        legacy_asset        material_wood;
+        legacy_asset        material_fabric;
+        legacy_asset        material_herb;
+        
+        int                 five_phase;
     };
 
     struct api_contract_action_info
@@ -493,7 +507,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::state, (current_route)(props)(account
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_operation_object, (trx_id)(block)(trx_in_block)(op_in_trx)(virtual_op)(timestamp)(op) )
 
-FC_REFLECT( taiyi::plugins::baiyujing_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for)(gold)(food)(wood)(fabric)(herb) )
 
 FC_REFLECT_DERIVED( taiyi::plugins::baiyujing_api::extended_account, (taiyi::plugins::baiyujing_api::api_account_object),(qi_balance)(transfer_history)(other_history)(siming_adores) )
 
@@ -519,7 +533,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::broadcast_transaction_synchronous_ret
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_resource_assets, (gold)(food)(wood)(fabric)(herb) )
 
-FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_contract_action_info, (exist)(consequence) )
 

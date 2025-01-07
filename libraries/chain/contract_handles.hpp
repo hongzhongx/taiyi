@@ -49,7 +49,7 @@ namespace taiyi { namespace chain {
         int64_t     fabric;
         int64_t     herb;
 
-        contract_asset_resources(const nfa_object& nfa, database& db);
+        contract_asset_resources(const nfa_object& nfa, database& db, bool is_material);
     };
     
     struct contract_tiandao_property
@@ -70,6 +70,7 @@ namespace taiyi { namespace chain {
         string      active_account;
         int64_t     qi;
         int64_t     parent;
+        int         five_phase;
         lua_map     data;
                 
         contract_nfa_base_info(const nfa_object& nfa, database& db);
@@ -145,7 +146,7 @@ namespace taiyi { namespace chain {
 
         contract_nfa_base_info get_info();
         contract_asset_resources get_resources();
-        
+        contract_asset_resources get_materials();
 
         void enable_tick();
         void disable_tick();
@@ -165,6 +166,11 @@ namespace taiyi { namespace chain {
         void withdraw_by_contract(nfa_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
         void deposit_from(const account_name_type& from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
         void deposit_by_contract(account_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
+
+        void inject_material_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
+        void inject_material_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
+        void separate_material_out(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
+        void separate_material_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
     };
     
     //Actor NFA绑定合约被调用的角度来处理事务，隐含了发起这个调用相关的Actor对象
@@ -235,6 +241,7 @@ namespace taiyi { namespace chain {
         bool is_nfa_valid(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
         contract_asset_resources get_nfa_resources(int64_t id);
+        contract_asset_resources get_nfa_materials(int64_t id);
         vector<contract_nfa_base_info> list_nfa_inventory(int64_t nfa_id);
 
         lua_map read_nfa_contract_data(int64_t nfa_id, const lua_map& read_list);

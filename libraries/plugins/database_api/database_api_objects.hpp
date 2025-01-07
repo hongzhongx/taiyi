@@ -50,6 +50,12 @@ namespace taiyi { namespace plugins { namespace database_api {
                 json_metadata = maybe_meta->json_metadata;
             }
 #endif
+
+            gold = db.get_balance(a, GOLD_SYMBOL);
+            food = db.get_balance(a, FOOD_SYMBOL);
+            wood = db.get_balance(a, WOOD_SYMBOL);
+            fabric = db.get_balance(a, FABRIC_SYMBOL);
+            herb = db.get_balance(a, HERB_SYMBOL);
         }
     
         api_account_object(){}
@@ -95,6 +101,12 @@ namespace taiyi { namespace plugins { namespace database_api {
         vector< share_type > proxied_vsf_adores;
         
         uint16_t          simings_adored_for = 0;
+        
+        asset               gold;
+        asset               food;
+        asset               wood;
+        asset               fabric;
+        asset               herb;
     };
 
     struct api_owner_authority_history_object
@@ -245,6 +257,15 @@ namespace taiyi { namespace plugins { namespace database_api {
                 children.push_back(itn->id);
                 ++itn;
             }
+            
+            const auto& material = db.get<nfa_material_object, by_nfa_id>(o.id);
+            material_gold = material.gold;
+            material_food = material.food;
+            material_wood = material.wood;
+            material_fabric = material.fabric;
+            material_herb = material.herb;
+            
+            five_phase = db.get_nfa_five_phase(o);
         }
         
         api_nfa_object(){}
@@ -277,11 +298,19 @@ namespace taiyi { namespace plugins { namespace database_api {
         asset               wood;
         asset               fabric;
         asset               herb;
+
+        asset               material_gold;
+        asset               material_food;
+        asset               material_wood;
+        asset               material_fabric;
+        asset               material_herb;
+        
+        int                 five_phase;
     };
         
     struct api_actor_object
     {
-        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), init_attribute_amount_max(a.init_attribute_amount_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vtimes(a.born_vtimes), five_phase(a.five_phase), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update), next_tick_time(a.next_tick_time)
+        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), init_attribute_amount_max(a.init_attribute_amount_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vtimes(a.born_vtimes), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update), next_tick_time(a.next_tick_time)
         {
             const auto& talents_obj = db.get< actor_talents_object, by_actor >( id );
             for(auto it = talents_obj.talents.begin(); it!=talents_obj.talents.end(); it++)
@@ -314,6 +343,8 @@ namespace taiyi { namespace plugins { namespace database_api {
                 location = db.get<zone_object, by_id>(a.location).name;
                 base_name = db.get<zone_object, by_id>(a.base).name;
             }
+            
+            five_phase = db.get_nfa_five_phase(db.get<nfa_object, by_id>(a.nfa_id));
         }
         
         api_actor_object(){}
@@ -373,7 +404,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
 } } } // taiyi::plugins::database_api
 
-FC_REFLECT( taiyi::plugins::database_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(mined)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::plugins::database_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(mined)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for)(gold)(food)(wood)(fabric)(herb) )
 
 FC_REFLECT( taiyi::plugins::database_api::api_owner_authority_history_object, (id)(account)(previous_owner_authority)(last_valid_time) )
 
@@ -387,6 +418,6 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_time) )

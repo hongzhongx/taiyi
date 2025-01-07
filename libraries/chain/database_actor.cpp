@@ -181,7 +181,6 @@ namespace taiyi { namespace chain {
             a.born_vyears = int(tiandao.v_years);
             a.born_vmonths = int(tiandao.v_months);
             a.born_vtimes = int(tiandao.v_times);
-            a.five_phase = int(hasher::hash( seed + a.id + 3229) % 5);
             
             a.standpoint = (hasher::hash( seed + a.id + 1619) % 1000);
 

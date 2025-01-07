@@ -131,8 +131,42 @@ namespace taiyi { namespace chain {
         >,
         allocator< nfa_object >
     > nfa_index;
-    
-    int64_t get_effective_qi( const nfa_object& obj );
+        
+    //=========================================================================
+
+    class nfa_material_object : public object < nfa_material_object_type, nfa_material_object >
+    {
+        TAIYI_STD_ALLOCATOR_CONSTRUCTOR(nfa_material_object)
+
+    public:
+        template< typename Constructor, typename Allocator >
+        nfa_material_object(Constructor&& c, allocator< Allocator > a)
+        {
+            c(*this);
+        }
+
+        id_type             id;
+
+        nfa_id_type         nfa = nfa_id_type::max();
+        
+        asset               gold = asset( 0, GOLD_SYMBOL );
+        asset               food = asset( 0, FOOD_SYMBOL );
+        asset               wood = asset( 0, WOOD_SYMBOL );
+        asset               fabric = asset( 0, FABRIC_SYMBOL );
+        asset               herb = asset( 0, HERB_SYMBOL );
+        
+        int64_t get_material_qi() const;
+    };
+
+    struct by_nfa_id;
+    typedef multi_index_container<
+        nfa_material_object,
+        indexed_by<
+            ordered_unique< tag< by_id >, member< nfa_material_object, nfa_material_id_type, &nfa_material_object::id > >,
+            ordered_unique< tag< by_nfa_id >, member< nfa_material_object, nfa_id_type, &nfa_material_object::nfa> >
+        >,
+        allocator< nfa_material_object >
+    > nfa_material_index;
 
 } } // taiyi::chain
 
@@ -141,3 +175,6 @@ CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symb
 
 FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_time))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)
+
+FC_REFLECT(taiyi::chain::nfa_material_object, (id)(nfa)(gold)(food)(wood)(fabric)(herb))
+CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_material_object, taiyi::chain::nfa_material_index)

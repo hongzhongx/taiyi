@@ -74,13 +74,23 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    contract_asset_resources::contract_asset_resources(const nfa_object & nfa, database& db)
+    contract_asset_resources::contract_asset_resources(const nfa_object & nfa, database& db, bool is_material)
     {
-        gold = db.get_nfa_balance(nfa, GOLD_SYMBOL).amount.value;
-        food = db.get_nfa_balance(nfa, FOOD_SYMBOL).amount.value;
-        wood = db.get_nfa_balance(nfa, WOOD_SYMBOL).amount.value;
-        fabric = db.get_nfa_balance(nfa, FABRIC_SYMBOL).amount.value;
-        herb = db.get_nfa_balance(nfa, HERB_SYMBOL).amount.value;
+        if (is_material) {
+            const auto& material = db.get<nfa_material_object, by_nfa_id>(nfa.id);
+            gold = material.gold.amount.value;
+            food = material.food.amount.value;
+            wood = material.wood.amount.value;
+            fabric = material.fabric.amount.value;
+            herb = material.herb.amount.value;
+        }
+        else {
+            gold = db.get_nfa_balance(nfa, GOLD_SYMBOL).amount.value;
+            food = db.get_nfa_balance(nfa, FOOD_SYMBOL).amount.value;
+            wood = db.get_nfa_balance(nfa, WOOD_SYMBOL).amount.value;
+            fabric = db.get_nfa_balance(nfa, FABRIC_SYMBOL).amount.value;
+            herb = db.get_nfa_balance(nfa, HERB_SYMBOL).amount.value;
+        }
     }
     //=============================================================================
     contract_tiandao_property::contract_tiandao_property(const tiandao_property_object& obj, database& db)
@@ -1298,7 +1308,20 @@ namespace taiyi { namespace chain {
         try
         {
             const auto& nfa = db.get<nfa_object, by_id>(id);
-            return contract_asset_resources(nfa, db);
+            return contract_asset_resources(nfa, db, false);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    contract_asset_resources contract_handler::get_nfa_materials(int64_t id)
+    {
+        try
+        {
+            const auto& nfa = db.get<nfa_object, by_id>(id);
+            return contract_asset_resources(nfa, db, true);
         }
         catch (fc::exception e)
         {

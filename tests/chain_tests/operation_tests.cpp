@@ -2335,8 +2335,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         op.delegator = "alice";
         op.delegatee = "bob";
         
-        auto old_mana = get_effective_qi(db->get_account( "alice" ));
-        auto old_bob_mana = get_effective_qi(db->get_account( "bob" ));
+        auto old_mana = db->get_account( "alice" ).get_effective_qi();
+        auto old_bob_mana = db->get_account( "bob" ).get_effective_qi();
 
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         tx.operations.push_back( op );
@@ -2347,9 +2347,9 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         const account_object& bob_acc = db->get_account( "bob" );
         
         BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "10000.000000 QI" ) );
-        BOOST_REQUIRE( get_effective_qi(alice_acc) == old_mana - op.qi.amount.value );
+        BOOST_REQUIRE( alice_acc.get_effective_qi() == old_mana - op.qi.amount.value );
         BOOST_REQUIRE( bob_acc.received_qi == ASSET( "10000.000000 QI" ) );
-        BOOST_REQUIRE( get_effective_qi(bob_acc) == old_bob_mana + op.qi.amount.value );
+        BOOST_REQUIRE( bob_acc.get_effective_qi() == old_bob_mana + op.qi.amount.value );
 
         BOOST_TEST_MESSAGE( "--- Test that the delegation object is correct. " );
         auto delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
@@ -2358,8 +2358,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         BOOST_REQUIRE( delegation->delegator == op.delegator);
         BOOST_REQUIRE( delegation->qi  == ASSET( "10000.000000 QI"));
         
-        old_mana = get_effective_qi(db->get_account( "alice" ));
-        old_bob_mana = get_effective_qi(db->get_account( "bob" ));
+        old_mana = db->get_account( "alice" ).get_effective_qi();
+        old_bob_mana = db->get_account( "bob" ).get_effective_qi();
 
         int64_t delta = 10000000000;
         
@@ -2372,15 +2372,15 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         db->push_transaction( tx, 0 );
         generate_blocks(1);
         
-        idump( (get_effective_qi(alice_acc))(old_mana)(delta) );
+        idump( (alice_acc.get_effective_qi())(old_mana)(delta) );
 
         BOOST_REQUIRE( delegation != nullptr );
         BOOST_REQUIRE( delegation->delegator == op.delegator);
         BOOST_REQUIRE( delegation->qi == ASSET( "20000.000000 QI"));
         BOOST_REQUIRE( alice_acc.delegated_qi == ASSET( "20000.000000 QI"));
-        BOOST_REQUIRE( get_effective_qi(alice_acc) == old_mana - delta );
+        BOOST_REQUIRE( alice_acc.get_effective_qi() == old_mana - delta );
         BOOST_REQUIRE( bob_acc.received_qi == ASSET( "20000.000000 QI"));
-        BOOST_REQUIRE( get_effective_qi(bob_acc) == old_bob_mana + delta );
+        BOOST_REQUIRE( bob_acc.get_effective_qi() == old_bob_mana + delta );
 
         BOOST_TEST_MESSAGE( "--- Test failure delegating delgated QI." );
         
@@ -2494,8 +2494,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
 
         BOOST_TEST_MESSAGE( "--- Remove a delegation and ensure it is returned after 1 week" );
 
-        auto old_sam_mana = get_effective_qi(db->get_account( "sam" ));
-        auto old_dave_mana = get_effective_qi(db->get_account( "dave" ));
+        auto old_sam_mana = db->get_account( "sam" ).get_effective_qi();
+        auto old_dave_mana = db->get_account( "dave" ).get_effective_qi();
 
         tx.clear();
         op.qi = ASSET( "0.000000 QI" );
@@ -2518,11 +2518,11 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
         delegation = db->find< qi_delegation_object, by_delegation >( boost::make_tuple( op.delegator, op.delegatee ) );
         BOOST_REQUIRE( delegation == nullptr );
 
-        BOOST_REQUIRE( get_effective_qi(db->get_account( "sam" )) == old_sam_mana );
-        BOOST_REQUIRE( get_effective_qi(db->get_account( "dave" )) == old_dave_mana - sam_vest.amount.value );
+        BOOST_REQUIRE( db->get_account( "sam" ).get_effective_qi() == old_sam_mana );
+        BOOST_REQUIRE( db->get_account( "dave" ).get_effective_qi() == old_dave_mana - sam_vest.amount.value );
 
-        old_sam_mana = get_effective_qi(db->get_account( "sam" ));
-        old_dave_mana = get_effective_qi(db->get_account( "dave" ));
+        old_sam_mana = db->get_account( "sam" ).get_effective_qi();
+        old_dave_mana = db->get_account( "dave" ).get_effective_qi();
 
         generate_blocks( exp_obj->expiration + TAIYI_BLOCK_INTERVAL );
 
@@ -2531,8 +2531,8 @@ BOOST_AUTO_TEST_CASE( delegate_qi_apply )
 
         BOOST_REQUIRE( exp_obj == end );
         BOOST_REQUIRE( db->get_account( "sam" ).delegated_qi == ASSET( "0.000000 QI" ) );
-        BOOST_REQUIRE( get_effective_qi(db->get_account( "sam" )) == old_sam_mana + sam_vest.amount.value );
-        BOOST_REQUIRE( get_effective_qi(db->get_account( "dave" )) == old_dave_mana );
+        BOOST_REQUIRE( db->get_account( "sam" ).get_effective_qi() == old_sam_mana + sam_vest.amount.value );
+        BOOST_REQUIRE( db->get_account( "dave" ).get_effective_qi() == old_dave_mana );
     }
     FC_LOG_AND_RETHROW()
 }

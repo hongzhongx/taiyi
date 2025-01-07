@@ -25,6 +25,8 @@ namespace taiyi { namespace chain {
         owner_account = db.get<account_object, by_id>(nfa.owner_account).name;
         creator_account = db.get<account_object, by_id>(nfa.creator_account).name;
         active_account = db.get<account_object, by_id>(nfa.active_account).name;
+        
+        five_phase = db.get_nfa_five_phase(nfa);
     }
     //=============================================================================
     contract_nfa_handler::contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch)
@@ -79,12 +81,24 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
-    //=============================================================================
+    //=========================================================================
     contract_asset_resources contract_nfa_handler::get_resources()
     {
         try
         {
-            return contract_asset_resources(_caller, _db);
+            return contract_asset_resources(_caller, _db, false);
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    contract_asset_resources contract_nfa_handler::get_materials()
+    {
+        try
+        {
+            return contract_asset_resources(_caller, _db, true);
         }
         catch (fc::exception e)
         {
@@ -136,7 +150,7 @@ namespace taiyi { namespace chain {
             
             _db.post_push_virtual_operation( vop );
             
-            //更新统计自由真气量
+            //更新统计自由真气量和统计资源
             _db.modify( _db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
                 gpo.total_qi -= qi;
                 switch (symbol.asset_num) {
@@ -570,6 +584,174 @@ namespace taiyi { namespace chain {
         catch (std::exception e)
         {
             LUA_C_ERR_THROW(_context.mState, e.what());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::inject_material_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger)
+    {
+        try
+        {
+            asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
+            auto token = asset(amount, symbol);
+            inject_material_by_contract(from, to, token, _ch.result, enable_logger);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::inject_material_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger)
+    {
+        try
+        {
+            FC_ASSERT(token.symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_FOOD ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_WOOD ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_HERB, "注入的材料不是有效的资源物质");
+            FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
+
+            const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
+            const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
+            try
+            {
+                FC_ASSERT(_db.get_nfa_balance(from_nfa, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", _db.get_nfa_balance(from_nfa, token.symbol)));
+            }
+            FC_RETHROW_EXCEPTIONS(error, "Unable to inject material ${a} from ${f} to ${t}", ("a", token)("f", from_nfa.id)("t", to_nfa.id));
+            
+            _db.adjust_nfa_balance(from_nfa, -token);
+            
+            const auto& material = _db.get<nfa_material_object, by_nfa_id>(to_nfa.id);
+            _db.modify(material, [&](nfa_material_object& obj) {
+                switch (token.symbol.asset_num) {
+                    case TAIYI_ASSET_NUM_GOLD:
+                        obj.gold += token;
+                        break;
+                    case TAIYI_ASSET_NUM_FOOD:
+                        obj.food += token;
+                        break;
+                    case TAIYI_ASSET_NUM_WOOD:
+                        obj.wood += token;
+                        break;
+                    case TAIYI_ASSET_NUM_FABRIC:
+                        obj.fabric += token;
+                        break;
+                    case TAIYI_ASSET_NUM_HERB:
+                        obj.herb += token;
+                        break;
+                    default:
+                        FC_ASSERT(false, "can not be here");
+                        break;
+                }
+            });
+                                    
+            if(enable_logger) {
+                variant v;
+                fc::to_variant(token, v);
+                _ch.log(FORMAT_MESSAGE("nfa #${a} inject material ${token} to nfa #${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_nfa.id)));
+            }
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::separate_material_out(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger)
+    {
+        try
+        {
+            asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
+            auto token = asset(amount, symbol);
+            separate_material_by_contract(from, to, token, _ch.result, enable_logger);
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::separate_material_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger)
+    {
+        try
+        {
+            FC_ASSERT(token.symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_FOOD ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_WOOD ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_FABRIC ||
+                      token.symbol.asset_num == TAIYI_ASSET_NUM_HERB, "析出的材料不是有效的资源物质");
+            FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
+
+            const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
+            const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
+
+            const auto& material = _db.get<nfa_material_object, by_nfa_id>(from_nfa.id);
+            try
+            {
+                switch (token.symbol.asset_num) {
+                    case TAIYI_ASSET_NUM_GOLD:
+                        FC_ASSERT(material.gold.amount >= token.amount, "Insufficient material: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", material.gold));
+                        break;
+                    case TAIYI_ASSET_NUM_FOOD:
+                        FC_ASSERT(material.food.amount >= token.amount, "Insufficient material: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", material.food));
+                        break;
+                    case TAIYI_ASSET_NUM_WOOD:
+                        FC_ASSERT(material.wood.amount >= token.amount, "Insufficient material: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", material.wood));
+                        break;
+                    case TAIYI_ASSET_NUM_FABRIC:
+                        FC_ASSERT(material.fabric.amount >= token.amount, "Insufficient material: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", material.fabric));
+                        break;
+                    case TAIYI_ASSET_NUM_HERB:
+                        FC_ASSERT(material.herb.amount >= token.amount, "Insufficient material: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", material.herb));
+                        break;
+                    default:
+                        FC_ASSERT(false, "can not be here");
+                        break;
+                }
+            }
+            FC_RETHROW_EXCEPTIONS(error, "Unable to separate material ${a} out from ${f} to ${t}", ("a", token)("f", from_nfa.id)("t", to_nfa.id));
+
+            _db.modify(material, [&](nfa_material_object& obj) {
+                switch (token.symbol.asset_num) {
+                    case TAIYI_ASSET_NUM_GOLD:
+                        obj.gold -= token;
+                        break;
+                    case TAIYI_ASSET_NUM_FOOD:
+                        obj.food -= token;
+                        break;
+                    case TAIYI_ASSET_NUM_WOOD:
+                        obj.wood -= token;
+                        break;
+                    case TAIYI_ASSET_NUM_FABRIC:
+                        obj.fabric -= token;
+                        break;
+                    case TAIYI_ASSET_NUM_HERB:
+                        obj.herb -= token;
+                        break;
+                    default:
+                        FC_ASSERT(false, "can not be here");
+                        break;
+                }
+            });
+
+            _db.adjust_nfa_balance(to_nfa, token);
+
+            if(enable_logger) {
+                variant v;
+                fc::to_variant(token, v);
+                _ch.log(FORMAT_MESSAGE("nfa #${a} separate meterial ${token} out to nfa ${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_nfa.id)));
+            }
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
 
