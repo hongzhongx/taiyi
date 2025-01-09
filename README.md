@@ -81,7 +81,7 @@
     * 实现可执行程序“[太阴（taiyin）](programs/taiyin/)”来运行太乙节点
     * 实现可执行程序“[玄牝（xuanpin）](programs/xuanpin/)”来和白玉京交互
 
-- [*] [【阳寿】](https://github.com/users/hongzhongx/projects/2)同质化游戏资产（FA，一种同质化资产）的原生实现
+- [x] [【阳寿】](https://github.com/users/hongzhongx/projects/2)同质化游戏资产（FA，一种同质化资产）的原生实现
     * 原生实现阳寿（YANG）和先天一炁（QI），阳寿有时也称阳寿丹，炁同气，有时也叫做真气
     * 账号可以转换“阳寿”和“气”，并用气来拜司命（通过祭祀、祈祷、供养以增加司命的实力——Adore）
     * 对出块司命开始奖励阳寿丹
@@ -89,7 +89,7 @@
     * 建立账号各种操作的运行资源消耗记录，对应各种操作都需要消耗账号的真气，消耗的真气以非罡（feigang）形式奖励给创作者或者坐忘道财库
     * 确立《真气守恒定律》
 
-- [*] [【天道】](https://github.com/users/hongzhongx/projects/3)智能游戏脚本（SGS）引擎
+- [x] [【天道】](https://github.com/users/hongzhongx/projects/3)智能游戏脚本（SGS）引擎
     * 集成[Lua虚拟机](libraries/lua/README.md)
     * 建立天道运转化生机制，天道运转需要消耗真气，天道运转消耗的真气转化为对应的非罡来奖励天道创作者
     * 化生的非罡可以转化为真气奖励给天道的创建和开发者（激励规则，通过核算智能脚本运行时的消耗来激励到创作者，使得通胀后大部分新阳寿以真气形式奖励给内容创作者）
