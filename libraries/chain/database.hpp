@@ -71,15 +71,9 @@ namespace taiyi { namespace chain {
         bool is_producing()const { return _is_producing; }
         void set_producing( bool p ) { _is_producing = p;  }
 
-        bool is_pending_tx()const { return _is_pending_tx; }
-        void set_pending_tx( bool p ) { _is_pending_tx = p; }
-
+        bool is_pending_tx()const { return _pending_tx_session.valid(); }
+        
         bool is_processing_block()const { return _currently_processing_block_id.valid(); }
-
-        bool _is_producing = false;
-        bool _is_pending_tx = false;
-
-        bool _log_hardforks = true;
 
         enum validation_steps
         {
@@ -436,6 +430,8 @@ namespace taiyi { namespace chain {
         void process_actor_tick();
 
     private:
+        bool _is_producing = false;
+        bool _log_hardforks = true;
         optional< chainbase::database::session > _pending_tx_session;
 
         void apply_block( const signed_block& next_block, uint32_t skip = skip_nothing );

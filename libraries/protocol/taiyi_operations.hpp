@@ -61,9 +61,9 @@ namespace taiyi { namespace protocol {
     };
 
     /**
-     *  This operation converts liquid token (YANG) into VFS (Vesting Fund Shares,
-     *  QI) at the current exchange rate. With this operation it is possible to
-     *  give another account qi shares so that faucets can pre-fund new accounts with qi shares.
+     *  This operation converts liquid token (YANG) into QI at
+     *  the current exchange rate. With this operation it is possible to
+     *  give another account qi so that faucets can pre-fund new accounts with qi.
      */
     struct transfer_to_qi_operation : public base_operation
     {
@@ -77,14 +77,14 @@ namespace taiyi { namespace protocol {
 
     /**
      * At any given point in time an account can be withdrawing from their
-     * qi shares. A user may change the number of shares they wish to
+     * qi. A user may change the number of qi they wish to
      * cash out at any time between 0 and their total qi stake.
      *
      * After applying this operation, qi will be withdrawn
      * at a rate of qi/104 per week for two years starting
      * one week after this operation is included in the blockchain.
      *
-     * This operation is not valid if the user has no qi shares.
+     * This operation is not valid if the user has no qi.
      */
     struct withdraw_qi_operation : public base_operation
     {
@@ -100,7 +100,7 @@ namespace taiyi { namespace protocol {
      * request for the funds to be transferred directly to another account's
      * balance rather than the withdrawing account. In addition, those funds
      * can be immediately vested again, circumventing the conversion from
-     * qi to taiyi and back, guaranteeing they maintain their value.
+     * qi to yang and back, guaranteeing they maintain their value.
      */
     struct set_withdraw_qi_route_operation : public base_operation
     {

@@ -40,6 +40,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         std::unique_ptr<impl> _my;
         uint32_t              _blockLimit = 0;
         bool                  _doImmediateImport = false;
+        bool                  _doVolatileImport = true;
     };
 
 } } } // taiyi::plugins::account_history

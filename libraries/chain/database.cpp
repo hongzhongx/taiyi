@@ -676,25 +676,13 @@ namespace taiyi { namespace chain {
      */
     void database::push_transaction( const signed_transaction& trx, uint32_t skip )
     { try {
-        try
-        {
-            FC_ASSERT( fc::raw::pack_size(trx) <= (get_dynamic_global_properties().maximum_block_size - 256) );
-            set_producing( true );
-            set_pending_tx( true );
-            detail::with_skip_flags( *this, skip, [&]() {
-                _push_transaction( trx );
-            });
-            set_producing( false );
-            set_pending_tx( false );
-        }
-        catch( ... )
-        {
-            set_producing( false );
-            set_pending_tx( false );
-            throw;
-        }
+        FC_ASSERT( fc::raw::pack_size(trx) <= (get_dynamic_global_properties().maximum_block_size - 256) );
+        detail::with_skip_flags( *this, skip, [&]() {
+            _push_transaction( trx );
+        });
     } FC_CAPTURE_AND_RETHROW( (trx) ) }
     
+    // 这里是所有收到的外来广播或者自己产生的新交易，在当前状态上验证执行后，加入到pending队列中
     void database::_push_transaction( const signed_transaction& trx )
     {
         // If this is the first transaction pushed after applying a block, start a new undo session.
@@ -1709,6 +1697,11 @@ namespace taiyi { namespace chain {
              * entire block fails to apply.  We only need an "undo" state
              * for transactions when validating broadcast transactions or
              * when building a block.
+             * 这里是对收到的块（包括自己出的块）中的交易，进行状态修改和应用的确切地方
+             * 注意，这里不需要对状态设置回滚保护，因为整个块在应用中任何一个环节出问题，
+             * 最外层的回滚保护机制会动作。
+             * 然而，为了不影响当前节点的状态，对广播来的交易（自己收交易请求api也走的
+             * 广播）的验证，以及在出块时候对打包交易的验证，都是需要专门的回滚操作的。
              */
             apply_transaction( trx, skip );
             ++_current_trx_in_block;

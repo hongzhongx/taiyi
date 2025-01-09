@@ -143,15 +143,20 @@ void block_producer::apply_pending_transactions(const chain::account_name_type& 
 
         try
         {
+            _db.set_producing( true ); //这使得在op执行或者响应的时候可以获得“出块验证”的标识
+
             auto temp_session = _db.start_undo_session();
             _db.apply_transaction( tx, _db.get_node_properties().skip_flags );
             temp_session.squash();
 
+            _db.set_producing( false );
+
             total_block_size = new_total_size;
-            pending_block.transactions.push_back( tx );
+            pending_block.transactions.push_back( tx ); //出块节点将通过验证的交易打包进新块
         }
         catch ( const fc::exception& e )
         {
+            _db.set_producing( false );
             // Do nothing, transaction will not be re-applied
             //wlog( "Transaction was not processed while generating block due to ${e}", ("e", e) );
             //wlog( "The transaction was ${t}", ("t", tx) );
@@ -162,6 +167,7 @@ void block_producer::apply_pending_transactions(const chain::account_name_type& 
         wlog( "Postponed ${n} transactions due to block size limit", ("n", _db._pending_tx.size() - pending_block.transactions.size()) );
     }
 
+    //由于是为了出块在当前状态上验证了交易，因此要回滚状态到之前的链头部
     _db.pending_transaction_session().reset();
 
     pending_block.transaction_merkle_root = pending_block.calculate_merkle_root();

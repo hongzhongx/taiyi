@@ -1384,6 +1384,9 @@ namespace taiyi { namespace plugins { namespace account_history {
     
     void account_history_plugin::impl::on_post_apply_operation(const operation_notification& n)
     {
+        if(_mainDb.is_producing() || _mainDb.is_pending_tx())
+            return; //避免在验证新入交易或者在出块验证打包交易的时候重复记录。这种情况在只有一个节点的网络上就会出现
+            
         if( n.block % 10000 == 0 && n.trx_in_block == 0 && n.op_in_trx == 0 && n.virtual_op == 0 )
         {
             ilog("RocksDb data import processed blocks: ${n}, containing: ${tx} transactions and ${op} operations.\n"
@@ -1408,7 +1411,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         if( impacted.empty() )
             return; // Ignore operations not impacting any account (according to original implementation)
         
-        if( _reindexing )
+        if( _reindexing || _self._doVolatileImport)
         {
             rocksdb_operation_object obj;
             obj.trx_id = n.trx_id;
@@ -1489,6 +1492,7 @@ namespace taiyi { namespace plugins { namespace account_history {
         ;
         command_line_options.add_options()
         ("account-history-immediate-import", bpo::bool_switch()->default_value(false), "Allows to force immediate data import at plugin startup. By default storage is supplied during reindex process.")
+        ("account-history-volatile-import", bpo::bool_switch()->default_value(true), "Allows to import volatile operations before block is irreversible. or there is no history after irreversible block.")
         ("account-history-stop-import-at-block", bpo::value<uint32_t>()->default_value(0), "Allows to specify block number, the data import process should stop at.")
         ;
     }
@@ -1499,6 +1503,7 @@ namespace taiyi { namespace plugins { namespace account_history {
             _blockLimit = options.at("account-history-stop-import-at-block").as<uint32_t>();
         
         _doImmediateImport = options.at("account-history-immediate-import").as<bool>();
+        _doVolatileImport = options.at("account-history-volatile-import").as<bool>();
         
         bfs::path dbPath;
         
