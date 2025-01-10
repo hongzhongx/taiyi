@@ -37,6 +37,38 @@ BOOST_AUTO_TEST_CASE( account_create_validate )
     FC_LOG_AND_RETHROW()
 }
 
+std::string vector_to_hex_string(const std::vector<char>& vec) {
+    std::stringstream ss;
+    ss << std::hex;
+    for (auto c : vec)
+        ss << (c & 0xff);
+    return ss.str();
+}
+
+std::string vector_to_hex_string(const fc::ecc::compact_signature& v, const size_t s) {
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    for (int i = 0; i < s; i++)
+        ss << std::hex << std::setw(2) << static_cast<int>(v.at(i));
+    return ss.str();
+}
+
+BOOST_AUTO_TEST_CASE( check_sign )
+{ try {
+    
+    private_key_type key = *taiyi::utilities::wif_to_key("5JNHfZYKGaomSFvd4NUdQ9qMcEAC43kujbfjueTHpVapX1Kzq2n");
+    digest_type::encoder enc;
+    fc::raw::pack( enc, char(1) );
+    fc::raw::pack( enc, char(2) );
+    fc::raw::pack( enc, char(3) );
+    auto message = enc.result();
+    wlog("msg=${m}", ("m",message));
+        
+    fc::ecc::compact_signature sign = key.sign_compact(message, fc::ecc::fc_canonical);
+    wlog(vector_to_hex_string(sign, sign.size()));
+        
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( account_create_authorities )
 {
     try

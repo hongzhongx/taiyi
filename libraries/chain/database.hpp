@@ -70,6 +70,9 @@ namespace taiyi { namespace chain {
 
         bool is_producing()const { return _is_producing; }
         void set_producing( bool p ) { _is_producing = p;  }
+        
+        //for test
+        void set_log_hardforks( bool b ) { _log_hardforks = b; }
 
         bool is_pending_tx()const { return _pending_tx_session.valid(); }
         

@@ -227,7 +227,7 @@ namespace taiyi { namespace chain {
         if( !data_dir )
         {
             data_dir = fc::temp_directory( taiyi::utilities::temp_directory_path() );
-            db->_log_hardforks = false;
+            db->set_log_hardforks(false);
             
             idump( (data_dir->path()) );
             
