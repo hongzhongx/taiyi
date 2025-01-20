@@ -39,9 +39,9 @@ BOOST_AUTO_TEST_CASE( account_create_validate )
 
 std::string vector_to_hex_string(const std::vector<char>& vec) {
     std::stringstream ss;
-    ss << std::hex;
+    ss << std::hex << std::setfill('0');
     for (auto c : vec)
-        ss << (c & 0xff);
+        ss << std::hex << std::setw(2) << static_cast<int>(c & 0xff);
     return ss.str();
 }
 
@@ -53,17 +53,49 @@ std::string vector_to_hex_string(const fc::ecc::compact_signature& v, const size
     return ss.str();
 }
 
+std::vector<char> hex_string_to_vector(const string& hex) {
+    size_t ct = hex.size() / 2;
+    std::vector<char> result;
+    result.reserve(ct);
+    string ss = "nn";
+    for (size_t i=0; i<ct; ++i) {
+        ss[0] = hex[2*i];
+        ss[1] = hex[2*i+1];
+        result.push_back((char)std::stoi(ss, 0, 16));
+    }
+    return result;
+}
+
+
 BOOST_AUTO_TEST_CASE( check_sign )
 { try {
     
+    const string rawdata_str = "18dcf0a285365fc58b71f18b3d3fec954aa0c141c44e4e5cb4cf777b9eab274e29080ace1338ab658767011209686f6e677a686f6e670b0000000000000002676f0001055b226e225d00";
+    std::vector<char> rawdata = hex_string_to_vector(rawdata_str);
+    BOOST_REQUIRE( vector_to_hex_string(rawdata) == rawdata_str );
+    
     private_key_type key = *taiyi::utilities::wif_to_key("5JNHfZYKGaomSFvd4NUdQ9qMcEAC43kujbfjueTHpVapX1Kzq2n");
     digest_type::encoder enc;
-    fc::raw::pack( enc, char(1) );
-    fc::raw::pack( enc, char(2) );
-    fc::raw::pack( enc, char(3) );
+    
+#if 0
+    size_t ct = rawdata_str.size() / 2;
+    string ss = "nn";
+    for (size_t i=0; i<ct; ++i) {
+        ss[0] = rawdata_str[2*i];
+        ss[1] = rawdata_str[2*i+1];
+        fc::raw::pack( enc, (char)std::stoi(ss, 0, 16) );
+    }
+#else
+    for (size_t i=0; i<rawdata.size(); ++i) {
+        fc::raw::pack( enc, rawdata[i] );
+    }
+    //fc::raw::pack( enc, rawdata );
+#endif
+    
     auto message = enc.result();
-    wlog("msg=${m}", ("m",message));
-        
+    wlog("hash=${m}", ("m",message));
+    BOOST_REQUIRE( FORMAT_MESSAGE("${m}", ("m",message)) == "3510fa35479794e387a0b6b9a71c0fef4727a85c30aec7c5cc31511d2cddf1f7");
+    
     fc::ecc::compact_signature sign = key.sign_compact(message, fc::ecc::fc_canonical);
     wlog(vector_to_hex_string(sign, sign.size()));
         

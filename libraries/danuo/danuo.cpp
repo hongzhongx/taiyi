@@ -168,34 +168,6 @@ namespace taiyi { namespace danuo {
             return result;
         }
 
-        vector<lua_types> from_variants_to_lua_types(const vector<fc::variant>& value_list) {
-            vector<lua_types> result;
-            for(size_t i=0; i<value_list.size(); i++) {
-                const auto& v = value_list[i];
-                if(v.is_string())
-                    result.push_back(lua_string(v.as_string()));
-                else if(v.is_bool())
-                    result.push_back(lua_bool(v.as_bool()));
-                else if(v.is_double())
-                    result.push_back(lua_number(v.as_double()));
-                else if(v.is_int64())
-                    result.push_back(lua_int(v.as_int64()));
-                else if(v.is_uint64())
-                    result.push_back(lua_int(v.as_uint64()));
-                else if(v.is_array()) {
-                    const auto sub_list = v.as<vector<fc::variant>>();
-                    vector<lua_types> values = from_variants_to_lua_types(sub_list);
-                    lua_table vt;
-                    for(size_t k=0; k<values.size(); k++)
-                        vt.v[lua_key(lua_int(k+1))] = values[k]; //lua 数组下表从1开始
-                    result.push_back(vt);
-                }
-                else
-                    FC_ASSERT(false, "#${i} value type in value list is not supported.", ("i", i));
-            }
-            return result;
-        }
-
         struct op_prototype_visitor
         {
             typedef void result_type;
@@ -1040,7 +1012,7 @@ namespace taiyi { namespace danuo {
             vector<string> results;
             auto info = get_nfa_action_info(actor_info->nfa_id, action);
             if(!info.consequence) {
-                vector<lua_types> lua_value_list = detail::from_variants_to_lua_types(value_list);
+                vector<lua_types> lua_value_list = protocol::from_variants_to_lua_types(value_list);
                 results = my->_remote_api->eval_nfa_action( actor_info->nfa_id, action, lua_value_list );
             }
             else {
@@ -1109,7 +1081,7 @@ namespace taiyi { namespace danuo {
         op.caller = caller;
         op.id = nfa_id;
         op.action = action;
-        op.value_list = detail::from_variants_to_lua_types(value_list);
+        op.value_list = protocol::from_variants_to_lua_types(value_list);
 
         signed_transaction tx;
         tx.operations.push_back(op);

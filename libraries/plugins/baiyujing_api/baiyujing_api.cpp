@@ -87,6 +87,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (get_nfa_history)
                 (get_nfa_action_info)
                 (eval_nfa_action)
+                (eval_nfa_action_with_string_args)
                              
                 (find_actor)
                 (find_actors)
@@ -850,7 +851,40 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
             string action_name = args[1].as< string >();
             vector<lua_types> value_list = args[2].as< vector<lua_types> >();
-                        
+
+            contract_worker worker;
+
+            LuaContext context;
+            _db.initialize_VM_baseENV(context);
+            
+            long long vm_drops = 100000000;
+            string err = worker.eval_nfa_contract_action(nfa, action_name, value_list, vm_drops, true, context, _db);
+
+            vector<string> result;
+            if(err != "") {
+                result.push_back(err);
+            }
+            else {
+                for(auto& temp : worker.get_result().contract_affecteds) {
+                    if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
+                        result.push_back(temp.get<contract_logger>().message);
+                    }
+                }
+            }
+
+            return result;
+        }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, eval_nfa_action_with_string_args )
+        {
+            CHECK_ARG_SIZE( 3 )
+            
+            const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
+            string action_name = args[1].as< string >();
+            string action_parameters_str = args[2].as< string >();
+            fc::variant action_args = fc::json::from_string(action_parameters_str);
+            vector<lua_types> value_list = protocol::from_variants_to_lua_types(action_args.as<fc::variants>());
+
             contract_worker worker;
 
             LuaContext context;
@@ -1126,6 +1160,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (get_nfa_history)
         (get_nfa_action_info)
         (eval_nfa_action)
+        (eval_nfa_action_with_string_args)
                      
         (find_actor)
         (find_actors)

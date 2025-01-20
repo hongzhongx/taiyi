@@ -143,6 +143,14 @@ namespace taiyi { namespace chain {
         FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
         FC_ASSERT(caller.id == nfa->owner_account || caller.id == nfa->active_account, "Can not action NFA not owned or actived by you.");
         
+        vector<lua_types> value_list;
+        if( o.extensions.size() > 0 && o.extensions[0].size() > 0) {
+            fc::variant action_args = fc::json::from_string(o.extensions[0]);
+            value_list = protocol::from_variants_to_lua_types(action_args.as<fc::variants>());
+        }
+        else
+            value_list = o.value_list;
+        
         contract_worker worker;
 
         LuaContext context;
@@ -151,7 +159,7 @@ namespace taiyi { namespace chain {
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        string err = worker.do_nfa_contract_action(*nfa, o.action, o.value_list, vm_drops, true, context, _db);
+        string err = worker.do_nfa_contract_action(*nfa, o.action, value_list, vm_drops, true, context, _db);
         FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
         int64_t used_drops = old_drops - vm_drops;
 

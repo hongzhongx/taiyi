@@ -401,7 +401,8 @@ DEFINE_API_ARGS( list_nfas,                         vector< variant >, vector< a
 DEFINE_API_ARGS( get_nfa_history,                   vector< variant >, get_nfa_history_return_type )
 DEFINE_API_ARGS( get_nfa_action_info,               vector< variant >, api_contract_action_info )
 DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, vector<string> )
-    
+DEFINE_API_ARGS( eval_nfa_action_with_string_args,  vector< variant >, vector<string> )
+
 DEFINE_API_ARGS( find_actor,                        vector< variant >, optional< database_api::api_actor_object > )
 DEFINE_API_ARGS( find_actors,                       vector< variant >, vector< database_api::api_actor_object > )
 DEFINE_API_ARGS( list_actors,                       vector< variant >, vector< database_api::api_actor_object > )
@@ -474,6 +475,7 @@ DEFINE_API_ARGS( find_way_to_zone,                  vector< variant >, database_
             (list_nfas)
             (get_nfa_history)
             (eval_nfa_action)
+            (eval_nfa_action_with_string_args)
             (get_nfa_action_info)
                     
             (find_actor)

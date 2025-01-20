@@ -235,7 +235,7 @@ namespace taiyi { namespace chain {
                 //dead
                 //wlog("actor ${a} is dead!", ("a", actor.name));
             }
-            else {
+            else if(actor.born) {
                 //try grow
                 int should_age = tiandao.v_years - actor.born_vyears;
                 if(actor.age < should_age) {

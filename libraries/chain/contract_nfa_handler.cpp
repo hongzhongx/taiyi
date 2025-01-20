@@ -210,7 +210,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
 
             const auto& parent_nfa = _db.get<nfa_object, by_id>(parent_nfa_id);
-            FC_ASSERT(parent_nfa.owner_account == _caller_account.id, "caller account not the input nfa's owner");
+            FC_ASSERT(parent_nfa.owner_account == _caller_account.id, "caller account not the parent nfa's owner");
                         
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 obj.parent = parent_nfa.id;

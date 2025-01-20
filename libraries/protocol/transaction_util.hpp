@@ -83,7 +83,7 @@ namespace taiyi { namespace protocol {
         {
             TAIYI_ASSERT(s.check_authority(id) ||
                          s.check_authority(get_owner(id)),
-                         tx_missing_active_auth, "Missing Active Authority ${id}",
+                         tx_missing_active_auth, "Missing Active Authority. id=${id}, auth=${auth}, sigs=${sigs}",
                          ("id",id)("auth",get_active(id))("owner",get_owner(id))("sigs", sigs));
         }
         

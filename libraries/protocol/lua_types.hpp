@@ -213,6 +213,8 @@ namespace taiyi { namespace protocol {
             return a.key.which() < b.key.which();
         }
     } lua_key;
+    
+    vector<lua_types> from_variants_to_lua_types(const vector<fc::variant>& value_list);
 
 } } // namespace taiyi::protocol
 

@@ -498,7 +498,8 @@ namespace taiyi { namespace protocol {
         int64_t             id;         ///nfa id
         string              action;     ///action name
         vector<lua_types>   value_list; ///action function parameter value list
-        
+        vector<string>      extensions;
+
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(caller); }
     };
@@ -563,7 +564,7 @@ FC_REFLECT( taiyi::protocol::create_nfa_symbol_operation, (creator)(symbol)(desc
 FC_REFLECT( taiyi::protocol::create_nfa_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::transfer_nfa_operation, (from)(to)(id) )
 FC_REFLECT( taiyi::protocol::approve_nfa_active_operation, (owner)(active_account)(id) )
-FC_REFLECT( taiyi::protocol::action_nfa_operation, (caller)(id)(action)(value_list) )
+FC_REFLECT( taiyi::protocol::action_nfa_operation, (caller)(id)(action)(value_list)(extensions) )
 
 FC_REFLECT( taiyi::protocol::create_actor_talent_rule_operation, (creator)(contract) )
 FC_REFLECT( taiyi::protocol::create_actor_operation, (fee)(creator)(family_name)(last_name) )

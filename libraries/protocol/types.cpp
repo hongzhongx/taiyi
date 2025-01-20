@@ -6,6 +6,8 @@
 #include <fc/exception/exception.hpp>
 #include <fc/io/raw.hpp>
 
+#include "lua_types.hpp"
+
 namespace taiyi { namespace protocol {
 
     public_key_type::public_key_type():key_data(){};
@@ -180,6 +182,34 @@ namespace taiyi { namespace protocol {
             return fc::sha256::hash( chain_id_name.c_str() );
         else
             return fc::sha256();
+    }
+    
+    vector<lua_types> from_variants_to_lua_types(const vector<fc::variant>& value_list) {
+        vector<lua_types> result;
+        for(size_t i=0; i<value_list.size(); i++) {
+            const auto& v = value_list[i];
+            if(v.is_string())
+                result.push_back(lua_string(v.as_string()));
+            else if(v.is_bool())
+                result.push_back(lua_bool(v.as_bool()));
+            else if(v.is_double())
+                result.push_back(lua_number(v.as_double()));
+            else if(v.is_int64())
+                result.push_back(lua_int(v.as_int64()));
+            else if(v.is_uint64())
+                result.push_back(lua_int(v.as_uint64()));
+            else if(v.is_array()) {
+                const auto sub_list = v.as<vector<fc::variant>>();
+                vector<lua_types> values = from_variants_to_lua_types(sub_list);
+                lua_table vt;
+                for(size_t k=0; k<values.size(); k++)
+                    vt.v[lua_key(lua_int(k+1))] = values[k]; //lua 数组下表从1开始
+                result.push_back(vt);
+            }
+            else
+                FC_ASSERT(false, "#${i} value type in value list is not supported.", ("i", i));
+        }
+        return result;
     }
 
 } } // taiyi::protocol
