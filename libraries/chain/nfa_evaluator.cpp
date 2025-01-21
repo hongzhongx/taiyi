@@ -159,7 +159,8 @@ namespace taiyi { namespace chain {
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
-        string err = worker.do_nfa_contract_action(*nfa, o.action, value_list, vm_drops, true, context, _db);
+        vector<lua_types> action_result;
+        string err = worker.do_nfa_contract_action(*nfa, o.action, value_list, action_result, vm_drops, true, context, _db);
         FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
         int64_t used_drops = old_drops - vm_drops;
 

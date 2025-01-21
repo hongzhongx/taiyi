@@ -55,6 +55,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef actor_talent_trigger_operation          legacy_actor_talent_trigger_operation;
     typedef actor_movement_operation                legacy_actor_movement_operation;
     typedef actor_grown_operation                   legacy_actor_grown_operation;
+    typedef narrate_log_operation                   legacy_narrate_log_operation;
 
     struct api_chain_properties
     {
@@ -496,7 +497,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_actor_born_operation,
         legacy_actor_talent_trigger_operation,
         legacy_actor_movement_operation,
-        legacy_actor_grown_operation
+        legacy_actor_grown_operation,
+        legacy_narrate_log_operation
 
     > legacy_operation;
 
@@ -536,6 +538,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const actor_talent_trigger_operation& op )const            { l_op = op; return true; }
         bool operator()( const actor_movement_operation& op )const                  { l_op = op; return true; }
         bool operator()( const actor_grown_operation& op )const                     { l_op = op; return true; }
+        bool operator()( const narrate_log_operation& op )const                     { l_op = op; return true; }
 
         bool operator()( const transfer_operation& op )const
         {

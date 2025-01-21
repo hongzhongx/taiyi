@@ -1949,7 +1949,8 @@ namespace taiyi { namespace xuanpin {
         if(!info.consequence)
         {
             vector<lua_types> lua_value_list = protocol::from_variants_to_lua_types(value_list);
-            return my->_remote_api->eval_nfa_action( nfa_id, action, lua_value_list );
+            auto result = my->_remote_api->eval_nfa_action( nfa_id, action, lua_value_list );
+            return result.narrate_logs;
         }
         else
         {
@@ -1960,8 +1961,8 @@ namespace taiyi { namespace xuanpin {
                 if(result.which() == operation_result::tag<contract_result>::value) {
                     auto cresult = result.get<contract_result>();
                     for(auto& temp : cresult.contract_affecteds) {
-                        if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
-                            logs.push_back(temp.get<contract_logger>().message);
+                        if(temp.which() == contract_affected_type::tag<contract_narrate>::value) {
+                            logs.push_back(temp.get<contract_narrate>().message);
                         }
                     }
                 }

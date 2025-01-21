@@ -196,6 +196,7 @@ namespace taiyi { namespace chain {
 
         //contract handler
         registerFunction("log", &contract_handler::log);
+        registerFunction("narrate", &contract_handler::narrate);
         registerFunction("number_max", &contract_handler::nummax);
         registerFunction("number_min", &contract_handler::nummin);
         registerFunction("integer_max", &contract_handler::integermax);

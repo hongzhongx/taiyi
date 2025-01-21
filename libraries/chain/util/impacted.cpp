@@ -252,6 +252,11 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
 
+        void operator()( const narrate_log_operation& op )
+        {
+            _impacted.insert( op.narrator );
+        }
+
         //void operator()( const operation& op ){}
     };
 

@@ -59,7 +59,7 @@ namespace taiyi { namespace chain {
         long long vm_drops = 1000000;
         //运行主合约获取初始化数据
         const auto& contract = get<contract_object, by_id>(rule.main_contract);
-        lua_table result_table = worker.do_contract_function_return_table(creator, TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, true, context, *this);
+        lua_table result_table = worker.do_contract_function(creator, TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, true, context, *this);
         
         auto it_name = result_table.v.find(lua_types(lua_string("name")));
         FC_ASSERT(it_name != result_table.v.end(), "talent contract init data invalid, need \"name\"");
@@ -328,7 +328,7 @@ namespace taiyi { namespace chain {
                 bool triggered = false;
                 try {
                     auto session = start_undo_session();
-                    lua_table result_table = worker.do_nfa_contract_function_return_table(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+                    lua_table result_table = worker.do_nfa_contract_function(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
                     
                     auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
                     if(it_triggered == result_table.v.end()) {

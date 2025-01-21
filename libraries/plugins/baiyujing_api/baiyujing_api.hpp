@@ -350,6 +350,13 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         account_name_type   owner;
         string              name;
     };
+    
+    struct api_eval_action_return
+    {
+        vector<lua_types>   eval_result;
+        vector<string>      narrate_logs;
+        string              err;
+    };
 
 #define DEFINE_API_ARGS( api_name, arg_type, return_type )  \
     typedef arg_type api_name ## _args;                     \
@@ -400,8 +407,8 @@ DEFINE_API_ARGS( find_nfas,                         vector< variant >, vector< a
 DEFINE_API_ARGS( list_nfas,                         vector< variant >, vector< api_nfa_object > )
 DEFINE_API_ARGS( get_nfa_history,                   vector< variant >, get_nfa_history_return_type )
 DEFINE_API_ARGS( get_nfa_action_info,               vector< variant >, api_contract_action_info )
-DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, vector<string> )
-DEFINE_API_ARGS( eval_nfa_action_with_string_args,  vector< variant >, vector<string> )
+DEFINE_API_ARGS( eval_nfa_action,                   vector< variant >, api_eval_action_return )
+DEFINE_API_ARGS( eval_nfa_action_with_string_args,  vector< variant >, api_eval_action_return )
 
 DEFINE_API_ARGS( find_actor,                        vector< variant >, optional< database_api::api_actor_object > )
 DEFINE_API_ARGS( find_actors,                       vector< variant >, vector< database_api::api_actor_object > )
@@ -540,3 +547,5 @@ FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_contract_action_info, (exist)(consequence) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_simple_actor_object, (owner)(name) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_eval_action_return, (eval_result)(narrate_logs)(err) )

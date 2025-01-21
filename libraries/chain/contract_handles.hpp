@@ -207,6 +207,7 @@ namespace taiyi { namespace chain {
         void assert_contract_data_size();
         bool is_owner();
         void log(string message);
+        void narrate(string message, bool time_prefix = false);
         int contract_random();
         void set_permissions_flag(bool flag);
         void set_invoke_share_percent(uint32_t percent);

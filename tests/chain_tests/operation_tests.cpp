@@ -1593,6 +1593,8 @@ BOOST_AUTO_TEST_CASE( custom_json_rate_limit )
         
         ACTORS( (alice)(bob)(sam) )
         
+        db->set_producing(true);
+        
         BOOST_TEST_MESSAGE( "--- Testing 5 custom json ops as separate transactions" );
         
         custom_json_operation op;
@@ -1657,6 +1659,8 @@ BOOST_AUTO_TEST_CASE( custom_json_rate_limit )
         
         sign( tx, sam_private_key );
         TAIYI_REQUIRE_THROW( db->push_transaction( tx, 0 ), plugin_exception );
+
+        db->set_producing(false);
     }
     FC_LOG_AND_RETHROW()
 }

@@ -75,7 +75,9 @@ namespace taiyi { namespace protocol {
         actor_born_operation,               //41
         actor_talent_trigger_operation,     //42
         actor_movement_operation,           //43
-        actor_grown_operation               //44
+        actor_grown_operation,              //44
+    
+        narrate_log_operation               //45
 
     > operation;
 

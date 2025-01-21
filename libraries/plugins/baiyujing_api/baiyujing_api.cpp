@@ -852,22 +852,19 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             string action_name = args[1].as< string >();
             vector<lua_types> value_list = args[2].as< vector<lua_types> >();
 
+            api_eval_action_return result;
             contract_worker worker;
 
             LuaContext context;
             _db.initialize_VM_baseENV(context);
             
             long long vm_drops = 100000000;
-            string err = worker.eval_nfa_contract_action(nfa, action_name, value_list, vm_drops, true, context, _db);
+            result.err = worker.eval_nfa_contract_action(nfa, action_name, value_list, result.eval_result, vm_drops, true, context, _db);
 
-            vector<string> result;
-            if(err != "") {
-                result.push_back(err);
-            }
-            else {
+            if(result.err == "") {
                 for(auto& temp : worker.get_result().contract_affecteds) {
-                    if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
-                        result.push_back(temp.get<contract_logger>().message);
+                    if(temp.which() == contract_affected_type::tag<contract_narrate>::value) {
+                        result.narrate_logs.push_back(temp.get<contract_narrate>().message);
                     }
                 }
             }
@@ -885,22 +882,19 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             fc::variant action_args = fc::json::from_string(action_parameters_str);
             vector<lua_types> value_list = protocol::from_variants_to_lua_types(action_args.as<fc::variants>());
 
+            api_eval_action_return result;
             contract_worker worker;
 
             LuaContext context;
             _db.initialize_VM_baseENV(context);
             
             long long vm_drops = 100000000;
-            string err = worker.eval_nfa_contract_action(nfa, action_name, value_list, vm_drops, true, context, _db);
+            result.err = worker.eval_nfa_contract_action(nfa, action_name, value_list, result.eval_result, vm_drops, true, context, _db);
 
-            vector<string> result;
-            if(err != "") {
-                result.push_back(err);
-            }
-            else {
+            if(result.err == "") {
                 for(auto& temp : worker.get_result().contract_affecteds) {
-                    if(temp.which() == contract_affected_type::tag<contract_logger>::value) {
-                        result.push_back(temp.get<contract_logger>().message);
+                    if(temp.which() == contract_affected_type::tag<contract_narrate>::value) {
+                        result.narrate_logs.push_back(temp.get<contract_narrate>().message);
                     }
                 }
             }

@@ -287,6 +287,32 @@ namespace taiyi { namespace chain {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
     }
+    //=========================================================================
+    void contract_handler::narrate(string message, bool time_prefix)
+    {
+        try
+        {
+            const auto& tiandao = db.get_tiandao_properties();
+
+            if(time_prefix)
+                message = FORMAT_MESSAGE("&YEL&${y}年${m}月&NOR&，${str}", ("y", tiandao.v_years)("m", tiandao.v_months)("str", message));
+            
+            //for dubug
+            wlog(message);
+            
+            contract_narrate narrator(caller.name);
+            narrator.message = message;
+            result.contract_affecteds.push_back(std::move(narrator));
+            
+            //push event message
+            db.push_virtual_operation( narrate_log_operation( db.get_account(TAIYI_DANUO_ACCOUNT).name, tiandao.v_years, tiandao.v_months, tiandao.v_times, message ) );
+
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
     //=============================================================================
     lua_Number contract_handler::nummax()
     {

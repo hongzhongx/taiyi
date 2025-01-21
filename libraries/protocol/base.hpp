@@ -79,12 +79,21 @@ namespace taiyi { namespace protocol {
         contract_logger(account_name_type aft) : affected_account(aft) {}
     } contract_logger;
 
+    typedef struct contract_narrate
+    {
+        account_name_type affected_account;
+        string message;
+        contract_narrate() {}
+        contract_narrate(account_name_type aft) : affected_account(aft) {}
+    } contract_narrate;
+
     struct contract_result;
     typedef fc::static_variant<
         asset_affected,
         nfa_affected,
         contract_memo_message,
         contract_logger,
+        contract_narrate,
         contract_result
     > contract_affected_type;
 
@@ -164,6 +173,7 @@ FC_REFLECT_DERIVED(taiyi::protocol::asset_result, (taiyi::protocol::base_result)
 FC_REFLECT(taiyi::protocol::asset_affected, (affected_account)(affected_asset))
 FC_REFLECT(taiyi::protocol::contract_memo_message, (affected_account)(memo))
 FC_REFLECT(taiyi::protocol::contract_logger, (affected_account)(message))
+FC_REFLECT(taiyi::protocol::contract_narrate, (affected_account)(message))
 FC_REFLECT_DERIVED(taiyi::protocol::contract_result, (taiyi::protocol::base_result), (contract_name)(contract_affecteds)(existed_pv)(process_value)(relevant_datasize))
 FC_REFLECT_DERIVED(taiyi::protocol::logger_result, (taiyi::protocol::base_result), (message))
 FC_REFLECT_DERIVED(taiyi::protocol::error_result, (taiyi::protocol::base_result), (error_code)(message))
