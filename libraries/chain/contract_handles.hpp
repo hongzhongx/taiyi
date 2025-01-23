@@ -150,7 +150,8 @@ namespace taiyi { namespace chain {
 
         void enable_tick();
         void disable_tick();
-        void convert_qi_to_resource(int64_t amount, string resource_symbol_name);
+        void convert_qi_to_resource(int64_t amount, const string& resource_symbol_name);
+        void convert_resource_to_qi(int64_t amount, const string& resource_symbol_name);
         void add_child(int64_t nfa_id);
         void add_to_parent(int64_t parent_nfa_id);
         void remove_from_parent();

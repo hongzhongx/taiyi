@@ -164,7 +164,7 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.id );
         }
 
-        void operator()( const nfa_convert_qi_to_resources_operation& op )
+        void operator()( const nfa_convert_resources_operation& op )
         {
             _impacted.insert( op.owner ); //至少要有一个受影响的账号，否则历史记录不会记录
             _impacted_nfas.insert( op.nfa );

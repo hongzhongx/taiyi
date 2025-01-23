@@ -140,8 +140,8 @@ namespace taiyi { namespace chain {
         const auto& caller = _db.get_account( o.caller );
 
         const auto* nfa = _db.find<nfa_object, by_id>(o.id);
-        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found.", ("i", o.id));
-        FC_ASSERT(caller.id == nfa->owner_account || caller.id == nfa->active_account, "Can not action NFA not owned or actived by you.");
+        FC_ASSERT(nfa != nullptr, "#t&&y#序号为${i}的实体不存在#a&&i#", ("i", o.id));
+        FC_ASSERT(caller.id == nfa->owner_account || caller.id == nfa->active_account, "#t&&y#没有权限操作实体#a&&i#");
         
         vector<lua_types> value_list;
         if( o.extensions.size() > 0 && o.extensions[0].size() > 0) {
@@ -165,7 +165,7 @@ namespace taiyi { namespace chain {
         int64_t used_drops = old_drops - vm_drops;
 
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( caller.qi.amount.value >= used_qi, "caller account does not have enough qi to action nfa." );
+        FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
         
         //reward contract owner
         const auto& contract = _db.get<contract_object, by_id>(nfa->main_contract);

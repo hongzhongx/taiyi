@@ -294,13 +294,13 @@ namespace taiyi { namespace chain {
         //check existence and consequence type
         const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
         if(contract_ptr == nullptr)
-            return "NFA main contract not exist";
+            return "NFA main contract not exist(#t&&y#实体缺乏内禀天道#a&&i#)";
 
         auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
         if(abi_itr == contract_ptr->contract_ABI.end())
-            return FORMAT_MESSAGE("action \"${a}\" is not exist", ("a", action));
+            return FORMAT_MESSAGE("#t&&y#实体不具备名为\"${a}\"的行为#a&&i#", ("a", action));
         if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
-            return FORMAT_MESSAGE("action \"${a}\" defination is invalid", ("a", action));;
+            return FORMAT_MESSAGE("#t&&y#实体的行为\"${a}\"没有定义好#a&&i#", ("a", action));;
 
         lua_map action_def = abi_itr->second.get<lua_table>().v;
         auto def_itr = action_def.find(lua_types(lua_string("consequence")));
@@ -328,13 +328,13 @@ namespace taiyi { namespace chain {
         //check existence and consequence type
         const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
         if(contract_ptr == nullptr)
-            return "NFA main contract not exist";
+            return "NFA main contract not exist(#t&&y#实体缺乏内禀天道#a&&i#)";
         
         auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
         if(abi_itr == contract_ptr->contract_ABI.end())
-            return FORMAT_MESSAGE("action \"${a}\" is not exist", ("a", action));
+            return FORMAT_MESSAGE("#t&&y#实体不具备名为\"${a}\"的行为#a&&i#", ("a", action));
         if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
-            return FORMAT_MESSAGE("action \"${a}\" defination is invalid", ("a", action));;
+            return FORMAT_MESSAGE("#t&&y#实体的行为\"${a}\"没有定义好#a&&i#", ("a", action));;
         
         lua_map action_def = abi_itr->second.get<lua_table>().v;
         auto def_itr = action_def.find(lua_types(lua_string("consequence")));
@@ -371,11 +371,9 @@ namespace taiyi { namespace chain {
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
             auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
-            FC_ASSERT(abi_itr != contract.contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
+            FC_ASSERT(abi_itr != contract.contract_ABI.end(), "${f} not found, maybe a internal function(#t&&y#内禀天道没有对应行为#a&&i#)", ("f", function_name));
             if(!abi_itr->second.get<lua_function>().is_var_arg)
-                FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(),
-                          "input values count is ${n}, but ${f}`s parameter list is ${p}...",
-                          ("n", value_list.size())("f", function_name)("p", abi_itr->second.get<lua_function>().arglist));
+                FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(), "#t&&y#行为输入参数数量错误，输入了${n}个参数，但是行为“${f}”的参数列表是${p}#a&&i#", ("n", value_list.size())("f", function_name)("p", abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
             
             contract_base_info cbi(db, context, contract_owner, contract.name, caller_account.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
@@ -413,13 +411,27 @@ namespace taiyi { namespace chain {
             }
             catch (...)
             {
-                error_message = lua_string(" Unexpected errors ");
+                error_message = lua_string("未知错误");
             }
             lua_pop(context.mState, -1);
             context.close_sandbox(name);
-            if (err)
-                FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
-            
+
+            if (err) {
+                if(error_message.which() == lua_types::tag<lua_string>::value) {
+                    //对于合约中的assert等触发的错误信息，通过一个特殊编码返回，便于特定客户端（如danuo）能识别解析出来
+                    string es = error_message.get<lua_string>().v;
+                    size_t p = es.find(": "); //hacked lua error format
+                    if(p != string::npos) {
+                        string marked_es = FORMAT_MESSAGE("${s1}#t&&y#${s2}#a&&i#", ("s1", es.substr(0, p+2))("s2", es.substr(p+2)));
+                        FC_THROW("Try the contract execution failure, ${m}", ("m", marked_es));
+                    }
+                    else
+                        FC_THROW("Try the contract resolution execution failure, ${m}", ("m", error_message));
+                }
+                else
+                    FC_THROW("Try the contract resolution execution failure, ${m}", ("m", error_message));
+            }
+
             ch.assert_contract_data_size();
             
             for(auto& temp : result.contract_affecteds)

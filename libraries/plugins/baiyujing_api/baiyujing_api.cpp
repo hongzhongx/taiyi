@@ -898,6 +898,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                     }
                 }
             }
+            else {
+                result.narrate_logs.push_back(result.err);
+            }
 
             return result;
         }

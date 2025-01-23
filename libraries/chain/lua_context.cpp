@@ -280,6 +280,7 @@ namespace taiyi { namespace chain {
         registerFunction("get_resources", &contract_nfa_handler::get_resources);
         registerFunction("get_materials", &contract_nfa_handler::get_materials);        
         registerFunction("convert_qi_to_resource", &contract_nfa_handler::convert_qi_to_resource);
+        registerFunction("convert_resource_to_qi", &contract_nfa_handler::convert_resource_to_qi);
         registerFunction("add_child", &contract_nfa_handler::add_child);
         registerFunction("add_to_parent", &contract_nfa_handler::add_to_parent);
         registerFunction("remove_from_parent", &contract_nfa_handler::remove_from_parent);

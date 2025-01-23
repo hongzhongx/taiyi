@@ -62,7 +62,7 @@ namespace taiyi { namespace protocol {
         return_qi_delegation_operation,     //31
         producer_reward_operation,          //32
     
-        nfa_convert_qi_to_resources_operation,  //33
+        nfa_convert_resources_operation,    //33
         nfa_trasfer_operation,              //34
         nfa_deposit_withdraw_operation,     //35
         reward_feigang_operation,           //36

@@ -49,16 +49,17 @@ namespace taiyi { namespace protocol {
         
     };
     
-    struct nfa_convert_qi_to_resources_operation : public virtual_operation
+    struct nfa_convert_resources_operation : public virtual_operation
     {
-        nfa_convert_qi_to_resources_operation(){}
-        nfa_convert_qi_to_resources_operation( const int64_t& n, const account_name_type& o, const asset& q, const asset& r )
-            : nfa( n ), owner( o ), qi_converted( q ), new_resource( r ) {}
+        nfa_convert_resources_operation(){}
+        nfa_convert_resources_operation(const int64_t& n, const account_name_type& o, const asset& q, const asset& r, const bool& _isqtor)
+            : nfa( n ), owner( o ), qi( q ), resource( r ), is_qi_to_resource(_isqtor) {}
         
         int64_t             nfa;
         account_name_type   owner;
-        asset               qi_converted;
-        asset               new_resource;
+        asset               qi;
+        asset               resource;
+        bool                is_qi_to_resource;
     };
 
     struct nfa_trasfer_operation : public virtual_operation
@@ -234,7 +235,7 @@ FC_REFLECT( taiyi::protocol::fill_qi_withdraw_operation, (from_account)(to_accou
 FC_REFLECT( taiyi::protocol::hardfork_operation, (hardfork_id) )
 FC_REFLECT( taiyi::protocol::return_qi_delegation_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(qi) )
-FC_REFLECT( taiyi::protocol::nfa_convert_qi_to_resources_operation, (nfa)(owner)(qi_converted)(new_resource) )
+FC_REFLECT( taiyi::protocol::nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
 FC_REFLECT( taiyi::protocol::nfa_trasfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
 FC_REFLECT( taiyi::protocol::reward_feigang_operation, (account)(qi) )
