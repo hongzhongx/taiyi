@@ -339,6 +339,11 @@ namespace taiyi { namespace chain {
         return db.head_block_time().sec_since_epoch();
     }
     //=============================================================================
+    uint32_t contract_handler::head_block_num()
+    {
+        return db.head_block_num();
+    }
+    //=============================================================================
     int64_t contract_handler::generate_hash(uint32_t offset)
     {
         auto hblock_id = db.head_block_id();

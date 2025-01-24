@@ -193,6 +193,7 @@ namespace taiyi { namespace chain {
         registerMember("v_years", &contract_tiandao_property::v_years);
         registerMember("v_months", &contract_tiandao_property::v_months);
         registerMember("v_times", &contract_tiandao_property::v_times);
+        registerMember("v_1day_blocks", &contract_tiandao_property::v_1day_blocks);
 
         //contract handler
         registerFunction("log", &contract_handler::log);
@@ -202,6 +203,7 @@ namespace taiyi { namespace chain {
         registerFunction("integer_max", &contract_handler::integermax);
         registerFunction("integer_min", &contract_handler::integermin);
         registerFunction("time", &contract_handler::head_block_time);
+        registerFunction("block", &contract_handler::head_block_num);
         registerFunction("hash256", &contract_handler::hash256);
         registerFunction("hash512", &contract_handler::hash512);
         registerFunction("generate_hash", &contract_handler::generate_hash);        
