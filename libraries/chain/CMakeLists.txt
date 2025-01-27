@@ -39,11 +39,13 @@ add_library( taiyi_chain
              zone_evaluator.cpp
              database_zone.cpp
              contract_zone_handler.cpp
+             taiyi_geography.cpp
 
              database_cultivation.cpp
 
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp
+             util/name_generator.cpp
 
              ${HEADERS}
            )

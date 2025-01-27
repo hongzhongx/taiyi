@@ -73,7 +73,7 @@ namespace taiyi { namespace chain {
         return fc::raw::pack_size(nfa_symbol_obj);
     }
     //=========================================================================
-    const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context)
+    const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa)
     {
         const auto& caller = creator;
         
@@ -106,18 +106,24 @@ namespace taiyi { namespace chain {
         vector<lua_types> value_list;
         
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
-        long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long old_drops = (caller_nfa ? caller_nfa->qi.amount.value : caller.qi.amount.value) / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, reset_vm_memused, context, *this);
         int64_t used_drops = old_drops - vm_drops;
         
         size_t new_state_size = fc::raw::pack_size(nfa);
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( caller.qi.amount.value >= used_qi, "Creator account does not have enough qi to create nfa." );
+        if(caller_nfa)
+            FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
+        else
+            FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以创建新实体" );
         
         //reward contract owner
         const auto& contract_owner = get<account_object, by_id>(contract.owner);
-        reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+        if(caller_nfa)
+            reward_feigang(contract_owner, *caller_nfa, asset(used_qi, QI_SYMBOL));
+        else
+            reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
                         
         //init nfa from result table
         modify(nfa, [&](nfa_object& obj) {

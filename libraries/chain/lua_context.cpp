@@ -248,6 +248,7 @@ namespace taiyi { namespace chain {
         registerFunction("born_actor", &contract_handler::born_actor);
         registerFunction("move_actor", &contract_handler::move_actor);
         registerFunction("exploit_zone", &contract_handler::exploit_zone);
+        registerFunction("break_new_zone", &contract_handler::break_new_zone);
         registerFunction("get_tiandao_property", &contract_handler::get_tiandao_property);
         registerFunction("create_cultivation", &contract_handler::create_cultivation);
         registerFunction("participate_cultivation", &contract_handler::participate_cultivation);

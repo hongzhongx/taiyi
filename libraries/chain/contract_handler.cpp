@@ -16,6 +16,9 @@
 #include <chain/lua_context.hpp>
 
 #include <chain/contract_handles.hpp>
+#include <chain/taiyi_geography.hpp>
+
+#include <chain/util/name_generator.hpp>
 
 namespace taiyi { namespace chain {
     
@@ -1477,17 +1480,17 @@ namespace taiyi { namespace chain {
         try
         {
             const auto& from_zone_nfa = db.get<nfa_object, by_id>(from_zone_nfa_id);
-            FC_ASSERT(from_zone_nfa.owner_account == caller.id || from_zone_nfa.active_account == caller.id, "caller account not the from zone nfa #${z}'s owner or active operator", ("z", from_zone_nfa));
             const auto& to_zone_nfa = db.get<nfa_object, by_id>(to_zone_nfa_id);
-            FC_ASSERT(to_zone_nfa.owner_account == caller.id || to_zone_nfa.active_account == caller.id, "caller account not the to zone nfa #${z}'s owner or active operator", ("z", to_zone_nfa_id));
+            if(from_zone_nfa.owner_account != caller.id && from_zone_nfa.active_account != caller.id && to_zone_nfa.owner_account != caller.id && to_zone_nfa.active_account != caller.id)
+                FC_ASSERT(false, "没有权限操作区域");
 
             const auto* from_zone = db.find<zone_object, by_nfa_id>(from_zone_nfa_id);
-            FC_ASSERT(from_zone != nullptr, "from nfa #${z} is not a zone", ("z", from_zone_nfa_id));
+            FC_ASSERT(from_zone != nullptr, "实体${z}不是一个区域", ("z", from_zone_nfa_id));
             const auto* to_zone = db.find<zone_object, by_nfa_id>(to_zone_nfa_id);
-            FC_ASSERT(to_zone != nullptr, "to nfa #${z} is not a zone", ("z", to_zone_nfa_id));
+            FC_ASSERT(to_zone != nullptr, "实体${z}不是一个区域", ("z", to_zone_nfa_id));
 
             const auto* check_connect = db.find<zone_connect_object, by_zone_from>( boost::make_tuple(from_zone->id, to_zone->id) );
-            FC_ASSERT( check_connect == nullptr, "Connection from \"${a}\" to \"${b}\" is already exist.", ("a", from_zone->name)("b", to_zone->name) );
+            FC_ASSERT( check_connect == nullptr, "从&YEL&${a}&NOR&到&YEL&${b}&NOR&之间的连接已经存在", ("a", from_zone->name)("b", to_zone->name) );
             
             const auto& tiandao = db.get_tiandao_properties();
 
@@ -1495,10 +1498,10 @@ namespace taiyi { namespace chain {
             std::set<zone_id_type> connected_zones;
             uint max_num = tiandao.zone_type_connection_max_num_map.at(from_zone->type);
             get_connected_zones(*from_zone, connected_zones, db);
-            FC_ASSERT(connected_zones.size() < max_num || connected_zones.find(to_zone->id) != connected_zones.end(), "The \"from zone\"'s connections exceed the limit.");
+            FC_ASSERT(connected_zones.size() < max_num || connected_zones.find(to_zone->id) != connected_zones.end(), "区域&YEL&${z}&NOR&的连接已经存在或者达到上限", ("z", from_zone->name));
             connected_zones.clear();
             max_num = tiandao.zone_type_connection_max_num_map.at(to_zone->type);
-            FC_ASSERT(connected_zones.size() < max_num || connected_zones.find(from_zone->id) != connected_zones.end(), "The \"to zone\"'s connections exceed the limit.");
+            FC_ASSERT(connected_zones.size() < max_num || connected_zones.find(from_zone->id) != connected_zones.end(), "区域&YEL&${z}&NOR&的连接已经存在或者达到上限", ("z", to_zone->name));
 
             //create connection
             db.create< zone_connect_object >( [&]( zone_connect_object& o ) {
@@ -1621,6 +1624,8 @@ namespace taiyi { namespace chain {
                 return FORMAT_MESSAGE("名为${n}的角色不存在", ("n", actor_name));
             if(!actor->born)
                 return FORMAT_MESSAGE("${a}还未出生", ("a", actor_name));
+            if(actor->health <= 0)
+                return FORMAT_MESSAGE("${a}已经去世了", ("a", actor_name));
 
             const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
             if(actor_nfa.owner_account != caller.id && actor_nfa.active_account != caller.id)
@@ -1667,6 +1672,7 @@ namespace taiyi { namespace chain {
         return "";
     }
     //=========================================================================
+    //返回错误信息
     string contract_handler::exploit_zone(const string& actor_name, const string& zone_name)
     {
         try
@@ -1676,6 +1682,8 @@ namespace taiyi { namespace chain {
                 return FORMAT_MESSAGE("名为${n}的角色不存在", ("n", actor_name));
             if(!actor->born)
                 return FORMAT_MESSAGE("${a}还未出生", ("a", actor_name));
+            if(actor->health <= 0)
+                return FORMAT_MESSAGE("${a}已经去世了", ("a", actor_name));
 
             const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
             if(actor_nfa.owner_account != caller.id && actor_nfa.active_account != caller.id)
@@ -1707,6 +1715,90 @@ namespace taiyi { namespace chain {
         }
         
         return "";
+    }
+    //=========================================================================
+    //返回新区域名称
+    string contract_handler::break_new_zone(const string& actor_name)
+    {
+        try
+        {
+            const auto* actor = db.find<actor_object, by_name>(actor_name);
+            FC_ASSERT(actor != nullptr, "名为${n}的角色不存在", ("n", actor_name));
+            FC_ASSERT(actor->born, "${a}还未出生", ("a", actor_name));
+            FC_ASSERT(actor->health > 0, "${a}已经去世了", ("a", actor_name));
+
+            const auto& actor_nfa = db.get<nfa_object, by_id>(actor->nfa_id);
+            FC_ASSERT(actor_nfa.owner_account == caller.id || actor_nfa.active_account == caller.id, "无权操作角色");
+
+            const auto& current_zone = db.get< zone_object, by_id >(actor->location);
+                    
+            int take_days = 1;
+            int64_t take_qi = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
+            FC_ASSERT(take_qi <= actor_nfa.qi.amount.value, "需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_qi)("t", take_days)("c", actor_nfa.qi.amount.value));
+            //reward take_qi to treasury
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
+
+            // 只能在自然地区发现新的地区
+            if(current_zone.type >= _NATURE_ZONE_TYPE_NUM)
+                return "";
+
+            const auto& tiandao = db.get_tiandao_properties();
+            std::set<zone_id_type> connected_zones;
+            uint max_num = tiandao.zone_type_connection_max_num_map.at(current_zone.type);
+            get_connected_zones(current_zone, connected_zones, db);
+            
+            if(connected_zones.size() >= max_num)
+                return "";
+
+            auto hblock_id = db.head_block_id();
+            uint32_t seed = hblock_id._hash[4];
+
+            if((hasher::hash( seed + actor_nfa.id + 13463) % 100) < 90)
+                return "";
+
+            const auto& nature_places = g_get_nature_places();
+            const auto& place_def = nature_places[hasher::hash( seed + actor_nfa.id + 12527) % nature_places.size()];
+            std::string new_name = g_generate_location_name(hasher::hash( seed + actor_nfa.id + 7177) % RARITY_VALUE_COMMON, seed + actor_nfa.id, place_def.kind);
+            if( db.find< zone_object, by_name >( new_name ) != nullptr)
+                return ""; //名称已经存在
+            
+            const auto& creator = caller;
+            
+            //先创建NFA
+            string nfa_symbol_name = "nfa.zone.default";
+            const auto& nfa_symbol = db.get<nfa_symbol_object, by_symbol>(nfa_symbol_name);
+            
+            const auto* current_trx = db.get_current_trx_ptr();
+            FC_ASSERT(current_trx);
+            const flat_set<public_key_type>& sigkeys = current_trx->get_signature_keys(db.get_chain_id(), fc::ecc::fc_canonical);
+            
+            LuaContext context;
+            db.initialize_VM_baseENV(context);
+            
+            const auto& new_nfa = db.create_nfa(creator, nfa_symbol, sigkeys, true, context, &actor_nfa);
+            
+            //创建一个新区域
+            const auto& new_zone = db.create< zone_object >( [&]( zone_object& zone ) {
+                E_ZONE_TYPE type = place_def.types[hasher::hash( seed + actor_nfa.id + 13691) % place_def.types.size()];
+                db.initialize_zone_object( zone, new_name, new_nfa, type);
+            });
+            
+            //create zone connect
+            db.create< zone_connect_object >( [&]( zone_connect_object& o ) {
+                o.from = current_zone.id;
+                o.to = new_zone.id;
+            });
+            db.create< zone_connect_object >( [&]( zone_connect_object& o ) {
+                o.from = new_zone.id;
+                o.to = current_zone.id;
+            });
+            
+            return new_name;
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
     }
     //=========================================================================
     int64_t contract_handler::create_cultivation(int64_t nfa_id, const lua_map& beneficiary_nfa_ids, const lua_map& beneficiary_shares, uint64_t prepare_time_seconds)

@@ -125,13 +125,13 @@ namespace taiyi { namespace chain {
         
         //init connection max number map
         for(int t = 0; t<_ZONE_TYPE_NUM; t++)
-            tiandao.zone_type_connection_max_num_map[(E_ZONE_TYPE)t] = 3;
+            tiandao.zone_type_connection_max_num_map[(E_ZONE_TYPE)t] = 4;
         tiandao.zone_type_connection_max_num_map[DONGXUE] = 1;
         tiandao.zone_type_connection_max_num_map[XIAGU] = 2;
 
-        tiandao.zone_type_connection_max_num_map[CUNZHUANG] = 4;
-        tiandao.zone_type_connection_max_num_map[GUANSAI] = 2;
-        tiandao.zone_type_connection_max_num_map[SHIZHEN] = 5;
+        tiandao.zone_type_connection_max_num_map[CUNZHUANG] = 5;
+        tiandao.zone_type_connection_max_num_map[GUANSAI] = 4;
+        tiandao.zone_type_connection_max_num_map[SHIZHEN] = 6;
         tiandao.zone_type_connection_max_num_map[DUHUI] = 8;
     }
     //=============================================================================

@@ -181,7 +181,7 @@ namespace taiyi { namespace chain {
         const account_object&  get_account(  const account_name_type& name )const;
         const account_object*  find_account( const account_name_type& name )const;
 
-        const nfa_object& create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context);
+        const nfa_object& create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa = 0);
         
         const dynamic_global_property_object&  get_dynamic_global_properties()const;
         const node_property_object&            get_node_properties()const;
