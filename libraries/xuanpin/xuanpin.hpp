@@ -654,7 +654,8 @@ namespace taiyi { namespace xuanpin {
         //contracts
         baiyujing_api::legacy_signed_transaction create_contract(const account_name_type& owner, const string& name, const public_key_type& contract_authority, const string& data, bool broadcast);
         baiyujing_api::legacy_signed_transaction create_contract_from_file(const account_name_type& owner, const string& name, const public_key_type&  contract_authority, const string& filename, bool broadcast);
-        
+        void get_contract_source_code(const string& name) const;
+
         baiyujing_api::legacy_signed_transaction revise_contract(const account_name_type& reviser, const string& name, const string& data, bool broadcast);
         baiyujing_api::legacy_signed_transaction revise_contract_from_file(const account_name_type& reviser, const string& name, const string& filename, bool broadcast);
         
@@ -866,6 +867,7 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (revise_contract)
     (revise_contract_from_file)
     (call_contract_function)
+    (get_contract_source_code)
        
     //nfa
     (create_nfa_symbol)

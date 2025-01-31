@@ -1830,6 +1830,14 @@ namespace taiyi { namespace xuanpin {
 
         return create_contract(owner, name, contract_authority, contract_data, broadcast);
     } FC_CAPTURE_AND_RETHROW( (owner)(name)(contract_authority)(filename) ) }
+    
+    void xuanpin_api::get_contract_source_code(const string& name) const
+    {
+        string code = "\n\n";
+        code += my->_remote_api->get_contract_source_code(name);
+        code += "\n";
+        ilog(code);
+    }
 
     baiyujing_api::legacy_signed_transaction xuanpin_api::call_contract_function(const account_name_type& account, const string& contract_name, const string& function_name, const vector<fc::variant>& value_list, bool broadcast)
     { try {

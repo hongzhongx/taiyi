@@ -76,6 +76,7 @@ namespace taiyi { namespace xuanpin {
         database_api::find_way_to_zone_return find_way_to_zone(const string&, const string&) const { FC_ASSERT( false ); }
         vector< database_api::api_zone_object > find_zones_by_name( vector< string > ) { FC_ASSERT( false ); }
         database_api::api_tiandao_property_object get_tiandao_properties() const { FC_ASSERT( false ); }
+        string get_contract_source_code(const string&) const { FC_ASSERT( false ); }
     };
 
 } } //taiyi::xuanpin
@@ -142,4 +143,5 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (find_way_to_zone)
     (find_zones_by_name)
     (get_tiandao_properties)
+    (get_contract_source_code)
 )

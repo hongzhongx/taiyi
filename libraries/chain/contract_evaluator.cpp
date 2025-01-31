@@ -86,7 +86,13 @@ namespace taiyi { namespace chain {
         _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), reviser, asset(used_qi, QI_SYMBOL));
 
         const auto& old_code_bin_object = _db.get<contract_bin_code_object, by_id>(old_contract.lua_code_b_id);
-        _db.modify(old_code_bin_object, [&](contract_bin_code_object&cbo) { cbo.lua_code_b = lua_code_b; });
+        _db.modify(old_code_bin_object, [&](contract_bin_code_object&cbo) {
+            cbo.lua_code_b = lua_code_b;
+#ifndef IS_LOW_MEM
+            cbo.source_code = o.data;
+#endif
+        });
+        
         string previous_version = old_contract.current_version.str();
         _db.modify(old_contract, [&](contract_object &c) {
             c.current_version = _db.get_current_trx();

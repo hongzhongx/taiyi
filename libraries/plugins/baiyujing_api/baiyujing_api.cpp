@@ -105,6 +105,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (list_to_zones_by_from)
                 (list_from_zones_by_to)
                 (find_way_to_zone)
+                             
+                (get_contract_source_code)
             )
             
             void on_post_apply_block( const signed_block& b );
@@ -1010,10 +1012,27 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
         DEFINE_API_IMPL( baiyujing_api_impl, get_tiandao_properties )
         {
-           CHECK_ARG_SIZE( 0 )
-           get_tiandao_properties_return tiandao = _database_api->get_tiandao_properties( {} );
+            CHECK_ARG_SIZE( 0 )
+            get_tiandao_properties_return tiandao = _database_api->get_tiandao_properties( {} );
 
-           return tiandao;
+            return tiandao;
+        }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, get_contract_source_code )
+        {
+#ifndef IS_LOW_MEM
+            CHECK_ARG_SIZE( 1 )
+            
+            const auto* contract_ptr = _db.find<chain::contract_object, chain::by_name>( args[0].as< string >() );
+            if(contract_ptr == nullptr)
+                return "";
+
+            const auto& contract_bin_code = _db.get<chain::contract_bin_code_object, chain::by_contract_id>(contract_ptr->id);
+            return contract_bin_code.source_code;
+#else
+            FC_ASSERT(false, "not support while node compiling with IS_LOW_MEM");
+            return "";
+#endif
         }
 
         void baiyujing_api_impl::on_post_apply_block( const signed_block& b )
@@ -1175,6 +1194,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (list_to_zones_by_from)
         (list_from_zones_by_to)
         (find_way_to_zone)
+                     
+        (get_contract_source_code)
     )
 
 } } } // taiyi::plugins::baiyujing_api

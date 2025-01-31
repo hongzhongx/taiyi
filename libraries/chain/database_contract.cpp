@@ -129,6 +129,9 @@ namespace taiyi { namespace chain {
         const auto& code_bin_object = create<contract_bin_code_object>([&](contract_bin_code_object& cbo) {
             cbo.contract_id = contract.id;
             cbo.lua_code_b = lua_code_b;
+#ifndef IS_LOW_MEM
+            cbo.source_code = contract_data;
+#endif
         });
         
         modify(contract, [&](contract_object& c) {

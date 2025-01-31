@@ -426,6 +426,8 @@ DEFINE_API_ARGS( list_zones_by_type,                vector< variant >, vector< d
 DEFINE_API_ARGS( list_to_zones_by_from,             vector< variant >, vector< database_api::api_zone_object > )
 DEFINE_API_ARGS( list_from_zones_by_to,             vector< variant >, vector< database_api::api_zone_object > )
 DEFINE_API_ARGS( find_way_to_zone,                  vector< variant >, database_api::find_way_to_zone_return )
+    
+DEFINE_API_ARGS( get_contract_source_code,          vector< variant >, string )
 
 #undef DEFINE_API_ARGS
 
@@ -501,6 +503,8 @@ DEFINE_API_ARGS( find_way_to_zone,                  vector< variant >, database_
             (list_to_zones_by_from)
             (list_from_zones_by_to)
             (find_way_to_zone)
+                    
+            (get_contract_source_code)
         )
         
     private:

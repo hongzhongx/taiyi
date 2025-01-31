@@ -119,6 +119,9 @@ namespace taiyi { namespace chain {
         
         contract_id_type    contract_id;
         vector<char>        lua_code_b;
+#ifndef IS_LOW_MEM
+        string              source_code;
+#endif
     };
 
     struct by_contract_id;
@@ -140,5 +143,9 @@ CHAINBASE_SET_INDEX_TYPE(taiyi::chain::contract_object, taiyi::chain::contract_i
 FC_REFLECT(taiyi::chain::account_contract_data_object, (id)(owner)(contract_id)(contract_data) )
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::account_contract_data_object, taiyi::chain::account_contract_data_index)
 
+#ifndef IS_LOW_MEM
+FC_REFLECT(taiyi::chain::contract_bin_code_object, (id)(contract_id)(lua_code_b)(source_code) )
+#else
 FC_REFLECT(taiyi::chain::contract_bin_code_object, (id)(contract_id)(lua_code_b) )
+#endif
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::contract_bin_code_object, taiyi::chain::contract_bin_code_index)

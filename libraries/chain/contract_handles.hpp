@@ -235,6 +235,7 @@ namespace taiyi { namespace chain {
         void invoke_contract_function(const string& contract_name, const string& function_name, const string& value_list_json);
         void make_release();
         contract_tiandao_property get_tiandao_property();
+        void create_named_contract(const string& name, const string& code);
         
         static std::pair<bool, const lua_types*> search_in_table(const lua_map* table, const vector<lua_types>& path, int start = 0);
         static std::pair<bool, lua_types*> get_in_table(lua_map* table, const vector<lua_types>& path, int start = 0);

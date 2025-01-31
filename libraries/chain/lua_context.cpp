@@ -254,6 +254,7 @@ namespace taiyi { namespace chain {
         registerFunction("participate_cultivation", &contract_handler::participate_cultivation);
         registerFunction("start_cultivation", &contract_handler::start_cultivation);
         registerFunction("stop_and_close_cultivation", &contract_handler::stop_and_close_cultivation);
+        registerFunction("create_named_contract", &contract_handler::create_named_contract);
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "format_vector_with_table", &format_vector_with_table);

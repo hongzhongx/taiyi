@@ -1922,5 +1922,27 @@ namespace taiyi { namespace chain {
         }
         return "";
     }
+    //=========================================================================
+    void contract_handler::create_named_contract(const string& name, const string& code)
+    {
+        try
+        {
+            const auto& creator = caller;
+            long long old_drops = creator.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
+            long long vm_drops = old_drops;
+            size_t new_state_size = db.create_contract_objects( creator, name, code, public_key_type(), vm_drops );
+            int64_t used_drops = old_drops - vm_drops;
+            
+            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
+            FC_ASSERT( creator.qi.amount.value >= used_qi, "神识没有足够的真气创建天道合约，需要真气${n}", ("n", used_qi) );
+            
+            //reward to treasury
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
 
 } } // namespace taiyi::chain
