@@ -838,16 +838,37 @@ namespace taiyi { namespace chain {
         try
         {
             const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the nfa #${n}'s owner or active operator", ("n", nfa_id));
+            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "无权操作NFA #${n}", ("n", nfa_id));
 
             const auto* contract = db.find<contract_object, by_name>(contract_name);
             FC_ASSERT(contract != nullptr, "contract named ${a} is not exist", ("a", contract_name));
             auto abi_itr = contract->contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
             FC_ASSERT(abi_itr != contract->contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract_name)("i", TAIYI_NFA_INIT_FUNC_NAME));
             
-            //仅仅改变主合约，不改变nfa的symbol
+            contract_worker worker;
+            vector<lua_types> value_list;
+            flat_set<public_key_type> sigkeys;
+            
+            long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
+            long long vm_drops = old_drops;
+            lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, *contract, vm_drops, true, context, db);
+            int64_t used_drops = old_drops - vm_drops;
+            
+            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
+            FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以修改天道" );
+            
+            //reward contract owner
+            const auto& contract_owner = db.get<account_object, by_id>(contract->owner);
+            db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+                                        
             db.modify(nfa, [&](nfa_object& obj) {
+                //仅仅改变主合约，不改变nfa的symbol
                 obj.main_contract = contract->id;
+                //仅仅增加数据中没有的字段
+                for (auto& p : result_table.v) {
+                    if (obj.contract_data.find(p.first) == obj.contract_data.end())
+                        obj.contract_data[p.first] = p.second;
+                }
             });
         }
         catch (fc::exception e)

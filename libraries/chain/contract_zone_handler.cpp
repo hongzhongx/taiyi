@@ -20,6 +20,7 @@ namespace taiyi { namespace chain {
     : nfa_id(z.nfa_id), name(z.name)
     {
         type = get_zone_type_string(z.type);
+        type_id = int(z.type);
     }
 
 } } // namespace taiyi::chain

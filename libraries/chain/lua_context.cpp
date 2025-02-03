@@ -313,7 +313,8 @@ namespace taiyi { namespace chain {
         registerMember("nfa_id", &contract_zone_base_info::nfa_id);
         registerMember("name", &contract_zone_base_info::name);
         registerMember("type", &contract_zone_base_info::type);
-        
+        registerMember("type_id", &contract_zone_base_info::type_id);
+
         //actor base info
         registerMember("nfa_id", &contract_actor_base_info::nfa_id);
         registerMember("name", &contract_actor_base_info::name);

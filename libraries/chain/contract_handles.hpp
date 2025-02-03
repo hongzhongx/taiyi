@@ -83,6 +83,7 @@ namespace taiyi { namespace chain {
         int64_t     nfa_id;
         string      name;
         string      type;
+        int         type_id;
         
         contract_zone_base_info(const zone_object& z, database& db);        
     };
