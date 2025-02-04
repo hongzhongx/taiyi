@@ -170,7 +170,7 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
 
-        void operator()( const nfa_trasfer_operation& op )
+        void operator()( const nfa_transfer_operation& op )
         {
             _impacted.insert( op.from_owner );
             if(op.from_owner != op.to_owner)
