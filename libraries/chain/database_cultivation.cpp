@@ -162,7 +162,18 @@ namespace taiyi { namespace chain {
                     pre_push_virtual_operation( vop );
 
                     adjust_nfa_balance(*nfa_b, rn);
-                    
+
+#ifdef IS_TEST_NET
+                    //测试网络修真可以起死回生
+                    const auto* test_actor = find< actor_object, by_nfa_id >( nfa_b->id );
+                    if( test_actor != nullptr && test_actor->health_max <= 0 ) {
+                        modify(*test_actor, [&](actor_object& obj) {
+                            obj.health_max = 100;
+                            obj.health = obj.health_max;
+                        });
+                    }
+#endif
+
                     post_push_virtual_operation( vop );
                     
                     rv_left -= rn.amount.value;
