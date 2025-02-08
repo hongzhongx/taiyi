@@ -8,8 +8,8 @@ namespace taiyi{ namespace plugins { namespace p2p {
     const std::vector< std::string > default_seeds;
 #else
     const std::vector< std::string > default_seeds = {
-        "seed.taiyi.com:2001",                // @taiyi
-        "seed-west.taiyi.com:2001"            // taiyi
+        "seed.taiyi.com:2025",                // @taiyi
+        "seed-west.taiyi.com:2025"            // taiyi
     };
 #endif
 

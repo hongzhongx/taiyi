@@ -337,7 +337,7 @@ namespace taiyi { namespace chain {
                     }
                     else
                         triggered = it_triggered->second.get<lua_bool>().v;
-                    session.push();
+                    session.squash();
                 }
                 catch (fc::exception e) {
                     //任何错误都不能照成核心循环崩溃
@@ -448,7 +448,7 @@ namespace taiyi { namespace chain {
             try {
                 auto session = start_undo_session();
                 worker.do_nfa_contract_function(nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
-                session.push();
+                session.squash();
             }
             catch (fc::exception e) {
                 //任何错误都不能照成核心循环崩溃
