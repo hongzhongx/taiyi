@@ -18,15 +18,33 @@
 
 ## Docker中编译
 
-这里提供了一个Docker文件（Dockerfile），能构建各种常用节点的二进制文件。
+我们提供了系列Docker文件（Dockerfile），能构建各种常用节点的二进制文件。
+
+1. 首先是构建包含适配测试网络、低内存节点和高内存节点二进制文件的基础镜像（zuowangdaox/taiyi-base）
 
     git clone https://github.com/hongzhongx/taiyi
     cd taiyi
-    docker build -t zuowangdao/taiyi .
+    docker build -t zuowangdaox/taiyi-base -f Dockerfile_base .  
 
 注意，如果你是最新的Apple Silicon芯片的Macos，可以运行模拟的amd64编译环境：
 
-    docker buildx build --platform linux/amd64 -t zuowangdao/taiyi .
+    docker buildx build --platform linux/amd64 -t zuowangdaox/taiyi-base -f Dockerfile_base .  
+
+基础镜像中仅仅包含了常用节点各种工具的二进制程序文件，实验人员也可以从镜像中提取二进制文件到对应的Ubuntu环境中直接使用。
+
+2. 构建能以不同配置工作的节点镜像（zuowangdaox/taiyi）
+
+工作镜像可以用于直接在容器中启动节点和各种工具。
+
+    git clone https://github.com/hongzhongx/taiyi
+    cd taiyi
+    docker build -t zuowangdaox/taiyi .  
+
+注意，如果你是最新的Apple Silicon芯片的Macos，可以运行模拟的amd64编译环境：
+
+    docker buildx build --platform linux/amd64 -t zuowangdaox/taiyi-base .  
+
+实际上，这个镜像是基于基础镜像的，仅仅是写入各种工作环境的配置和脚本，因此镜像的构建速度会比较快。
 
 ## 在 Ubuntu 22.04 操作系统上编译
 

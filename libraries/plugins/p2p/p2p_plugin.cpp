@@ -549,7 +549,7 @@ namespace taiyi { namespace plugins { namespace p2p {
         }
         
         cfg.add_options()
-            ("p2p-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:9876"), "The local IP address and port to listen for incoming connections.")
+            ("p2p-endpoint", bpo::value<string>()->implicit_value("127.0.0.1:2025"), "The local IP address and port to listen for incoming connections.")
             ("p2p-max-connections", bpo::value<uint32_t>(), "Maxmimum number of incoming connections on P2P endpoint.")
             ("seed-node", bpo::value<vector<string>>()->composing(), "The IP address and port of a remote peer to sync with. Deprecated in favor of p2p-seed-node.")
             ("p2p-seed-node", bpo::value<vector<string>>()->composing()->default_value( default_seeds, seed_ss.str() ), "The IP address and port of a remote peer to sync with.")

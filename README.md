@@ -190,8 +190,8 @@ NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方
 启动一个P2P节点（目前需要2GB内存）：
 
     docker run \
-        -d -p 2001:2001 -p 8090:8090 --name taiyin-default \
-        zuowangdao/taiyi
+        -d -p 2025:2025 -p 8090:8090 --name taiyin-default \
+        zuowangdaox/taiyi
 
     docker logs -f taiyin-default  # follow along
 
@@ -201,8 +201,20 @@ NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方
 
     docker run \
         --env USE_WAY_TOO_MUCH_RAM=1 --env USE_FULL_WEB_NODE=1 \
-        -d -p 2001:2001 -p 8090:8090 --name taiyin-full \
-        zuowangdao/taiyi
+        -d -p 2025:2025 -p 8090:8090 --name taiyin-full \
+        zuowangdaox/taiyi
+
+    docker logs -f taiyin-full
+
+## 通过Docker启动测试网的全节点（Full Node）
+
+启动一个提供*所有*可查询数据的测试网络节点（例如用来支撑一个内容网站前端，目前需要4GB的内存，这个内存量在不断增长中）：
+
+    docker run \
+        --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
+        --env REQUIRED_PARTICIPATION=0 --env TAIYI_SEED_NODES="47.109.49.30:2025" \
+        -d -p 2025:2025 -p 8090:8090 --name taiyin-full \
+        zuowangdaox/taiyi
 
     docker logs -f taiyin-full
 
@@ -236,6 +248,8 @@ NFA物品道具的设计也在坐忘道进行，并且通过一种`铁匠铺`方
 * `USE_NGINX_FRONTEND` - 如果设置为true，将在太乙节点外层启用一个NGINX反向代理，这个代理会先处理接收到的WebSocket太乙请求。这也会启动一个自定义的健康检查，在路径'/health'下将列出你的节点离当前网络最新的块还差多长时间。如果离同步最新的块差距在60秒钟以内，这个健康检查会返回'200'代码。
 * `USE_MULTICORE_READONLY` - 如果设置为true，太乙系统将会启动多人读取模式，这在多核系统上能提供更好性能。所有的读取请求将被多个只读节点处理，而所有写请求被自动转发到一个单一的‘写’节点。NGINX对只读节点请求进行负载均衡处理，每个CPU核平均处理4个请求。目前这个设计还处在实验阶段，在某些API调用的情况下还有问题，这些问题有待未来的开发来解决。
 * `HOME` - 设置你要太乙系统存储数据文件的路径（包括块数据、状态数据和配置文件等等）。默认情况下，这个路径是`/var/lib/taiyi`，这个路径在docker容器中也要存在。如果需要使用另外的载入位置（比如内存磁盘，或者另外一个磁盘驱动器），你可以设置这个变量来指向你的docker容器上的映射卷。
+* `IS_TESTNET` - 如果设置为true，则使用适配当前测试网络的节点程序。
+* `REQUIRED_PARTICIPATION` - 节点参与率，在某些测试网络环境下，节点的参与率并不高，因此在测试网络环境下可以设置为0。
 
 ## 系统需求说明
 

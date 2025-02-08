@@ -1,0 +1,122 @@
+FROM ubuntu:22.04 AS builder
+
+# https://askubuntu.com/questions/909277/avoiding-user-interaction-with-tzdata-when-installing-certbot-in-a-docker-contai
+ARG DEBIAN_FRONTEND=noninteractive
+
+# The default build params are for low memory version.
+# This usually are used as a siming node.
+ARG BUILD_TAG=main
+ARG TAIYI_STATIC_BUILD=ON
+ARG UNIT_TEST=OFF
+ARG DOXYGEN=OFF
+
+RUN \
+    apt-get update && \
+    apt-get install -y \
+        git \
+        build-essential \
+        libboost-all-dev \
+        cmake \
+        libssl-dev \
+        libsnappy-dev \
+        python3-jinja2 \
+        doxygen \
+        autoconf \
+        automake \
+        autotools-dev \
+        bsdmainutils \
+        libyajl-dev \
+        libreadline-dev \
+        libssl-dev \
+        libtool \
+        liblz4-tool \
+        ncurses-dev \
+        libgflags-dev \
+        zlib1g-dev \
+        libbz2-dev \
+        liblz4-dev \
+        libzstd-dev
+
+WORKDIR /usr/local/src/taiyi
+ADD . /usr/local/src/taiyi
+
+RUN \
+    cd /usr/local/src/taiyi && \
+#    git fetch origin ${BUILD_TAG} && \
+#    git checkout ${BUILD_TAG} && \
+    git submodule update --init --recursive
+
+# 测试网
+RUN \
+    cd /usr/local/src/taiyi && \
+    mkdir build && \
+    cd build && \
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/taiyi-testnet \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLOW_MEMORY_NODE=OFF \
+        -DBUILD_TAIYI_TESTNET=ON \
+        -DENABLE_COVERAGE_TESTING=OFF \
+        -DCHAINBASE_CHECK_LOCKING=OFF \
+        -DTAIYI_STATIC_BUILD=${TAIYI_STATIC_BUILD} \
+        .. && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && \
+    rm -rf /usr/local/src/taiyi/build ;
+
+# 正式网，低内存
+RUN \
+    cd /usr/local/src/taiyi && \
+    mkdir build && \
+    cd build && \
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/taiyi-default \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLOW_MEMORY_NODE=ON \
+        -DBUILD_TAIYI_TESTNET=OFF \
+        -DENABLE_COVERAGE_TESTING=OFF \
+        -DCHAINBASE_CHECK_LOCKING=OFF \
+        -DTAIYI_STATIC_BUILD=${TAIYI_STATIC_BUILD} \
+        .. && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && \
+    rm -rf /usr/local/src/taiyi/build ;
+
+# 正式网，高内存
+RUN \
+    cd /usr/local/src/taiyi && \
+    mkdir build && \
+    cd build && \
+    cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/taiyi-full \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLOW_MEMORY_NODE=OFF \
+        -DBUILD_TAIYI_TESTNET=OFF \
+        -DENABLE_COVERAGE_TESTING=OFF \
+        -DCHAINBASE_CHECK_LOCKING=OFF \
+        -DTAIYI_STATIC_BUILD=${TAIYI_STATIC_BUILD} \
+        .. && \
+    make -j$(nproc) && \
+    make install ;
+
+RUN if [ "${UNIT_TEST}" = "ON" ] ; then \
+        cd /usr/local/src/taiyi/build/tests && \
+        ./chain_test --run_test=basic_tests/adjust_balance_test; \
+    fi
+
+RUN if [ "${DOXYGEN}" = "ON" ] ; then \
+        cd /usr/local/src/taiyi && \
+        doxygen && \
+        PYTHONPATH=programs/build_helpers \
+        python3 -m taiyi_build_helpers.check_reflect && \
+        programs/build_helpers/get_config_check.sh; \
+    fi
+
+
+FROM ubuntu:22.04 AS final
+
+COPY --from=builder /usr/local/taiyi-testnet /usr/local/taiyi-testnet
+COPY --from=builder /usr/local/taiyi-default /usr/local/taiyi-default
+COPY --from=builder /usr/local/taiyi-full /usr/local/taiyi-full
