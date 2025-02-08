@@ -20,7 +20,7 @@
 
 我们提供了系列Docker文件（Dockerfile），能构建各种常用节点的二进制文件。
 
-1. 首先是构建包含适配测试网络、低内存节点和高内存节点二进制文件的基础镜像（zuowangdaox/taiyi-base）
+### 1. 首先是构建包含适配测试网络、低内存节点和高内存节点二进制文件的基础镜像（zuowangdaox/taiyi-base）
 
     git clone https://github.com/hongzhongx/taiyi
     cd taiyi
@@ -32,7 +32,7 @@
 
 基础镜像中仅仅包含了常用节点各种工具的二进制程序文件，实验人员也可以从镜像中提取二进制文件到对应的Ubuntu环境中直接使用。
 
-2. 构建能以不同配置工作的节点镜像（zuowangdaox/taiyi）
+### 2. 构建能以不同配置工作的节点镜像（zuowangdaox/taiyi）
 
 工作镜像可以用于直接在容器中启动节点和各种工具。
 

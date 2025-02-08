@@ -42,8 +42,8 @@ ADD . /usr/local/src/taiyi
 
 RUN \
     cd /usr/local/src/taiyi && \
-#    git fetch origin ${BUILD_TAG} && \
-#    git checkout ${BUILD_TAG} && \
+    git fetch origin ${BUILD_TAG} && \
+    git checkout ${BUILD_TAG} && \
     git submodule update --init --recursive
 
 # 测试网
