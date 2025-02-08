@@ -178,7 +178,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         uint8_t                       elected_weight = 1;
         uint8_t                       timeshare_weight = 5;
         uint8_t                       miner_weight = 1;
-        uint32_t                      siming_pay_normalization_factor = 25;
+        uint32_t                      siming_pay_normalization_factor = TAIYI_MAX_SIMINGS;
         api_chain_properties          median_props;
         version                       majority_version;
         uint8_t                       max_adored_simings           = TAIYI_MAX_SIMINGS;

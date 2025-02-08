@@ -104,7 +104,7 @@
 
 #define TAIYI_MAX_ACCOUNT_SIMING_ADORES         30
 
-#define TAIYI_MIN_REWARD_FUND                   (1)     // 通胀后激励各基金的最小阳寿
+#define TAIYI_MIN_REWARD_FUND                   (1000)  // 通胀后激励各基金的最小阳寿
 #define TAIYI_INFLATION_RATE_START_PERCENT      (1000)  // 10%
 #define TAIYI_INFLATION_RATE_STOP_PERCENT       (100)   // 1%
 #define TAIYI_INFLATION_NARROWING_PERIOD        (233600) // Narrow 0.01% every 233.6k blocks
