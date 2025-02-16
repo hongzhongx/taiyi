@@ -184,7 +184,7 @@ namespace taiyi { namespace chain {
                 });
             }
             
-            const auto* contract_ptr = find<contract_object, by_id>(nfa.main_contract);
+            const auto* contract_ptr = find<contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)
                 continue;
             auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));

@@ -435,11 +435,12 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    int64_t contract_handler::get_account_balance(account_id_type account, asset_symbol_type symbol)
+    int64_t contract_handler::get_account_balance(const string& account_name, const string& symbol_name)
     {
         try
         {
-            const auto& account_obj = db.get<account_object, by_id>(account);
+            asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
+            const auto& account_obj = db.get<account_object, by_name>(account_name);
             return db.get_balance(account_obj, symbol).amount.value;
         }
         catch (fc::exception e)
@@ -512,7 +513,7 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
-            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.main_contract);
+            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)
                 return lua_map();
             
@@ -625,7 +626,7 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
-            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.main_contract);
+            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)
                 return lua_map();
             
@@ -734,7 +735,7 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check function existence
-            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.main_contract);
+            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)
                 return lua_map();
                         
@@ -1358,6 +1359,20 @@ namespace taiyi { namespace chain {
             target_table = data;
     }
     //=============================================================================
+    int64_t contract_handler::get_nfa_balance(int64_t nfa_id, const string& symbol_name)
+    {
+        try
+        {
+            asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
+            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
+            return db.get_nfa_balance(nfa, symbol).amount.value;
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     contract_asset_resources contract_handler::get_nfa_resources(int64_t id)
     {
         try
@@ -1384,10 +1399,17 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    vector<contract_nfa_base_info> contract_handler::list_nfa_inventory(int64_t nfa_id)
+    vector<contract_nfa_base_info> contract_handler::list_nfa_inventory(int64_t nfa_id, const string& symbol_name)
     {
         try
         {
+            nfa_symbol_id_type symbol_id = nfa_symbol_id_type::max();
+            if(symbol_name != "") {
+                const auto* symbol = db.find<nfa_symbol_object, by_symbol>(symbol_name);
+                if(symbol)
+                    symbol_id = symbol->id;
+            }
+            
             std::vector<contract_nfa_base_info> result;
             const auto& nfa_by_parent_idx = db.get_index<nfa_index, by_parent>();
             auto itr = nfa_by_parent_idx.lower_bound( nfa_id );
@@ -1395,6 +1417,12 @@ namespace taiyi { namespace chain {
             {
                 if(itr->parent != nfa_id_type(nfa_id))
                     break;
+                if(symbol_name != "") {
+                    if(itr->symbol_id != symbol_id) {
+                        itr++;
+                        continue;
+                    }
+                }
                 result.emplace_back(contract_nfa_base_info(*itr, db));
                 itr++;
             }
@@ -1691,6 +1719,78 @@ namespace taiyi { namespace chain {
         }
         
         return "";
+    }
+    //=========================================================================
+    bool contract_handler::enter_nfa_mirage(int64_t nfa_id, const string& mirage_entry_contract)
+    {
+        try
+        {
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
+            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
+            FC_ASSERT(!nfa->is_miraged, "实体#${d}已经在幻觉世界了", ("d", nfa_id));
+            
+            const auto* contract = db.find<contract_object, by_name>(mirage_entry_contract);
+            FC_ASSERT(contract, "幻觉世界入口不存在");
+            
+            db.modify(*nfa, [&](nfa_object& obj) {
+                obj.is_miraged = true;
+                obj.mirage_contract = contract->id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+
+        return true;
+    }
+    //=========================================================================
+    bool contract_handler::enter_nfa_next_mirage(int64_t nfa_id, const string& mirage_entry_contract)
+    {
+        try
+        {
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
+            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
+            FC_ASSERT(nfa->is_miraged, "实体#${d}还没有在幻觉世界", ("d", nfa_id));
+            
+            const auto* contract = db.find<contract_object, by_name>(mirage_entry_contract);
+            FC_ASSERT(contract, "幻觉世界入口不存在");
+            
+            db.modify(*nfa, [&](nfa_object& obj) {
+                obj.is_miraged = true;
+                obj.mirage_contract = contract->id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+
+        return true;
+    }
+    //=========================================================================
+    bool contract_handler::exit_nfa_mirage(int64_t nfa_id)
+    {
+        try
+        {
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
+            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
+            FC_ASSERT(nfa->is_miraged, "实体#${d}并没有在幻觉世界", ("d", nfa_id));
+            
+            db.modify(*nfa, [&](nfa_object& obj) {
+                obj.is_miraged = false;
+                obj.mirage_contract = contract_id_type::max();
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+
+        return true;
     }
     //=========================================================================
     //返回错误信息

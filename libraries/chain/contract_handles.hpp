@@ -73,6 +73,7 @@ namespace taiyi { namespace chain {
         int64_t     qi;
         int64_t     parent;
         int         five_phase;
+        string      mirage_contract; //幻觉状态下所处的合约剧情节点，为空表示在正常状态
         lua_map     data;
                 
         contract_nfa_base_info(const nfa_object& nfa, database& db);
@@ -157,6 +158,8 @@ namespace taiyi { namespace chain {
         void convert_resource_to_qi(int64_t amount, const string& resource_symbol_name);
         void add_child(int64_t nfa_id);
         void add_to_parent(int64_t parent_nfa_id);
+        void add_child_from_contract_owner(int64_t nfa_id);
+        void add_to_parent_from_contract_owner(int64_t parent_nfa_id);
         void remove_from_parent();
         lua_map read_contract_data(const lua_map& read_list);
         void write_contract_data(const lua_map& data, const lua_map& write_list);
@@ -168,7 +171,7 @@ namespace taiyi { namespace chain {
         void transfer_by_contract(nfa_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
         void withdraw_to(nfa_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);
         void withdraw_by_contract(nfa_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
-        void deposit_from(const account_name_type& from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
+        void deposit_from(account_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
         void deposit_by_contract(account_id_type from, nfa_id_type to, asset token, contract_result &result, bool enable_logger=false);
 
         void inject_material_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
@@ -230,7 +233,7 @@ namespace taiyi { namespace chain {
         uint32_t head_block_time();
         uint32_t head_block_num();
         int64_t generate_hash(uint32_t offset);
-        int64_t get_account_balance(account_id_type account, asset_symbol_type symbol);
+        int64_t get_account_balance(const string& account_name, const string& symbol_name);
         void change_contract_authority(string authority);
         memo_data make_memo(const string& receiver_account_name, const string& key, const string& value, uint64_t ss, bool enable_logger = false);
         void invoke_contract_function(const string& contract_name, const string& function_name, const string& value_list_json);
@@ -247,9 +250,10 @@ namespace taiyi { namespace chain {
         string get_nfa_contract(int64_t nfa_id);
         bool is_nfa_valid(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
+        int64_t get_nfa_balance(int64_t nfa_id, const string& symbol_name);
         contract_asset_resources get_nfa_resources(int64_t id);
         contract_asset_resources get_nfa_materials(int64_t id);
-        vector<contract_nfa_base_info> list_nfa_inventory(int64_t nfa_id);
+        vector<contract_nfa_base_info> list_nfa_inventory(int64_t nfa_id, const string& symbol_name);
 
         lua_map read_nfa_contract_data(int64_t nfa_id, const lua_map& read_list);
         void write_nfa_contract_data(int64_t nfa_id, const lua_map& data, const lua_map& write_list);
@@ -257,6 +261,9 @@ namespace taiyi { namespace chain {
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
         int64_t create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger);
+        bool enter_nfa_mirage(int64_t nfa_id, const string& mirage_entry_contract);
+        bool enter_nfa_next_mirage(int64_t nfa_id, const string& mirage_entry_contract);
+        bool exit_nfa_mirage(int64_t nfa_id);
 
         //Zone
         bool is_zone_valid(int64_t nfa_id);

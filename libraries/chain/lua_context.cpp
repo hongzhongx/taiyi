@@ -216,6 +216,7 @@ namespace taiyi { namespace chain {
         registerFunction("get_account_contract_data", &contract_handler::get_account_contract_data);
         registerFunction("read_account_contract_data", &contract_handler::read_account_contract_data);
         registerFunction("write_account_contract_data", &contract_handler::write_account_contract_data);
+        registerFunction("get_account_balance", &contract_handler::get_account_balance);        
         registerFunction("set_permissions_flag", &contract_handler::set_permissions_flag);
         registerFunction("set_invoke_share_percent", &contract_handler::set_invoke_share_percent);
         registerFunction("invoke_contract_function", &contract_handler::invoke_contract_function);
@@ -229,10 +230,14 @@ namespace taiyi { namespace chain {
         registerFunction("eval_nfa_action", &contract_handler::eval_nfa_action);
         registerFunction("do_nfa_action", &contract_handler::do_nfa_action);
         registerFunction("get_nfa_info", &contract_handler::get_nfa_info);
-        registerFunction("is_nfa_valid", &contract_handler::is_nfa_valid);        
+        registerFunction("is_nfa_valid", &contract_handler::is_nfa_valid);
+        registerFunction("get_nfa_balance", &contract_handler::get_nfa_balance);
         registerFunction("get_nfa_resources", &contract_handler::get_nfa_resources);
         registerFunction("get_nfa_materials", &contract_handler::get_nfa_materials);
         registerFunction("list_nfa_inventory", &contract_handler::list_nfa_inventory);
+        registerFunction("enter_nfa_mirage", &contract_handler::enter_nfa_mirage);
+        registerFunction("enter_nfa_next_mirage", &contract_handler::enter_nfa_next_mirage);
+        registerFunction("exit_nfa_mirage", &contract_handler::exit_nfa_mirage);
         registerFunction("change_zone_type", &contract_handler::change_zone_type);
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
@@ -276,6 +281,7 @@ namespace taiyi { namespace chain {
         registerMember("parent", &contract_nfa_base_info::parent);
         registerMember("five_phase", &contract_nfa_base_info::five_phase);
         registerMember("data", &contract_nfa_base_info::data);
+        registerMember("mirage_contract", &contract_nfa_base_info::mirage_contract);
 
         //nfa handler
         registerFunction("enable_tick", &contract_nfa_handler::enable_tick);
@@ -287,6 +293,8 @@ namespace taiyi { namespace chain {
         registerFunction("convert_resource_to_qi", &contract_nfa_handler::convert_resource_to_qi);
         registerFunction("add_child", &contract_nfa_handler::add_child);
         registerFunction("add_to_parent", &contract_nfa_handler::add_to_parent);
+        registerFunction("add_child_from_contract_owner", &contract_nfa_handler::add_child_from_contract_owner);
+        registerFunction("add_to_parent_from_contract_owner", &contract_nfa_handler::add_to_parent_from_contract_owner);
         registerFunction("remove_from_parent", &contract_nfa_handler::remove_from_parent);
         registerFunction("read_contract_data", &contract_nfa_handler::read_contract_data);
         registerFunction("write_contract_data", &contract_nfa_handler::write_contract_data);
@@ -302,8 +310,13 @@ namespace taiyi { namespace chain {
         registerFunction<contract_nfa_handler, void(int64_t to, double, const string&, bool)>("separate_material_out", [](contract_nfa_handler &handler, int64_t to, double amount, const string& symbol, bool enable_logger = false) {
             handler.separate_material_out(handler._caller.id, to, amount, symbol, enable_logger);
         });
+        registerFunction<contract_nfa_handler, void(double, const string&, bool)>("deposit_from_owner", [](contract_nfa_handler &handler, double amount, const string& symbol, bool enable_logger = false) {
+            handler.deposit_from(handler._ch.contract.owner, handler._caller.id, amount, symbol, enable_logger);
+        });
         registerFunction<contract_nfa_handler, void(const string&, double, const string&, bool)>("deposit_from", [](contract_nfa_handler &handler, const string& from, double amount, const string& symbol, bool enable_logger = false) {
-            handler.deposit_from(from, handler._caller.id, amount, symbol, enable_logger);
+            auto from_id = handler._db.get_account(from).id;
+            FC_ASSERT(handler._ch.caller.id == from_id, "caller have no authority to transfer assets from account \"${a}\"", ("a", from));
+            handler.deposit_from(from_id, handler._caller.id, amount, symbol, enable_logger);
         });
         registerFunction<contract_nfa_handler, void(const string&, double, const string&, bool)>("withdraw_to", [](contract_nfa_handler &handler, const string& to, double amount, const string& symbol, bool enable_logger = false) {
             handler.withdraw_to(handler._caller.id, to, amount, symbol, enable_logger);

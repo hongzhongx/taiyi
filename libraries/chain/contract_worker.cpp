@@ -292,7 +292,7 @@ namespace taiyi { namespace chain {
     string contract_worker::eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, vector<lua_types>&result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
-        const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
+        const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.is_miraged?caller_nfa.mirage_contract:caller_nfa.main_contract);
         if(contract_ptr == nullptr)
             return "NFA main contract not exist(#t&&y#实体缺乏内禀天道#a&&i#)";
 
@@ -326,7 +326,7 @@ namespace taiyi { namespace chain {
     std::string contract_worker::do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, vector<lua_types>&result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
-        const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.main_contract);
+        const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.is_miraged?caller_nfa.mirage_contract:caller_nfa.main_contract);
         if(contract_ptr == nullptr)
             return "NFA main contract not exist(#t&&y#实体缺乏内禀天道#a&&i#)";
         
