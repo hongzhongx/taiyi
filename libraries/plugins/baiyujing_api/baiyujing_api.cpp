@@ -826,7 +826,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
             string action_name = args[1].as< string >();
             
-            const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.main_contract);
+            const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)
                 return result;
             

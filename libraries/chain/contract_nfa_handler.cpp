@@ -27,6 +27,9 @@ namespace taiyi { namespace chain {
         active_account = db.get<account_object, by_id>(nfa.active_account).name;
         
         five_phase = db.get_nfa_five_phase(nfa);
+
+        if(nfa.is_miraged)
+            mirage_contract = db.get<contract_object, by_id>(nfa.mirage_contract).name;
     }
     //=============================================================================
     contract_nfa_handler::contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch)
@@ -265,7 +268,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
 
             const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(child_nfa.owner_account == _caller_account.id, "caller account not the input nfa's owner");
+            FC_ASSERT(child_nfa.owner_account == _caller_account.id || child_nfa.active_account == _caller_account.id, "caller account not the input nfa's owner or active operator");
             FC_ASSERT(child_nfa.parent == nfa_id_type::max(), "input nfa already have parent");
                         
             _db.modify(child_nfa, [&]( nfa_object& obj ) {
@@ -286,7 +289,47 @@ namespace taiyi { namespace chain {
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
 
             const auto& parent_nfa = _db.get<nfa_object, by_id>(parent_nfa_id);
-            FC_ASSERT(parent_nfa.owner_account == _caller_account.id, "caller account not the parent nfa's owner");
+            FC_ASSERT(parent_nfa.owner_account == _caller_account.id || parent_nfa.active_account == _caller_account.id, "caller account not the parent nfa's owner or active operator");
+                        
+            _db.modify(_caller, [&]( nfa_object& obj ) {
+                obj.parent = parent_nfa.id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    void contract_nfa_handler::add_child_from_contract_owner(int64_t nfa_id)
+    {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            
+            const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(child_nfa.owner_account == _ch.contract.owner || child_nfa.active_account == _ch.contract.owner, "contract owner not the input nfa's owner or active operator");
+            FC_ASSERT(child_nfa.parent == nfa_id_type::max(), "input nfa already have parent");
+                        
+            _db.modify(child_nfa, [&]( nfa_object& obj ) {
+                obj.parent = _caller.id;
+            });
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::add_to_parent_from_contract_owner(int64_t parent_nfa_id)
+    {
+        try
+        {
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
+
+            const auto& parent_nfa = _db.get<nfa_object, by_id>(parent_nfa_id);
+            FC_ASSERT(parent_nfa.owner_account == _ch.contract.owner || parent_nfa.active_account == _ch.contract.owner, "contract owner not the parent nfa's owner or active operator");
                         
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 obj.parent = parent_nfa.id;
@@ -421,13 +464,13 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_nfa_handler::deposit_from(const account_name_type& from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger)
+    void contract_nfa_handler::deposit_from(account_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger)
     {
         try
         {
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
-            deposit_by_contract(_db.get_account(from).id, to, token, _ch.result, enable_logger);
+            deposit_by_contract(from, to, token, _ch.result, enable_logger);
         }
         catch (fc::exception e)
         {
