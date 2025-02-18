@@ -42,7 +42,7 @@
 
 注意，如果你是最新的Apple Silicon芯片的Macos，可以运行模拟的amd64编译环境：
 
-    docker buildx build --platform linux/amd64 -t zuowangdaox/taiyi-base .  
+    docker buildx build --platform linux/amd64 -t zuowangdaox/taiyi .  
 
 实际上，这个镜像是基于基础镜像的，仅仅是写入各种工作环境的配置和脚本，因此镜像的构建速度会比较快。
 
