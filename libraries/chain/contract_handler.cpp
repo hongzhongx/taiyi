@@ -1977,7 +1977,7 @@ namespace taiyi { namespace chain {
             if(nfa.cultivation_value != 0)
                 return "指定参与者已经在修真了，不能再参加新的修真活动";
             if(value == 0)
-                return "参与者没有设置参与修着活动的有效真气";
+                return "参与者没有设置参与修真活动的有效真气";
             if(nfa.qi.amount.value < value)
                 return "参与者体内真气不够";
             
