@@ -9,6 +9,7 @@
 namespace taiyi { namespace chain {
 
     using protocol::lua_map;
+    using protocol::asset;
 
     class nfa_symbol_object : public object < nfa_symbol_object_type, nfa_symbol_object >
     {

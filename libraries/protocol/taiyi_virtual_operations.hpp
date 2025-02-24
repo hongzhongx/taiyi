@@ -217,10 +217,11 @@ namespace taiyi { namespace protocol {
     struct narrate_log_operation : public virtual_operation
     {
         narrate_log_operation() {}
-        narrate_log_operation( const account_name_type& a, const uint32_t& y, const uint32_t& m, const uint32_t& t, const string& l)
-            : narrator(a), years(y), months(m), times(t), log(l) {}
+        narrate_log_operation( const account_name_type& a, const int64_t& nf, const uint32_t& y, const uint32_t& m, const uint32_t& t, const string& l)
+            : narrator(a), nfa(nf), years(y), months(m), times(t), log(l) {}
         
         account_name_type           narrator;
+        int64_t                     nfa;
 
         uint32_t                    years;
         uint32_t                    months;
@@ -247,4 +248,4 @@ FC_REFLECT( taiyi::protocol::actor_born_operation, (owner)(name)(zone)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_talent_trigger_operation, (owner)(name)(nfa)(tid)(title)(desc)(age) )
 FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(to_zone)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(months)(times)(age)(health) )
-FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(years)(months)(times)(log) )
+FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(times)(log) )

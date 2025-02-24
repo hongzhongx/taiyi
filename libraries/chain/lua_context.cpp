@@ -50,7 +50,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(lua_isstring(L, -1));
             auto imported_contract_name = LuaContext::readTopAndPop<string>(L, -1);
             
-            lua_getglobal(L, "current_contract");
+            lua_getglobal(L, "current_contract"); //注意，这个是顶层合约，不是导入函数所在的当前合约
             auto current_contract_name = LuaContext::readTopAndPop<string>(L, -1);
             
             if(current_contract_name != imported_contract_name) {
@@ -84,12 +84,14 @@ namespace taiyi { namespace chain {
                 if(current_ch) {
                     //导入的合约需要创建新的ch，由于在导入后会对合约函数进行调用，因此这里创建的ch必须有效，因此需要保留在上层ch中，直到上层ch释放时释放
                     ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), *contract, current_ch->result, current_ch->context, current_ch->sigkeys);
+                    FC_ASSERT(current_ch->context.mState == L);
                     current_ch->_sub_chs.push_back(ch);
                     context.writeVariable(contract->name, "contract_helper", ch);
                 }
                 auto current_cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
-                if(current_cnh) context.writeVariable(contract->name, "nfa_helper", current_cnh);
+                context.writeVariable(contract->name, "nfa_helper", current_cnh);
 
+                //将导入合约同名的表放到顶层合约同名的表中作为子项（之后有需要只能从这个子项里面获取），然后清除上下文中刚才位导入合约环境创建的表
                 FC_ASSERT(lua_getglobal(context.mState, current_contract_name.c_str()) == LUA_TTABLE);
                 FC_ASSERT(lua_getfield(context.mState, -1, contract->name.c_str()) == LUA_TNIL); //just check
                 lua_pop(context.mState, 1);

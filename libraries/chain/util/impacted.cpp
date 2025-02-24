@@ -1,5 +1,7 @@
 #include <protocol/authority.hpp>
 
+#include <chain/nfa_objects.hpp>
+
 #include <chain/util/impacted.hpp>
 
 #include <fc/utility.hpp>
@@ -255,6 +257,8 @@ namespace taiyi { namespace chain {
         void operator()( const narrate_log_operation& op )
         {
             _impacted.insert( op.narrator );
+            if(op.nfa != nfa_id_type::max()._id)
+                _impacted_nfas.insert( op.nfa );
         }
 
         //void operator()( const operation& op ){}

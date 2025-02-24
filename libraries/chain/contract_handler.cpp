@@ -299,16 +299,29 @@ namespace taiyi { namespace chain {
 
             if(time_prefix)
                 message = FORMAT_MESSAGE("&YEL&${y}年${m}月&NOR&，${str}", ("y", tiandao.v_years)("m", tiandao.v_months)("str", message));
+                        
+            wlog(message); //for dubug
+                        
+            nfa_id_type affected_nfa = nfa_id_type::max();
+            account_name_type affected_account;
             
-            //for dubug
-            wlog(message);
-            
-            contract_narrate narrator(caller.name);
+            //不论是不是import导入的合约，顶层合约名的表中一定有nfa_helper
+            lua_getglobal(context.mState, "current_contract");
+            auto current_contract_name = LuaContext::readTopAndPop<string>(context.mState, -1);
+            auto current_cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
+            if (current_cnh) {
+                affected_nfa = current_cnh->_caller.id;
+                affected_account = db.get<account_object, by_id>(db.get<nfa_object, by_id>(affected_nfa).owner_account).name;
+            }
+            else
+                affected_account = db.get_account(TAIYI_DANUO_ACCOUNT).name;
+
+            contract_narrate narrator(affected_account, affected_nfa._id);
             narrator.message = message;
             result.contract_affecteds.push_back(std::move(narrator));
             
             //push event message
-            db.push_virtual_operation( narrate_log_operation( db.get_account(TAIYI_DANUO_ACCOUNT).name, tiandao.v_years, tiandao.v_months, tiandao.v_times, message ) );
+            db.push_virtual_operation( narrate_log_operation( affected_account, affected_nfa, tiandao.v_years, tiandao.v_months, tiandao.v_times, message ) );
 
         }
         catch (fc::exception e)
