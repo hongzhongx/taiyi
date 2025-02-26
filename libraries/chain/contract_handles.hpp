@@ -73,6 +73,7 @@ namespace taiyi { namespace chain {
         int64_t     qi;
         int64_t     parent;
         int         five_phase;
+        string      main_contract;
         string      mirage_contract; //幻觉状态下所处的合约剧情节点，为空表示在正常状态
         lua_map     data;
                 
@@ -290,6 +291,7 @@ namespace taiyi { namespace chain {
         string participate_cultivation(int64_t cult_id, int64_t nfa_id, uint64_t value);
         string start_cultivation(int64_t cult_id);
         string stop_and_close_cultivation(int64_t cult_id);
+        bool is_cultivation_exist(int64_t cult_id);
 
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(account_id_type from, const account_name_type& to, double amount, const string& symbol_name, bool enable_logger=false);

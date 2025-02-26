@@ -261,6 +261,7 @@ namespace taiyi { namespace chain {
         registerFunction("participate_cultivation", &contract_handler::participate_cultivation);
         registerFunction("start_cultivation", &contract_handler::start_cultivation);
         registerFunction("stop_and_close_cultivation", &contract_handler::stop_and_close_cultivation);
+        registerFunction("is_cultivation_exist", &contract_handler::is_cultivation_exist);        
         registerFunction("create_named_contract", &contract_handler::create_named_contract);
 
         lua_register(mState, "import_contract", &import_contract);
@@ -283,6 +284,7 @@ namespace taiyi { namespace chain {
         registerMember("parent", &contract_nfa_base_info::parent);
         registerMember("five_phase", &contract_nfa_base_info::five_phase);
         registerMember("data", &contract_nfa_base_info::data);
+        registerMember("main_contract", &contract_nfa_base_info::main_contract);
         registerMember("mirage_contract", &contract_nfa_base_info::mirage_contract);
 
         //nfa handler

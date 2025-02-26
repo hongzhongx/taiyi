@@ -2057,6 +2057,12 @@ namespace taiyi { namespace chain {
         return "";
     }
     //=========================================================================
+    bool contract_handler::is_cultivation_exist(int64_t cult_id)
+    {
+        const auto* cult = db.find<cultivation_object, by_id>(cult_id);
+        return cult != nullptr;
+    }
+    //=========================================================================
     void contract_handler::create_named_contract(const string& name, const string& code)
     {
         try
