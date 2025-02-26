@@ -184,18 +184,16 @@ namespace taiyi { namespace chain {
                 });
             }
             
-            const auto* contract_ptr = find<contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                continue;
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));
-            if(abi_itr == contract_ptr->contract_ABI.end()) {
-                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
-                continue;
-            }
-
             modify(nfa, [&]( nfa_object& obj ) {
                 obj.next_tick_time = now + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL;
             });
+
+            const auto* contract_ptr = find<contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
+            if(contract_ptr == nullptr)
+                continue; //主合约可能无效，但是只要有真气，就有下一次心跳机会
+            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));
+            if(abi_itr == contract_ptr->contract_ABI.end())
+                continue; //主合约可能无心跳入口，但是只要有真气，就有下一次心跳机会
 
             vector<lua_types> value_list; //no params.
             contract_worker worker;

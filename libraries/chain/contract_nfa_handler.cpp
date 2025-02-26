@@ -28,6 +28,7 @@ namespace taiyi { namespace chain {
         
         five_phase = db.get_nfa_five_phase(nfa);
 
+        main_contract = db.get<contract_object, by_id>(nfa.main_contract).name;
         if(nfa.is_miraged)
             mirage_contract = db.get<contract_object, by_id>(nfa.mirage_contract).name;
     }
