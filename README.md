@@ -17,7 +17,7 @@
 这是一个在线虚拟小游戏，模拟一个修仙世界，为乐子人找找乐子。
 
 <br>
-<div align='center'><a href='./doc/imgs/map.jpg'><img src='./doc/imgs/map.jpg' width=40%></a></div>
+<div align='center'><a href='./doc/imgs/map.png'><img src='./doc/imgs/map.png' width=50%></a></div>
 <div align='center'><i>在Mud游戏中，如果你能真正拥有并设计自己的房间，又或者能运营自己的城镇门派，会是一种什么体验？</i></div>
 
 
@@ -35,6 +35,7 @@
 
 * 太乙宇宙观：原本见[《太乙宇宙内篇》](./doc/yuzhou.md)，现代白话解读见[《太乙宇宙多维结构——五部十八界》](./doc/yuzhou_explain.md)，其中阐述了太乙第一定律——太乙因果律
 * 真气守恒定律：也称太乙第二定律，详见[《先天真炁守恒论》](./doc/zhenqishouheng.md)
+* 演化概论：阐述了太乙宇宙中各种生灵之间的演化，详见[《太乙宇宙演化概论》](./doc/yanhua_explain.md)
 * 建设实践：大傩建设和实践报告，详见[https://github.com/hongzhongx/taiyi-contracts](https://github.com/hongzhongx/taiyi-contracts)
 * 智能游戏脚本（SGS）：[https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf](https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf) (*不断更新中*)
 * 前期交流社区（Discord）：[https://discord.gg/g4f84UEGCD](https://discord.gg/g4f84UEGCD)。理想情况下，社区将由太乙网络本身承载，详见[坐忘道项目](https://)
