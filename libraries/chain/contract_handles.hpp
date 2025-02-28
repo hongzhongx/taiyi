@@ -219,6 +219,7 @@ namespace taiyi { namespace chain {
         int contract_random();
         void set_permissions_flag(bool flag);
         void set_invoke_share_percent(uint32_t percent);
+        string get_contract_source_code(const string& contract_name);
         lua_map get_contract_data(const string& contract_name, const lua_map& read_list);
         lua_map read_contract_data(const lua_map& read_list);
         void write_contract_data(const lua_map& data, const lua_map& write_list);

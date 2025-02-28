@@ -223,6 +223,7 @@ namespace taiyi { namespace chain {
         registerFunction("set_invoke_share_percent", &contract_handler::set_invoke_share_percent);
         registerFunction("invoke_contract_function", &contract_handler::invoke_contract_function);
         registerFunction("change_contract_authority", &contract_handler::change_contract_authority);
+        registerFunction("get_contract_source_code", &contract_handler::get_contract_source_code);
         registerFunction("get_contract_data", &contract_handler::get_contract_data);
         registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);
         registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);

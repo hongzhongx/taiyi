@@ -382,6 +382,26 @@ namespace taiyi { namespace chain {
         db.modify(contract, [](contract_object& cb) { cb.is_release = true; });
     }
     //=============================================================================
+    string contract_handler::get_contract_source_code(const string& contract_name)
+    {
+        try
+        {
+            const auto& contract = db.get<contract_object, by_name>(contract_name);
+            const auto& contract_bin_code = db.get<chain::contract_bin_code_object, chain::by_contract_id>(contract.id);
+            return contract_bin_code.source_code;
+        }
+        catch (fc::exception e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            wdump((e.what()));
+            LUA_C_ERR_THROW(this->context.mState, e.what());
+        }
+    }
+    //=============================================================================
     lua_map contract_handler::get_contract_data(const string& contract_name, const lua_map& read_list)
     {
         try
@@ -403,7 +423,6 @@ namespace taiyi { namespace chain {
             wdump((e.what()));
             LUA_C_ERR_THROW(this->context.mState, e.what());
         }
-
     }
     //=============================================================================
     contract_tiandao_property contract_handler::get_tiandao_property()
