@@ -386,9 +386,13 @@ namespace taiyi { namespace chain {
     {
         try
         {
+#ifndef IS_LOW_MEM
             const auto& contract = db.get<contract_object, by_name>(contract_name);
             const auto& contract_bin_code = db.get<chain::contract_bin_code_object, chain::by_contract_id>(contract.id);
             return contract_bin_code.source_code;
+#else
+            return "";
+#endif
         }
         catch (fc::exception e)
         {
