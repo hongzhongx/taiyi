@@ -38,7 +38,7 @@
 * 演化概论I：阐述了太乙宇宙中各种生灵之间的演化，详见[《太乙宇宙演化概论I》](./doc/yanhua_explain.md)
 * 演化概论II：阐述了太乙宇宙中修真体系的演化，详见[《太乙宇宙演化概论II》](./doc/kejixiuzhen_explain.md)
 * 建设实践：大傩建设和实践报告，详见[https://github.com/hongzhongx/taiyi-contracts](https://github.com/hongzhongx/taiyi-contracts)
-* 智能游戏脚本（SGS）：[https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf](https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf) (*不断更新中*)
+* 智能游戏脚本（SGS）：[https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf](https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf) (*暂缺*)
 * 前期交流社区（Discord）：[https://discord.gg/g4f84UEGCD](https://discord.gg/g4f84UEGCD)。理想情况下，社区将由太乙网络本身承载，详见[坐忘道项目](https://)
 
 ## 特色
