@@ -92,10 +92,12 @@ namespace taiyi { namespace protocol {
     struct reward_feigang_operation : public virtual_operation
     {
         reward_feigang_operation(){}
-        reward_feigang_operation( const account_name_type& a, const asset& q )
-            : account( a ), qi( q ) {}
+        reward_feigang_operation( const account_name_type& f, const int64_t& fn, const account_name_type& t, const asset& q )
+            : from( f ), from_nfa(fn), to( t ), qi(q) {}
         
-        account_name_type   account;
+        account_name_type   from;
+        int64_t             from_nfa;
+        account_name_type   to;
         asset               qi;
     };
     
@@ -239,7 +241,7 @@ FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(qi) )
 FC_REFLECT( taiyi::protocol::nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
 FC_REFLECT( taiyi::protocol::nfa_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
-FC_REFLECT( taiyi::protocol::reward_feigang_operation, (account)(qi) )
+FC_REFLECT( taiyi::protocol::reward_feigang_operation, (from)(from_nfa)(to)(qi) )
 FC_REFLECT( taiyi::protocol::reward_cultivation_operation, (account)(nfa)(qi) )
 FC_REFLECT( taiyi::protocol::tiandao_year_change_operation, (messager)(years)(months)(times)(live_num)(dead_num)(born_this_year)(dead_this_year) )
 FC_REFLECT( taiyi::protocol::tiandao_month_change_operation, (messager)(years)(months)(times) )

@@ -191,7 +191,10 @@ namespace taiyi { namespace chain {
 
         void operator()( const reward_feigang_operation& op )
         {
-            _impacted.insert( op.account );
+            _impacted.insert( op.from );
+            if(op.from_nfa != nfa_id_type::max()._id)
+                _impacted_nfas.insert( op.from_nfa );
+            _impacted.insert( op.to );
         }
         
         void operator()( const reward_cultivation_operation& op )

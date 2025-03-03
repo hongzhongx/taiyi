@@ -24,7 +24,7 @@ namespace taiyi { namespace protocol {
     typedef struct nfa_affected
     {
         account_name_type affected_account;
-        int64_t affected_item;
+        int64_t affected_item = -1;
         nfa_affected_type action;
         optional<std::pair<string, string>> modified;
     } nfa_affected;
@@ -62,6 +62,7 @@ namespace taiyi { namespace protocol {
     typedef struct asset_affected
     {
         account_name_type affected_account;
+        int64_t affected_item = -1;
         asset affected_asset;
     } asset_affected;
 
@@ -171,7 +172,7 @@ FC_REFLECT_TYPENAME(taiyi::protocol::future_extensions)
 
 FC_REFLECT(taiyi::protocol::base_result, (fees))
 FC_REFLECT_DERIVED(taiyi::protocol::asset_result, (taiyi::protocol::base_result), (result))
-FC_REFLECT(taiyi::protocol::asset_affected, (affected_account)(affected_asset))
+FC_REFLECT(taiyi::protocol::asset_affected, (affected_account)(affected_item)(affected_asset))
 FC_REFLECT(taiyi::protocol::contract_memo_message, (affected_account)(memo))
 FC_REFLECT(taiyi::protocol::contract_logger, (affected_account)(message))
 FC_REFLECT(taiyi::protocol::contract_narrate, (affected_account)(affected_nfa)(message))

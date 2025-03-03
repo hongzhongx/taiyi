@@ -10,6 +10,7 @@
 #include <chain/transaction_object.hpp>
 #include <chain/account_object.hpp>
 #include <chain/contract_objects.hpp>
+#include <chain/nfa_objects.hpp>
 
 #include <chain/lua_context.hpp>
 #include <chain/contract_worker.hpp>
@@ -174,7 +175,7 @@ namespace taiyi { namespace chain {
         adjust_balance( from_account, -feigang );
         adjust_proxied_siming_adores( from_account, -feigang.amount );
 
-        reward_feigang_operation vop = reward_feigang_operation( to_account.name, feigang );
+        reward_feigang_operation vop = reward_feigang_operation( from_account.name, nfa_id_type::max(), to_account.name, feigang );
         pre_push_virtual_operation( vop );
 
         modify_reward_balance(to_account, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
@@ -195,7 +196,8 @@ namespace taiyi { namespace chain {
         
         adjust_nfa_balance( from_nfa, -feigang );
 
-        reward_feigang_operation vop = reward_feigang_operation( to_account.name, feigang );
+        const auto& nfa_owner = get<account_object, by_id>(from_nfa.owner_account);
+        reward_feigang_operation vop = reward_feigang_operation( nfa_owner.name, from_nfa.id, to_account.name, feigang );
         pre_push_virtual_operation( vop );
 
         modify_reward_balance(to_account, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), feigang, false);
