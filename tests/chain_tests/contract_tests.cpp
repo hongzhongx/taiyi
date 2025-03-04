@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE( callback_functions )
     contract_result result;
     lua_map account_data;
     flat_set<public_key_type> sigkeys;
-    contract_handler ch(*db, caller, contract, result, context, sigkeys, result, account_data);
+    contract_handler ch(*db, caller, contract, result, context, sigkeys, result, account_data, false);
     
     context.new_sandbox(space_name, envcode.c_str(), envcode.size()); //sandbox
     context.writeVariable(space_name, "contract_helper", &ch);

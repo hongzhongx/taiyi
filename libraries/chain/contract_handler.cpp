@@ -101,8 +101,8 @@ namespace taiyi { namespace chain {
     {
     }
     //=============================================================================
-    contract_handler::contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys)
-        : db(db), contract(contract), caller(caller), result(result), context(context), sigkeys(sigkeys)
+    contract_handler::contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys, bool eval)
+    : db(db), contract(contract), caller(caller), result(result), context(context), sigkeys(sigkeys), is_in_eval(eval)
     {
         result.contract_name = contract.name;
         account_contract_data_cache = db.prepare_account_contract_data(caller, contract);
@@ -320,8 +320,10 @@ namespace taiyi { namespace chain {
             narrator.message = message;
             result.contract_affecteds.push_back(std::move(narrator));
             
-            //push event message
-            db.push_virtual_operation( narrate_log_operation( affected_account, affected_nfa, tiandao.v_years, tiandao.v_months, tiandao.v_times, message ) );
+            if(!is_in_eval) {
+                //push event message
+                db.push_virtual_operation( narrate_log_operation( affected_account, affected_nfa, tiandao.v_years, tiandao.v_months, tiandao.v_times, message ) );
+            }
 
         }
         catch (fc::exception e)
@@ -591,7 +593,7 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
             contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys);
+            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->is_in_eval);
             contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
@@ -704,7 +706,7 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
             contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys);
+            contract_handler ch(db, current_ch->caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, false);
             contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
@@ -805,7 +807,7 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
             contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, caller.name, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys);
+            contract_handler ch(db, caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->is_in_eval);
             contract_nfa_handler cnh(caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;

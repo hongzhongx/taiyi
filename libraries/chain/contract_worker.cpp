@@ -42,7 +42,7 @@ namespace taiyi { namespace chain {
 
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller, contract, result, context, sigkeys);
+            contract_handler ch(db, caller, contract, result, context, sigkeys, false);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -314,7 +314,7 @@ namespace taiyi { namespace chain {
                             
         flat_set<public_key_type> sigkeys; //no signature keys
         string function_name = "eval_" + action;
-        lua_table result_table = do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db);
+        lua_table result_table = do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db, true);
         
         result.clear();
         for(auto itr=result_table.v.begin(); itr!=result_table.v.end(); itr++)
@@ -348,7 +348,7 @@ namespace taiyi { namespace chain {
                             
         flat_set<public_key_type> sigkeys; //no signature keys
         string function_name = "do_" + action;
-        lua_table result_table = do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db);
+        lua_table result_table = do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db, false);
 
         result.clear();
         for(auto itr=result_table.v.begin(); itr!=result_table.v.end(); itr++)
@@ -357,7 +357,7 @@ namespace taiyi { namespace chain {
         return "";
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
-    lua_table contract_worker::do_nfa_contract_function(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    lua_table contract_worker::do_nfa_contract_function(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db, bool eval)
     { try {
         lua_table result_table;
 
@@ -377,7 +377,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
             
             contract_base_info cbi(db, context, contract_owner, contract.name, caller_account.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller_account, contract, result, context, sigkeys);
+            contract_handler ch(db, caller_account, contract, result, context, sigkeys, eval);
             contract_nfa_handler cnh(caller_account, caller_nfa, context, db, ch);
 
             const auto& name = contract.name;

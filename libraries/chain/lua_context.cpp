@@ -83,7 +83,7 @@ namespace taiyi { namespace chain {
                 contract_handler* ch = 0;
                 if(current_ch) {
                     //导入的合约需要创建新的ch，由于在导入后会对合约函数进行调用，因此这里创建的ch必须有效，因此需要保留在上层ch中，直到上层ch释放时释放
-                    ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), *contract, current_ch->result, current_ch->context, current_ch->sigkeys);
+                    ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), *contract, current_ch->result, current_ch->context, current_ch->sigkeys, current_ch->is_in_eval);
                     FC_ASSERT(current_ch->context.mState == L);
                     current_ch->_sub_chs.push_back(ch);
                     context.writeVariable(contract->name, "contract_helper", ch);

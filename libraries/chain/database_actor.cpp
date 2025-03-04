@@ -328,7 +328,7 @@ namespace taiyi { namespace chain {
                 bool triggered = false;
                 try {
                     auto session = start_undo_session();
-                    lua_table result_table = worker.do_nfa_contract_function(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+                    lua_table result_table = worker.do_nfa_contract_function(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
                     
                     auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
                     if(it_triggered == result_table.v.end()) {
@@ -430,7 +430,7 @@ namespace taiyi { namespace chain {
         if(abi_itr == contract_ptr->contract_ABI.end())
             return;
 
-        const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
+        //const auto& owner_account = get< account_object, by_id >( nfa.owner_account );
 
         //回调合约生长函数
         {
@@ -447,7 +447,7 @@ namespace taiyi { namespace chain {
             bool trigger_fail = false;
             try {
                 auto session = start_undo_session();
-                worker.do_nfa_contract_function(nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+                worker.do_nfa_contract_function(nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
                 session.squash();
             }
             catch (fc::exception e) {

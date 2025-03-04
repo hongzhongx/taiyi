@@ -208,7 +208,7 @@ namespace taiyi { namespace chain {
             bool beat_fail = false;
             try {
                 auto session = start_undo_session();
-                worker.do_nfa_contract_function(nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this);
+                worker.do_nfa_contract_function(nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
                 session.squash();
             }
             catch (fc::exception e) {

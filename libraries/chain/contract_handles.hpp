@@ -206,10 +206,11 @@ namespace taiyi { namespace chain {
         const flat_set<public_key_type>&    sigkeys;
         lua_map                             account_contract_data_cache;
         lua_map                             contract_data_cache;
+        bool                                is_in_eval; //只读模式标记，表示在eval调用中
         
         std::vector<contract_handler*>      _sub_chs;
         
-        contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys);
+        contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys, bool eval);
         ~contract_handler();
     
         void assert_contract_data_size();
