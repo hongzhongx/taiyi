@@ -33,13 +33,23 @@
 
 ## 文档
 
+### 世界观和文化背景
+
 * 太乙宇宙观：原本见[《太乙宇宙内篇》](./doc/yuzhou.md)，现代白话解读见[《太乙宇宙多维结构——五部十八界》](./doc/yuzhou_explain.md)，其中阐述了太乙第一定律——太乙因果律
 * 真气守恒定律：也称太乙第二定律，详见[《先天真炁守恒论》](./doc/zhenqishouheng.md)
 * 演化概论I：阐述了太乙宇宙中各种生灵之间的演化，详见[《太乙宇宙演化概论I》](./doc/yanhua_explain.md)
 * 演化概论II：阐述了太乙宇宙中修真体系的演化，详见[《太乙宇宙演化概论II》](./doc/kejixiuzhen_explain.md)
+
+### 技术和工具
+
+* 太乙改进建议集（Taiyi Improvement Proposals——TIPs）：https://github.com/hongzhongx/TIPs
 * 建设实践：大傩建设和实践报告，详见[https://github.com/hongzhongx/taiyi-contracts](https://github.com/hongzhongx/taiyi-contracts)
 * 智能游戏脚本（SGS）：[https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf](https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf) (*暂缺*)
+
+### 沟通和交流
+
 * 前期交流社区（Discord）：[https://discord.gg/g4f84UEGCD](https://discord.gg/g4f84UEGCD)。理想情况下，社区将由太乙网络本身承载，详见[坐忘道项目](https://)
+* 几个相关项目的Github论坛：在[TIPs论坛](https://github.com/hongzhongx/TIPs/discussions)、[太乙网络项目论坛](https://github.com/hongzhongx/taiyi/discussions/)和[合约应用实践论坛](https://github.com/hongzhongx/taiyi-contracts/discussions)中打开一个主题贴来讨论各种改进建议
 
 ## 特色
 
