@@ -83,7 +83,7 @@ namespace taiyi { namespace chain {
                 contract_handler* ch = 0;
                 if(current_ch) {
                     //导入的合约需要创建新的ch，由于在导入后会对合约函数进行调用，因此这里创建的ch必须有效，因此需要保留在上层ch中，直到上层ch释放时释放
-                    ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), *contract, current_ch->result, current_ch->context, current_ch->sigkeys, current_ch->is_in_eval);
+                    ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), current_ch->nfa_caller, *contract, current_ch->result, current_ch->context, current_ch->sigkeys, current_ch->is_in_eval);
                     FC_ASSERT(current_ch->context.mState == L);
                     current_ch->_sub_chs.push_back(ch);
                     context.writeVariable(contract->name, "contract_helper", ch);
@@ -213,6 +213,7 @@ namespace taiyi { namespace chain {
         registerFunction("make_release", &contract_handler::make_release);
         registerFunction("random", &contract_handler::contract_random);
         registerFunction("is_owner", &contract_handler::is_owner);
+        registerFunction("get_nfa_caller", &contract_handler::get_nfa_caller);
         registerFunction("read_contract_data", &contract_handler::read_contract_data);
         registerFunction("write_contract_data", &contract_handler::write_contract_data);
         registerFunction("get_account_contract_data", &contract_handler::get_account_contract_data);
@@ -226,6 +227,7 @@ namespace taiyi { namespace chain {
         registerFunction("get_contract_source_code", &contract_handler::get_contract_source_code);
         registerFunction("get_contract_data", &contract_handler::get_contract_data);
         registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);
+        registerFunction("get_nfa_mirage_contract", &contract_handler::get_nfa_mirage_contract);        
         registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);
         registerFunction("create_nfa", &contract_handler::create_nfa);        
         registerFunction("read_nfa_contract_data", &contract_handler::read_nfa_contract_data);
@@ -305,7 +307,9 @@ namespace taiyi { namespace chain {
         registerFunction("write_contract_data", &contract_nfa_handler::write_contract_data);
         registerFunction("destroy", &contract_nfa_handler::destroy);
         registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
-        
+        registerFunction("eval_nfa_action", &contract_nfa_handler::eval_nfa_action);
+        registerFunction("do_nfa_action", &contract_nfa_handler::do_nfa_action);
+
         registerFunction<contract_nfa_handler, void(int64_t to, double, const string&, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler._caller.id, to, amount, symbol, enable_logger);
         });

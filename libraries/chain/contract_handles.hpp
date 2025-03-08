@@ -166,6 +166,8 @@ namespace taiyi { namespace chain {
         void write_contract_data(const lua_map& data, const lua_map& write_list);
         void destroy();
         void modify_actor_attributes(const lua_map& values);
+        lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
 
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);
@@ -201,6 +203,7 @@ namespace taiyi { namespace chain {
         database&                           db;
         const contract_object&              contract;
         const account_object&               caller;
+        const nfa_object*                   nfa_caller = 0; //隐含由某个NFA发起的调用
         contract_result&                    result;
         LuaContext&                         context;
         const flat_set<public_key_type>&    sigkeys;
@@ -210,11 +213,12 @@ namespace taiyi { namespace chain {
         
         std::vector<contract_handler*>      _sub_chs;
         
-        contract_handler(database &db, const account_object& caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys, bool eval);
+        contract_handler(database &db, const account_object& caller, const nfa_object* nfa_caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys, bool eval);
         ~contract_handler();
     
         void assert_contract_data_size();
         bool is_owner();
+        int64_t get_nfa_caller();
         void log(string message);
         void narrate(string message, bool time_prefix = false);
         int contract_random();
@@ -251,6 +255,7 @@ namespace taiyi { namespace chain {
 
         //NFA
         string get_nfa_contract(int64_t nfa_id);
+        string get_nfa_mirage_contract(int64_t nfa_id);
         bool is_nfa_valid(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
         int64_t get_nfa_balance(int64_t nfa_id, const string& symbol_name);

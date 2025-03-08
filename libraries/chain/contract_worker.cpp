@@ -42,7 +42,7 @@ namespace taiyi { namespace chain {
 
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller, contract, result, context, sigkeys, false);
+            contract_handler ch(db, caller, 0, contract, result, context, sigkeys, false);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
@@ -377,7 +377,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
             
             contract_base_info cbi(db, context, contract_owner, contract.name, caller_account.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller_account, contract, result, context, sigkeys, eval);
+            contract_handler ch(db, caller_account, 0, contract, result, context, sigkeys, eval);
             contract_nfa_handler cnh(caller_account, caller_nfa, context, db, ch);
 
             const auto& name = contract.name;
