@@ -1,13 +1,29 @@
 #!/bin/bash
 
+# Add signal handling
+pid=0
+
+# SIGTERM handler
+term_handler() {
+  if [ $pid -ne 0 ]; then
+    echo "Received SIGTERM, shutting down taiyin..."
+    kill -SIGTERM "$pid"
+    wait "$pid"
+  fi
+  exit 143 # 128 + 15 -- SIGTERM
+}
+
+# Setup signal handlers
+trap 'term_handler' SIGTERM
+
 TAIYIN="/usr/local/taiyi-default/bin/taiyin"
 
-VERSION=`cat /etc/taiyinversion`
+VERSION=$(cat /etc/taiyinversion)
 
 if [[ "$IS_TESTNET" ]]; then
-    TAIYIN="/usr/local/taiyi-testnet/bin/taiyin"
+  TAIYIN="/usr/local/taiyi-testnet/bin/taiyin"
 elif [[ "$USE_WAY_TOO_MUCH_RAM" ]]; then
-    TAIYIN="/usr/local/taiyi-full/bin/taiyin"
+  TAIYIN="/usr/local/taiyi-full/bin/taiyin"
 fi
 
 chown -R taiyi:taiyi $HOME
@@ -17,32 +33,32 @@ ARGS=""
 # if user did pass in desired seed nodes, use
 # the ones the user specified:
 if [[ ! -z "$TAIYI_SEED_NODES" ]]; then
-    for NODE in $TAIYI_SEED_NODES ; do
-        ARGS+=" --p2p-seed-node=$NODE"
-    done
+  for NODE in $TAIYI_SEED_NODES; do
+    ARGS+=" --p2p-seed-node=$NODE"
+  done
 fi
 
 if [[ ! -z "$TAIYI_SIMING_NAME" ]]; then
-    ARGS+=" --siming=\"$TAIYI_SIMING_NAME\""
+  ARGS+=" --siming=\"$TAIYI_SIMING_NAME\""
 fi
 
 if [[ ! -z "$TAIYI_PRIVATE_KEY" ]]; then
-    ARGS+=" --private-key=$TAIYI_PRIVATE_KEY"
+  ARGS+=" --private-key=$TAIYI_PRIVATE_KEY"
 fi
 
 if [[ "$STALE_PRODUCTION" ]]; then
-    ARGS+=" --enable-stale-production"
+  ARGS+=" --enable-stale-production"
 fi
 
 if [[ ! -z "$REQUIRED_PARTICIPATION" ]]; then
-    ARGS+=" --required-participation=$REQUIRED_PARTICIPATION"
+  ARGS+=" --required-participation=$REQUIRED_PARTICIPATION"
 fi
 
 if [[ ! -z "$TRACK_ACCOUNT" ]]; then
-    if [[ ! "$USE_WAY_TOO_MUCH_RAM" ]]; then
-        ARGS+=" --plugin=account_history --plugin=account_history_api"
-    fi
-    ARGS+=" --account-history-track-account-range=[\"$TRACK_ACCOUNT\",\"$TRACK_ACCOUNT\"]"
+  if [[ ! "$USE_WAY_TOO_MUCH_RAM" ]]; then
+    ARGS+=" --plugin=account_history --plugin=account_history_api"
+  fi
+  ARGS+=" --account-history-track-account-range=[\"$TRACK_ACCOUNT\",\"$TRACK_ACCOUNT\"]"
 fi
 
 # overwrite local config with image one
@@ -61,14 +77,14 @@ fi
 chown taiyi:taiyi $HOME/config.ini
 
 if [[ ! -d $HOME/blockchain ]]; then
-    if [[ -e /var/cache/taiyi/blocks.tbz2 ]]; then
-        # init with blockchain cached in image
-        ARGS+=" --replay-blockchain"
-        mkdir -p $HOME/blockchain
-        cd $HOME/blockchain
-        tar xvjpf /var/cache/taiyi/blocks.tbz2
-        chown -R taiyi:taiyi $HOME/blockchain
-    fi
+  if [[ -e /var/cache/taiyi/blocks.tbz2 ]]; then
+    # init with blockchain cached in image
+    ARGS+=" --replay-blockchain"
+    mkdir -p $HOME/blockchain
+    cd $HOME/blockchain
+    tar xvjpf /var/cache/taiyi/blocks.tbz2
+    chown -R taiyi:taiyi $HOME/blockchain
+  fi
 fi
 
 # without --data-dir it uses cwd as datadir(!)
@@ -98,31 +114,29 @@ sleep 1
 mv /etc/nginx/nginx.conf /etc/nginx/nginx.original.conf
 cp /etc/nginx/taiyi.nginx.conf /etc/nginx/nginx.conf
 
+echo "Attempting to execute taiyin using additional command line arguments: $ARGS"
+
 if [[ "$USE_NGINX_FRONTEND" ]]; then
-    cp /etc/nginx/healthcheck.conf.template /etc/nginx/healthcheck.conf
-    echo server 127.0.0.1:8091\; >> /etc/nginx/healthcheck.conf
-    echo } >> /etc/nginx/healthcheck.conf
-    rm /etc/nginx/sites-enabled/default
-    cp /etc/nginx/healthcheck.conf /etc/nginx/sites-enabled/default
-    /etc/init.d/fcgiwrap restart
-    service nginx restart
-    exec chpst -utaiyi \
-        $TAIYIN \
-            --webserver-ws-endpoint=0.0.0.0:8091 \
-            --webserver-http-endpoint=0.0.0.0:8091 \
-            --p2p-endpoint=0.0.0.0:2025 \
-            --data-dir=$HOME \
-            $ARGS \
-            $TAIYI_EXTRA_OPTS \
-            2>&1
+  cp /etc/nginx/healthcheck.conf.template /etc/nginx/healthcheck.conf
+  echo server 127.0.0.1:8091\; >>/etc/nginx/healthcheck.conf
+  echo } >>/etc/nginx/healthcheck.conf
+  rm /etc/nginx/sites-enabled/default
+  cp /etc/nginx/healthcheck.conf /etc/nginx/sites-enabled/default
+  /etc/init.d/fcgiwrap restart
+  service nginx restart
+  exec $TAIYIN \
+    --webserver-ws-endpoint=0.0.0.0:8091 \
+    --webserver-http-endpoint=0.0.0.0:8091 \
+    --p2p-endpoint=0.0.0.0:2025 \
+    --data-dir=$HOME \
+    $ARGS \
+    $TAIYI_EXTRA_OPTS
 else
-    exec chpst -utaiyi \
-        $TAIYIN \
-            --webserver-ws-endpoint=0.0.0.0:8090 \
-            --webserver-http-endpoint=0.0.0.0:8090 \
-            --p2p-endpoint=0.0.0.0:2025 \
-            --data-dir=$HOME \
-            $ARGS \
-            $TAIYI_EXTRA_OPTS \
-            2>&1
+  exec $TAIYIN \
+    --webserver-ws-endpoint=0.0.0.0:8090 \
+    --webserver-http-endpoint=0.0.0.0:8090 \
+    --p2p-endpoint=0.0.0.0:2025 \
+    --data-dir=$HOME \
+    $ARGS \
+    $TAIYI_EXTRA_OPTS
 fi
