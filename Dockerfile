@@ -23,15 +23,6 @@ RUN apt-get install -y \
 RUN apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists
 
-RUN \
-    ( /usr/local/taiyi-full/bin/taiyin --version | grep -o '[0-9]*\.[0-9]*\.[0-9]*' \
-    && echo '_' \
-    && git rev-parse --short HEAD ) \
-    | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n//g' \
-    > /etc/taiyinversion 
-
-RUN cat /etc/taiyinversion
-
 # 创建 taiyi 用户
 RUN useradd -s /bin/bash -m -d /var/taiyi taiyi
 
