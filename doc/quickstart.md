@@ -86,6 +86,18 @@ docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
 
 ### 正常关闭节点
 
+
+```sh
+docker run \
+    --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
+    --env REQUIRED_PARTICIPATION=0 --env TAIYI_SEED_NODES="47.109.49.30:2025" \
+    --env USE_NGINX_FRONTEND=1 \
+    --platform linux/amd64 \
+    -d -p 2025:2025 -p 8090:8090 --name taiyin-full \
+    -v ~/Projects/taiyi-mount:/var/taiyi \
+    zuowangdaox/taiyi
+```
+
 停止节点docker容器时，为了保障本地数据库的完整性，可以使用如下方式来让taiyin程序正常退出。下次再开启容器的时候，taiyin程序可以不用再次同步之前的区块。
 
     PID=$(docker exec taiyin-testnet pgrep -f /etc/service/taiyi)
