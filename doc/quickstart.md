@@ -1,15 +1,33 @@
 # 快速启动指南
-----------
+
+有两种方式通过 taiyin 可执行程序快速启动太乙节点。
 
 ## 启动太阴（taiyin）
 
-使用docker来启动：
+### 使用docker来启动：
+
+运行如下命令来快速启动一个默认的节点：
 
 ```sh
 docker run \
     -d -p 2025:2025 -p 8090:8090 --name taiyin-default \
     --restart unless-stopped zuowangdaox/taiyi
 ```
+
+### 使用编译好的二进制文件:
+
+直接以一些必须的参数运行 taiyin 可执行程序即可
+
+```sh
+./bin/taiyin \
+    --webserver-ws-endpoint=0.0.0.0:8090 \
+    --webserver-http-endpoint=0.0.0.0:8090 \
+    --p2p-endpoint=0.0.0.0:2025 \
+    --data-dir=./taiyi-data-dir
+```
+
+> [!NOTE]
+> 编译可以参考[构建太乙系统](./building.md)来自己构建 taiyin，推荐使用 docker 方式运行，下面的各种配置也是基于 docker 镜像进行。
 
 ### 低内存节点
 
@@ -62,7 +80,6 @@ track-account-range = ["yourexchangeid", "yourexchangeid"]
 
 Docker下使用如下命令也可以激活类似配置：
 
-
 ```
 docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
     --name taiyin \
@@ -84,7 +101,7 @@ docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
 | `TAIYI_SEED_NODES`       | 指定种子节点                                                        |
 | `TAIYI_SIMING_NAME`      | 指定节点司命账户名称                                                |
 | `TAIYI_PRIVATE_KEY`      | 指定节点司命账户私钥                                                |
-| `STALE_PRODUCTION`       | 启用区块生成，即使区块链已经过时。产                                |
+| `STALE_PRODUCTION`       | 启用区块生成，即使区块链已经过时。                                  |
 | `REQUIRED_PARTICIPATION` | 为了生成区块必须司命参与百分比，启动本地测试网时通常为 0            |
 | `TRACK_ACCOUNT`          | 指定需要追踪的账号                                                  |
 
