@@ -104,7 +104,7 @@ docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
 | `STALE_PRODUCTION`       | 启用区块生成，即使区块链已经过时。                                  |
 | `REQUIRED_PARTICIPATION` | 为了生成区块必须司命参与百分比，启动本地测试网时通常为 0            |
 | `TRACK_ACCOUNT`          | 指定需要追踪的账号                                                  |
-
+| `REPLAY_BLOCKCHAIN`      | 强制重演已有区块                                                  |
 
 ## 启动测试节点示例
 
@@ -172,6 +172,14 @@ docker run \
     -d -p 2025:2025 -p 8090:8090 --name taiyin \
     -v ~/taiyi-mount:/var/taiyi \
     zuowangdaox/taiyi:latest
+```
+
+## 关于打开文件数量过多的问题（too many open files）
+
+如果出现`too many open files`错误，在运行容器时增加`--ulimit`参数，以提高容器中允许进程打开文件数目的最大值：
+
+```sh
+docker run --ulimit nofile=60000:60000 ...
 ```
 
 ## 资源使用配置

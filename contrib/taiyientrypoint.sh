@@ -44,6 +44,10 @@ build_args() {
     args+=" --enable-stale-production"
   fi
 
+  if [[ "$REPLAY_BLOCKCHAIN" ]]; then
+    args+=" --replay-blockchain"
+  fi
+
   if [[ ! -z "$REQUIRED_PARTICIPATION" ]]; then
     args+=" --required-participation=$REQUIRED_PARTICIPATION"
   fi
