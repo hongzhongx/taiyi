@@ -647,11 +647,9 @@ namespace taiyi { namespace chain {
             try
             {
                 if (err)
-                    error_message = LuaContext::readTopAndPop<lua_types>(nfa_context.mState, -1);
-                else {
-                    if(lua_istable(nfa_context.mState, -1))
-                        result_table = LuaContext::readTopAndPop<lua_table>(nfa_context.mState, -1);
-                }
+                    error_message = *LuaContext::Reader<lua_types>::read(nfa_context.mState, -1);
+                else if(lua_istable(nfa_context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(nfa_context.mState, -1);
             }
             catch (...)
             {
@@ -754,17 +752,15 @@ namespace taiyi { namespace chain {
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
                 LuaContext::Pusher<lua_types>::push(nfa_context.mState, *itr).release();
             
-            int err = lua_pcall(nfa_context.mState, value_list.size(), 0, 0);
+            int err = lua_pcall(nfa_context.mState, value_list.size(), 1, 0);
             lua_types error_message;
             lua_table result_table;
             try
             {
                 if (err)
-                    error_message = LuaContext::readTopAndPop<lua_types>(nfa_context.mState, -1);
-                else {
-                    if(lua_istable(nfa_context.mState, -1))
-                        result_table = LuaContext::readTopAndPop<lua_table>(nfa_context.mState, -1);
-                }
+                    error_message = *LuaContext::Reader<lua_types>::read(nfa_context.mState, -1);
+                else if(lua_istable(nfa_context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(nfa_context.mState, -1);
             }
             catch (...)
             {
@@ -855,17 +851,15 @@ namespace taiyi { namespace chain {
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
                 LuaContext::Pusher<lua_types>::push(nfa_context.mState, *itr).release();
             
-            int err = lua_pcall(nfa_context.mState, value_list.size(), 0, 0);
+            int err = lua_pcall(nfa_context.mState, value_list.size(), 1, 0);
             lua_types error_message;
             lua_table result_table;
             try
             {
                 if (err)
-                    error_message = LuaContext::readTopAndPop<lua_types>(nfa_context.mState, -1);
-                else {
-                    if(lua_istable(nfa_context.mState, -1))
-                        result_table = LuaContext::readTopAndPop<lua_table>(nfa_context.mState, -1);
-                }
+                    error_message = *LuaContext::Reader<lua_types>::read(nfa_context.mState, -1);
+                else if(lua_istable(nfa_context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(nfa_context.mState, -1);
             }
             catch (...)
             {

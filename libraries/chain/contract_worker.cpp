@@ -68,11 +68,9 @@ namespace taiyi { namespace chain {
             try
             {
                 if (err)
-                    error_message = LuaContext::readTopAndPop<lua_types>(context.mState, -1);
-                else {
-                    if(lua_istable(context.mState, -1))
-                        result_table = LuaContext::readTopAndPop<lua_table>(context.mState, -1);
-                }
+                    error_message = *LuaContext::Reader<lua_types>::read(context.mState, -1);
+                else if(lua_istable(context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(context.mState, -1);
             }
             catch (...)
             {
@@ -403,11 +401,9 @@ namespace taiyi { namespace chain {
             try
             {
                 if (err)
-                    error_message = LuaContext::readTopAndPop<lua_types>(context.mState, -1);
-                else {
-                    if(lua_istable(context.mState, -1))
-                        result_table = LuaContext::readTopAndPop<lua_table>(context.mState, -1);
-                }
+                    error_message = *LuaContext::Reader<lua_types>::read(context.mState, -1);
+                else if(lua_istable(context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(context.mState, -1);
             }
             catch (...)
             {

@@ -165,8 +165,11 @@ namespace taiyi { namespace chain {
 
 #ifdef IS_TEST_NET
                     //测试网络修真可以起死回生
+                    auto hbn = head_block_num();
                     const auto* test_actor = find< actor_object, by_nfa_id >( nfa_b->id );
-                    if( test_actor != nullptr && test_actor->health_max <= 0 ) {
+                    if( test_actor != nullptr &&
+                       (test_actor->health_max <= 0 || (hbn > 1601345 && test_actor->health_max <= 10) )
+                       ) {
                         modify(*test_actor, [&](actor_object& obj) {
                             obj.health_max = 100;
                             obj.health = obj.health_max;
