@@ -51,6 +51,10 @@
 * 前期交流社区（Discord）：[https://discord.gg/g4f84UEGCD](https://discord.gg/g4f84UEGCD)。理想情况下，社区将由太乙网络本身承载，详见[坐忘道项目](https://)
 * 几个相关项目的Github论坛：在[TIPs论坛](https://github.com/hongzhongx/TIPs/discussions)、[太乙网络项目论坛](https://github.com/hongzhongx/taiyi/discussions/)和[合约应用实践论坛](https://github.com/hongzhongx/taiyi-contracts/discussions)中打开一个主题贴来讨论各种改进建议
 
+### 白皮书
+
+* 白皮书？番茄小说网上搜索一部名叫《大傩世界》的小说，正在免费连载。
+
 ## 特色
 
 * 游戏交互无需费用（可恢复的行动力 = 免费模式）
