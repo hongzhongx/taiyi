@@ -395,7 +395,7 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, clean_database_fixture )
 {
     try
     {
-        idump((db->get_account("initminer")));
+        idump((db->get_account("danuo")));
         ACTORS( (alice)(bob) );
         
         generate_block();
@@ -735,7 +735,7 @@ BOOST_FIXTURE_TEST_CASE( hardfork_test, database_fixture )
             
             generate_blocks( 2 );
             
-            vest( "initminer", 10000 );
+            vest( "danuo", 10000 );
             
             // Fill up the rest of the required miners
             for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )
@@ -824,13 +824,13 @@ BOOST_FIXTURE_TEST_CASE( generate_block_size, clean_database_fixture )
         op.amount = asset( 1000, YANG_SYMBOL );
         
         // tx minus op is 79 bytes
-        // op is 33 bytes (32 for op + 1 byte static variant tag)
+        // op is 29 bytes (28 for op + 1 byte static variant tag)
         // total is 65254
         // Original generation logic only allowed 115 bytes for the header
         // We are targetting a size (minus header) of 65421 which creates a block of "size" 65535
         // This block will actually be larger because the header estimates is too small
         
-        for( size_t i = 0; i < 1975; i++ )
+        for( size_t i = 0; i < 2248; i++ )
         {
             tx.operations.push_back( op );
         }
@@ -839,7 +839,7 @@ BOOST_FIXTURE_TEST_CASE( generate_block_size, clean_database_fixture )
         db->push_transaction( tx, 0 );
         
         // Second transaction, tx minus op is 78 (one less byte for operation vector size)
-        // We need a 88 byte op. We need a 22 character memo (1 byte for length) 55 = 32 (old op) + 55 + 1
+        // We need a 84 byte op. We need a 22 character memo (1 byte for length) 84 = 28 (old op) + 55 + 1
         op.memo = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123";
         tx.clear();
         tx.operations.push_back( op );

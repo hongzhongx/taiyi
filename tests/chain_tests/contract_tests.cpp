@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_mana.value - alice_acc.qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 883 );
+    BOOST_REQUIRE( used_mana == 1036 );
 
     validate_database();
 
@@ -708,11 +708,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     int64_t used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 406 );
+    BOOST_REQUIRE( used_mana == 416 );
     
     asset reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
     idump( (reward_feigang.amount) );
-    BOOST_REQUIRE( reward_feigang.amount == 406 );
+    BOOST_REQUIRE( reward_feigang.amount == 416 );
     
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     
@@ -731,11 +731,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
         
         used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
         //idump( (used_mana) );
-        BOOST_REQUIRE( used_mana == 406 );
+        BOOST_REQUIRE( used_mana == 416 );
         
         reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
         //idump( (reward_feigang) );
-        BOOST_REQUIRE( reward_feigang.amount == 406 );
+        BOOST_REQUIRE( reward_feigang.amount == 416 );
     }
     
 } FC_LOG_AND_RETHROW() }

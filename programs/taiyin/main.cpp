@@ -49,16 +49,16 @@ void info()
     std::cerr << "------------------------------------------------------\n\n";
     std::cerr << "            STARTING TEST NETWORK\n\n";
     std::cerr << "------------------------------------------------------\n";
-    auto initminer_private_key = taiyi::utilities::key_to_wif( TAIYI_INIT_PRIVATE_KEY );
-    std::cerr << "initminer public key: " << TAIYI_INIT_PUBLIC_KEY_STR << "\n";
-    std::cerr << "initminer private key: " << initminer_private_key << "\n";
+    auto initsiming_private_key = taiyi::utilities::key_to_wif( TAIYI_INIT_PRIVATE_KEY );
+    std::cerr << "initsiming public key: " << TAIYI_INIT_PUBLIC_KEY_STR << "\n";
+    std::cerr << "initsiming private key: " << initsiming_private_key << "\n";
     std::cerr << "blockchain version: " << std::string( TAIYI_BLOCKCHAIN_VERSION ) << "\n";
     std::cerr << "------------------------------------------------------\n";
 #else
     std::cerr << "------------------------------------------------------\n\n";
     std::cerr << "            STARTING TAIYI NETWORK\n\n";
     std::cerr << "------------------------------------------------------\n";
-    std::cerr << "initminer public key: " << TAIYI_INIT_PUBLIC_KEY_STR << "\n";
+    std::cerr << "initsiming public key: " << TAIYI_INIT_PUBLIC_KEY_STR << "\n";
     std::cerr << "chain id: " << std::string( TAIYI_CHAIN_ID ) << "\n";
     std::cerr << "blockchain version: " << std::string( TAIYI_BLOCKCHAIN_VERSION ) << "\n";
     std::cerr << "------------------------------------------------------\n";

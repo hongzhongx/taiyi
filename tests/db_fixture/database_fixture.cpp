@@ -74,7 +74,7 @@ namespace taiyi { namespace chain {
             db->set_hardfork( TAIYI_BLOCKCHAIN_VERSION.minor_v() );
             generate_block();
 
-            vest( "initminer", 10000 );
+            vest( "danuo", 10000 );
             
             // Fill up the rest of the required miners
             for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )
@@ -147,7 +147,7 @@ namespace taiyi { namespace chain {
         db->set_hardfork( TAIYI_BLOCKCHAIN_VERSION.minor_v() );
         generate_block();
         
-        vest( "initminer", 10000 );
+        vest( "danuo", 10000 );
         
         // Fill up the rest of the required miners
         for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )
@@ -558,7 +558,7 @@ namespace taiyi { namespace chain {
             db->set_hardfork( TAIYI_BLOCKCHAIN_VERSION.minor_v() );
             generate_block();
             
-            vest( "initminer", 10000 );
+            vest( "danuo", 10000 );
             
             // Fill up the rest of the required miners
             for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )

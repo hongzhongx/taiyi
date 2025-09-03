@@ -72,12 +72,12 @@ docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
 
 由于是初始节点，因此`STALE_PRODUCTION`设置为true表示要立即出块。
 
-`TAIYI_SIMING_NAME`和`TAIYI_PRIVATE_KEY`分别设置为测试网络的初始司命账号名和初始私钥，目前initminer的账号名和私钥在测试网络上是固定的。
+`TAIYI_SIMING_NAME`和`TAIYI_PRIVATE_KEY`分别设置为测试网络的初始司命账号名和初始私钥，目前initsiming的账号名和私钥在测试网络上是固定的。
 
     docker run \
         --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
         --env STALE_PRODUCTION=1 --env REQUIRED_PARTICIPATION=0 \
-        --env TAIYI_SIMING_NAME=initminer \
+        --env TAIYI_SIMING_NAME=danuo \
         --env TAIYI_PRIVATE_KEY=5JNHfZYKGaomSFvd4NUdQ9qMcEAC43kujbfjueTHpVapX1Kzq2n \
         -d -p 2025:2025 -p 8090:8090 --name taiyin-testnet \
         zuowangdaox/taiyi

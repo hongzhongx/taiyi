@@ -80,7 +80,7 @@
 #define TAIYI_START_QI_BLOCK                    (TAIYI_BLOCKS_PER_DAY * 7)
 #define TAIYI_START_MINER_ADORING_BLOCK         (TAIYI_BLOCKS_PER_DAY * 30)
 
-#define TAIYI_INIT_SIMING_NAME                  "initminer"
+#define TAIYI_INIT_SIMING_NAME                  "danuo"
 #define TAIYI_NUM_INIT_SIMINGS                  1
 
 #define TAIYI_MAX_SIMINGS                       21
