@@ -265,6 +265,7 @@ namespace taiyi { namespace chain {
 
         lua_map read_nfa_contract_data(int64_t nfa_id, const lua_map& read_list);
         void write_nfa_contract_data(int64_t nfa_id, const lua_map& data, const lua_map& write_list);
+        bool is_nfa_action_exist(int64_t nfa_id, const string& action);
         lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);

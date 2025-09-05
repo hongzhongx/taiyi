@@ -22,7 +22,7 @@ namespace taiyi { namespace chain {
     { try {
         const auto& creator = _db.get_account( o.creator );
                 
-        size_t new_state_size = _db.create_nfa_symbol_object(creator, o.symbol, o.describe, o.default_contract);
+        size_t new_state_size = _db.create_nfa_symbol_object(creator, o.symbol, o.describe, o.default_contract, o.max_count);
         
         int64_t used_qi = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create nfa symbol." );

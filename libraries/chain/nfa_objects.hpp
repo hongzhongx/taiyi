@@ -30,6 +30,7 @@ namespace taiyi { namespace chain {
         string                      describe;
         contract_id_type            default_contract = contract_id_type::max();
         uint64_t                    count = 0;
+        uint64_t                    max_count = 0;
     };
 
     struct by_symbol;
@@ -174,7 +175,7 @@ namespace taiyi { namespace chain {
 
 } } // taiyi::chain
 
-FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count))
+FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count)(max_count))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
 FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(is_miraged)(mirage_contract)(created_time)(next_tick_time))

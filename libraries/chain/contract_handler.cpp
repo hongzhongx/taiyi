@@ -564,6 +564,31 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    bool contract_handler::is_nfa_action_exist(int64_t nfa_id, const string& action)
+    {
+        try
+        {
+            const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
+            
+            //check existence and consequence type
+            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
+            if(contract_ptr == nullptr)
+                return false;
+
+            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
+            if(abi_itr == contract_ptr->contract_ABI.end())
+                return false;
+            if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
+                return false;
+
+            return true;
+        }
+        catch(fc::exception e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     lua_map contract_handler::eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
     {
         LuaContext nfa_context;

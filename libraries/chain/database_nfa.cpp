@@ -48,11 +48,11 @@ namespace taiyi { namespace chain {
     void database::create_basic_nfa_symbol_objects()
     {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
-        create_nfa_symbol_object(creator, "nfa.actor.default", "默认的角色", "contract.actor.default");
-        create_nfa_symbol_object(creator, "nfa.zone.default", "默认的区域", "contract.zone.default");
+        create_nfa_symbol_object(creator, "nfa.actor.default", "默认的角色", "contract.actor.default", 1000000000);
+        create_nfa_symbol_object(creator, "nfa.zone.default", "默认的区域", "contract.zone.default", 1000000000);
     }
     //=========================================================================
-    size_t database::create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract)
+    size_t database::create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count)
     {
         const auto* nfa_symbol = find<nfa_symbol_object, by_symbol>(symbol);
         FC_ASSERT(nfa_symbol == nullptr, "NFA symbol named \"${n}\" is already exist.", ("n", symbol));
@@ -68,6 +68,7 @@ namespace taiyi { namespace chain {
             obj.describe = describe;
             obj.default_contract = contract->id;
             obj.count = 0;
+            obj.max_count = max_count;
         });
         
         return fc::raw::pack_size(nfa_symbol_obj);
@@ -76,6 +77,13 @@ namespace taiyi { namespace chain {
     const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa)
     {
         const auto& caller = creator;
+        
+        //检查NFA最大数量限制
+        FC_ASSERT(nfa_symbol.count < nfa_symbol.max_count, "The quantity of nfa with symbol \"${s}\" has reached the maximum limit ${c}", ("s", nfa_symbol.symbol)("c", nfa_symbol.max_count));
+
+        modify<nfa_symbol_object>(nfa_symbol, [&](nfa_symbol_object& _obj) {
+            _obj.count += 1;
+        });
         
         const auto& nfa = create<nfa_object>([&](nfa_object& obj) {
             obj.creator_account = creator.id;
@@ -184,16 +192,22 @@ namespace taiyi { namespace chain {
                 });
             }
             
+            const auto* contract_ptr = find<contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
+            if(contract_ptr == nullptr) {
+                //主合约无效
+                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
+                continue;
+            }
+            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));
+            if(abi_itr == contract_ptr->contract_ABI.end()) {
+                //主合约无心跳入口
+                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
+                continue;
+            }
+            
             modify(nfa, [&]( nfa_object& obj ) {
                 obj.next_tick_time = now + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL;
             });
-
-            const auto* contract_ptr = find<contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                continue; //主合约可能无效，但是只要有真气，就有下一次心跳机会
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));
-            if(abi_itr == contract_ptr->contract_ABI.end())
-                continue; //主合约可能无心跳入口，但是只要有真气，就有下一次心跳机会
 
             vector<lua_types> value_list; //no params.
             contract_worker worker;
