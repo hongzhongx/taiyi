@@ -140,7 +140,7 @@ namespace taiyi { namespace chain {
             c.contract_ABI = aco.v;
         });
         
-        return fc::raw::pack_size(contract) + fc::raw::pack_size(code_bin_object);
+        return TAIYI_CONTRACT_OBJ_STATE_BYTES + fc::raw::pack_size(contract.contract_ABI) + TAIYI_CONTRACT_BIN_OBJ_STATE_BYTES + fc::raw::pack_size(code_bin_object.lua_code_b);
     }
     //=========================================================================
     void database::create_basic_contract_objects()

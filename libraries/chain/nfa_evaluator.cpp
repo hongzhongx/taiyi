@@ -24,13 +24,10 @@ namespace taiyi { namespace chain {
                 
         size_t new_state_size = _db.create_nfa_symbol_object(creator, o.symbol, o.describe, o.default_contract, o.max_count);
         
-        int64_t used_qi = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        //reward to treasury
+        int64_t used_qi = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create nfa symbol." );
-
-        //reward contract owner
-        const auto& contract = _db.get<contract_object, by_name>(o.default_contract);
-        const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
-        _db.reward_feigang(contract_owner, creator, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
 
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -99,6 +96,11 @@ namespace taiyi { namespace chain {
         affected.action = nfa_affected_type::transfer_to;
         result.contract_affecteds.push_back(std::move(affected));
         
+        //reward to treasury
+        int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( from_account.qi.amount.value >= used_qi, "From account does not have enough qi to operation." );
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
+        
         return result;
     } FC_CAPTURE_AND_RETHROW( (o) ) }
     //=============================================================================
@@ -130,7 +132,12 @@ namespace taiyi { namespace chain {
             affected.action = nfa_affected_type::modified;
             result.contract_affecteds.push_back(std::move(affected));
         }
-        
+
+        //reward to treasury
+        int64_t used_qi = 1 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( owner_account.qi.amount.value >= used_qi, "Owner account does not have enough qi to operation." );
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), owner_account, asset(used_qi, QI_SYMBOL));
+
         return result;
     } FC_CAPTURE_AND_RETHROW( (o) ) }
     //=============================================================================
@@ -164,13 +171,17 @@ namespace taiyi { namespace chain {
         FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
         int64_t used_drops = old_drops - vm_drops;
 
-        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
-        
         //reward contract owner
+        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
         const auto& contract = _db.get<contract_object, by_id>(nfa->is_miraged?nfa->mirage_contract:nfa->main_contract);
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
         _db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+        
+        //reward to treasury
+        used_qi = 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
 
         return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }

@@ -84,7 +84,7 @@ namespace taiyi { namespace chain {
         if( wit_itr != by_siming_name_idx.end() )
         {
             _db.modify( *wit_itr, [&]( siming_object& w ) {
-                w.url = o.url;
+                w.url               = o.url;
                 w.signing_key       = o.block_signing_key;
                 copy_legacy_chain_properties< false >( w.props, o.props );
             });
@@ -93,7 +93,7 @@ namespace taiyi { namespace chain {
         {
             _db.create< siming_object >( [&]( siming_object& w ) {
                 w.owner             = o.owner;
-                w.url = o.url;
+                w.url               = o.url;
                 w.signing_key       = o.block_signing_key;
                 w.created           = _db.head_block_time();
                 copy_legacy_chain_properties< false >( w.props, o.props );
@@ -317,6 +317,13 @@ namespace taiyi { namespace chain {
     {
         FC_ASSERT( o.amount.symbol == YANG_SYMBOL || o.to != TAIYI_TREASURY_ACCOUNT, "Can only transfer YANG to ${s}", ("s", TAIYI_TREASURY_ACCOUNT) );
         
+        //reward to treasury
+        int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t need_qi = used_qi + (o.amount.symbol == QI_SYMBOL ? o.amount.amount.value : 0);
+        const auto& from_account = _db.get_account(o.from);
+        FC_ASSERT( from_account.qi.amount.value >= need_qi, "From account does not have enough qi to operation." );
+        _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
+
         _db.adjust_balance( o.from, -o.amount );
         _db.adjust_balance( o.to, o.amount );
         
@@ -329,7 +336,12 @@ namespace taiyi { namespace chain {
         const auto& to_account = o.to.size() ? _db.get_account(o.to) : from_account;
         
         FC_ASSERT( o.to != TAIYI_TREASURY_ACCOUNT, "Can only transfer YANG to ${s}", ("s", TAIYI_TREASURY_ACCOUNT) );
-        
+
+        //reward to treasury
+        int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( from_account.qi.amount.value >= used_qi, "From account does not have enough qi to operation." );
+        _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
+
         _db.adjust_balance( from_account, -o.amount );
         _db.create_qi( to_account, o.amount );
         
@@ -341,8 +353,13 @@ namespace taiyi { namespace chain {
         FC_ASSERT( o.qi.amount >= 0, "Cannot withdraw negative Qi. account: ${account}, qi:${qi}", ("account", o.account)("qi", o.qi) );
         
         const auto& account = _db.get_account( o.account );
-        FC_ASSERT( account.qi >= asset( 0, QI_SYMBOL ), "Account does not have sufficient Taiyi Qi for withdraw." );
-        FC_ASSERT( account.qi - account.delegated_qi >= o.qi, "Account does not have sufficient Taiyi Qi for withdraw." );
+
+        //reward to treasury
+        int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( account.qi.amount.value >= used_qi, "Account does not have enough qi to operation." );
+        _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), account, asset(used_qi, QI_SYMBOL));
+
+        FC_ASSERT( account.qi - account.delegated_qi >= o.qi, "Account does not have sufficient Qi for withdraw." );
         
         if( o.qi.amount == 0 )
         {

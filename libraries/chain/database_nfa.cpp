@@ -71,7 +71,7 @@ namespace taiyi { namespace chain {
             obj.max_count = max_count;
         });
         
-        return fc::raw::pack_size(nfa_symbol_obj);
+        return TAIYI_NFA_SYMBOL_OBJ_STATE_BYTES; //fix size to avoid fc::raw::pack_size(nfa_symbol_obj) changing in future structure defination;
     }
     //=========================================================================
     const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa)
@@ -119,19 +119,18 @@ namespace taiyi { namespace chain {
         lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, reset_vm_memused, context, *this);
         int64_t used_drops = old_drops - vm_drops;
         
-        size_t new_state_size = fc::raw::pack_size(nfa);
-        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
-        if(caller_nfa)
-            FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
-        else
-            FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以创建新实体" );
-        
         //reward contract owner
+        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
         const auto& contract_owner = get<account_object, by_id>(contract.owner);
-        if(caller_nfa)
+
+        if(caller_nfa) {
+            FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
             reward_feigang(contract_owner, *caller_nfa, asset(used_qi, QI_SYMBOL));
-        else
+        }
+        else {
+            FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以创建新实体" );
             reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+        }
                         
         //init nfa from result table
         modify(nfa, [&](nfa_object& obj) {
@@ -142,6 +141,17 @@ namespace taiyi { namespace chain {
         create<nfa_material_object>([&](nfa_material_object& obj) {
             obj.nfa = nfa.id;
         });
+        
+        //reward to treasury
+        used_qi = (TAIYI_NFA_OBJ_STATE_BYTES + TAIYI_NFA_MATERIAL_STATE_BYTES + fc::raw::pack_size(result_table.v)) * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        if(caller_nfa) {
+            FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
+            reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), *caller_nfa, asset(used_qi, QI_SYMBOL));
+        }
+        else {
+            FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以创建新实体" );
+            reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
+        }
         
         return nfa;
     }

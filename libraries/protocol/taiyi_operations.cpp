@@ -60,8 +60,7 @@ namespace taiyi { namespace protocol {
     void transfer_to_qi_operation::validate() const
     {
         validate_account_name( from );
-        FC_ASSERT( amount.symbol == YANG_SYMBOL,
-                  "Amount must be YANG" );
+        FC_ASSERT( amount.symbol == YANG_SYMBOL, "Amount must be YANG" );
         if ( to != account_name_type() ) validate_account_name( to );
         FC_ASSERT( amount.amount > 0, "Must transfer a nonzero amount" );
     }
@@ -247,6 +246,7 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( is_valid_nfa_symbol( symbol ), "symbol ${q} is invalid", ("n", symbol) );
         
         FC_ASSERT( describe.size() > 0, "describe is empty" );
+        FC_ASSERT( describe.size() < 512, "describe is too long" );
         FC_ASSERT( fc::is_utf8( describe ), "describe not formatted in UTF8" );
 
         FC_ASSERT(memcmp(default_contract.data(), "contract.", 9) == 0);
