@@ -167,19 +167,23 @@ namespace taiyi { namespace chain {
         long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         vector<lua_types> action_result;
+        _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
         string err = worker.do_nfa_contract_action(*nfa, o.action, value_list, action_result, vm_drops, true, context, _db);
         FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
+        int64_t api_exe_point = _db.get_contract_handler_exe_point();
         int64_t used_drops = old_drops - vm_drops;
 
         //reward contract owner
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
+        used_qi -= used_qi_for_treasury;
         FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
         const auto& contract = _db.get<contract_object, by_id>(nfa->is_miraged?nfa->mirage_contract:nfa->main_contract);
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
         _db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
         
         //reward to treasury
-        used_qi = 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
         FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
         _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
 

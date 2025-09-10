@@ -310,12 +310,8 @@ namespace taiyi { namespace protocol {
     {
         validate_account_name( creator );
         
-        FC_ASSERT( is_asset_type( fee, QI_SYMBOL ), "Zone creation fee must be QI" );
-        FC_ASSERT( fee >= asset( 0, QI_SYMBOL ), "Zone creation fee cannot be negative" );
-
         FC_ASSERT( name.size() > 0, "Name is empty" );
-        FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT,
-                  "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
+        FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT, "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
         FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );        
     }    
 

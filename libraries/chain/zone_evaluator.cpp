@@ -78,19 +78,10 @@ namespace taiyi { namespace chain {
     operation_result create_zone_evaluator::do_apply( const create_zone_operation& o )
     { try {
         const auto& creator = _db.get_account( o.creator ); // prove it exists
-        auto now = _db.head_block_time();
                     
         //check zone existence
         auto check_zone = _db.find< zone_object, by_name >( o.name );
         FC_ASSERT( check_zone == nullptr, "There is already exist zone named \"${a}\".", ("a", o.name) );
-
-        const auto& props = _db.get_dynamic_global_properties();
-        const siming_schedule_object& wso = _db.get_siming_schedule_object();
-
-        FC_ASSERT( o.fee <= asset( TAIYI_MAX_ZONE_CREATION_FEE, QI_SYMBOL ), "Zone creation fee cannot be too large" );
-        FC_ASSERT( o.fee == (wso.median_props.account_creation_fee * TAIYI_QI_SHARE_PRICE), "Must pay the exact zone creation fee. paid: ${p} fee: ${f}", ("p", o.fee) ("f", wso.median_props.account_creation_fee * TAIYI_QI_SHARE_PRICE) );
-
-        _db.adjust_balance( creator, -o.fee );
 
         contract_result result;
 
@@ -123,16 +114,9 @@ namespace taiyi { namespace chain {
             _db.initialize_zone_object( zone, o.name, nfa, XUKONG);
         });
         
-        if( o.fee.amount > 0 ) {
-            _db.modify(nfa, [&](nfa_object& obj) {
-                obj.qi += o.fee;
-            });
-        }
-
-        int64_t used_qi = fc::raw::pack_size(new_zone) * TAIYI_USEMANA_STATE_BYTES_SCALE + 2000 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create zone." );
-
         //reward to treasury
+        int64_t used_qi = TAIYI_ZONE_OBJ_STATE_BYTES * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create zone." );
         _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
 
         affected.affected_account = creator.name;

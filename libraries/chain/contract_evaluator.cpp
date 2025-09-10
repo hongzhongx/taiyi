@@ -44,11 +44,13 @@ namespace taiyi { namespace chain {
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = creator.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
+        _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
         size_t new_state_size = _db.create_contract_objects( creator, o.name, o.data, o.contract_authority, vm_drops );
+        int64_t api_exe_point = _db.get_contract_handler_exe_point();
         int64_t used_drops = old_drops - vm_drops;
 
         //reward to treasury
-        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + (100 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create contract. need ${n}", ("n", used_qi) );
         _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
         
@@ -74,7 +76,9 @@ namespace taiyi { namespace chain {
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = reviser.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
+        _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
         lua_table aco = worker.do_contract(contract.id, contract.name, o.data, lua_code_b, vm_drops, _db);
+        int64_t api_exe_point = _db.get_contract_handler_exe_point();
         int64_t used_drops = old_drops - vm_drops;
 
         const auto& code_bin_object = _db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
@@ -93,7 +97,7 @@ namespace taiyi { namespace chain {
         
         //reward to treasury
         size_t new_state_size = fc::raw::pack_size(contract.contract_ABI) + fc::raw::pack_size(code_bin_object.lua_code_b);
-        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( reviser.qi.amount.value >= used_qi, "reviser account does not have enough qi to revise contract." );
         _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), reviser, asset(used_qi, QI_SYMBOL));
         
@@ -131,17 +135,23 @@ namespace taiyi { namespace chain {
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
+        int64_t backup_api_exe_point = _db.get_contract_handler_exe_point();
+        _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
         worker.do_contract_function(caller, o.function_name, o.value_list, sigkeys, contract, vm_drops, true,  context, _db);
+        int64_t api_exe_point = _db.get_contract_handler_exe_point();
+        _db.clear_contract_handler_exe_point(backup_api_exe_point);
         int64_t used_drops = old_drops - vm_drops;
 
         //reward contract owner
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
+        used_qi -= used_qi_for_treasury;
         FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
         _db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
 
         //reward to treasury
-        used_qi = 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+        used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
         FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
         _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
 

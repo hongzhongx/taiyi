@@ -433,19 +433,17 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct legacy_create_zone_operation
     {
         legacy_create_zone_operation() {}
-        legacy_create_zone_operation(const create_zone_operation& op) : fee(legacy_asset::from_asset(op.fee)), creator(op.creator), name(op.name)
+        legacy_create_zone_operation(const create_zone_operation& op) : creator(op.creator), name(op.name)
         {}
 
         operator create_zone_operation()const
         {
             create_zone_operation op;
-            op.fee = fee;
             op.creator = creator;
             op.name = name;
             return op;
         }
 
-        legacy_asset      fee;
         account_name_type creator;
         string            name;
     };
@@ -822,6 +820,6 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_deposit_withdraw_operation
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_feigang_operation, (from)(from_nfa)(to)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_cultivation_operation, (account)(nfa)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_actor_operation, (fee)(creator)(family_name)(last_name) )
-FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_zone_operation, (fee)(creator)(name) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_zone_operation, (creator)(name) )
 
 FC_REFLECT_TYPENAME( taiyi::plugins::baiyujing_api::legacy_operation )

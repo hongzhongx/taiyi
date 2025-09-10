@@ -527,7 +527,6 @@ namespace taiyi { namespace protocol {
 
     struct create_zone_operation : public base_operation
     {
-        asset             fee;          ///< must be QI
         account_name_type creator;
         string            name;
 
@@ -569,4 +568,4 @@ FC_REFLECT( taiyi::protocol::action_nfa_operation, (caller)(id)(action)(value_li
 
 FC_REFLECT( taiyi::protocol::create_actor_talent_rule_operation, (creator)(contract) )
 FC_REFLECT( taiyi::protocol::create_actor_operation, (fee)(creator)(family_name)(last_name) )
-FC_REFLECT( taiyi::protocol::create_zone_operation, (fee)(creator)(name) )
+FC_REFLECT( taiyi::protocol::create_zone_operation, (creator)(name) )

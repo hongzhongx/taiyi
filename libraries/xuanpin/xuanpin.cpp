@@ -2111,7 +2111,6 @@ namespace taiyi { namespace xuanpin {
         create_zone_operation op;
         op.creator = creator;
         op.name = name;
-        op.fee = my->_remote_api->get_chain_properties().account_creation_fee * TAIYI_QI_SHARE_PRICE;
 
         signed_transaction tx;
         tx.operations.push_back(op);

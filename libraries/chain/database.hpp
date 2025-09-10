@@ -414,6 +414,10 @@ namespace taiyi { namespace chain {
         size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
         lua_map prepare_account_contract_data(const account_object& account, const contract_object& contract);
         
+        void add_contract_handler_exe_point(int64_t p) { _contract_handler_exe_point += p; }
+        int64_t get_contract_handler_exe_point() const { return _contract_handler_exe_point; }
+        void clear_contract_handler_exe_point(const int64_t& init = 0) { _contract_handler_exe_point = init; }
+                
         //奖励账号非罡
         void reward_feigang(const account_object& to_account, const account_object& from_account, const asset& feigang );
         void reward_feigang(const account_object& to_account, const nfa_object& from_nfa, const asset& feigang );
@@ -587,6 +591,11 @@ namespace taiyi { namespace chain {
           * Internal signal to execute deferred registration of plugin indexes.
           */
         fc::signal<void()>                                    _plugin_index_signal;
+        
+        /**
+          * 用于统计合约中执行handler api的运算消耗
+         */
+        int64_t _contract_handler_exe_point = 0;
     };
 
     struct reindex_notification

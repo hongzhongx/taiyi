@@ -71,6 +71,8 @@ namespace taiyi { namespace chain {
                 FC_ASSERT(current_cbi, "contract_base_info must be available!");
                 contract = &current_cbi->get_contract(imported_contract_name);
                 
+                current_cbi->db.add_contract_handler_exe_point(3);
+                
                 const auto &baseENV = current_cbi->db.get<contract_bin_code_object, by_id>(0);
                 context.new_sandbox(contract->name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
                 

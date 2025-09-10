@@ -62,7 +62,7 @@ namespace taiyi { namespace chain {
         auto abi_itr = contract->contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
         FC_ASSERT(abi_itr != contract->contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract->name)("i", TAIYI_NFA_INIT_FUNC_NAME));
         
-        const auto& nfa_symbol_obj = create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
+        /*const auto& nfa_symbol_obj = */create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
             obj.creator = creator.name;
             obj.symbol = symbol;
             obj.describe = describe;
@@ -116,11 +116,17 @@ namespace taiyi { namespace chain {
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = (caller_nfa ? caller_nfa->qi.amount.value : caller.qi.amount.value) / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
+        int64_t backup_api_exe_point = get_contract_handler_exe_point();
+        clear_contract_handler_exe_point(); //初始化api执行消耗统计
         lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, reset_vm_memused, context, *this);
+        int64_t api_exe_point = get_contract_handler_exe_point();
+        clear_contract_handler_exe_point(backup_api_exe_point);
         int64_t used_drops = old_drops - vm_drops;
         
         //reward contract owner
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+        int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
+        used_qi -= used_qi_for_treasury;
         const auto& contract_owner = get<account_object, by_id>(contract.owner);
 
         if(caller_nfa) {
@@ -143,7 +149,7 @@ namespace taiyi { namespace chain {
         });
         
         //reward to treasury
-        used_qi = (TAIYI_NFA_OBJ_STATE_BYTES + TAIYI_NFA_MATERIAL_STATE_BYTES + fc::raw::pack_size(result_table.v)) * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
+        used_qi = (TAIYI_NFA_OBJ_STATE_BYTES + TAIYI_NFA_MATERIAL_STATE_BYTES + fc::raw::pack_size(result_table.v)) * TAIYI_USEMANA_STATE_BYTES_SCALE + (100 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
         if(caller_nfa) {
             FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
             reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), *caller_nfa, asset(used_qi, QI_SYMBOL));
@@ -229,10 +235,13 @@ namespace taiyi { namespace chain {
             //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
             long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
+            int64_t api_exe_point = 0;
             bool beat_fail = false;
             try {
                 auto session = start_undo_session();
+                clear_contract_handler_exe_point(); //初始化api执行消耗统计
                 worker.do_nfa_contract_function(nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                api_exe_point = get_contract_handler_exe_point();
                 session.squash();
             }
             catch (fc::exception e) {
@@ -247,11 +256,13 @@ namespace taiyi { namespace chain {
             }
             int64_t used_drops = old_drops - vm_drops;
 
-            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+            int64_t exe_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
             int64_t debt_qi = 0;
-            if(used_qi > nfa.qi.amount.value) {
-                debt_qi = used_qi - nfa.qi.amount.value;
+            if((used_qi + exe_qi) > nfa.qi.amount.value) {
+                debt_qi = (used_qi + exe_qi) - nfa.qi.amount.value;
                 used_qi = nfa.qi.amount.value;
+                exe_qi = 0; //欠款时，本次消耗的真气欠款全部算给合约创建者
                 if(!beat_fail) {
                     beat_fail = true;
                     wlog("NFA (${i}) process heart beat successfully, but have not enough qi to next trigger.", ("i", nfa.id));
@@ -262,10 +273,14 @@ namespace taiyi { namespace chain {
             }
             
             //reward contract owner
-            if( used_qi > 0) {
-                const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
-                reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
-            }
+            int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
+            used_qi -= used_qi_for_treasury;
+            if( used_qi > 0)
+                reward_feigang(get<account_object, by_id>(contract_ptr->owner), nfa, asset(used_qi, QI_SYMBOL));
+            
+            //reward to treasury
+            if( (exe_qi + used_qi_for_treasury) > 0)
+                reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
 
             //执行错误不仅要扣费，还会将NFA重置为关闭心跳状态
             if(beat_fail)  {

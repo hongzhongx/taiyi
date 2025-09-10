@@ -241,7 +241,7 @@ namespace taiyi { namespace chain {
         uint32_t head_block_num();
         int64_t generate_hash(uint32_t offset);
         int64_t get_account_balance(const string& account_name, const string& symbol_name);
-        void change_contract_authority(string authority);
+        void change_contract_authority(const string& authority);
         memo_data make_memo(const string& receiver_account_name, const string& key, const string& value, uint64_t ss, bool enable_logger = false);
         void invoke_contract_function(const string& contract_name, const string& function_name, const string& value_list_json);
         void make_release();

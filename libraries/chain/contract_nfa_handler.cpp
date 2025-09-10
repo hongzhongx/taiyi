@@ -114,6 +114,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             FC_ASSERT(amount > 0, "convert qi is zero");
 
@@ -190,6 +192,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             FC_ASSERT(amount > 0, "convert resource is zero");
             
@@ -266,6 +270,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
 
             const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
@@ -286,6 +292,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
 
@@ -306,6 +314,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             
             const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
@@ -326,6 +336,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
 
@@ -346,6 +358,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
             FC_ASSERT(_caller.parent != nfa_id_type::max(), "caller have no parent");
 
@@ -366,6 +380,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
             transfer_by_contract(from, to, token, _ch.result, enable_logger);
@@ -381,6 +397,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             FC_ASSERT(from != to, "It's no use transferring resource to yourself");
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
             FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
@@ -418,6 +436,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
             withdraw_by_contract(from, _db.get_account(to).id, token, _ch.result, enable_logger);
@@ -433,6 +453,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
             FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
             const account_object &to_account = _db.get<account_object, by_id>(to);
@@ -469,6 +491,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
             deposit_by_contract(from, to, token, _ch.result, enable_logger);
@@ -484,6 +508,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             FC_ASSERT(_caller_account.id == from, "caller have no authority to transfer assets from this account");
             const account_object &from_account = _db.get<account_object, by_id>(from);
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
@@ -558,6 +584,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller with parent can not be destroyed");
             
@@ -581,6 +609,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
 
             auto now = _db.head_block_time();
@@ -711,6 +741,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
             inject_material_by_contract(from, to, token, _ch.result, enable_logger);
@@ -726,6 +758,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             FC_ASSERT(token.symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
                       token.symbol.asset_num == TAIYI_ASSET_NUM_FOOD ||
                       token.symbol.asset_num == TAIYI_ASSET_NUM_WOOD ||
@@ -785,6 +819,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(1);
+            
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
             separate_material_by_contract(from, to, token, _ch.result, enable_logger);
@@ -800,6 +836,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             FC_ASSERT(token.symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
                       token.symbol.asset_num == TAIYI_ASSET_NUM_FOOD ||
                       token.symbol.asset_num == TAIYI_ASSET_NUM_WOOD ||
@@ -886,6 +924,8 @@ namespace taiyi { namespace chain {
 
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
@@ -920,6 +960,8 @@ namespace taiyi { namespace chain {
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
+            
+            _db.add_contract_handler_exe_point(2);
             
             auto current_contract_name = _context.readVariable<string>("current_contract");
             auto current_cbi = _context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
@@ -997,6 +1039,8 @@ namespace taiyi { namespace chain {
         LuaContext nfa_context;
         try
         {
+            _db.add_contract_handler_exe_point(2);
+            
             const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
@@ -1031,6 +1075,8 @@ namespace taiyi { namespace chain {
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
+            
+            _db.add_contract_handler_exe_point(2);
             
             auto current_contract_name = _context.readVariable<string>("current_contract");
             auto current_cbi = _context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");

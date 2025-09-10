@@ -137,8 +137,6 @@ namespace taiyi { namespace chain {
     //=============================================================================
     void database::initialize_zone_object( zone_object& zone, const std::string& name, const nfa_object& nfa, E_ZONE_TYPE type)
     {
-        const auto& props = get_dynamic_global_properties();
-        
         zone.nfa_id = nfa.id;
         zone.name = name;
         zone.type = type;

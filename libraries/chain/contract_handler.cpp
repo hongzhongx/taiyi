@@ -172,7 +172,7 @@ namespace taiyi { namespace chain {
         }
     };
     //=============================================================================
-    void contract_handler::change_contract_authority(string authority)
+    void contract_handler::change_contract_authority(const string& authority)
     {
         try
         {
@@ -181,6 +181,8 @@ namespace taiyi { namespace chain {
             db.modify(db.get<contract_object, by_id>(contract.id), [&](contract_object &co) {
                 co.contract_authority = new_authority;
             });
+            
+            db.add_contract_handler_exe_point(1);
         }
         catch (fc::exception e)
         {
@@ -222,6 +224,8 @@ namespace taiyi { namespace chain {
         auto &receiver = db.get_account(receiver_account_name);
         try
         {
+            db.add_contract_handler_exe_point(2);
+            
             //Get_random_private_key();
             fc::ecc::private_key rand_key = fc::ecc::private_key::regenerate(fc::sha256::hash(key + std::to_string(ss)));
             
@@ -271,10 +275,14 @@ namespace taiyi { namespace chain {
             op.contract_name = this->contract.name;
             op.function_name = function_name;
             op.value_list = value_list;
-            call_contract_function_evaluator evaluator(db);
-            evaluator.apply(op);
-            context.writeVariable("current_contract", backup_current_contract_name);
             
+            call_contract_function_evaluator evaluator(db);
+            evaluator.apply(op);            
+            
+            context.writeVariable("current_contract", backup_current_contract_name);
+
+            db.add_contract_handler_exe_point(5);
+
             s_invoking_path.pop_back();
         }
         catch (fc::exception e)
@@ -288,6 +296,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(1);
+
             wlog(message);
             contract_logger logger(caller.name);
             logger.message = message;
@@ -303,6 +313,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto& tiandao = db.get_tiandao_properties();
 
             if(time_prefix)
@@ -425,6 +437,9 @@ namespace taiyi { namespace chain {
             vector<lua_types> stacks = {};
             lua_map result;
             read_table_data(result, read_list, contract.contract_data, stacks);
+
+            db.add_contract_handler_exe_point(1 + fc::raw::pack_size(read_list) / 5);
+
             return result;
         }
         catch (fc::exception e)
@@ -455,6 +470,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(1);
+
             FC_ASSERT(from != to, "It's no use transferring money to yourself");
             const account_object &from_account = db.get<account_object, by_id>(from);
             const account_object &to_account = db.get<account_object, by_id>(to);
@@ -500,6 +517,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(1);
+
             account_id_type account_to = db.get_account(to).id;
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
@@ -600,6 +619,8 @@ namespace taiyi { namespace chain {
 
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
@@ -634,6 +655,8 @@ namespace taiyi { namespace chain {
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
+            
+            db.add_contract_handler_exe_point(5);
             
             auto current_contract_name = context.readVariable<string>("current_contract");
             auto current_cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
@@ -711,6 +734,8 @@ namespace taiyi { namespace chain {
         LuaContext nfa_context;
         try
         {
+            db.add_contract_handler_exe_point(2);
+            
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
@@ -745,6 +770,8 @@ namespace taiyi { namespace chain {
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
+            
+            db.add_contract_handler_exe_point(5);
             
             auto current_contract_name = context.readVariable<string>("current_contract");
             auto current_cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
@@ -818,6 +845,8 @@ namespace taiyi { namespace chain {
         LuaContext nfa_context;
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check function existence
@@ -844,6 +873,8 @@ namespace taiyi { namespace chain {
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
+            
+            db.add_contract_handler_exe_point(3);
             
             auto current_contract_name = context.readVariable<string>("current_contract");
             auto current_cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
@@ -930,6 +961,8 @@ namespace taiyi { namespace chain {
             auto abi_itr = contract->contract_ABI.find(lua_types(lua_string(TAIYI_NFA_INIT_FUNC_NAME)));
             FC_ASSERT(abi_itr != contract->contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract_name)("i", TAIYI_NFA_INIT_FUNC_NAME));
             
+            db.add_contract_handler_exe_point(5);
+            
             contract_worker worker;
             vector<lua_types> value_list;
             flat_set<public_key_type> sigkeys;
@@ -945,7 +978,9 @@ namespace taiyi { namespace chain {
             //reward contract owner
             const auto& contract_owner = db.get<account_object, by_id>(contract->owner);
             db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
-                                        
+            
+            db.add_contract_handler_exe_point(5 + fc::raw::pack_size(result_table) / 5);
+
             db.modify(nfa, [&](nfa_object& obj) {
                 //仅仅改变主合约，不改变nfa的symbol
                 obj.main_contract = contract->id;
@@ -966,6 +1001,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+            
             const auto& contract_owner = db.get<account_object, by_id>(contract.owner);
             const auto& actor_nfa = db.get<nfa_object, by_id>(to_actor_nfa_id);
             const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
@@ -1121,6 +1158,9 @@ namespace taiyi { namespace chain {
             vector<lua_types> stacks = {};
             lua_map result;
             read_table_data(result, read_list, contract_data_cache, stacks);
+            
+            db.add_contract_handler_exe_point(2 + fc::raw::pack_size(read_list) / 5);
+
             return result;
         }
         catch (fc::exception e)
@@ -1139,6 +1179,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2 + fc::raw::pack_size(write_list) / 5);
+            
             vector<lua_types> stacks = {};
             write_table_data(contract_data_cache, write_list, data, stacks);
         }
@@ -1165,6 +1207,9 @@ namespace taiyi { namespace chain {
             vector<lua_types> stacks = {};
             lua_map result;
             read_table_data(result, read_list, account_contract_data, stacks);
+
+            db.add_contract_handler_exe_point(2 + fc::raw::pack_size(read_list) / 5);
+
             return result;
         }
         catch (fc::exception e)
@@ -1186,6 +1231,9 @@ namespace taiyi { namespace chain {
             vector<lua_types> stacks = {};
             lua_map result;
             read_table_data(result, read_list, account_contract_data_cache, stacks);
+
+            db.add_contract_handler_exe_point(2 + fc::raw::pack_size(read_list) / 5);
+
             return result;
         }
         catch (fc::exception e)
@@ -1206,6 +1254,8 @@ namespace taiyi { namespace chain {
         {
             vector<lua_types> stacks = {};
             write_table_data(account_contract_data_cache, write_list, data, stacks);
+            
+            db.add_contract_handler_exe_point(2 + fc::raw::pack_size(write_list) / 5);
         }
         catch (fc::exception e)
         {
@@ -1228,6 +1278,9 @@ namespace taiyi { namespace chain {
             vector<lua_types> stacks = {};
             lua_map result;
             read_table_data(result, read_list, nfa.contract_data, stacks);
+
+            db.add_contract_handler_exe_point(2 + fc::raw::pack_size(read_list) / 5);
+            
             return result;
         }
         catch (fc::exception e)
@@ -1253,6 +1306,8 @@ namespace taiyi { namespace chain {
                 vector<lua_types> stacks = {};
                 write_table_data(obj.contract_data, write_list, data, stacks);
             });
+            
+            db.add_contract_handler_exe_point(2 + fc::raw::pack_size(write_list) / 5);
         }
         catch (fc::exception e)
         {
@@ -1487,6 +1542,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             nfa_symbol_id_type symbol_id = nfa_symbol_id_type::max();
             if(symbol_name != "") {
                 const auto* symbol = db.find<nfa_symbol_object, by_symbol>(symbol_name);
@@ -1523,6 +1580,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
             FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", nfa_id));
             
@@ -1583,6 +1642,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
             FC_ASSERT(zone != nullptr, "NFA #${i} is not a zone", ("i", nfa_id));
             
@@ -1612,10 +1673,14 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+            
             const auto& from_zone_nfa = db.get<nfa_object, by_id>(from_zone_nfa_id);
             const auto& to_zone_nfa = db.get<nfa_object, by_id>(to_zone_nfa_id);
             if(from_zone_nfa.owner_account != caller.id && from_zone_nfa.active_account != caller.id && to_zone_nfa.owner_account != caller.id && to_zone_nfa.active_account != caller.id)
                 FC_ASSERT(false, "没有权限操作区域");
+
+            db.add_contract_handler_exe_point(2);
 
             const auto* from_zone = db.find<zone_object, by_nfa_id>(from_zone_nfa_id);
             FC_ASSERT(from_zone != nullptr, "实体${z}不是一个区域", ("z", from_zone_nfa_id));
@@ -1625,6 +1690,8 @@ namespace taiyi { namespace chain {
             const auto* check_connect = db.find<zone_connect_object, by_zone_from>( boost::make_tuple(from_zone->id, to_zone->id) );
             FC_ASSERT( check_connect == nullptr, "从&YEL&${a}&NOR&到&YEL&${b}&NOR&之间的连接已经存在", ("a", from_zone->name)("b", to_zone->name) );
             
+            db.add_contract_handler_exe_point(5);
+
             const auto& tiandao = db.get_tiandao_properties();
 
             //检查连接区域是否达到上限
@@ -1635,6 +1702,8 @@ namespace taiyi { namespace chain {
             connected_zones.clear();
             max_num = tiandao.zone_type_connection_max_num_map.at(to_zone->type);
             FC_ASSERT(connected_zones.size() < max_num || connected_zones.find(from_zone->id) != connected_zones.end(), "区域&YEL&${z}&NOR&的连接已经存在或者达到上限", ("z", to_zone->name));
+
+            db.add_contract_handler_exe_point(5);
 
             //create connection
             db.create< zone_connect_object >( [&]( zone_connect_object& o ) {
@@ -1704,6 +1773,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto* actor = db.find<actor_object, by_name>(name);
             FC_ASSERT(actor != nullptr, "Actor named ${n} is not exist", ("n", name));
             FC_ASSERT(!actor->born, "Actor named ${n} is already born", ("n", name));
@@ -1713,6 +1784,8 @@ namespace taiyi { namespace chain {
 
             const auto* zone = db.find<zone_object, by_name>(zone_name);
             FC_ASSERT(zone != nullptr, "Zone named ${n} is not exist", ("n", zone_name));
+            
+            db.add_contract_handler_exe_point(3);
 
             //转换初始属性值列表
             FC_ASSERT(init_attrs.size() == 8, "the number of actor init attributes is not 8");
@@ -1730,10 +1803,14 @@ namespace taiyi { namespace chain {
             for(auto i : value_list)
                 amount += i;
             FC_ASSERT(amount <= actor->init_attribute_amount_max, "Amount of init attribute values is more than ${m}.", ("m", actor->init_attribute_amount_max));
+            
+            db.add_contract_handler_exe_point(5);
 
             //create attributes
             db.initialize_actor_attributes( *actor, value_list );
             
+            db.add_contract_handler_exe_point(10);
+
             //born on zone
             db.born_actor( *actor, gender, sexuality, *zone );
             
@@ -1752,6 +1829,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto* actor = db.find<actor_object, by_name>(actor_name);
             if(actor == nullptr)
                 return FORMAT_MESSAGE("名为${n}的角色不存在", ("n", actor_name));
@@ -1775,6 +1854,8 @@ namespace taiyi { namespace chain {
             const auto* zone_connection = db.find< zone_connect_object, by_zone_from >(boost::make_tuple(actor->location, target_zone->id));
             if(zone_connection == nullptr)
                 return FORMAT_MESSAGE("${a}无法直接通往${b}", ("a", current_zone.name)("b", target_zone->name));
+            
+            db.add_contract_handler_exe_point(3);
 
             int take_days = db.calculate_moving_days_to_zone(*target_zone);
             int64_t take_qi = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
@@ -1809,6 +1890,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(1);
+
             const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
             FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
             FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
@@ -1834,6 +1917,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(1);
+
             const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
             FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
             FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
@@ -1859,6 +1944,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(1);
+
             const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
             FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
             FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
@@ -1882,6 +1969,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(5);
+
             const auto* actor = db.find<actor_object, by_name>(actor_name);
             if(actor == nullptr)
                 return FORMAT_MESSAGE("名为${n}的角色不存在", ("n", actor_name));
@@ -1927,6 +2016,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto* actor = db.find<actor_object, by_name>(actor_name);
             FC_ASSERT(actor != nullptr, "名为${n}的角色不存在", ("n", actor_name));
             FC_ASSERT(actor->born, "${a}还未出生", ("a", actor_name));
@@ -1942,6 +2033,8 @@ namespace taiyi { namespace chain {
             FC_ASSERT(take_qi <= actor_nfa.qi.amount.value, "需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_qi)("t", take_days)("c", actor_nfa.qi.amount.value));
             //reward take_qi to treasury
             db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
+            
+            db.add_contract_handler_exe_point(3);
 
             // 只能在自然地区发现新的地区
             if(current_zone.type >= _NATURE_ZONE_TYPE_NUM)
@@ -1982,6 +2075,8 @@ namespace taiyi { namespace chain {
             
             const auto& new_nfa = db.create_nfa(creator, nfa_symbol, sigkeys, true, context, &actor_nfa);
             
+            db.add_contract_handler_exe_point(5);
+            
             //创建一个新区域
             const auto& new_zone = db.create< zone_object >( [&]( zone_object& zone ) {
                 E_ZONE_TYPE type = place_def.types[hasher::hash( seed + actor_nfa.id + 13691) % place_def.types.size()];
@@ -2010,6 +2105,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(5);
+
             const auto& manager_nfa = db.get<nfa_object, by_id>(nfa_id);
             FC_ASSERT(manager_nfa.owner_account == caller.id || manager_nfa.active_account == caller.id, "无权操作NFA");
             
@@ -2049,6 +2146,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto* cult = db.find<cultivation_object, by_id>(cult_id);
             if(cult == nullptr)
                 return "指定修真活动不存在";
@@ -2078,6 +2177,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(2);
+
             const auto* cult = db.find<cultivation_object, by_id>(cult_id);
             if(cult == nullptr)
                 return "指定修真活动不存在";
@@ -2103,6 +2204,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(5);
+
             const auto* cult = db.find<cultivation_object, by_id>(cult_id);
             if(cult == nullptr)
                 return "指定修真活动不存在";
@@ -2138,6 +2241,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            db.add_contract_handler_exe_point(5);
+
             const auto& creator = caller;
             long long old_drops = creator.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
