@@ -511,7 +511,7 @@ namespace taiyi { namespace protocol {
         string              contract;
 
         void validate()const;
-        void get_required_posting_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
     };
     
     struct create_actor_operation : public base_operation

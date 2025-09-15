@@ -205,6 +205,8 @@
 
 #define TAIYI_ZONE_OBJ_STATE_BYTES              1000
 
+#define TAIYI_ACTOR_OBJ_STATE_BYTES             1000
+
 #define TAIYI_MIN_ACTOR_CREATION_FEE            0
 #define TAIYI_MAX_ACTOR_CREATION_FEE            int64_t(1000000000000)
 #define TAIYI_ACTOR_NAME_LIMIT                  (64)
