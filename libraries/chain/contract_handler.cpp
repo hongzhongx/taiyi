@@ -204,13 +204,13 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    int contract_handler::contract_random()
+    uint32_t contract_handler::contract_random()
     {
         try
         {
             result.existed_pv = true;
             auto hblock_id = db.head_block_id();
-            return (int)(protocol::hasher::hash( hblock_id._hash[4] ));
+            return protocol::hasher::hash( hblock_id._hash[4] );
         }
         catch (fc::exception e)
         {
@@ -1576,7 +1576,8 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_handler::change_zone_type(int64_t nfa_id, const string& type)
+    extern E_ZONE_TYPE g_generate_zone_refining_result(const zone_object& zone, const nfa_material_object& zone_materials, uint32_t seed);
+    string contract_handler::refine_zone(int64_t nfa_id)
     {
         try
         {
@@ -1587,12 +1588,23 @@ namespace taiyi { namespace chain {
             
             const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
             FC_ASSERT(zone != nullptr, "nfa #${z} is not a zone", ("z", nfa_id));
+            
+            uint32_t rand_seed = contract_random();
+            
+            const auto& m = db.get<nfa_material_object, by_nfa_id>(zone->nfa_id);
+            auto new_type = g_generate_zone_refining_result(*zone, m, rand_seed);
+            FC_ASSERT(new_type != _ZONE_INVALID_TYPE, "invalid zone type \"${t}\"", ("t", new_type));
+            if(new_type != zone->type) {
+                db.modify(*zone, [&](zone_object& obj){
+                    obj.type = new_type;
+                });
+            }
+            
+            //随机消耗大量真气（用执行点表示）
+            int64_t used_exe_point = 100 + rand_seed % 1000;
+            db.add_contract_handler_exe_point(used_exe_point);
 
-            auto new_type = get_zone_type_from_string(type);
-            FC_ASSERT(new_type != _ZONE_INVALID_TYPE, "invalid zone type \"${t}\"", ("t", type));
-            db.modify(*zone, [&](zone_object& obj){
-                obj.type = new_type;
-            });
+            return get_zone_type_string(new_type);
         }
         catch (fc::exception e)
         {

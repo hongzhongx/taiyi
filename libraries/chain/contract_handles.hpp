@@ -221,7 +221,7 @@ namespace taiyi { namespace chain {
         int64_t get_nfa_caller();
         void log(string message);
         void narrate(string message, bool time_prefix = false);
-        int contract_random();
+        uint32_t contract_random();
         void set_permissions_flag(bool flag);
         void set_invoke_share_percent(uint32_t percent);
         string get_contract_source_code(const string& contract_name);
@@ -277,7 +277,7 @@ namespace taiyi { namespace chain {
         //Zone
         bool is_zone_valid(int64_t nfa_id);
         bool is_zone_valid_by_name(const string& name);
-        void change_zone_type(int64_t nfa_id, const string& type);
+        string refine_zone(int64_t nfa_id);
         contract_zone_base_info get_zone_info(int64_t nfa_id);
         contract_zone_base_info get_zone_info_by_name(const string& name);
         void connect_zones(int64_t from_zone_nfa_id, int64_t to_zone_nfa_id);

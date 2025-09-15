@@ -758,7 +758,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            _db.add_contract_handler_exe_point(2);
+            _db.add_contract_handler_exe_point(5);
             
             FC_ASSERT(token.symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
                       token.symbol.asset_num == TAIYI_ASSET_NUM_FOOD ||
@@ -836,7 +836,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            _db.add_contract_handler_exe_point(2);
+            _db.add_contract_handler_exe_point(5);
             
             FC_ASSERT(token.symbol.asset_num == TAIYI_ASSET_NUM_GOLD ||
                       token.symbol.asset_num == TAIYI_ASSET_NUM_FOOD ||

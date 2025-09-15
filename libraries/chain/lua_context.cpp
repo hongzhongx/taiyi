@@ -246,7 +246,7 @@ namespace taiyi { namespace chain {
         registerFunction("enter_nfa_mirage", &contract_handler::enter_nfa_mirage);
         registerFunction("enter_nfa_next_mirage", &contract_handler::enter_nfa_next_mirage);
         registerFunction("exit_nfa_mirage", &contract_handler::exit_nfa_mirage);
-        registerFunction("change_zone_type", &contract_handler::change_zone_type);
+        registerFunction("refine_zone", &contract_handler::refine_zone);
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
         registerFunction("is_zone_valid", &contract_handler::is_zone_valid);        
