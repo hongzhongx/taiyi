@@ -2003,10 +2003,10 @@ namespace taiyi { namespace chain {
             if(current_zone.name != zone_name)
                 return FORMAT_MESSAGE("${a}不能探索${z}，因为${a}不在${z}", ("a", actor_name)("z", zone_name));
                     
-            int take_days = 1;
-            int64_t take_qi = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
+            int hard_level = 1; //TODO: 根据区域类型有不同难度
+            int64_t take_qi = hard_level * 1000 * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
             if( take_qi > actor_nfa.qi.amount.value )
-                return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_qi)("t", take_days)("c", actor_nfa.qi.amount.value));
+                return FORMAT_MESSAGE("需要气力${p}，但气力只剩余${c}了", ("p", take_qi)("c", actor_nfa.qi.amount.value));
             //reward take_qi to treasury
             db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
 
@@ -2040,9 +2040,9 @@ namespace taiyi { namespace chain {
 
             const auto& current_zone = db.get< zone_object, by_id >(actor->location);
                     
-            int take_days = 1;
-            int64_t take_qi = take_days * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
-            FC_ASSERT(take_qi <= actor_nfa.qi.amount.value, "需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_qi)("t", take_days)("c", actor_nfa.qi.amount.value));
+            int hard_level = 1; //TODO: 根据区域类型有不同难度
+            int64_t take_qi = hard_level * 1000 * TAIYI_USEMANA_ACTOR_ACTION_SCALE;
+            FC_ASSERT(take_qi <= actor_nfa.qi.amount.value, "需要气力${p}，但气力只剩余${c}了", ("p", take_qi)("c", actor_nfa.qi.amount.value));
             //reward take_qi to treasury
             db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
             
@@ -2087,8 +2087,6 @@ namespace taiyi { namespace chain {
             
             const auto& new_nfa = db.create_nfa(creator, nfa_symbol, sigkeys, true, context, &actor_nfa);
             
-            db.add_contract_handler_exe_point(5);
-            
             //创建一个新区域
             const auto& new_zone = db.create< zone_object >( [&]( zone_object& zone ) {
                 E_ZONE_TYPE type = place_def.types[hasher::hash( seed + actor_nfa.id + 13691) % place_def.types.size()];
@@ -2104,6 +2102,8 @@ namespace taiyi { namespace chain {
                 o.from = new_zone.id;
                 o.to = current_zone.id;
             });
+            
+            db.add_contract_handler_exe_point(TAIYI_ZONE_OBJ_STATE_BYTES + 1000);
             
             return new_name;
         }
