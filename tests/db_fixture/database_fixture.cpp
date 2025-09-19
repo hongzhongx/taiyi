@@ -136,6 +136,7 @@ namespace taiyi { namespace chain {
             args.data_dir = data_dir->path();
             args.state_storage_dir = args.data_dir;
             args.initial_supply = INITIAL_TEST_SUPPLY;
+            args.initial_qi_supply = INITIAL_TEST_QI_SUPPLY;
             args.database_cfg = taiyi::utilities::default_database_configuration();
             db->open( args );
         }
@@ -235,6 +236,7 @@ namespace taiyi { namespace chain {
             args.data_dir = data_dir->path();
             args.state_storage_dir = args.data_dir;
             args.initial_supply = INITIAL_TEST_SUPPLY;
+            args.initial_qi_supply = INITIAL_TEST_QI_SUPPLY;
             args.database_cfg = taiyi::utilities::default_database_configuration();
             db->open(args);
         }

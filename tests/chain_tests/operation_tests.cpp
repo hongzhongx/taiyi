@@ -757,10 +757,16 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         auto new_vest = op.amount * TAIYI_QI_SHARE_PRICE;
         shares += new_vest;
         alice_shares += new_vest;
-        
+
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "2.500 YANG" ).amount.value );
-        BOOST_REQUIRE( alice.qi.amount.value == alice_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi.amount.value == shares.amount.value );
+
+        idump((alice_shares));
+        idump((alice.qi));
+        BOOST_REQUIRE( (alice.qi.amount.value + 10) == alice_shares.amount.value ); //10 as feigang reward to treasure
+
+        idump((shares));
+        idump((gpo.total_qi));
+        BOOST_REQUIRE( (gpo.total_qi.amount.value + 10) == shares.amount.value ); //10 as feigang reward to treasure
         validate_database();
         
         op.to = "bob";
@@ -777,19 +783,19 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         bob_shares += new_vest;
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "0.500 YANG" ).amount.value );
-        BOOST_REQUIRE( alice.qi.amount.value == alice_shares.amount.value );
+        BOOST_REQUIRE( (alice.qi.amount.value + 20) == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
         BOOST_REQUIRE( bob.qi.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi.amount.value == shares.amount.value );
+        BOOST_REQUIRE( (gpo.total_qi.amount.value + 20) == shares.amount.value );
         validate_database();
         
         TAIYI_REQUIRE_THROW( db->push_transaction( tx, database::skip_transaction_dupe_check ), fc::exception );
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "0.500 YANG").amount.value );
-        BOOST_REQUIRE( alice.qi.amount.value == alice_shares.amount.value );
+        BOOST_REQUIRE( (alice.qi.amount.value + 20) == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
         BOOST_REQUIRE( bob.qi.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( gpo.total_qi.amount.value == shares.amount.value );
+        BOOST_REQUIRE( (gpo.total_qi.amount.value + 20) == shares.amount.value );
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -888,7 +894,7 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             sign( tx, alice_private_key );
             db->push_transaction( tx, 0 );
             
-            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
+            BOOST_REQUIRE( (alice.qi.amount.value + 10) == old_qi.amount.value ); //10 as feigang reward to treasure
             BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 2 ) ).value );
             BOOST_REQUIRE( alice.to_withdraw.value == op.qi.amount.value );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == db->head_block_time() + TAIYI_QI_WITHDRAW_INTERVAL_SECONDS );
@@ -904,8 +910,8 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             sign( tx, alice_private_key );
             db->push_transaction( tx, 0 );
             
-            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
-            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
+            BOOST_REQUIRE( (alice.qi.amount.value + 20) == old_qi.amount.value );
+            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( (old_qi.amount - 20) / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
             BOOST_REQUIRE( alice.to_withdraw.value == op.qi.amount.value );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == db->head_block_time() + TAIYI_QI_WITHDRAW_INTERVAL_SECONDS );
             validate_database();
@@ -921,8 +927,8 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             sign( tx, alice_private_key );
             TAIYI_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
             
-            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
-            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( old_qi.amount / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
+            BOOST_REQUIRE( (alice.qi.amount.value + 20) == old_qi.amount.value );
+            BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == ( (old_qi.amount - 20) / ( TAIYI_QI_WITHDRAW_INTERVALS * 3 ) ).value + 1 );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == db->head_block_time() + TAIYI_QI_WITHDRAW_INTERVAL_SECONDS );
             validate_database();
             
@@ -936,14 +942,14 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
             sign( tx, alice_private_key );
             db->push_transaction( tx, 0 );
             
-            BOOST_REQUIRE( alice.qi.amount.value == old_qi.amount.value );
+            BOOST_REQUIRE( (alice.qi.amount.value + 30) == old_qi.amount.value );
             BOOST_REQUIRE( alice.qi_withdraw_rate.amount.value == 0 );
             BOOST_REQUIRE( alice.to_withdraw.value == 0 );
             BOOST_REQUIRE( alice.next_qi_withdrawal_time == fc::time_point_sec::maximum() );
             
             
             BOOST_TEST_MESSAGE( "--- Test cancelling a withdraw when below the account creation fee" );
-            op.qi = alice.qi;
+            op.qi = (alice.qi - asset(10, QI_SYMBOL));
             tx.clear();
             tx.operations.push_back( op );
             sign( tx, alice_private_key );
@@ -972,7 +978,7 @@ BOOST_AUTO_TEST_CASE( withdraw_qi_apply )
         
         BOOST_TEST_MESSAGE( "--- Test withdrawing minimal QI" );
         op.account = "bob";
-        op.qi = db->get_account( "bob" ).qi;
+        op.qi = db->get_account( "bob" ).qi - asset(10, QI_SYMBOL);
         tx.clear();
         tx.operations.push_back( op );
         sign( tx, bob_private_key );

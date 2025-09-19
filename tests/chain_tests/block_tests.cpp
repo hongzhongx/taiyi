@@ -32,6 +32,7 @@ void open_test_database( database& db, const fc::path& dir )
     args.data_dir = dir;
     args.state_storage_dir = dir;
     args.initial_supply = INITIAL_TEST_SUPPLY;
+    args.initial_qi_supply = INITIAL_TEST_QI_SUPPLY;
     args.database_cfg = taiyi::utilities::default_database_configuration();
     db.open( args );
 }

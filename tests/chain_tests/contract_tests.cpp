@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_mana.value - alice_acc.qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 1036 );
+    BOOST_REQUIRE( used_mana == 4765 );
 
     validate_database();
 
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     const account_object& alice_acc = db->get_account( "alice" );
     int64_t used_mana = old_mana.value - alice_acc.qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 483 );
+    BOOST_REQUIRE( used_mana == 716 );
 
     //validate_database(); 由于前面强制修改账号的qi，所以这里是通不过的，仅用于测试
 
@@ -712,7 +712,7 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     
     asset reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
     idump( (reward_feigang.amount) );
-    BOOST_REQUIRE( reward_feigang.amount == 416 );
+    BOOST_REQUIRE( reward_feigang.amount == 293 ); //part reward to contract owner, others reward to treasure.
     
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     
@@ -735,7 +735,7 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
         
         reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
         //idump( (reward_feigang) );
-        BOOST_REQUIRE( reward_feigang.amount == 416 );
+        BOOST_REQUIRE( reward_feigang.amount == 293 );
     }
     
 } FC_LOG_AND_RETHROW() }

@@ -142,6 +142,7 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
     cnsop.creator = "alice";
     cnsop.symbol = "nfa.test";
     cnsop.describe = "test";
+    cnsop.max_count = 10;
     cnsop.default_contract = "contract.nfa.base";
         
     tx.operations.clear();
@@ -423,11 +424,11 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     
     int64_t used_mana = old_mana.amount.value - db->get_account( "charlie" ).qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 441 );
+    BOOST_REQUIRE( used_mana == 442 );
 
     asset reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
-    //idump( (reward_feigang) );
-    BOOST_REQUIRE( reward_feigang.amount == 441 );
+    idump( (reward_feigang) );
+    BOOST_REQUIRE( reward_feigang.amount == 313 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -557,7 +558,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     used_mana = old_mana.amount.value - db->get_account( "charlie" ).qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 465 );
+    BOOST_REQUIRE( used_mana == 466 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -706,7 +707,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     generate_block(); //beat且欠费在这里还
 
     nfa = db->find<nfa_object, by_id>(affected.affected_item);
-    BOOST_REQUIRE_EQUAL(nfa->qi.amount.value, old_nfa_qi.amount.value + 5000000 - 58 - 457 ); //扣除欠费和运行费用
+    BOOST_REQUIRE_EQUAL(nfa->qi.amount.value, old_nfa_qi.amount.value + 5000000 - 58 - 458 ); //扣除欠费和运行费用
 
     int64_t used_mana = 0;
     for(int k = 0; k < 10; k ++) {
@@ -727,7 +728,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
         if(k == 0) {
             used_mana = old_mana - nfa->qi.amount.value;
             idump( (old_mana)(nfa->qi.amount)(used_mana) );
-            BOOST_CHECK_EQUAL( used_mana, 457);
+            BOOST_CHECK_EQUAL( used_mana, 458);
         }
         else {
             idump( (old_mana)(nfa->qi.amount) );

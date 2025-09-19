@@ -50,9 +50,9 @@
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
 #define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (100) // about 5 minutes
 
-#define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_BLOCKS_PER_HOUR*2)
+#define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_BLOCKS_PER_HOUR*2*7) // 1 virtual year per real week
 
-#define TAIYI_CULTIVATION_MAX_SECONDS           (60*60*24) // 1 day
+#define TAIYI_CULTIVATION_MAX_SECONDS           (60*60*24*7) // 7 day
 
 #endif // END LIVE TAIYI NETWORK
 

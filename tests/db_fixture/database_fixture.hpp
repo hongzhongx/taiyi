@@ -20,6 +20,7 @@
 #include <iostream>
 
 #define INITIAL_TEST_SUPPLY (10000000000ll)
+#define INITIAL_TEST_QI_SUPPLY (10000000000ll)
 
 extern uint32_t TAIYI_TESTING_GENESIS_TIMESTAMP;
 

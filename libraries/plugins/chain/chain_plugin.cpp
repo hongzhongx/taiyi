@@ -455,6 +455,7 @@ namespace taiyi { namespace plugins { namespace chain {
         db_open_args.data_dir = app().data_dir() / "blockchain";
         db_open_args.state_storage_dir = my->state_storage_dir;
         db_open_args.initial_supply = TAIYI_YANG_INIT_SUPPLY;
+        db_open_args.initial_qi_supply = 0;
         db_open_args.chainbase_flags = my->chainbase_flags;
         db_open_args.do_validate_invariants = my->validate_invariants;
         db_open_args.stop_replay_at = my->stop_replay_at;

@@ -105,6 +105,7 @@ namespace taiyi { namespace chain {
             fc::path data_dir;
             fc::path state_storage_dir;
             uint64_t initial_supply = TAIYI_YANG_INIT_SUPPLY;
+            uint64_t initial_qi_supply = 0;
             uint32_t chainbase_flags = 0;
             bool do_validate_invariants = false;
             bool benchmark_is_enabled = false;
@@ -372,7 +373,7 @@ namespace taiyi { namespace chain {
 
         /// Reset the object graph in-memory
         void initialize_indexes();
-        void init_genesis(uint64_t initial_supply = TAIYI_YANG_INIT_SUPPLY );
+        void init_genesis(uint64_t initial_supply = TAIYI_YANG_INIT_SUPPLY, uint64_t initial_qi_supply = 0 );
 
         /**
           *  This method validates transactions without adding it to the pending state.

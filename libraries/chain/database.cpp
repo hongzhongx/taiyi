@@ -73,7 +73,7 @@ namespace taiyi { namespace chain {
         
         if( !find< dynamic_global_property_object >() ) {
             with_write_lock( [&]() {
-                init_genesis( args.initial_supply );
+                init_genesis( args.initial_supply, args.initial_qi_supply );
             });
         }
         
@@ -1374,7 +1374,7 @@ namespace taiyi { namespace chain {
     }
     
     void g_init_tiandao_property_object( tiandao_property_object& tiandao );
-    void database::init_genesis(uint64_t init_supply)
+    void database::init_genesis(uint64_t init_supply, uint64_t init_qi_supply)
     { try {
         
         struct auth_inhibitor
@@ -1437,6 +1437,7 @@ namespace taiyi { namespace chain {
                 a.name = TAIYI_INIT_SIMING_NAME + ( i ? fc::to_string( i ) : std::string() );
                 a.memo_key = init_public_key;
                 a.balance  = asset( i ? 0 : init_supply, YANG_SYMBOL );
+                a.qi  = asset( i ? 0 : init_qi_supply, QI_SYMBOL );
             } );
             
             create< account_authority_object >( [&]( account_authority_object& auth ) {
@@ -1459,7 +1460,8 @@ namespace taiyi { namespace chain {
             p.time = TAIYI_GENESIS_TIME;
             p.recent_slots_filled = fc::uint128::max_value();
             p.participation_count = 128;
-            p.current_supply = asset( init_supply, YANG_SYMBOL );
+            p.total_qi = asset( init_qi_supply, QI_SYMBOL );
+            p.current_supply = asset( init_supply, YANG_SYMBOL ) + p.total_qi * TAIYI_QI_SHARE_PRICE;
             p.maximum_block_size = TAIYI_MAX_BLOCK_SIZE;
         } );
         
