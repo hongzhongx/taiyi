@@ -1161,27 +1161,36 @@ namespace taiyi { namespace chain {
         
         new_yang = content_reward_yang + content_reward_qi_fund + siming_reward;
         
-        modify( props, [&]( dynamic_global_property_object& p ) {
-            p.current_supply += asset( new_yang, YANG_SYMBOL );
-        });
-        
+        asset last_siming_production_reward;
+                
         // pay siming in qi shares
         const auto& siming_account = get_account( csiming.owner );
         if( props.head_block_number >= TAIYI_START_MINER_ADORING_BLOCK || (siming_account.qi.amount.value == 0) )
         {
             operation vop = producer_reward_operation( csiming.owner, asset( 0, QI_SYMBOL ) );
             create_qi2( *this, siming_account, asset( siming_reward, YANG_SYMBOL ), false, [&]( const asset& qi ) {
-                vop.get< producer_reward_operation >().qi = qi;
+                last_siming_production_reward = qi;
+                vop.get< producer_reward_operation >().reward = qi;
                 pre_push_virtual_operation( vop );
             } );
             post_push_virtual_operation( vop );
+            last_siming_production_reward = vop.get< producer_reward_operation >().reward;
         }
         else
         {
+            operation vop = producer_reward_operation( csiming.owner, asset( siming_reward, YANG_SYMBOL ) );
+            pre_push_virtual_operation( vop );
             modify( siming_account, [&]( account_object& a ) {
                 a.balance += asset( siming_reward, YANG_SYMBOL );
             } );
+            post_push_virtual_operation( vop );
+            last_siming_production_reward = vop.get< producer_reward_operation >().reward;
         }
+        
+        modify( props, [&]( dynamic_global_property_object& p ) {
+            p.current_supply += asset( new_yang, YANG_SYMBOL );
+            p.last_siming_production_reward = last_siming_production_reward.symbol == QI_SYMBOL ? last_siming_production_reward : (last_siming_production_reward * TAIYI_QI_SHARE_PRICE);
+        });
     }
     
     std::tuple<share_type, share_type> database::pay_reward_funds( share_type reward_yang, share_type reward_qi_fund )
@@ -2090,6 +2099,11 @@ namespace taiyi { namespace chain {
                 {
                     modify( siming_missed, [&]( siming_object& w ) {
                         w.total_missed++;
+                        if( head_block_num() - w.last_confirmed_block_num  > TAIYI_BLOCKS_PER_DAY )
+                        {
+                            w.signing_key = public_key_type();
+                            push_virtual_operation( shutdown_siming_operation( w.owner ) );
+                        }
                     } );
                 }
             }

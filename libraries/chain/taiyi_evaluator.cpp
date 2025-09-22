@@ -72,7 +72,7 @@ namespace taiyi { namespace chain {
 
     operation_result siming_update_evaluator::do_apply( const siming_update_operation& o )
     {
-        _db.get_account( o.owner ); // verify owner exists
+        const auto& owner = _db.get_account( o.owner ); // verify owner exists
         
         FC_ASSERT( o.props.account_creation_fee.symbol.is_canon() );
         FC_ASSERT( o.props.account_creation_fee.amount <= TAIYI_MAX_ACCOUNT_CREATION_FEE, "account_creation_fee greater than maximum account creation fee" );
@@ -91,6 +91,18 @@ namespace taiyi { namespace chain {
         }
         else
         {
+            const auto& props = _db.get_dynamic_global_properties();
+            asset need_fee(0, QI_SYMBOL);
+            if (props.last_siming_production_reward.symbol == QI_SYMBOL)
+                need_fee.amount =  7 * props.last_siming_production_reward.amount;
+            else {
+                FC_ASSERT(props.last_siming_production_reward.symbol == YANG_SYMBOL); //must be
+                need_fee = asset(props.last_siming_production_reward.amount * 7, YANG_SYMBOL) * TAIYI_QI_SHARE_PRICE;
+            }
+            //pay to treasury
+            FC_ASSERT( owner.qi.amount.value >= need_fee.amount.value, "Owner account does not have enough qi for siming registration, need ${a}", ("a", need_fee));
+            _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), owner, need_fee);
+
             _db.create< siming_object >( [&]( siming_object& w ) {
                 w.owner             = o.owner;
                 w.url               = o.url;

@@ -63,7 +63,7 @@ namespace taiyi { namespace protocol {
         producer_reward_operation,          //32
     
         nfa_convert_resources_operation,    //33
-        nfa_transfer_operation,              //34
+        nfa_transfer_operation,             //34
         nfa_deposit_withdraw_operation,     //35
         reward_feigang_operation,           //36
         reward_cultivation_operation,       //37
@@ -77,8 +77,10 @@ namespace taiyi { namespace protocol {
         actor_movement_operation,           //43
         actor_grown_operation,              //44
     
-        narrate_log_operation               //45
-
+        narrate_log_operation,              //45
+    
+        shutdown_siming_operation           //46
+    
     > operation;
 
     bool is_market_operation( const operation& op );

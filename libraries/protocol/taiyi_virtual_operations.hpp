@@ -42,11 +42,19 @@ namespace taiyi { namespace protocol {
     {
         producer_reward_operation(){}
         producer_reward_operation( const string& p, const asset& v )
-            : producer( p ), qi( v ) {}
+            : producer( p ), reward( v ) {}
         
         account_name_type producer;
-        asset             qi;
+        asset             reward;
         
+    };
+    
+    struct shutdown_siming_operation : public virtual_operation
+    {
+        shutdown_siming_operation(){}
+        shutdown_siming_operation( const string& o ) : owner(o) {}
+
+        account_name_type owner;
     };
     
     struct nfa_convert_resources_operation : public virtual_operation
@@ -237,7 +245,8 @@ namespace taiyi { namespace protocol {
 FC_REFLECT( taiyi::protocol::fill_qi_withdraw_operation, (from_account)(to_account)(withdrawn)(deposited) )
 FC_REFLECT( taiyi::protocol::hardfork_operation, (hardfork_id) )
 FC_REFLECT( taiyi::protocol::return_qi_delegation_operation, (account)(qi) )
-FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(qi) )
+FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(reward) )
+FC_REFLECT( taiyi::protocol::shutdown_siming_operation, (owner) )
 FC_REFLECT( taiyi::protocol::nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
 FC_REFLECT( taiyi::protocol::nfa_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )

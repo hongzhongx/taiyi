@@ -105,7 +105,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct extended_dynamic_global_properties
     {
         extended_dynamic_global_properties() {}
-        extended_dynamic_global_properties(const database_api::api_dynamic_global_property_object& o) : head_block_number(o.head_block_number), head_block_id(o.head_block_id), time(o.time), current_siming(o.current_siming), current_supply(legacy_asset::from_asset(o.current_supply)), total_qi(legacy_asset::from_asset(o.total_qi)), pending_rewarded_qi(legacy_asset::from_asset(o.pending_rewarded_qi)), pending_rewarded_feigang(legacy_asset::from_asset(o.pending_rewarded_feigang)), pending_cultivation_qi(legacy_asset::from_asset(o.pending_cultivation_qi)), total_gold(legacy_asset::from_asset(o.total_gold)), total_food(legacy_asset::from_asset(o.total_food)), total_wood(legacy_asset::from_asset(o.total_wood)), total_fabric(legacy_asset::from_asset(o.total_fabric)), total_herb(legacy_asset::from_asset(o.total_herb)), maximum_block_size(o.maximum_block_size), current_aslot(o.current_aslot), recent_slots_filled(o.recent_slots_filled), participation_count(o.participation_count), last_irreversible_block_num(o.last_irreversible_block_num), delegation_return_period(o.delegation_return_period), content_reward_yang_percent(o.content_reward_yang_percent), content_reward_qi_fund_percent(o.content_reward_qi_fund_percent)
+        extended_dynamic_global_properties(const database_api::api_dynamic_global_property_object& o) : head_block_number(o.head_block_number), head_block_id(o.head_block_id), time(o.time), current_siming(o.current_siming), current_supply(legacy_asset::from_asset(o.current_supply)), total_qi(legacy_asset::from_asset(o.total_qi)), pending_rewarded_qi(legacy_asset::from_asset(o.pending_rewarded_qi)), pending_rewarded_feigang(legacy_asset::from_asset(o.pending_rewarded_feigang)), pending_cultivation_qi(legacy_asset::from_asset(o.pending_cultivation_qi)), total_gold(legacy_asset::from_asset(o.total_gold)), total_food(legacy_asset::from_asset(o.total_food)), total_wood(legacy_asset::from_asset(o.total_wood)), total_fabric(legacy_asset::from_asset(o.total_fabric)), total_herb(legacy_asset::from_asset(o.total_herb)), maximum_block_size(o.maximum_block_size), current_aslot(o.current_aslot), recent_slots_filled(o.recent_slots_filled), participation_count(o.participation_count), last_irreversible_block_num(o.last_irreversible_block_num), delegation_return_period(o.delegation_return_period), content_reward_yang_percent(o.content_reward_yang_percent), content_reward_qi_fund_percent(o.content_reward_qi_fund_percent),
+            last_siming_production_reward(legacy_asset::from_asset(o.last_siming_production_reward))
         {}
         
         uint32_t          head_block_number = 0;
@@ -136,6 +137,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         
         uint16_t          content_reward_yang_percent = TAIYI_CONTENT_REWARD_YANG_PERCENT;
         uint16_t          content_reward_qi_fund_percent = TAIYI_CONTENT_REWARD_QI_FUND_PERCENT;
+        
+        legacy_asset      last_siming_production_reward;
     };
 
     struct api_siming_object
@@ -526,7 +529,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::api_account_object, (id)(name)(owner)
 
 FC_REFLECT_DERIVED( taiyi::plugins::baiyujing_api::extended_account, (taiyi::plugins::baiyujing_api::api_account_object),(qi_balance)(transfer_history)(other_history)(siming_adores) )
 
-FC_REFLECT( taiyi::plugins::baiyujing_api::extended_dynamic_global_properties, (head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(pending_cultivation_qi)(total_gold)(total_food)(total_wood)(total_fabric)(total_herb)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::extended_dynamic_global_properties, (head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(pending_cultivation_qi)(total_gold)(total_food)(total_wood)(total_fabric)(total_herb)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent)(last_siming_production_reward) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_siming_object, (id)(owner)(created)(url)(adores)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)(last_aslot)(last_confirmed_block_num)(signing_key)(props)(running_version)(hardfork_version_vote)(hardfork_time_vote) )
 

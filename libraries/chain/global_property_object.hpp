@@ -82,6 +82,8 @@ namespace taiyi { namespace chain {
                                 
         uint16_t content_reward_yang_percent = TAIYI_CONTENT_REWARD_YANG_PERCENT;
         uint16_t content_reward_qi_fund_percent = TAIYI_CONTENT_REWARD_QI_FUND_PERCENT;
+        
+        asset last_siming_production_reward = asset(0, YANG_SYMBOL);
     };
 
     typedef multi_index_container<
@@ -98,5 +100,5 @@ namespace mira {
     template<> struct is_static_length< taiyi::chain::dynamic_global_property_object > : public boost::true_type {};
 } // mira
 
-FC_REFLECT( taiyi::chain::dynamic_global_property_object, (id)(head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(pending_cultivation_qi)(total_gold)(total_food)(total_wood)(total_fabric)(total_herb)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent) )
+FC_REFLECT( taiyi::chain::dynamic_global_property_object, (id)(head_block_number)(head_block_id)(time)(current_siming)(current_supply)(total_qi)(pending_rewarded_qi)(pending_rewarded_feigang)(pending_cultivation_qi)(total_gold)(total_food)(total_wood)(total_fabric)(total_herb)(maximum_block_size)(current_aslot)(recent_slots_filled)(participation_count)(last_irreversible_block_num)(delegation_return_period)(content_reward_yang_percent)(content_reward_qi_fund_percent)(last_siming_production_reward) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::dynamic_global_property_object, taiyi::chain::dynamic_global_property_index )

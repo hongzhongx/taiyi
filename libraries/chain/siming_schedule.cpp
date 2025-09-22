@@ -125,8 +125,8 @@ namespace taiyi { namespace chain {
             reset_virtual_schedule_time(db);
         }
         
-        size_t expected_active_simings = std::min( size_t(TAIYI_MAX_SIMINGS), widx.size() );
-        FC_ASSERT( active_simings.size() == expected_active_simings, "number of active simings does not equal expected_active_simings=${expected_active_simings}", ("active_simings.size()",active_simings.size()) ("TAIYI_MAX_SIMINGS",TAIYI_MAX_SIMINGS) ("expected_active_simings", expected_active_simings) );
+//        size_t expected_active_simings = std::min( size_t(TAIYI_MAX_SIMINGS), widx.size() );
+//        FC_ASSERT( active_simings.size() == expected_active_simings, "number of active simings does not equal expected_active_simings=${expected_active_simings}", ("active_simings.size()",active_simings.size()) ("TAIYI_MAX_SIMINGS",TAIYI_MAX_SIMINGS) ("expected_active_simings", expected_active_simings) );
         
         auto majority_version = wso.majority_version;
         

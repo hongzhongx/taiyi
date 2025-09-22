@@ -152,7 +152,7 @@ namespace taiyi { namespace protocol {
      *  to begin.
      *
      *  If the owner isn't a siming they will become a siming.  Simings
-     *  are charged a fee equal to 1 weeks worth of siming pay which in
+     *  are charged a fee more than 1 weeks worth of siming pay which in
      *  turn is derived from the current share supply.  The fee is
      *  only applied if the owner is not already a siming.
      *
@@ -166,7 +166,6 @@ namespace taiyi { namespace protocol {
         string            url;
         public_key_type   block_signing_key;
         legacy_chain_properties  props;
-        asset             fee; ///< the fee paid to register a new siming, should be 10x current block production pay
 
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
@@ -543,7 +542,7 @@ FC_REFLECT( taiyi::protocol::transfer_operation, (from)(to)(amount)(memo) )
 FC_REFLECT( taiyi::protocol::transfer_to_qi_operation, (from)(to)(amount) )
 FC_REFLECT( taiyi::protocol::withdraw_qi_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::set_withdraw_qi_route_operation, (from_account)(to_account)(percent)(auto_vest) )
-FC_REFLECT( taiyi::protocol::siming_update_operation, (owner)(url)(block_signing_key)(props)(fee) )
+FC_REFLECT( taiyi::protocol::siming_update_operation, (owner)(url)(block_signing_key)(props) )
 FC_REFLECT( taiyi::protocol::siming_set_properties_operation, (owner)(props)(extensions) )
 FC_REFLECT( taiyi::protocol::account_siming_adore_operation, (account)(siming)(approve) )
 FC_REFLECT( taiyi::protocol::account_siming_proxy_operation, (account)(proxy) )

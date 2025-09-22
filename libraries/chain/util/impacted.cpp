@@ -263,6 +263,11 @@ namespace taiyi { namespace chain {
             if(op.nfa != nfa_id_type::max()._id)
                 _impacted_nfas.insert( op.nfa );
         }
+        
+        void operator()( const shutdown_siming_operation& op )
+        {
+           _impacted.insert( op.owner );
+        }
 
         //void operator()( const operation& op ){}
     };
