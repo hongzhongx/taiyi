@@ -37,7 +37,7 @@
 #define TAIYI_INIT_PUBLIC_KEY_STR               "TAI8HpgpX6nXnqJcZCcUwDQpFeorz4ZHMegQA5Be4K88wzRSnxjeo"
 #define TAIYI_CHAIN_ID                          fc::sha256()
 
-#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1735732800))  //2025-1-1 20:00:00
+#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1762840800))  //2025-11-11 14:00:00
 
 #define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::days(30)
 #define TAIYI_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::days(1)
