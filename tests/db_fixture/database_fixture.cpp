@@ -74,14 +74,15 @@ namespace taiyi { namespace chain {
             db->set_hardfork( TAIYI_BLOCKCHAIN_VERSION.minor_v() );
             generate_block();
 
-            vest( "danuo", 10000 );
+            vest( TAIYI_INIT_SIMING_NAME, 10000 );
             
             // Fill up the rest of the required miners
             for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )
             {
                 account_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_pub_key );
-                fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND );
-                siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, share_type(TAIYI_MIN_REWARD_FUND) );
+                fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 20 );
+                vest( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 10 );
+                siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key );
             }
             
             validate_database();
@@ -154,8 +155,9 @@ namespace taiyi { namespace chain {
         for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )
         {
             account_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_pub_key );
-            fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND );
-            siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, share_type(TAIYI_MIN_REWARD_FUND) );
+            fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 20 );
+            vest( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 10 );
+            siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key );
         }
         
         validate_database();
@@ -315,7 +317,7 @@ namespace taiyi { namespace chain {
         return account_create( name, key, key );
     }
 
-    const siming_object& database_fixture::siming_create(const string& owner, const private_key_type& owner_key, const string& url, const public_key_type& signing_key, const share_type& fee )
+    const siming_object& database_fixture::siming_create(const string& owner, const private_key_type& owner_key, const string& url, const public_key_type& signing_key )
     {
         try
         {
@@ -323,7 +325,6 @@ namespace taiyi { namespace chain {
             op.owner = owner;
             op.url = url;
             op.block_signing_key = signing_key;
-            op.fee = asset( fee, YANG_SYMBOL );
             
             trx.operations.push_back( op );
             trx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
@@ -566,8 +567,9 @@ namespace taiyi { namespace chain {
             for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )
             {
                 account_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_pub_key );
-                fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND );
-                siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, share_type(TAIYI_MIN_REWARD_FUND) );
+                fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 20 );
+                vest( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 10 );
+                siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key );
             }
             
             validate_database();

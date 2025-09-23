@@ -742,8 +742,9 @@ BOOST_FIXTURE_TEST_CASE( hardfork_test, database_fixture )
             for( int i = TAIYI_NUM_INIT_SIMINGS; i < TAIYI_MAX_SIMINGS; i++ )
             {
                 account_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_pub_key );
-                fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND );
-                siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key, TAIYI_MIN_REWARD_FUND );
+                fund( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 20 );
+                vest( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), TAIYI_MIN_REWARD_FUND * 10 );
+                siming_create( TAIYI_INIT_SIMING_NAME + fc::to_string( i ), init_account_priv_key, "foo.bar", init_account_pub_key );
             }
             
             validate_database();

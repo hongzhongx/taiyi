@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
             gpo.current_supply -= org_alice_qi * TAIYI_QI_SHARE_PRICE;
             gpo.total_qi += -org_alice_qi + ASSET( "0.000100 QI" );
         });
-    });
+    }, default_skip);
 
     tx.operations.clear();
     tx.signatures.clear();
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
             obj.current_supply.amount -= 1; //配平总量的整型误差
             obj.total_qi -= (old_alice_qi - asset(100, QI_SYMBOL));
         });
-    });
+    }, default_skip);
 
     revise_contract_operation rop;
     rop.reviser = "alice";

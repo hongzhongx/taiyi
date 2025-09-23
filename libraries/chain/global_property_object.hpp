@@ -83,7 +83,7 @@ namespace taiyi { namespace chain {
         uint16_t content_reward_yang_percent = TAIYI_CONTENT_REWARD_YANG_PERCENT;
         uint16_t content_reward_qi_fund_percent = TAIYI_CONTENT_REWARD_QI_FUND_PERCENT;
         
-        asset last_siming_production_reward = asset(0, YANG_SYMBOL);
+        asset last_siming_production_reward = asset(0, QI_SYMBOL);
     };
 
     typedef multi_index_container<

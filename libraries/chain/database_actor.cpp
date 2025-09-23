@@ -323,12 +323,15 @@ namespace taiyi { namespace chain {
                 //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
                 long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
                 long long vm_drops = old_drops;
+                int64_t api_exe_point = 0;
                 bool trigger_fail = false;
                 bool triggered = false;
                 try {
                     auto session = start_undo_session();
+                    clear_contract_handler_exe_point(); //初始化api执行消耗统计
                     lua_table result_table = worker.do_nfa_contract_function(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
-                    
+                    api_exe_point = get_contract_handler_exe_point();
+
                     auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
                     if(it_triggered == result_table.v.end()) {
                         trigger_fail = true;
@@ -351,11 +354,13 @@ namespace taiyi { namespace chain {
                 int64_t used_drops = old_drops - vm_drops;
 
                 //执行错误仍然要扣费，但是不影响下次触发
-                int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+                int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+                int64_t exe_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
                 int64_t debt_qi = 0;
-                if(used_qi > nfa.qi.amount.value) {
-                    debt_qi = used_qi - nfa.qi.amount.value;
+                if((used_qi + exe_qi) > nfa.qi.amount.value) {
+                    debt_qi = (used_qi + exe_qi) - nfa.qi.amount.value;
                     used_qi = nfa.qi.amount.value;
+                    exe_qi = 0; //欠款时，本次消耗的真气欠款全部算给合约创建者
                     if(!trigger_fail) {
                         trigger_fail = true;
                         wlog("Actor (${a}) trigger talent #${t} successfully, but have not enough qi to next trigger.", ("a", act.name)("t", tobj.id));
@@ -366,11 +371,17 @@ namespace taiyi { namespace chain {
                 }
 
                 //reward contract owner
+                int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
+                used_qi -= used_qi_for_treasury;
                 if( used_qi > 0) {
                     const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
                     reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
                 }
-                
+
+                //reward to treasury
+                if( (exe_qi + used_qi_for_treasury) > 0)
+                    reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
+
                 if(debt_qi > 0) {
                     modify( nfa, [&]( nfa_object& obj ) {
                         obj.debt_value = debt_qi;
@@ -443,10 +454,13 @@ namespace taiyi { namespace chain {
             //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
             long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
+            int64_t api_exe_point = 0;
             bool trigger_fail = false;
             try {
                 auto session = start_undo_session();
+                clear_contract_handler_exe_point(); //初始化api执行消耗统计
                 worker.do_nfa_contract_function(nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                api_exe_point = get_contract_handler_exe_point();
                 session.squash();
             }
             catch (fc::exception e) {
@@ -462,11 +476,13 @@ namespace taiyi { namespace chain {
             int64_t used_drops = old_drops - vm_drops;
 
             //执行错误仍然要扣费，但是不影响下次触发
-            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 50 * TAIYI_USEMANA_EXECUTION_SCALE;
+            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+            int64_t exe_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
             int64_t debt_qi = 0;
-            if(used_qi > nfa.qi.amount.value) {
-                debt_qi = used_qi - nfa.qi.amount.value;
+            if((used_qi + exe_qi) > nfa.qi.amount.value) {
+                debt_qi = (used_qi + exe_qi) - nfa.qi.amount.value;
                 used_qi = nfa.qi.amount.value;
+                exe_qi = 0; //欠款时，本次消耗的真气欠款全部算给合约创建者
                 if(!trigger_fail) {
                     trigger_fail = true;
                     wlog("Actor (${a}) trigger on_grown successfully, but have not enough qi to next trigger.", ("a", act.name));
@@ -477,11 +493,17 @@ namespace taiyi { namespace chain {
             }
 
             //reward contract owner
+            int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
+            used_qi -= used_qi_for_treasury;
             if( used_qi > 0) {
                 const auto& contract_owner = get<account_object, by_id>(contract_ptr->owner);
                 reward_feigang(contract_owner, nfa, asset(used_qi, QI_SYMBOL));
             }
-            
+
+            //reward to treasury
+            if( (exe_qi + used_qi_for_treasury) > 0)
+                reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
+
             if(debt_qi > 0) {
                 modify( nfa, [&]( nfa_object& obj ) {
                     obj.debt_value = debt_qi;

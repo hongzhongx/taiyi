@@ -100,7 +100,7 @@ namespace taiyi { namespace chain {
                 need_fee = asset(props.last_siming_production_reward.amount * 7, YANG_SYMBOL) * TAIYI_QI_SHARE_PRICE;
             }
             //pay to treasury
-            FC_ASSERT( owner.qi.amount.value >= need_fee.amount.value, "Owner account does not have enough qi for siming registration, need ${a}", ("a", need_fee));
+            FC_ASSERT( owner.qi.amount.value >= need_fee.amount.value, "Owner account ${a} does not have enough qi for siming registration, need ${n}, have ${h}", ("a", o.owner)("n", need_fee)("h", owner.qi));
             _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), owner, need_fee);
 
             _db.create< siming_object >( [&]( siming_object& w ) {

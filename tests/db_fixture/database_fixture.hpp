@@ -228,7 +228,7 @@ namespace taiyi { namespace chain {
         
         const account_object& account_create(const string& name, const public_key_type& key);
         
-        const siming_object& siming_create(const string& owner, const private_key_type& owner_key, const string& url, const public_key_type& signing_key, const share_type& fee);
+        const siming_object& siming_create(const string& owner, const private_key_type& owner_key, const string& url, const public_key_type& signing_key);
         
         void fund( const string& account_name, const share_type& amount = 500000 );
         void fund( const string& account_name, const asset& amount );

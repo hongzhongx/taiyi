@@ -1005,14 +1005,14 @@ BOOST_AUTO_TEST_CASE( siming_update_authorities )
         BOOST_TEST_MESSAGE( "Testing: siming_update_authorities" );
         
         ACTORS( (alice)(bob) );
-        fund( "alice", 10000 );
-        
+        fund( "alice", 20000 );
+        vest( "alice", 10000 );
+
         private_key_type signing_key = generate_private_key( "new_key" );
         
         siming_update_operation op;
         op.owner = "alice";
         op.url = "foo.bar";
-        op.fee = ASSET( "1.000 YANG" );
         op.block_signing_key = signing_key.get_public_key();
         
         signed_transaction tx;
@@ -1058,8 +1058,9 @@ BOOST_AUTO_TEST_CASE( siming_update_apply )
         BOOST_TEST_MESSAGE( "Testing: siming_update_apply" );
         
         ACTORS( (alice) )
-        fund( "alice", 10000 );
-        
+        fund( "alice", 20000 );
+        vest( "alice", 10000 );
+
         private_key_type signing_key = generate_private_key( "new_key" );
         
         BOOST_TEST_MESSAGE( "--- Test upgrading an account to a siming" );
@@ -1067,7 +1068,6 @@ BOOST_AUTO_TEST_CASE( siming_update_apply )
         siming_update_operation op;
         op.owner = "alice";
         op.url = "foo.bar";
-        op.fee = ASSET( "1.000 YANG" );
         op.block_signing_key = signing_key.get_public_key();
         op.props.account_creation_fee = legacy_taiyi_asset::from_asset( asset(TAIYI_MIN_ACCOUNT_CREATION_FEE + 10, YANG_SYMBOL) );
         op.props.maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT + 100;
@@ -1155,9 +1155,10 @@ BOOST_AUTO_TEST_CASE( account_siming_adore_authorities )
         
         ACTORS( (alice)(bob)(sam) )
         
-        fund( "alice", 1000 );
+        fund( "alice", 20000 );
+        vest( "alice", 10000 );
         private_key_type alice_siming_key = generate_private_key( "alice_siming" );
-        siming_create( "alice", alice_private_key, "foo.bar", alice_siming_key.get_public_key(), 1000 );
+        siming_create( "alice", alice_private_key, "foo.bar", alice_siming_key.get_public_key() );
         
         account_siming_adore_operation op;
         op.account = "bob";
@@ -1211,10 +1212,11 @@ BOOST_AUTO_TEST_CASE( account_siming_adore_apply )
         ACTORS( (alice)(bob)(sam) )
         fund( "alice" , 5000 );
         vest( "alice", 5000 );
-        fund( "sam", 1000 );
+        fund( "sam", 20000 );
+        vest( "sam", 10000 );
         
         private_key_type sam_siming_key = generate_private_key( "sam_key" );
-        siming_create( "sam", sam_private_key, "foo.bar", sam_siming_key.get_public_key(), 1000 );
+        siming_create( "sam", sam_private_key, "foo.bar", sam_siming_key.get_public_key() );
         const siming_object& sam_siming = db->get_siming( "sam" );
         
         const auto& siming_adore_idx = db->get_index< siming_adore_index >().indices().get< by_siming_account >();
@@ -1680,13 +1682,13 @@ BOOST_AUTO_TEST_CASE( account_recovery )
         ACTORS( (alice) );
         fund( "alice", 1000000 );
         generate_block();
-        
+
         db_plugin->debug_update( [&]( database& db ) {
             db.modify( db.get_siming_schedule_object(), [&]( siming_schedule_object& wso ) {
                 wso.median_props.account_creation_fee = ASSET( "0.100 YANG" );
             });
-        });
-        
+        }, default_skip);
+
         generate_block();
         
         BOOST_TEST_MESSAGE( "Creating account bob with alice" );
@@ -2129,7 +2131,7 @@ BOOST_AUTO_TEST_CASE( decline_adoring_rights_apply )
         
         generate_blocks( db->head_block_time() + TAIYI_OWNER_AUTH_RECOVERY_PERIOD - fc::seconds( TAIYI_BLOCK_INTERVAL ), true );
         BOOST_REQUIRE( db->get_account( "alice" ).can_adore );
-        siming_create( "alice", alice_private_key, "foo.bar", alice_private_key.get_public_key(), 0 );
+        siming_create( "alice", alice_private_key, "foo.bar", alice_private_key.get_public_key() );
         
         account_siming_adore_operation siming_adore;
         siming_adore.account = "alice";
@@ -2258,7 +2260,7 @@ BOOST_AUTO_TEST_CASE( claim_reward_balance_apply )
                 gpo.pending_rewarded_qi += ASSET( "10.000000 QI" );
                 gpo.pending_rewarded_feigang += ASSET( "10.000000 QI" );
             });
-        });
+        }, default_skip);
         
         generate_block();
         validate_database();
@@ -2680,13 +2682,13 @@ BOOST_AUTO_TEST_CASE( siming_set_properties_validate )
         BOOST_TEST_MESSAGE( "Testing: siming_set_properties_validate" );
         
         ACTORS( (alice) )
-        fund( "alice", 10000 );
+        fund( "alice", 20000 );
+        vest( "alice", 10000 );
         private_key_type signing_key = generate_private_key( "old_key" );
         
         siming_update_operation op;
         op.owner = "alice";
         op.url = "foo.bar";
-        op.fee = ASSET( "1.000 YANG" );
         op.block_signing_key = signing_key.get_public_key();
         op.props.account_creation_fee = legacy_taiyi_asset::from_asset( asset(TAIYI_MIN_ACCOUNT_CREATION_FEE + 10, YANG_SYMBOL) );
         op.props.maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT + 100;
@@ -2785,13 +2787,13 @@ BOOST_AUTO_TEST_CASE( siming_set_properties_apply )
         BOOST_TEST_MESSAGE( "Testing: siming_set_properties_apply" );
         
         ACTORS( (alice) )
-        fund( "alice", 10000 );
+        fund( "alice", 20000 );
+        vest( "alice", 10000 );
         private_key_type signing_key = generate_private_key( "old_key" );
         
         siming_update_operation op;
         op.owner = "alice";
         op.url = "foo.bar";
-        op.fee = ASSET( "1.000 YANG" );
         op.block_signing_key = signing_key.get_public_key();
         op.props.account_creation_fee = legacy_taiyi_asset::from_asset( asset(TAIYI_MIN_ACCOUNT_CREATION_FEE + 10, YANG_SYMBOL) );
         op.props.maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT + 100;
