@@ -17,6 +17,8 @@ namespace taiyi { namespace chain {
         TAIYI_ADD_CORE_INDEX(db, actor_group_index);
         TAIYI_ADD_CORE_INDEX(db, actor_talent_rule_index);
         TAIYI_ADD_CORE_INDEX(db, actor_talents_index);
+        TAIYI_ADD_CORE_INDEX(db, actor_relation_index);
+        TAIYI_ADD_CORE_INDEX(db, actor_connection_index);
     }
 
 } }

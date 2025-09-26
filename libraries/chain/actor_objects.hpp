@@ -293,12 +293,170 @@ namespace taiyi { namespace chain {
         >,
         allocator< actor_talents_object >
     > actor_talents_index;
+    
+    //=========================================================================
+
+    enum E_ACTOR_RELATION_TYPE
+    {
+        NC = 0,
+        //亲友
+        FRIEND          =1, //知心之交
+        SWORN           =2, //义结金兰
+        MENTOR          =3, //授业恩师
+        DESCENDANT      =4, //嫡系传人
+        BENEFACTOR      =5, //有恩于我（恩人）
+        BENEFICIARY     =6, //恩深义重（受益者）
+        ADORE           =7, //倾心爱慕
+        ADORED          =8, //被慕倾心
+        LOVE            =9, //两情相悦
+        COUPLE          =10,//结发夫妻
+        PARENT          =11,//亲父亲母
+        ADOPTIVE_PARENT =12,//义父义母
+        SIBLING         =13,//兄弟姐妹
+        CHILD           =14,//儿女子嗣
+        //仇敌
+        IRRECONCILABLE  =15,//誓不两立
+        BLOOD           =16 //血海深仇
+    };
+
+    class actor_connection_object : public object < actor_connection_object_type, actor_connection_object >
+    {
+        TAIYI_STD_ALLOCATOR_CONSTRUCTOR(actor_connection_object)
+
+    public:
+        template< typename Constructor, typename Allocator >
+        actor_connection_object(Constructor&& c, allocator< Allocator > a)
+        {
+            c(*this);
+        }
+
+        id_type                 id;
+
+        actor_id_type           actor;
+        E_ACTOR_RELATION_TYPE   type;
+        
+        flat_set<actor_id_type> people; //actor对他人的人物关系，即actor是“某某”的“type”者
+
+        time_point_sec          last_update;
+    };
+
+    struct by_actor;
+    struct by_relation_type;
+    typedef multi_index_container<
+        actor_connection_object,
+        indexed_by<
+            ordered_unique< tag< by_id >, member< actor_connection_object, actor_connection_id_type, &actor_connection_object::id > >,
+            ordered_unique< tag< by_actor >,
+                composite_key< actor_connection_object,
+                    member< actor_connection_object, actor_id_type, &actor_connection_object::actor >,
+                    member< actor_connection_object, actor_connection_id_type, &actor_connection_object::id >
+                >
+            >,
+            ordered_unique< tag< by_relation_type >,
+                composite_key< actor_connection_object,
+                    member< actor_connection_object, actor_id_type, &actor_connection_object::actor >,
+                    member< actor_connection_object, E_ACTOR_RELATION_TYPE, &actor_connection_object::type >
+                >
+            >
+        >,
+        allocator< actor_connection_object >
+    > actor_connection_index;
+
+    class actor_relation_object : public object < actor_relation_object_type, actor_relation_object >
+    {
+        TAIYI_STD_ALLOCATOR_CONSTRUCTOR(actor_relation_object)
+
+    public:
+        template< typename Constructor, typename Allocator >
+        actor_relation_object(Constructor&& c, allocator< Allocator > a)
+        {
+            c(*this);
+        }
+
+        id_type             id;
+
+        actor_id_type       actor;
+        actor_id_type       target;
+        
+        int32_t             favor = 0;  //好感度
+
+        time_point_sec      last_update;
+        
+        //-6 to +6, 13 levels
+        int get_favor_level() const {
+            if(favor <= -26000)
+                return -6; //血仇, -30,000~-26,000
+            else if(favor <= -22000)
+                return -5; //痛恨, -25,999~-22,000
+            else if(favor <= -18000)
+                return -4; //憎恨, -21,999~-18,000
+            else if(favor <= -14000)
+                return -3; //仇视, -17,999~-14,000
+            else if(favor <= -10000)
+                return -2; //敌视, -13,999~-10,000
+            else if(favor <= -6000)
+                return -1; //鄙视, -9,999~-6,000
+            else if(favor <= 6000)
+                return 0; //陌路, -5,999~+6,000
+            else if(favor <= 10000)
+                return 1; //冷淡, +6,001~+10,000
+            else if(favor <= 14000)
+                return 2; //融洽, +10,001~+14,000
+            else if(favor <= 18000)
+                return 3; //热忱, +14,001~+18,000
+            else if(favor <= 22000)
+                return 4; //喜爱, +18,001~+22,000
+            else if(favor <= 26000)
+                return 5; //亲密, +22,001~+26,000
+            else
+                return 6; //不渝, +26,001~+30,000
+        }
+    };
+
+    struct by_actor;
+    struct by_target;
+    struct by_actor_target;
+    struct by_actor_favor;
+    typedef multi_index_container<
+        actor_relation_object,
+        indexed_by<
+            ordered_unique< tag< by_id >, member< actor_relation_object, actor_relation_id_type, &actor_relation_object::id > >,
+            ordered_unique< tag< by_actor >,
+                composite_key< actor_relation_object,
+                    member< actor_relation_object, actor_id_type, &actor_relation_object::actor >,
+                    member< actor_relation_object, actor_relation_id_type, &actor_relation_object::id >
+                >
+            >,
+            ordered_unique< tag< by_target >,
+                composite_key< actor_relation_object,
+                    member< actor_relation_object, actor_id_type, &actor_relation_object::target >,
+                    member< actor_relation_object, actor_relation_id_type, &actor_relation_object::id >
+                >
+            >,
+            ordered_unique< tag< by_actor_target >,
+                composite_key< actor_relation_object,
+                    member< actor_relation_object, actor_id_type, &actor_relation_object::actor >,
+                    member< actor_relation_object, actor_id_type, &actor_relation_object::target >
+                >
+            >,
+            ordered_unique< tag< by_actor_favor >,
+                composite_key< actor_relation_object,
+                    member< actor_relation_object, actor_id_type, &actor_relation_object::actor >,
+                    member< actor_relation_object, int32_t, &actor_relation_object::favor >,
+                    member< actor_relation_object, actor_relation_id_type, &actor_relation_object::id >
+                >,
+                composite_key_compare< std::less< actor_id_type >, std::greater< int32_t >, std::less< actor_relation_id_type > >
+            >
+        >,
+        allocator< actor_relation_object >
+    > actor_relation_index;
 
 } } // taiyi::chain
 
 namespace mira {
     template<> struct is_static_length< taiyi::chain::actor_core_attributes_object > : public boost::true_type {};
     template<> struct is_static_length< taiyi::chain::actor_group_object > : public boost::true_type {};
+    template<> struct is_static_length< taiyi::chain::actor_relation_object > : public boost::true_type {};
 } // mira
 
 FC_REFLECT_ENUM( taiyi::chain::E_ACTOR_STANDPOINT_TYPE, (UPRIGHT)(KINDNESS)(MIDDLEBROW)(REBEL)(SOLIPSISM) )
@@ -317,3 +475,11 @@ CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_talent_rule_object, taiyi::chain::a
 
 FC_REFLECT(taiyi::chain::actor_talents_object, (id)(actor)(talents)(last_update)(created))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_talents_object, taiyi::chain::actor_talents_index)
+
+FC_REFLECT_ENUM( taiyi::chain::E_ACTOR_RELATION_TYPE, (NC)(FRIEND)(SWORN)(MENTOR)(DESCENDANT)(BENEFACTOR)(BENEFICIARY)(ADORE)(ADORED)(LOVE)(COUPLE)(PARENT)(ADOPTIVE_PARENT)(SIBLING)(CHILD)(IRRECONCILABLE)(BLOOD))
+
+FC_REFLECT(taiyi::chain::actor_relation_object, (id)(actor)(target)(favor)(last_update))
+CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_relation_object, taiyi::chain::actor_relation_index)
+
+FC_REFLECT(taiyi::chain::actor_connection_object, (id)(actor)(type)(people)(last_update))
+CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_connection_object, taiyi::chain::actor_connection_index)

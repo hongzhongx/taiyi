@@ -66,7 +66,13 @@ namespace taiyi { namespace plugins { namespace database_api {
             (list_zones)
             (find_zones_by_name)
             (find_way_to_zone)
-                         
+            (list_actor_relations)
+            (list_target_relations)
+            (get_actors_relation)
+            (get_actor_connections)
+            (list_actor_groups)
+            (find_actor_group)
+
             (get_tiandao_properties)
         )
 
@@ -1334,6 +1340,166 @@ namespace taiyi { namespace plugins { namespace database_api {
         return result;
     }
     
+    DEFINE_API_IMPL( database_api_impl, list_actor_relations )
+    {
+        list_actor_relations_return result;
+
+        const auto& actor = _db.get_actor( args.name );
+        const auto& relation_by_actor_idx = _db.get_index< chain::actor_relation_index, chain::by_actor >();
+        auto itr = relation_by_actor_idx.lower_bound( actor.id );
+        auto end = relation_by_actor_idx.end();
+        while( itr != end )
+        {
+            if( itr->actor != actor.id)
+                break;
+
+            result.relations.emplace_back( api_actor_relation_object( *itr, _db ) );
+
+            ++itr;
+        }
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, list_target_relations )
+    {
+        list_target_relations_return result;
+
+        const auto& target = _db.get_actor( args.name );
+        const auto& relation_by_target_idx = _db.get_index< chain::actor_relation_index, chain::by_target >();
+        auto itr = relation_by_target_idx.lower_bound( target.id );
+        auto end = relation_by_target_idx.end();
+        while( itr != end )
+        {
+            if( itr->target != target.id)
+                break;
+
+            result.relations.emplace_back( api_actor_relation_object( *itr, _db ) );
+
+            ++itr;
+        }
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, get_actors_relation )
+    {
+        get_actors_relation_return result;
+
+        const auto& actor = _db.get_actor( args.actor_name );
+        const auto& target = _db.get_actor( args.target_name );
+        const auto* relation = _db.find< chain::actor_relation_object, chain::by_actor_target >( boost::make_tuple(actor.id, target.id) );
+        
+        if(relation)
+            result.relation = api_actor_relation_object(*relation, _db);
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, get_actor_connections )
+    {
+        get_actor_connections_return result;
+
+        const auto& actor = _db.get_actor( args.name );
+        const auto* connection = _db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor.id, args.type) );
+        
+        if(connection) {
+            for(auto p : connection->people) {
+                const auto& a = _db.get< chain::actor_object, chain::by_id >(p);
+                result.actors.push_back({p, a.name});
+            }
+        }
+
+        return result;
+    }
+    
+    DEFINE_API_IMPL( database_api_impl, list_actor_groups )
+    {
+        FC_ASSERT( args.limit <= DATABASE_API_SINGLE_QUERY_LIMIT );
+
+        list_actor_groups_return result;
+        result.leaders.reserve( args.limit );
+
+        switch( args.order )
+        {
+            case( by_group_leader ):
+            {
+                auto key = args.start.as< find_actor_args >();
+                const auto* start_leader = _db.find< chain::actor_object, chain::by_name >(key.name);
+                const auto& actor_group_by_leader_member_idx = _db.get_index< chain::actor_group_index, chain::by_leader_member >();
+                auto itr = start_leader == 0 ? actor_group_by_leader_member_idx.begin() : actor_group_by_leader_member_idx.lower_bound( start_leader->id );
+                auto end = actor_group_by_leader_member_idx.end();
+                const actor_group_object* last_leader_item = 0;
+                while( itr != end )
+                {
+                    if(!last_leader_item) {
+                        last_leader_item = &(*itr);
+                        const auto& leader_actor = _db.get< chain::actor_object, chain::by_id >(last_leader_item->leader);
+                        result.leaders.emplace_back(leader_actor.name);
+                    }
+                    
+                    if( itr->leader != last_leader_item->leader) {
+                        last_leader_item = &(*itr);
+                        const auto& leader_actor = _db.get< chain::actor_object, chain::by_id >(last_leader_item->leader);
+                        result.leaders.emplace_back(leader_actor.name);
+                    }
+                    
+                    if(result.leaders.size() >= args.limit)
+                        break;
+
+                    ++itr;
+                }
+                break;
+            }
+            default:
+                FC_ASSERT( false, "Unknown or unsupported sort order" );
+        }
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, find_actor_group )
+    {
+        find_actor_group_return result;
+
+        const auto& test_actor = _db.get< chain::actor_object, chain::by_name >(args.name);
+        
+        //test if member
+        const auto* check_member_item = _db.find< chain::actor_group_object, chain::by_actor >(test_actor.id);
+        const actor_object* leader_actor = 0;
+        if(check_member_item)
+            leader_actor = _db.find< chain::actor_object, chain::by_id >(check_member_item->leader);
+        
+        const auto& actor_group_by_leader_member_idx = _db.get_index< chain::actor_group_index, chain::by_leader_member >();
+        auto itr = leader_actor == 0 ? actor_group_by_leader_member_idx.lower_bound( test_actor.id ) : actor_group_by_leader_member_idx.lower_bound( leader_actor->id );
+        auto end = actor_group_by_leader_member_idx.end();
+        //get leader
+        if(itr != end) {
+            if(itr->leader == test_actor.id) {
+                result.leader = test_actor.name;
+                leader_actor = &test_actor;
+            }
+            else if(itr->leader == leader_actor->id)
+                result.leader = leader_actor->name;
+            else
+                return result;
+        }
+        
+        //get members
+        while( itr != end )
+        {
+            if(itr->leader != leader_actor->id)
+                break;
+            
+            const auto& member_actor = _db.get< chain::actor_object, chain::by_id >(itr->actor);
+            result.members.push_back(member_actor.name);
+
+            ++itr;
+        }
+
+        return result;
+    }
+    
     DEFINE_API_IMPL( database_api_impl, get_tiandao_properties )
     {
        return _db.get_tiandao_properties();
@@ -1384,7 +1550,13 @@ namespace taiyi { namespace plugins { namespace database_api {
         (list_zones)
         (find_zones_by_name)
         (find_way_to_zone)
-                     
+        (list_actor_relations)
+        (list_target_relations)
+        (get_actors_relation)
+        (get_actor_connections)
+        (list_actor_groups)
+        (find_actor_group)
+
         (get_tiandao_properties)
     )
     

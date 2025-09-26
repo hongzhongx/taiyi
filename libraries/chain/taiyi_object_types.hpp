@@ -96,7 +96,9 @@ namespace taiyi {
             actor_group_object_type,
             actor_talent_rule_object_type,
             actor_talents_object_type,
-            
+            actor_relation_object_type,
+            actor_connection_object_type,
+
             //zone objects
             zone_object_type,
             zone_connect_object_type,
@@ -148,6 +150,8 @@ namespace taiyi {
         class actor_group_object;
         class actor_talent_rule_object;
         class actor_talents_object;
+        class actor_relation_object;
+        class actor_connection_object;
 
         class zone_object;
         class zone_connect_object;
@@ -196,6 +200,8 @@ namespace taiyi {
         typedef oid< actor_group_object                     > actor_group_id_type;
         typedef oid< actor_talent_rule_object               > actor_talent_rule_id_type;
         typedef oid< actor_talents_object                   > actor_talents_id_type;
+        typedef oid< actor_relation_object                  > actor_relation_id_type;
+        typedef oid< actor_connection_object                > actor_connection_id_type;
 
         typedef oid< zone_object                            > zone_id_type;
         typedef oid< zone_connect_object                    > zone_connect_id_type;
@@ -398,7 +404,9 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     (actor_group_object_type)
     (actor_talent_rule_object_type)
     (actor_talents_object_type)
-                
+    (actor_relation_object_type)
+    (actor_connection_object_type)
+
     //zone objects
     (zone_object_type)
     (zone_connect_object_type)

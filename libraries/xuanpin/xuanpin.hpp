@@ -796,6 +796,24 @@ namespace taiyi { namespace xuanpin {
          * @returns the tiandao properties
          */
         database_api::api_tiandao_property_object get_tiandao_properties() const;
+
+        vector< baiyujing_api::api_actor_relation_data > list_relations_from_actor(const account_name_type& owner, const string& name) const;
+        vector< baiyujing_api::api_actor_relation_data > list_relations_to_actor(const account_name_type& owner, const string& name) const;
+        optional< baiyujing_api::api_actor_relation_data > get_relation_from_to_actor(const account_name_type& from_owner, const string& from_name, const account_name_type& to_owner, const string& to_name) const;
+        
+        database_api::get_actor_connections_return get_actor_connections(const account_name_type& owner, const string& name, const E_ACTOR_RELATION_TYPE& type) const;
+
+        database_api::list_actor_groups_return list_actor_groups(const string& start_leader_name, uint32_t limit);
+        database_api::find_actor_group_return find_actor_group(const string& actor_name);
+
+        baiyujing_api::list_actor_friends_return list_actor_friends(const string& actor_name, int standpoint_threshold, bool only_live);
+        baiyujing_api::get_actor_needs_return get_actor_needs(const string& actor_name);
+
+        //获取指定区域中的情侣或者配偶
+        baiyujing_api::list_actor_mating_targets_by_zone_return list_actor_mating_targets_by_zone(const string& actor_name, const string& zone_name);
+        
+        baiyujing_api::api_people_stat_data stat_people_by_zone(const string& zone_name);
+        baiyujing_api::api_people_stat_data stat_people_by_base(const string& zone_name);
     };
     
 } }
@@ -905,6 +923,18 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (find_zones)
     (find_zones_by_name)
     (get_tiandao_properties)
+
+    (list_relations_from_actor)
+    (list_relations_to_actor)
+    (get_relation_from_to_actor)
+    (get_actor_connections)
+    (list_actor_groups)
+    (find_actor_group)
+    (list_actor_friends)
+    (get_actor_needs)
+    (list_actor_mating_targets_by_zone)
+    (stat_people_by_zone)
+    (stat_people_by_base)
 
     //helper api
     (get_prototype_operation)

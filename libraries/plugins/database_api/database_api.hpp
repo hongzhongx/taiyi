@@ -139,6 +139,15 @@ namespace taiyi { namespace plugins { namespace database_api {
             (find_zones_by_name)
             (find_way_to_zone)
                     
+            // Relations //
+            (list_actor_relations)
+            (list_target_relations)
+            (get_actors_relation)
+            (get_actor_connections)
+                    
+            (list_actor_groups)
+            (find_actor_group)
+
             (get_tiandao_properties)
         )
         

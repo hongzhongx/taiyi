@@ -362,6 +362,56 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         vector<string>      narrate_logs;
         string              err;
     };
+    
+    struct api_actor_relation_data
+    {
+        api_actor_relation_data(const actor_relation_id_type& i, const account_name_type& o, const string& n, const int32_t& f, const int& l, const time_point_sec& u) : id(i), owner(o), name(n), favor(f), favor_level(l), last_update(u) {}
+        api_actor_relation_data() {}
+        
+        actor_relation_id_type  id;
+        
+        account_name_type       owner;
+        string                  name;
+            
+        int32_t                 favor = 0;
+        int                     favor_level = 0;
+        
+        time_point_sec          last_update;
+    };
+
+    struct api_actor_friend_data
+    {
+        api_actor_friend_data(const account_name_type& o, const string& n, const int& ct, const bool& c, const bool& m) : owner(o), name(n), connection_type(ct), is_couple(c), is_mentor(m) {}
+        api_actor_friend_data() {}
+        
+        account_name_type   owner;
+        string              name;
+        
+        int connection_type = 0; //1=直接血亲或配偶, 2=非血亲家人或师父或徒弟, other=其他关系
+        bool is_couple      = false; //夫妻关系
+        bool is_mentor      = false; //师徒关系
+    };
+
+    //角色生理心理需求数据
+    struct api_actor_needs_data
+    {
+        api_actor_needs_data(const account_name_type& mo, const string& mn, const uint32_t& me, const account_name_type& bo, const string& bn, const uint32_t& be) : mating_target_owner(mo), mating_target_name(mn), mating_end_block_num(me), bullying_target_owner(bo), bullying_target_name(bn), bullying_end_block_num(be) {}
+        api_actor_needs_data() {}
+        
+        account_name_type   mating_target_owner;       //春宵需求对象
+        string              mating_target_name;
+        uint32_t            mating_end_block_num = 0;  //春宵需求截止时间
+        
+        account_name_type   bullying_target_owner;     //欺辱需求对象
+        string              bullying_target_name;
+        uint32_t            bullying_end_block_num = 0;//欺辱需求截止时间
+    };
+
+    struct api_people_stat_data
+    {
+        uint live_num = 0;
+        uint dead_num = 0;
+    };
 
 #define DEFINE_API_ARGS( api_name, arg_type, return_type )  \
     typedef arg_type api_name ## _args;                     \
@@ -431,7 +481,19 @@ DEFINE_API_ARGS( list_zones_by_type,                vector< variant >, vector< d
 DEFINE_API_ARGS( list_to_zones_by_from,             vector< variant >, vector< database_api::api_zone_object > )
 DEFINE_API_ARGS( list_from_zones_by_to,             vector< variant >, vector< database_api::api_zone_object > )
 DEFINE_API_ARGS( find_way_to_zone,                  vector< variant >, database_api::find_way_to_zone_return )
-    
+
+DEFINE_API_ARGS( list_relations_from_actor,         vector< variant >, vector< api_actor_relation_data > )
+DEFINE_API_ARGS( list_relations_to_actor,           vector< variant >, vector< api_actor_relation_data > )
+DEFINE_API_ARGS( get_relation_from_to_actor,        vector< variant >, optional< api_actor_relation_data > )
+DEFINE_API_ARGS( get_actor_connections,             vector< variant >, database_api::get_actor_connections_return )
+DEFINE_API_ARGS( list_actor_groups,                 vector< variant >, database_api::list_actor_groups_return )
+DEFINE_API_ARGS( find_actor_group,                  vector< variant >, database_api::find_actor_group_return )
+DEFINE_API_ARGS( list_actor_friends,                vector< variant >, vector< api_actor_friend_data > )
+DEFINE_API_ARGS( get_actor_needs,                   vector< variant >, api_actor_needs_data )
+DEFINE_API_ARGS( list_actor_mating_targets_by_zone, vector< variant >, vector< api_simple_actor_object > )
+DEFINE_API_ARGS( stat_people_by_zone,               vector< variant >, api_people_stat_data )
+DEFINE_API_ARGS( stat_people_by_base,               vector< variant >, api_people_stat_data )
+
 DEFINE_API_ARGS( get_contract_source_code,          vector< variant >, string )
 
 #undef DEFINE_API_ARGS
@@ -508,7 +570,19 @@ DEFINE_API_ARGS( get_contract_source_code,          vector< variant >, string )
             (list_to_zones_by_from)
             (list_from_zones_by_to)
             (find_way_to_zone)
-                    
+
+            (list_relations_from_actor)
+            (list_relations_to_actor)
+            (get_relation_from_to_actor)
+            (get_actor_connections)
+            (list_actor_groups)
+            (find_actor_group)
+            (list_actor_friends)
+            (get_actor_needs)
+            (list_actor_mating_targets_by_zone)
+            (stat_people_by_zone)
+            (stat_people_by_base)
+
             (get_contract_source_code)
         )
         
@@ -558,3 +632,9 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::api_contract_action_info, (exist)(con
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_simple_actor_object, (owner)(name) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_eval_action_return, (eval_result)(narrate_logs)(err) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_actor_relation_data, (id)(owner)(name)(favor)(favor_level)(last_update) )
+
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_actor_friend_data, (owner)(name)(connection_type)(is_couple)(is_mentor) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_actor_needs_data, (mating_target_owner)(mating_target_name)(mating_end_block_num)(bullying_target_owner)(bullying_target_name)(bullying_end_block_num) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_people_stat_data, (live_num)(dead_num) )

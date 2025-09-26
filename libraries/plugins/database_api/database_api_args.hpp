@@ -55,7 +55,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         by_type,
         by_zone_from,
         by_zone_to,
-        by_location
+        by_location,
+        by_group_leader
     };
     
     enum order_direction_type
@@ -448,6 +449,61 @@ namespace taiyi { namespace plugins { namespace database_api {
         vector<string> way_points;
     };
 
+    /* Relation */
+    struct list_actor_relations_args
+    {
+        string name;
+    };
+    struct list_actor_relations_return
+    {
+        vector< api_actor_relation_object > relations;
+    };
+
+    typedef list_actor_relations_args list_target_relations_args;
+    typedef list_actor_relations_return list_target_relations_return;
+
+    struct get_actors_relation_args
+    {
+        string actor_name;
+        string target_name;
+    };
+    struct get_actors_relation_return
+    {
+        optional<api_actor_relation_object> relation;
+    };
+
+    struct get_actor_connections_args
+    {
+        string name;
+        
+        E_ACTOR_RELATION_TYPE   type;
+    };
+    struct actor_connection_data
+    {
+        api_id_type id;
+        string      name;
+        
+    };
+    struct get_actor_connections_return
+    {
+        vector<actor_connection_data> actors;
+    };
+
+    typedef list_object_args_type list_actor_groups_args;
+    struct list_actor_groups_return
+    {
+        vector< string > leaders;
+    };
+
+    struct actor_group_data
+    {
+        string  leader;
+        vector< string > members;
+    };
+
+    typedef find_actor_args find_actor_group_args;
+    typedef actor_group_data find_actor_group_return;
+
 } } } // taiyi::database_api
 
 FC_REFLECT( taiyi::plugins::database_api::get_version_return, (blockchain_version)(taiyi_revision)(fc_revision)(chain_id) )
@@ -541,3 +597,17 @@ FC_REFLECT( taiyi::plugins::database_api::find_zones_by_name_args, (name_list) )
 
 FC_REFLECT( taiyi::plugins::database_api::find_way_to_zone_args, (from_zone)(to_zone) )
 FC_REFLECT( taiyi::plugins::database_api::find_way_to_zone_return, (way_points) )
+
+FC_REFLECT( taiyi::plugins::database_api::list_actor_relations_args, (name) )
+FC_REFLECT( taiyi::plugins::database_api::list_actor_relations_return, (relations) )
+
+FC_REFLECT( taiyi::plugins::database_api::get_actors_relation_args, (actor_name)(target_name) )
+FC_REFLECT( taiyi::plugins::database_api::get_actors_relation_return, (relation) )
+
+FC_REFLECT( taiyi::plugins::database_api::actor_connection_data, (id)(name) )
+FC_REFLECT( taiyi::plugins::database_api::get_actor_connections_args, (name)(type) )
+FC_REFLECT( taiyi::plugins::database_api::get_actor_connections_return, (actors) )
+
+FC_REFLECT( taiyi::plugins::database_api::list_actor_groups_return, (leaders) )
+
+FC_REFLECT( taiyi::plugins::database_api::actor_group_data, (leader)(members) )

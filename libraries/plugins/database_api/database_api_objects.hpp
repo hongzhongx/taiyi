@@ -15,7 +15,9 @@
 namespace taiyi { namespace plugins { namespace database_api {
 
     using namespace taiyi::chain;
-    
+
+    typedef uint64_t api_id_type;
+
     typedef change_recovery_account_request_object  api_change_recovery_account_request_object;
     typedef block_summary_object                    api_block_summary_object;
     typedef dynamic_global_property_object          api_dynamic_global_property_object;
@@ -405,7 +407,37 @@ namespace taiyi { namespace plugins { namespace database_api {
         time_point_sec      next_tick_time;
     };
 
-    typedef uint64_t api_id_type;
+    struct api_actor_relation_object
+    {
+        api_actor_relation_object( const actor_relation_object& a, const database& db ) : id(a.id), favor(a.favor), last_update(a.last_update)
+        {
+            const auto& actor = db.get< actor_object, by_id >( a.actor );
+            const auto& actor_owner_acc = db.get< account_object, by_id >( db.get< nfa_object, by_id >( actor.nfa_id ).owner_account );
+            actor_owner = actor_owner_acc.name;
+            actor_name = actor.name;
+            
+            const auto& target = db.get< actor_object, by_id >( a.target );
+            const auto& target_owner_acc = db.get< account_object, by_id >( db.get< nfa_object, by_id >( target.nfa_id ).owner_account );
+            target_owner = target_owner_acc.name;
+            target_name = target.name;
+            
+            favor_level = a.get_favor_level();
+        }
+        api_actor_relation_object(){}
+        
+        actor_relation_id_type  id;
+        
+        account_name_type       actor_owner;
+        string                  actor_name;
+        
+        account_name_type       target_owner;
+        string                  target_name;
+        
+        int32_t                 favor = 0;
+        int                     favor_level = 0;
+        
+        time_point_sec          last_update;
+    };
     
 } } } // taiyi::plugins::database_api
 
@@ -426,3 +458,5 @@ FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(pro
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_time) )
+
+FC_REFLECT( taiyi::plugins::database_api::api_actor_relation_object, (id)(actor_owner)(actor_name)(target_owner)(target_name)(favor)(favor_level)(last_update) )

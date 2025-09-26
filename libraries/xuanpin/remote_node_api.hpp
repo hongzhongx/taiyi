@@ -77,6 +77,18 @@ namespace taiyi { namespace xuanpin {
         vector< database_api::api_zone_object > find_zones_by_name( vector< string > ) { FC_ASSERT( false ); }
         database_api::api_tiandao_property_object get_tiandao_properties() const { FC_ASSERT( false ); }
         string get_contract_source_code(const string&) const { FC_ASSERT( false ); }
+
+        vector< baiyujing_api::api_actor_relation_data > list_relations_from_actor(account_name_type, string) { FC_ASSERT( false ); }
+        vector< baiyujing_api::api_actor_relation_data > list_relations_to_actor(account_name_type, string) { FC_ASSERT( false ); }
+        optional< baiyujing_api::api_actor_relation_data > get_relation_from_to_actor(account_name_type, string, account_name_type, string) { FC_ASSERT( false ); }
+        database_api::get_actor_connections_return get_actor_connections(const account_name_type&, const string&, const E_ACTOR_RELATION_TYPE&) const { FC_ASSERT( false ); }
+        database_api::list_actor_groups_return list_actor_groups(const database_api::find_actor_args&, uint32_t) const { FC_ASSERT( false ); }
+        database_api::find_actor_group_return find_actor_group(const database_api::find_actor_args&) const { FC_ASSERT( false ); }
+        baiyujing_api::list_actor_friends_return list_actor_friends(const string&, int, bool) const { FC_ASSERT( false ); }
+        baiyujing_api::get_actor_needs_return get_actor_needs(const string&) const { FC_ASSERT( false ); }
+        baiyujing_api::list_actor_mating_targets_by_zone_return list_actor_mating_targets_by_zone(const string&, const string&) const { FC_ASSERT( false ); }
+        baiyujing_api::api_people_stat_data stat_people_by_zone(const string&) const { FC_ASSERT( false ); }
+        baiyujing_api::api_people_stat_data stat_people_by_base(const string&) const { FC_ASSERT( false ); }
     };
 
 } } //taiyi::xuanpin
@@ -144,4 +156,15 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (find_zones_by_name)
     (get_tiandao_properties)
     (get_contract_source_code)
+    (list_relations_from_actor)
+    (list_relations_to_actor)
+    (get_relation_from_to_actor)
+    (get_actor_connections)
+    (list_actor_groups)
+    (find_actor_group)
+    (list_actor_friends)
+    (get_actor_needs)
+    (list_actor_mating_targets_by_zone)
+    (stat_people_by_zone)
+    (stat_people_by_base)
 )

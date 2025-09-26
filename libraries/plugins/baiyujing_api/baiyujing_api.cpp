@@ -105,7 +105,19 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (list_to_zones_by_from)
                 (list_from_zones_by_to)
                 (find_way_to_zone)
-                             
+
+                (list_relations_from_actor)
+                (list_relations_to_actor)
+                (get_relation_from_to_actor)
+                (get_actor_connections)
+                (list_actor_groups)
+                (find_actor_group)
+                (list_actor_friends)
+                (get_actor_needs)
+                (list_actor_mating_targets_by_zone)
+                (stat_people_by_zone)
+                (stat_people_by_base)
+
                 (get_contract_source_code)
             )
             
@@ -1018,6 +1030,348 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return tiandao;
         }
         
+        DEFINE_API_IMPL( baiyujing_api_impl, list_actor_groups )
+        {
+            CHECK_ARG_SIZE( 2 )
+
+            return _database_api->list_actor_groups( { args[0], args[1].as< uint32_t >(), database_api::by_group_leader } );
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, find_actor_group )
+        {
+            CHECK_ARG_SIZE( 1 )
+
+            return _database_api->find_actor_group( args[0].as< database_api::find_actor_group_args >() );
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_relations_from_actor )
+        {
+            CHECK_ARG_SIZE( 1 )
+
+            const auto& relations = _database_api->list_actor_relations( { args[0].as<string>() } ).relations;
+            
+            list_relations_from_actor_return result;
+            for( const auto& r : relations )
+                result.emplace_back( api_actor_relation_data( r.id, r.target_owner, r.target_name, r.favor, r.favor_level, r.last_update ) );
+
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_relations_to_actor )
+        {
+            CHECK_ARG_SIZE( 1 )
+
+            const auto& relations = _database_api->list_target_relations( { args[0].as<string>() } ).relations;
+            
+            list_relations_to_actor_return result;
+            for( const auto& r : relations )
+                result.emplace_back( api_actor_relation_data( r.id, r.actor_owner, r.actor_name, r.favor, r.favor_level, r.last_update ) );
+
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, get_relation_from_to_actor )
+        {
+            CHECK_ARG_SIZE( 2 )
+
+            const auto& relation = _database_api->get_actors_relation( { args[0].as<string>(), args[1].as<string>() } ).relation;
+            
+            if(relation.valid())
+                return api_actor_relation_data( relation->id, relation->actor_owner, relation->actor_name, relation->favor, relation->favor_level, relation->last_update );
+            else
+                return optional< api_actor_relation_data >();
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, get_actor_connections )
+        {
+            CHECK_ARG_SIZE( 2 )
+
+            const auto& result = _database_api->get_actor_connections( { args[0].as<string>(), args[1].as<E_ACTOR_RELATION_TYPE>() } );
+
+            return result;
+        }
+
+        //总结双方关系
+        //connection_t //1=直接血亲或配偶, 2=非血亲家人或师父或徒弟, other=其他关系
+        void summarize_connections(const chain::actor_object& actor1, const chain::actor_object& actor2, int& connection_t, bool& couple, bool& mentor, chain::database& db )
+        {
+            connection_t = 0;
+            couple = false;
+            mentor = false;
+            
+            const chain::actor_connection_object* check_con = 0;
+            //2对1的关系
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, SWORN) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end())
+                    connection_t = 2;
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, MENTOR) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end()) {
+                    connection_t = 2;
+                    mentor = true;
+                }
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, DESCENDANT) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end()) {
+                    connection_t = 2;
+                    mentor = true;
+                }
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, COUPLE) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end()) {
+                    connection_t = 1;
+                    couple = true;
+                }
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, PARENT) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end())
+                    connection_t = 1;
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, ADOPTIVE_PARENT) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end())
+                    connection_t = 2;
+            }
+            
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, SIBLING) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end())
+                    connection_t = 1;
+            }
+            
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor2.id, CHILD) );
+                if(check_con && check_con->people.find(actor1.id) != check_con->people.end())
+                    connection_t = 1;
+            }
+            
+            //1对2的关系
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, SWORN) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end())
+                    connection_t = 2;
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, MENTOR) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end()) {
+                    connection_t = 2;
+                    mentor = true;
+                }
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, DESCENDANT) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end()) {
+                    connection_t = 2;
+                    mentor = true;
+                }
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, COUPLE) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end()) {
+                    connection_t = 1;
+                    couple = true;
+                }
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, PARENT) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end())
+                    connection_t = 1;
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, ADOPTIVE_PARENT) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end())
+                    connection_t = 1;
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, SIBLING) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end())
+                    connection_t = 1;
+            }
+
+            if(connection_t == 0) {
+                check_con = db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor1.id, CHILD) );
+                if(check_con && check_con->people.find(actor2.id) != check_con->people.end())
+                    connection_t = 1;
+            }
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, list_actor_friends )
+        {
+            CHECK_ARG_SIZE( 3 )
+            
+            const auto& actor = _db.get< chain::actor_object, by_name >(args[0].as< string >());
+            int standpoint_threshold = args[1].as< int >();
+            bool only_live = args[2].as< bool >();
+            
+            list_actor_friends_return result;
+
+            const auto& relation_by_actor_favor_idx = _db.get_index< chain::actor_relation_index, chain::by_actor_favor >();
+            auto itr = relation_by_actor_favor_idx.lower_bound( boost::make_tuple(actor.id, std::numeric_limits<int32_t>::max()) );
+            auto end = relation_by_actor_favor_idx.end();
+            while( itr != end )
+            {
+                const chain::actor_relation_object& relation = *itr;
+                ++itr;
+                
+                if(relation.actor != actor.id)
+                    break;
+                
+                if(relation.get_favor_level() < standpoint_threshold)
+                    break;
+                
+                const auto& actor_target = _db.get< actor_object, by_id >(relation.target);
+                if(only_live && actor_target.health <= 0)
+                    continue;
+                
+                //总结双方关系
+                int connection_t = 0; //1=直接血亲或配偶, 2=非血亲家人或师父或徒弟, other=其他关系
+                bool couple = false;
+                bool mentor = false;
+                summarize_connections(actor, actor_target, connection_t, couple, mentor, _db);
+                
+                const auto& owner = _db.get<account_object, by_id>( _db.get< nfa_object, by_id >(actor_target.nfa_id).owner_account );
+                result.emplace_back(api_actor_friend_data(owner.name, actor_target.name, connection_t, couple, mentor));
+            }
+            
+            return result;
+        }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, get_actor_needs )
+        {
+            CHECK_ARG_SIZE( 1 )
+            
+            const auto& actor = _db.get< chain::actor_object, chain::by_name >(args[0].as< string >());
+            
+            get_actor_needs_return result;
+
+            const auto* mating_target = _db.find< chain::actor_object, chain::by_id >(actor.need_mating_target);
+            if(mating_target) {
+                const auto& owner = _db.get<account_object, by_id>( _db.get< nfa_object, by_id >(mating_target->nfa_id).owner_account );
+                result.mating_target_owner = owner.name;
+                result.mating_target_name = mating_target->name;
+                result.mating_end_block_num = actor.need_mating_end_block_num;
+            }
+            
+            const auto* bullying_target = _db.find< chain::actor_object, chain::by_id >(actor.need_bullying_target);
+            if(bullying_target) {
+                const auto& owner = _db.get<account_object, by_id>( _db.get< nfa_object, by_id >(bullying_target->nfa_id).owner_account );
+                result.bullying_target_owner = owner.name;
+                result.bullying_target_name = bullying_target->name;
+                result.bullying_end_block_num = actor.need_bullying_end_block_num;
+            }
+
+            return result;
+        }
+
+        //获取指定区域中的情侣或者配偶
+        DEFINE_API_IMPL( baiyujing_api_impl, list_actor_mating_targets_by_zone )
+        {
+            CHECK_ARG_SIZE( 2 )
+            
+            const auto& actor = _db.get< chain::actor_object, chain::by_name >(args[0].as< string >());
+            const auto& zone = _db.get< chain::zone_object, chain::by_name >(args[1].as< string >());
+            
+            list_actor_mating_targets_by_zone_return result;
+
+            const auto* love_of_me = _db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor.id, LOVE) );
+            const auto* couple_of_me = _db.find< chain::actor_connection_object, chain::by_relation_type >( boost::make_tuple(actor.id, COUPLE) );
+            const auto& actor_by_location_idx = _db.get_index< chain::actor_index, chain::by_location >();
+            auto itr = actor_by_location_idx.lower_bound( zone.id );
+            auto end = actor_by_location_idx.end();
+            while( itr != end )
+            {
+                const actor_object& act = *itr;
+                ++itr;
+                
+                if( act.location != zone.id )
+                    break;
+                if( act.id == actor.id )
+                    continue;
+                
+                if( love_of_me && love_of_me->people.find(act.id) != love_of_me->people.end()) {
+                    const auto& owner = _db.get<account_object, by_id>( _db.get< nfa_object, by_id >(act.nfa_id).owner_account );
+                    result.emplace_back(api_simple_actor_object(owner.name, act.name));
+                    continue;
+                }
+
+                if( couple_of_me && couple_of_me->people.find(act.id) != couple_of_me->people.end()) {
+                    const auto& owner = _db.get<account_object, by_id>( _db.get< nfa_object, by_id >(act.nfa_id).owner_account );
+                    result.emplace_back(api_simple_actor_object(owner.name, act.name));
+                    continue;
+                }
+            }
+
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, stat_people_by_zone )
+        {
+            CHECK_ARG_SIZE( 1 )
+            
+            const auto& zone = _db.get< chain::zone_object, chain::by_name >(args[0].as< string >());
+            
+            api_people_stat_data result;
+
+            const auto& actor_by_location_idx = _db.get_index< chain::actor_index, chain::by_location >();
+            auto itr = actor_by_location_idx.lower_bound( zone.id );
+            auto end = actor_by_location_idx.end();
+            while( itr != end )
+            {
+                if( itr->location != zone.id )
+                    break;
+                
+                if(itr->health > 0)
+                    result.live_num++;
+                else
+                    result.dead_num++;
+
+                itr++;
+            }
+
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, stat_people_by_base )
+        {
+            CHECK_ARG_SIZE( 1 )
+            
+            const auto& zone = _db.get< chain::zone_object, chain::by_name >(args[0].as< string >());
+            
+            api_people_stat_data result;
+
+            const auto& actor_by_base_idx = _db.get_index<chain::actor_index, chain::by_base>();
+            auto itrn = actor_by_base_idx.lower_bound( zone.id );
+            while(itrn != actor_by_base_idx.end()) {
+                if(itrn->base != zone.id)
+                    break;
+                
+                if(itrn->health > 0)
+                    result.live_num++;
+                else
+                    result.dead_num++;
+                
+                itrn++;
+            }
+
+            return result;
+        }
+        
         DEFINE_API_IMPL( baiyujing_api_impl, get_contract_source_code )
         {
 #ifndef IS_LOW_MEM
@@ -1194,6 +1548,18 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (list_to_zones_by_from)
         (list_from_zones_by_to)
         (find_way_to_zone)
+
+        (list_relations_from_actor)
+        (list_relations_to_actor)
+        (get_relation_from_to_actor)
+        (get_actor_connections)
+        (list_actor_groups)
+        (find_actor_group)
+        (list_actor_friends)
+        (get_actor_needs)
+        (list_actor_mating_targets_by_zone)
+        (stat_people_by_zone)
+        (stat_people_by_base)
                      
         (get_contract_source_code)
     )

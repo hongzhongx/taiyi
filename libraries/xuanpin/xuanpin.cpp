@@ -999,7 +999,7 @@ namespace taiyi { namespace xuanpin {
     /*
      fc::ecc::private_key xuanpin_api::derive_private_key(const std::string& prefix_string, int sequence_number) const
      {
-        return detail::derive_private_key( prefix_string, sequence_number );
+         return detail::derive_private_key( prefix_string, sequence_number );
      }
      */
     
@@ -2010,12 +2010,12 @@ namespace taiyi { namespace xuanpin {
 
     vector< baiyujing_api::api_nfa_object > xuanpin_api::list_nfas(const account_name_type& owner, uint32_t limit)
     {
-       return my->_remote_api->list_nfas( owner, limit );
+        return my->_remote_api->list_nfas( owner, limit );
     }
 
     map< uint32_t, baiyujing_api::api_operation_object > xuanpin_api::get_nfa_history( const int64_t& nfa_id, uint32_t from, uint32_t limit )
     {
-       return my->_remote_api->get_nfa_history( nfa_id, from, limit );
+        return my->_remote_api->get_nfa_history( nfa_id, from, limit );
     }
 
     baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor_talent_rule(account_name_type creator, const string& contract, bool broadcast )
@@ -2062,12 +2062,12 @@ namespace taiyi { namespace xuanpin {
 
     vector< database_api::api_actor_object > xuanpin_api::list_actors(const account_name_type& owner, uint32_t limit)
     {
-       return my->_remote_api->list_actors( owner, limit );
+        return my->_remote_api->list_actors( owner, limit );
     }
 
     map< uint32_t, baiyujing_api::api_operation_object > xuanpin_api::get_actor_history( const string& name, uint32_t from, uint32_t limit )
     {
-       return my->_remote_api->get_actor_history( name, from, limit );
+        return my->_remote_api->get_actor_history( name, from, limit );
     }
 
     vector< database_api::api_actor_object > xuanpin_api::list_actors_below_health(const int16_t& health, uint32_t limit)
@@ -2160,5 +2160,60 @@ namespace taiyi { namespace xuanpin {
     {
         return my->_remote_api->get_tiandao_properties();
     }
-
+    
+    vector< baiyujing_api::api_actor_relation_data > xuanpin_api::list_relations_from_actor(const account_name_type& owner, const string& name) const
+    {
+        return my->_remote_api->list_relations_from_actor(owner, name);
+    }
+    
+    vector< baiyujing_api::api_actor_relation_data > xuanpin_api::list_relations_to_actor(const account_name_type& owner, const string& name) const
+    {
+        return my->_remote_api->list_relations_to_actor(owner, name);
+    }
+    
+    optional< baiyujing_api::api_actor_relation_data > xuanpin_api::get_relation_from_to_actor(const account_name_type& from_owner, const string& from_name, const account_name_type& to_owner, const string& to_name) const
+    {
+        return my->_remote_api->get_relation_from_to_actor(from_owner, from_name, to_owner, to_name);
+    }
+    
+    database_api::get_actor_connections_return xuanpin_api::get_actor_connections(const account_name_type& owner, const string& name, const E_ACTOR_RELATION_TYPE& type) const
+    {
+        return my->_remote_api->get_actor_connections(owner, name, type);
+    }
+    
+    database_api::list_actor_groups_return xuanpin_api::list_actor_groups(const string& start_leader_name, uint32_t limit)
+    {
+        return my->_remote_api->list_actor_groups( database_api::find_actor_args(start_leader_name), limit );
+    }
+    
+    database_api::find_actor_group_return xuanpin_api::find_actor_group(const string& actor_name)
+    {
+        return my->_remote_api->find_actor_group( database_api::find_actor_args(actor_name) );
+    }
+    
+    baiyujing_api::list_actor_friends_return xuanpin_api::list_actor_friends(const string& actor_name, int standpoint_threshold, bool only_live)
+    {
+        return my->_remote_api->list_actor_friends( actor_name, standpoint_threshold, only_live );
+    }
+    
+    baiyujing_api::get_actor_needs_return xuanpin_api::get_actor_needs(const string& actor_name)
+    {
+        return my->_remote_api->get_actor_needs( actor_name );
+    }
+    
+    baiyujing_api::list_actor_mating_targets_by_zone_return xuanpin_api::list_actor_mating_targets_by_zone(const string& actor_name, const string& zone_name)
+    {
+        return my->_remote_api->list_actor_mating_targets_by_zone( actor_name, zone_name );
+    }
+    
+    baiyujing_api::api_people_stat_data xuanpin_api::stat_people_by_zone(const string& zone_name)
+    {
+        return my->_remote_api->stat_people_by_zone( zone_name );
+    }
+    
+    baiyujing_api::api_people_stat_data xuanpin_api::stat_people_by_base(const string& zone_name)
+    {
+        return my->_remote_api->stat_people_by_base( zone_name );
+    }
+    
 } } // taiyi::xuanpin
