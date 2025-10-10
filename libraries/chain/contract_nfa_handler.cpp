@@ -9,6 +9,7 @@
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/actor_objects.hpp>
+#include <chain/tiandao_property_object.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -726,6 +727,108 @@ namespace taiyi { namespace chain {
                     }
                 }
             }
+        }
+        catch (fc::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.what());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::talk_to_actor(const string& target_actor_name, const string& something)
+    {
+        try
+        {
+            _db.add_contract_handler_exe_point(2);
+            
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+
+            auto now = _db.head_block_time();
+            
+            const actor_object& actor_me = _db.get< actor_object, by_nfa_id >( _caller.id );
+            FC_ASSERT( actor_me.born == true, "actor ${a} is not born.", ("a", actor_me.name));
+            
+            const actor_object& actor_target = _db.get< actor_object, by_name >( target_actor_name );
+            FC_ASSERT( actor_target.born == true, "actor ${a} is not born.", ("a", actor_target.name));
+            
+            FC_ASSERT( actor_me.location == actor_target.location, "talk to actor not on the same zone location.");
+            
+            _db.prepare_actor_relations(actor_me, actor_target);
+            
+            _db.add_contract_handler_exe_point(3);
+
+            //处理说话人
+            int favor_delta_me = 0;
+            {
+                const auto& relation_me_to_target = _db.get< actor_relation_object, by_actor_target >( boost::make_tuple(actor_me.id, actor_target.id) );
+                
+                //以nfa视角回调nfa函数：on_actor_talking(target_actor_name, something)
+                //该函数返回一个整数作为好感度变化值
+                lua_map param;
+                param[lua_key(lua_int(1))] = lua_types(lua_string(actor_target.name));
+                param[lua_key(lua_int(2))] = lua_types(lua_string(something));
+                lua_map result = _ch.call_nfa_function_with_caller(_caller_account, actor_me.nfa_id, "on_actor_talking", param, false);
+                
+                if (result.size() > 0) {
+                    FC_ASSERT(result.size() == 1, "on_actor_talking should return one sigle integer.");
+                    auto _itr = result.find(lua_types(lua_int(1)));
+                    FC_ASSERT(_itr != result.end(), "on_actor_talking should return one sigle integer.");
+                    auto a = _itr->second.which();
+                    auto b = lua_types::tag<lua_int>::value;
+                    FC_ASSERT(_itr->second.which() == lua_types::tag<lua_int>::value, "on_actor_talking should return one sigle integer.");
+                    favor_delta_me = _itr->second.get<lua_int>().v;
+                }
+                
+                if (favor_delta_me != 0) {
+                    _db.modify(relation_me_to_target, [&]( actor_relation_object& rel ) {
+                        rel.favor = std::min(30000, rel.favor + favor_delta_me);
+                        rel.last_update = now;
+                        //if(actor_me.name == s_debug_actor && rel.favor > 10000)
+                        //    wlog("${y}年${m}月，${a}对${b}的好感达到${c}。", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_me.name)("b", actor_target.name)("c", rel.favor));
+                    });
+                }
+            }
+            
+            //处理听话人
+            int favor_delta_target = 0;
+            {
+                const auto& relation_target_to_me = _db.get< actor_relation_object, by_actor_target >( boost::make_tuple(actor_target.id, actor_me.id) );
+
+                //以nfa视角回调nfa函数：on_actor_listening(from_actor_name, something)
+                //该函数返回一个整数作为好感度变化值
+                lua_map param;
+                param[lua_key(lua_int(1))] = lua_types(lua_string(actor_me.name));
+                param[lua_key(lua_int(2))] = lua_types(lua_string(something));
+                lua_map result = _ch.call_nfa_function_with_caller(_db.get_account(TAIYI_DANUO_ACCOUNT), actor_target.nfa_id, "on_actor_listening", param, false);
+
+                if (result.size() > 0) {
+                    FC_ASSERT(result.size() == 1, "on_actor_listening should return one sigle integer.");
+                    auto _itr = result.find(lua_types(lua_int(1)));
+                    FC_ASSERT(_itr != result.end(), "on_actor_listening should return one sigle integer.");
+                    FC_ASSERT(_itr->second.which() == lua_types::tag<lua_int>::value, "on_actor_listening should return one sigle integer.");
+                    favor_delta_target = _itr->second.get<lua_int>().v;
+                }
+                
+                if (favor_delta_target != 0) {
+                    _db.modify(relation_target_to_me, [&]( actor_relation_object& rel ) {
+                        rel.favor = std::min(30000, rel.favor + favor_delta_target);
+                        rel.last_update = now;
+                        //if(actor_target.name == s_debug_actor && rel.favor > 10000)
+                        //    wlog("${y}年${m}月，${a}对${b}的好感达到${c}。", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_target.name)("b", actor_me.name)("c", rel.favor));
+                    });
+                }
+            }
+            
+            const auto& tiandao = _db.get_tiandao_properties();
+            const auto& actor_me_owner = _db.get<account_object, by_id>(_caller.owner_account);
+            const auto& actor_target_owner = _db.get<account_object, by_id>(_db.get<nfa_object, by_id>( actor_target.nfa_id).owner_account);
+            _db.push_virtual_operation( actor_talk_operation( tiandao.v_years, tiandao.v_months, tiandao.v_times, actor_me_owner.name, actor_me.nfa_id, actor_me.name, actor_target_owner.name, actor_target.nfa_id, actor_target.name, something, favor_delta_me, favor_delta_target ) );
+            //if(actor_me.name == s_debug_actor)
+            //    wlog("${y}年${m}月，${a}对${b}说道：\"${c}\"", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_me.name)("b", actor_target.name)("c", talk_content));
+
         }
         catch (fc::exception e)
         {

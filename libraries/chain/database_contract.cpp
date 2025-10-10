@@ -50,21 +50,24 @@
     go = { consequence = true }             \
     function eval_welcome()                   \
         local nfa = nfa_helper:get_info()   \
-        contract_helper:narrate(string.format('- 欢迎&YEL&%s&NOR&进入游戏 -', contract_helper:get_actor_info(nfa.id).name))  \
+        contract_helper:narrate(string.format('- 欢迎&YEL&%s&NOR&进入游戏 -', contract_helper:get_actor_info(nfa.id).name), false)  \
     end                                     \
     function eval_look(target)              \
         local nfa = nfa_helper:get_info()   \
-        contract_helper:narrate(string.format('&YEL&%s&NOR&看了看四周。', contract_helper:get_actor_info(nfa.id).name)) \
+        contract_helper:narrate(string.format('&YEL&%s&NOR&看了看四周。', contract_helper:get_actor_info(nfa.id).name), false) \
     end                                     \
     function do_go(dir)                     \
         local nfa = nfa_helper:get_info()   \
-        contract_helper:narrate(string.format('&YEL&%s&NOR&不会走路。', contract_helper:get_actor_info(nfa.id).name)) \
+        contract_helper:narrate(string.format('&YEL&%s&NOR&不会走路。', contract_helper:get_actor_info(nfa.id).name), false) \
     end                                     \
     function init_data()                    \
         return {                            \
             is_actor = true,                \
             unit = '个'                      \
         }                                   \
+    end                                     \
+    function get_title()                    \
+        return '一个木讷的人'                 \
     end                                     \
 "
 

@@ -239,6 +239,28 @@ namespace taiyi { namespace protocol {
 
         string                      log;
     };
+    
+    struct actor_talk_operation : public virtual_operation
+    {
+        actor_talk_operation() {}
+        actor_talk_operation( const uint32_t& vy, const uint32_t& vm, const uint32_t& vt, const account_name_type& ao, const int64_t& anfa, const string& an, const account_name_type& to, const int64_t& tnfa, const string& tn, const string& c, const int& fdm, const int& fdt)
+            : v_years(vy), v_months(vm), v_times(vt), actor_owner(ao), actor_nfa(anfa), actor_name(an), target_owner(to), target_nfa(tnfa), target_name(tn), content(c), favor_delta_actor(fdm), favor_delta_target(fdt) {}
+        
+        uint32_t                    v_years;
+        uint32_t                    v_months;
+        uint32_t                    v_times; //same as solar term number
+        
+        account_name_type           actor_owner;
+        int64_t                     actor_nfa;
+        string                      actor_name;
+        account_name_type           target_owner;
+        int64_t                     target_nfa;
+        string                      target_name;
+        
+        string                      content;
+        int                         favor_delta_actor;
+        int                         favor_delta_target;
+    };
 
 } } //taiyi::protocol
 
@@ -260,3 +282,4 @@ FC_REFLECT( taiyi::protocol::actor_talent_trigger_operation, (owner)(name)(nfa)(
 FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(to_zone)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(months)(times)(age)(health) )
 FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(times)(log) )
+FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content)(favor_delta_actor)(favor_delta_target) )

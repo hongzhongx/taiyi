@@ -106,6 +106,7 @@ namespace taiyi { namespace chain {
         int         five_phase;
 
         int         gender;
+        int         standpoint;
         int         standpoint_type;
         
         string      location;   //current zone name
@@ -165,9 +166,12 @@ namespace taiyi { namespace chain {
         lua_map read_contract_data(const lua_map& read_list);
         void write_contract_data(const lua_map& data, const lua_map& write_list);
         void destroy();
-        void modify_actor_attributes(const lua_map& values);
         lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        
+        //Actor
+        void modify_actor_attributes(const lua_map& values);
+        void talk_to_actor(const string& target_actor_name, const string& something);
 
         //以下是不直接暴露到合约的辅助函数
         void transfer_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger=false);

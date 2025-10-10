@@ -309,9 +309,11 @@ namespace taiyi { namespace chain {
         registerFunction("read_contract_data", &contract_nfa_handler::read_contract_data);
         registerFunction("write_contract_data", &contract_nfa_handler::write_contract_data);
         registerFunction("destroy", &contract_nfa_handler::destroy);
-        registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
         registerFunction("eval_nfa_action", &contract_nfa_handler::eval_nfa_action);
         registerFunction("do_nfa_action", &contract_nfa_handler::do_nfa_action);
+        //nfa handler - actor
+        registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
+        registerFunction("talk_to_actor", &contract_nfa_handler::talk_to_actor);
 
         registerFunction<contract_nfa_handler, void(int64_t to, double, const string&, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler._caller.id, to, amount, symbol, enable_logger);
@@ -352,6 +354,7 @@ namespace taiyi { namespace chain {
         registerMember("born_vtimes", &contract_actor_base_info::born_vtimes);
         registerMember("five_phase", &contract_actor_base_info::five_phase);
         registerMember("gender", &contract_actor_base_info::gender);
+        registerMember("standpoint", &contract_actor_base_info::standpoint);
         registerMember("standpoint_type", &contract_actor_base_info::standpoint_type);
         registerMember("location", &contract_actor_base_info::location);
         registerMember("base", &contract_actor_base_info::base);

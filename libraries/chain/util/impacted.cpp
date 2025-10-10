@@ -266,7 +266,16 @@ namespace taiyi { namespace chain {
         
         void operator()( const shutdown_siming_operation& op )
         {
-           _impacted.insert( op.owner );
+            _impacted.insert( op.owner );
+        }
+        
+        void operator()( const actor_talk_operation& op )
+        {
+            _impacted.insert( op.actor_owner );
+            _impacted.insert( op.target_owner );
+
+            _impacted_nfas.insert( op.actor_nfa );
+            _impacted_nfas.insert( op.target_nfa );
         }
 
         //void operator()( const operation& op ){}

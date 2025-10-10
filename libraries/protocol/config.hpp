@@ -13,7 +13,7 @@
 #define TAIYI_INIT_PUBLIC_KEY_STR               (std::string( taiyi::protocol::public_key_type(TAIYI_INIT_PRIVATE_KEY.get_public_key()) ))
 #define TAIYI_CHAIN_ID                          (fc::sha256::hash("testnet"))
 
-#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1728747000))  //2024-10-12 23:30:00
+#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1757691000))  //2025-9-12 23:30:00
 
 #define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define TAIYI_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)

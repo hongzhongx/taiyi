@@ -512,5 +512,31 @@ namespace taiyi { namespace chain {
             }
         }
     }
+    //=============================================================================
+    void database::prepare_actor_relations( const actor_object& actor1, const actor_object& actor2 )
+    {
+        auto now = head_block_time();
+        const actor_relation_object* relation_to_other = find< actor_relation_object, by_actor_target >( boost::make_tuple(actor1.id, actor2.id) );
+        if(!relation_to_other) {
+            //create new one
+            create< actor_relation_object >( [&]( actor_relation_object& rel ) {
+                rel.actor = actor1.id;
+                rel.target = actor2.id;
+                rel.favor = 0;
+                rel.last_update = now;
+            });
+        }
+
+        const actor_relation_object* relation_to_me = find< actor_relation_object, by_actor_target >( boost::make_tuple(actor2.id, actor1.id) );
+        if(!relation_to_me) {
+            //create new one
+            create< actor_relation_object >( [&]( actor_relation_object& rel ) {
+                rel.actor = actor2.id;
+                rel.target = actor1.id;
+                rel.favor = 0;
+                rel.last_update = now;
+            });
+        }
+    }
 
 } } //taiyi::chain

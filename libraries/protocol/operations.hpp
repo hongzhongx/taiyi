@@ -76,10 +76,11 @@ namespace taiyi { namespace protocol {
         actor_talent_trigger_operation,     //42
         actor_movement_operation,           //43
         actor_grown_operation,              //44
+        actor_talk_operation,               //45
     
-        narrate_log_operation,              //45
+        narrate_log_operation,              //46
     
-        shutdown_siming_operation           //46
+        shutdown_siming_operation           //47
     
     > operation;
 
