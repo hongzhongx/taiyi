@@ -457,6 +457,8 @@ DEFINE_API_ARGS( broadcast_transaction,             vector< variant >, json_rpc:
 DEFINE_API_ARGS( broadcast_block,                   vector< variant >, json_rpc::void_type )
 DEFINE_API_ARGS( get_account_resources,             vector< variant >, vector< api_resource_assets > )
     
+DEFINE_API_ARGS( find_nfa_symbol,                   vector< variant >, optional< database_api::api_nfa_symbol_object > )
+DEFINE_API_ARGS( find_nfa_symbol_by_contract,       vector< variant >, optional< database_api::api_nfa_symbol_object > )
 DEFINE_API_ARGS( find_nfa,                          vector< variant >, optional< api_nfa_object > )
 DEFINE_API_ARGS( find_nfas,                         vector< variant >, vector< api_nfa_object > )
 DEFINE_API_ARGS( list_nfas,                         vector< variant >, vector< api_nfa_object > )
@@ -546,6 +548,8 @@ DEFINE_API_ARGS( get_contract_source_code,          vector< variant >, string )
             (broadcast_block)
             (get_account_resources)
                     
+            (find_nfa_symbol)
+            (find_nfa_symbol_by_contract)
             (find_nfa)
             (find_nfas)
             (list_nfas)

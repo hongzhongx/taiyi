@@ -80,7 +80,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (broadcast_transaction_synchronous)
                 (broadcast_block)
                 (get_account_resources)
-                             
+
+                (find_nfa_symbol)
+                (find_nfa_symbol_by_contract)
                 (find_nfa)
                 (find_nfas)
                 (list_nfas)
@@ -768,7 +770,35 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
             return result;
         }
-        
+
+        DEFINE_API_IMPL( baiyujing_api_impl, find_nfa_symbol )
+        {
+            CHECK_ARG_SIZE( 1 )
+            
+            find_nfa_symbol_return result;
+
+            auto a = _database_api->find_nfa_symbol( { args[0].as<string>() } ).result;
+            
+            if(a.valid())
+                result = database_api::api_nfa_symbol_object( *a );
+            
+            return result;
+        }
+
+        DEFINE_API_IMPL( baiyujing_api_impl, find_nfa_symbol_by_contract )
+        {
+            CHECK_ARG_SIZE( 1 )
+            
+            find_nfa_symbol_by_contract_return result;
+
+            auto a = _database_api->find_nfa_symbol_by_contract( { args[0].as<string>() } ).result;
+            
+            if(a.valid())
+                result = database_api::api_nfa_symbol_object( *a );
+            
+            return result;
+        }
+
         DEFINE_API_IMPL( baiyujing_api_impl, find_nfa )
         {
             CHECK_ARG_SIZE( 1 )
@@ -1523,7 +1553,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (verify_account_authority)
         (get_account_history)
         (get_account_resources)
-                     
+
+        (find_nfa_symbol)
+        (find_nfa_symbol_by_contract)
         (find_nfa)
         (find_nfas)
         (list_nfas)

@@ -426,9 +426,11 @@ namespace taiyi { namespace chain {
 
         // nfa
         void create_basic_nfa_symbol_objects();
-        size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count);
+        size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi);
         void modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check);
         int get_nfa_five_phase(const nfa_object& nfa) const;
+        bool is_nfa_material_equivalent_qi_insufficient(const nfa_object& nfa) const;
+        void consume_nfa_material_random(const nfa_object& nfa, const uint32_t& seed);
 
     protected:
         //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead

@@ -361,6 +361,27 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     /* NFA */
 
+    struct find_nfa_symbol_args
+    {
+        find_nfa_symbol_args(const string& s) : symbol(s) {}
+        find_nfa_symbol_args() {}
+        
+        string symbol;
+    };
+    struct find_nfa_symbol_return
+    {
+        optional< api_nfa_symbol_object > result;
+    };
+
+    struct find_nfa_symbol_by_contract_args
+    {
+        find_nfa_symbol_by_contract_args(const string& c) : contract(c) {}
+        find_nfa_symbol_by_contract_args() {}
+        
+        string contract;
+    };
+    typedef find_nfa_symbol_return find_nfa_symbol_by_contract_return;
+
     typedef list_object_args_type list_nfas_args;
     struct list_nfas_return
     {
@@ -574,6 +595,11 @@ FC_REFLECT( taiyi::plugins::database_api::verify_signatures_return, (valid) )
 FC_REFLECT( taiyi::plugins::database_api::resource_assets, (gold)(food)(wood)(fabric)(herb) )
 FC_REFLECT( taiyi::plugins::database_api::find_account_resources_args, (accounts) )
 FC_REFLECT( taiyi::plugins::database_api::find_account_resources_return, (resources) )
+
+FC_REFLECT( taiyi::plugins::database_api::find_nfa_symbol_args, (symbol) )
+FC_REFLECT( taiyi::plugins::database_api::find_nfa_symbol_return, (result) )
+
+FC_REFLECT( taiyi::plugins::database_api::find_nfa_symbol_by_contract_args, (contract) )
 
 FC_REFLECT( taiyi::plugins::database_api::list_nfas_return, (result) )
 

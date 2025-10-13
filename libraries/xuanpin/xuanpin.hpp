@@ -662,7 +662,7 @@ namespace taiyi { namespace xuanpin {
         //value_list 目前仅支持string, bool, double, int64
         baiyujing_api::legacy_signed_transaction call_contract_function(const account_name_type& account, const string& contract_name, const string& function_name, const vector<fc::variant>& value_list, bool broadcast);
                 
-        baiyujing_api::legacy_signed_transaction create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, const string& contract, const uint64_t& max_count, bool broadcast );
+        baiyujing_api::legacy_signed_transaction create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, const string& contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi, bool broadcast );
         baiyujing_api::legacy_signed_transaction create_nfa( const account_name_type& creator, const string& symbol, bool broadcast );
         baiyujing_api::legacy_signed_transaction transfer_nfa( const account_name_type& from, const account_name_type& to, int64_t nfa_id, bool broadcast );
         baiyujing_api::legacy_signed_transaction approve_nfa_active( const account_name_type& owner, const account_name_type& active_account, int64_t nfa_id, bool broadcast );
@@ -672,6 +672,9 @@ namespace taiyi { namespace xuanpin {
         //value_list 目前仅支持string, bool, double, int64, array
         vector<string> action_nfa(const account_name_type& owner, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list);
         baiyujing_api::legacy_signed_transaction action_nfa_consequence(const account_name_type& caller, int64_t nfa_id, const string& action, const vector<fc::variant>& value_list, bool broadcast);
+
+        baiyujing_api::find_nfa_symbol_return find_nfa_symbol( const string& s );
+        baiyujing_api::find_nfa_symbol_by_contract_return find_nfa_symbol_by_contract( const string& c );
 
         /**
          * Find nfas with given ids
@@ -895,6 +898,8 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (action_nfa)
     (action_nfa_consequence)
     (list_nfas)
+    (find_nfa_symbol)
+    (find_nfa_symbol_by_contract)
     (find_nfa)
     (find_nfas)
     (get_nfa_history)

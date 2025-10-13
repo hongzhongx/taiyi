@@ -230,6 +230,27 @@ namespace taiyi { namespace plugins { namespace database_api {
         fc::time_point_sec            next_hardfork_time;
     };
     
+    struct api_nfa_symbol_object
+    {
+        api_nfa_symbol_object( const nfa_symbol_object& o, const database& db ) : id(o.id), creator(o.creator),
+            symbol(o.symbol), describe(o.describe), count(o.count), max_count(o.max_count), min_equivalent_qi(o.min_equivalent_qi)
+        {
+            default_contract = db.get<contract_object, by_id>(o.default_contract).name;
+        }
+        
+        api_nfa_symbol_object() {}
+        
+        nfa_symbol_id_type          id;
+
+        account_name_type           creator;
+        string                      symbol;
+        string                      describe;
+        string                      default_contract;
+        uint64_t                    count;
+        uint64_t                    max_count;
+        uint64_t                    min_equivalent_qi;  //最低等效真气。材质总等效真气如果低于这个值被视为损坏
+    };
+    
     struct api_nfa_object
     {
         api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), contract_data(o.contract_data), qi(o.qi), debt_value(o.debt_value), cultivation_value(o.cultivation_value), created_time(o.created_time), next_tick_time(o.next_tick_time)
@@ -454,6 +475,8 @@ FC_REFLECT( taiyi::plugins::database_api::api_siming_schedule_object, (id)(curre
 FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiyi::protocol::signed_block), (block_id)(signing_key)(transaction_ids) )
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
+
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 

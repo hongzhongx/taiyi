@@ -31,14 +31,17 @@ namespace taiyi { namespace chain {
         contract_id_type            default_contract = contract_id_type::max();
         uint64_t                    count = 0;
         uint64_t                    max_count = 0;
+        uint64_t                    min_equivalent_qi = 0;  //最低等效真气。材质总等效真气如果低于这个值被视为损坏
     };
 
     struct by_symbol;
+    struct by_contract;
     typedef multi_index_container<
         nfa_symbol_object,
         indexed_by<
             ordered_unique< tag< by_id >, member< nfa_symbol_object, nfa_symbol_id_type, &nfa_symbol_object::id > >,
-            ordered_unique< tag< by_symbol >, member< nfa_symbol_object, string, &nfa_symbol_object::symbol > >
+            ordered_unique< tag< by_symbol >, member< nfa_symbol_object, string, &nfa_symbol_object::symbol > >,
+            ordered_unique< tag< by_contract >, member< nfa_symbol_object, contract_id_type, &nfa_symbol_object::default_contract > >
         >,
         allocator< nfa_symbol_object >
     > nfa_symbol_index;
@@ -175,7 +178,7 @@ namespace taiyi { namespace chain {
 
 } } // taiyi::chain
 
-FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count)(max_count))
+FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
 FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(is_miraged)(mirage_contract)(created_time)(next_tick_time))

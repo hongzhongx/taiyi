@@ -1145,7 +1145,11 @@ namespace taiyi { namespace chain {
             _db.add_contract_handler_exe_point(2);
             
             const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
-            
+
+            //check material valid
+            FC_ASSERT(_db.is_nfa_material_equivalent_qi_insufficient(nfa), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");
+            _db.consume_nfa_material_random(nfa, _db.head_block_id()._hash[4] + 14071);
+
             //check existence and consequence type
             const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)

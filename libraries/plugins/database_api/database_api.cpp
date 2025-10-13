@@ -55,6 +55,8 @@ namespace taiyi { namespace plugins { namespace database_api {
             (verify_account_authority)
             (verify_signatures)
             (find_account_resources)
+            (find_nfa_symbol)
+            (find_nfa_symbol_by_contract)
             (find_nfa)
             (find_nfas)
             (list_nfas)
@@ -975,6 +977,32 @@ namespace taiyi { namespace plugins { namespace database_api {
     //                                                                       //
     //*************************************************************************
 
+    DEFINE_API_IMPL( database_api_impl, find_nfa_symbol )
+    {
+        find_nfa_symbol_return result;
+        
+        auto nfa_symbol = _db.find< chain::nfa_symbol_object, chain::by_symbol >( args.symbol );
+        if( nfa_symbol != nullptr )
+            result.result = api_nfa_symbol_object( *nfa_symbol, _db );
+
+        return result;
+    }
+
+    DEFINE_API_IMPL( database_api_impl, find_nfa_symbol_by_contract )
+    {
+        find_nfa_symbol_by_contract_return result;
+        
+        auto contract = _db.find< chain::contract_object, chain::by_name >( args.contract );
+        if (contract == nullptr)
+            return result;
+        
+        auto nfa_symbol = _db.find< chain::nfa_symbol_object, chain::by_contract >( contract->id );
+        if( nfa_symbol != nullptr )
+            result.result = api_nfa_symbol_object( *nfa_symbol, _db );
+
+        return result;
+    }
+
     DEFINE_API_IMPL( database_api_impl, find_nfa )
     {
         find_nfa_return result;
@@ -1539,6 +1567,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         (verify_account_authority)
         (verify_signatures)
         (find_account_resources)
+        (find_nfa_symbol)
+        (find_nfa_symbol_by_contract)
         (find_nfa)
         (find_nfas)
         (list_nfas)

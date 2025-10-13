@@ -119,6 +119,8 @@ namespace taiyi { namespace plugins { namespace database_api {
             //********
             // NFAs //
             //********
+            (find_nfa_symbol)
+            (find_nfa_symbol_by_contract)
             (find_nfa)
             (find_nfas)
             (list_nfas)

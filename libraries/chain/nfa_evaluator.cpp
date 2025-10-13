@@ -22,7 +22,7 @@ namespace taiyi { namespace chain {
     { try {
         const auto& creator = _db.get_account( o.creator );
                 
-        size_t new_state_size = _db.create_nfa_symbol_object(creator, o.symbol, o.describe, o.default_contract, o.max_count);
+        size_t new_state_size = _db.create_nfa_symbol_object(creator, o.symbol, o.describe, o.default_contract, o.max_count, o.min_equivalent_qi);
         
         //reward to treasury
         int64_t used_qi = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;

@@ -55,6 +55,8 @@ namespace taiyi { namespace xuanpin {
         baiyujing_api::broadcast_transaction_synchronous_return broadcast_transaction_synchronous( baiyujing_api::legacy_signed_transaction ) { FC_ASSERT( false ); }
         void broadcast_block( signed_block ) { FC_ASSERT( false ); }
         vector< baiyujing_api::api_resource_assets > get_account_resources ( vector< account_name_type > ) { FC_ASSERT( false ); }
+        optional< database_api::api_nfa_symbol_object > find_nfa_symbol( const string& ) { FC_ASSERT( false ); }
+        optional< database_api::api_nfa_symbol_object > find_nfa_symbol_by_contract( const string& ) { FC_ASSERT( false ); }
         vector< baiyujing_api::api_nfa_object > find_nfas( vector< int64_t > ) { FC_ASSERT( false ); }
         optional< baiyujing_api::api_nfa_object > find_nfa( const int64_t& ) { FC_ASSERT( false ); }
         vector< baiyujing_api::api_nfa_object > list_nfas(const account_name_type&, uint32_t) const { FC_ASSERT( false ); }
@@ -134,6 +136,8 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (broadcast_transaction_synchronous)
     (broadcast_block)
     (get_account_resources)
+    (find_nfa_symbol)
+    (find_nfa_symbol_by_contract)
     (find_nfa)
     (find_nfas)
     (list_nfas)

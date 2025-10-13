@@ -456,6 +456,7 @@ namespace taiyi { namespace protocol {
         string              describe;
         string              default_contract;
         uint64_t            max_count;
+        uint64_t            min_equivalent_qi;
 
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(creator); }
@@ -559,7 +560,7 @@ FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(cont
 FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)(contract_name)(function_name)(value_list)(extensions) )
 
-FC_REFLECT( taiyi::protocol::create_nfa_symbol_operation, (creator)(symbol)(describe)(default_contract)(max_count) )
+FC_REFLECT( taiyi::protocol::create_nfa_symbol_operation, (creator)(symbol)(describe)(default_contract)(max_count)(min_equivalent_qi) )
 FC_REFLECT( taiyi::protocol::create_nfa_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::transfer_nfa_operation, (from)(to)(id) )
 FC_REFLECT( taiyi::protocol::approve_nfa_active_operation, (owner)(active_account)(id) )

@@ -45,14 +45,141 @@ namespace taiyi { namespace chain {
         return mqi.amount.value;
     }
     //=========================================================================
+    bool database::is_nfa_material_equivalent_qi_insufficient(const nfa_object& nfa) const
+    {
+        const auto& nfa_symbol = get<nfa_symbol_object, by_id>(nfa.symbol_id);
+        const auto& nfa_material = get<nfa_material_object, by_nfa_id>(nfa.id);
+        
+        int64_t material_equivalent_qi_value = nfa_material.get_material_qi();
+        return material_equivalent_qi_value >= nfa_symbol.min_equivalent_qi;
+    }
+    //=========================================================================
+    //注意，消耗掉的材料只能转移到财库
+    void database::consume_nfa_material_random(const nfa_object& nfa, const uint32_t& seed)
+    {
+        const auto& nfa_symbol = get<nfa_symbol_object, by_id>(nfa.symbol_id);
+        int64_t consume_qi_base_value = nfa_symbol.min_equivalent_qi / 50; //每次最多消耗基数的 1/50
+        if (consume_qi_base_value == 0)
+            return;
+
+        const auto& nfa_material = get<nfa_material_object, by_nfa_id>(nfa.id);
+        
+        asset gold_qi = nfa_material.gold * TAIYI_GOLD_QI_PRICE;
+        asset food_qi = nfa_material.food * TAIYI_FOOD_QI_PRICE;
+        asset wood_qi = nfa_material.wood * TAIYI_WOOD_QI_PRICE;
+        asset fabric_qi = nfa_material.fabric * TAIYI_FABRIC_QI_PRICE;
+        asset herb_qi = nfa_material.herb * TAIYI_HERB_QI_PRICE;
+        int64_t material_equivalent_qi_value = gold_qi.amount.value + food_qi.amount.value + wood_qi.amount.value + fabric_qi.amount.value + herb_qi.amount.value;
+        if (material_equivalent_qi_value <= 0)
+            return;
+        
+        asset consumed_gold(0, GOLD_SYMBOL);
+        asset consumed_food(0, FOOD_SYMBOL);
+        asset consumed_wood(0, WOOD_SYMBOL);
+        asset consumed_fabric(0, FABRIC_SYMBOL);
+        asset consumed_herb(0, HERB_SYMBOL);
+
+        modify<nfa_material_object>(nfa_material, [&](nfa_material_object& _obj) {
+            int64_t consume_qi_value = 0;
+
+            consume_qi_value = consume_qi_base_value * gold_qi.amount.value / material_equivalent_qi_value;
+            if (consume_qi_value > 0) {
+                consume_qi_value = hasher::hash(seed + 30011) % (uint32_t)(consume_qi_value);
+                consumed_gold = asset(consume_qi_value, QI_SYMBOL) * TAIYI_GOLD_QI_PRICE;
+                consumed_gold.amount.value = std::min(_obj.gold.amount.value, consumed_gold.amount.value);
+                if(consumed_gold.amount > 0) {
+                    wlog("NFA #${n} consume material ${v}", ("n", nfa.id)("v", consumed_gold));
+                    _obj.gold -= consumed_gold;
+                }
+            }
+
+            consume_qi_value = consume_qi_base_value * food_qi.amount.value / material_equivalent_qi_value;
+            if (consume_qi_value > 0) {
+                consume_qi_value = hasher::hash(seed + 30223) % (uint32_t)(consume_qi_value);
+                consumed_food = asset(consume_qi_value, QI_SYMBOL) * TAIYI_FOOD_QI_PRICE;
+                consumed_food.amount.value = std::min(_obj.food.amount.value, consumed_food.amount.value);
+                if(consumed_food.amount > 0) {
+                    wlog("NFA #${n} consume material ${v}", ("n", nfa.id)("v", consumed_food));
+                    _obj.food -= consumed_food;
+                }
+            }
+            
+            consume_qi_value = consume_qi_base_value * wood_qi.amount.value / material_equivalent_qi_value;
+            if (consume_qi_value > 0) {
+                consume_qi_value = hasher::hash(seed + 30253) % (uint32_t)(consume_qi_value);
+                consumed_wood = asset(consume_qi_value, QI_SYMBOL) * TAIYI_WOOD_QI_PRICE;
+                consumed_wood.amount.value = std::min(_obj.wood.amount.value, consumed_wood.amount.value);
+                if(consumed_wood.amount > 0) {
+                    wlog("NFA #${n} consume material ${v}", ("n", nfa.id)("v", consumed_wood));
+                    _obj.wood -= consumed_wood;
+                }
+            }
+
+            consume_qi_value = consume_qi_base_value * fabric_qi.amount.value / material_equivalent_qi_value;
+            if (consume_qi_value > 0) {
+                consume_qi_value = hasher::hash(seed + 30271) % (uint32_t)(consume_qi_value);
+                consumed_fabric = asset(consume_qi_value, QI_SYMBOL) * TAIYI_FABRIC_QI_PRICE;
+                consumed_fabric.amount.value = std::min(_obj.fabric.amount.value, consumed_fabric.amount.value);
+                if(consumed_fabric.amount > 0) {
+                    wlog("NFA #${n} consume material ${v}", ("n", nfa.id)("v", consumed_fabric));
+                    _obj.fabric -= consumed_fabric;
+                }
+            }
+
+            consume_qi_value = consume_qi_base_value * herb_qi.amount.value / material_equivalent_qi_value;
+            if (consume_qi_value > 0) {
+                consume_qi_value = hasher::hash(seed + 30341) % (uint32_t)(consume_qi_value);
+                consumed_herb = asset(consume_qi_value, QI_SYMBOL) * TAIYI_HERB_QI_PRICE;
+                consumed_herb.amount.value = std::min(_obj.herb.amount.value, consumed_herb.amount.value);
+                if(consumed_herb.amount > 0) {
+                    wlog("NFA #${n} consume material ${v}", ("n", nfa.id)("v", consumed_herb));
+                    _obj.herb -= consumed_herb;
+                }
+            }
+        });
+        
+        //传递到财库
+        const auto& treasury_account = get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT);
+        if(consumed_gold.amount > 0) {
+            operation vop = nfa_deposit_withdraw_operation(nfa.id, treasury_account.name, asset( 0, YANG_SYMBOL ), consumed_gold);
+            pre_push_virtual_operation( vop );
+            adjust_balance(treasury_account, consumed_gold);
+            post_push_virtual_operation( vop );
+        }
+        if(consumed_food.amount > 0) {
+            operation vop = nfa_deposit_withdraw_operation(nfa.id, treasury_account.name, asset( 0, YANG_SYMBOL ), consumed_food);
+            pre_push_virtual_operation( vop );
+            adjust_balance(treasury_account, consumed_food);
+            post_push_virtual_operation( vop );
+        }
+        if(consumed_wood.amount > 0) {
+            operation vop = nfa_deposit_withdraw_operation(nfa.id, treasury_account.name, asset( 0, YANG_SYMBOL ), consumed_wood);
+            pre_push_virtual_operation( vop );
+            adjust_balance(treasury_account, consumed_wood);
+            post_push_virtual_operation( vop );
+        }
+        if(consumed_fabric.amount > 0) {
+            operation vop = nfa_deposit_withdraw_operation(nfa.id, treasury_account.name, asset( 0, YANG_SYMBOL ), consumed_fabric);
+            pre_push_virtual_operation( vop );
+            adjust_balance(treasury_account, consumed_fabric);
+            post_push_virtual_operation( vop );
+        }
+        if(consumed_herb.amount > 0) {
+            operation vop = nfa_deposit_withdraw_operation(nfa.id, treasury_account.name, asset( 0, YANG_SYMBOL ), consumed_herb);
+            pre_push_virtual_operation( vop );
+            adjust_balance(treasury_account, consumed_herb);
+            post_push_virtual_operation( vop );
+        }
+    }
+    //=========================================================================
     void database::create_basic_nfa_symbol_objects()
     {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
-        create_nfa_symbol_object(creator, "nfa.actor.default", "默认的角色", "contract.actor.default", 1000000000);
-        create_nfa_symbol_object(creator, "nfa.zone.default", "默认的区域", "contract.zone.default", 1000000000);
+        create_nfa_symbol_object(creator, "nfa.actor.default", "默认的角色", "contract.actor.default", 1000000000, 1000000);
+        create_nfa_symbol_object(creator, "nfa.zone.default", "默认的区域", "contract.zone.default", 1000000000, 10000000);
     }
     //=========================================================================
-    size_t database::create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count)
+    size_t database::create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi)
     {
         const auto* nfa_symbol = find<nfa_symbol_object, by_symbol>(symbol);
         FC_ASSERT(nfa_symbol == nullptr, "NFA symbol named \"${n}\" is already exist.", ("n", symbol));
@@ -69,6 +196,7 @@ namespace taiyi { namespace chain {
             obj.default_contract = contract->id;
             obj.count = 0;
             obj.max_count = max_count;
+            obj.min_equivalent_qi = min_equivalent_qi;
         });
         
         return TAIYI_NFA_SYMBOL_OBJ_STATE_BYTES; //fix size to avoid fc::raw::pack_size(nfa_symbol_obj) changing in future structure defination;
@@ -430,14 +558,14 @@ namespace taiyi { namespace chain {
     {
         auto hblock_id = head_block_id();
         
-        //金木食织药，分别对应金木水火土
+        //金木织药食，分别对应金木水火土
         const auto& material = get<nfa_material_object, by_nfa_id>(nfa.id);
         int64_t phases[5] = {
             material.gold.amount.value,
             material.wood.amount.value,
-            material.food.amount.value,
             material.fabric.amount.value,
-            material.herb.amount.value
+            material.herb.amount.value,
+            material.food.amount.value
         };
         
         //最大量的一种材料决定五行，如果最大量同时有几种材料，则五行不稳，随机一种
