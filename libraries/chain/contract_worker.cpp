@@ -4,6 +4,7 @@
 #include <chain/taiyi_objects.hpp>
 #include <chain/account_object.hpp>
 #include <chain/nfa_objects.hpp>
+#include <chain/actor_objects.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/contract_handles.hpp>
 
@@ -101,7 +102,7 @@ namespace taiyi { namespace chain {
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
             throw e;
         }
-        catch(fc::exception e)
+        catch(const fc::exception& e)
         {
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
@@ -366,9 +367,18 @@ namespace taiyi { namespace chain {
 
         int pre_drops_enable = lua_enabledrops(context.mState, 1, reset_vm_memused?1:0);
         lua_setdrops(context.mState, vm_drops);
+        
+        zone_id_type pre_contract_run_zone = db.get_contract_run_zone();
 
         try
-        {            
+        {
+            //对actor要设置db的当前运行zone标记
+            const auto* check_actor = db.find_actor_with_parents(caller_nfa);
+            if (check_actor && pre_contract_run_zone == zone_id_type::max())
+                db.set_contract_run_zone(check_actor->location);
+            
+            FC_ASSERT(db.is_contract_allowed_by_zone(contract, db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract.name)("z", db.get_contract_run_zone()));
+            
             const auto& caller_account = db.get<account_object, by_id>(caller_nfa.owner_account);
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
@@ -441,23 +451,31 @@ namespace taiyi { namespace chain {
                     result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
             result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(result.contract_affecteds);
+            
+            db.set_contract_run_zone(pre_contract_run_zone);
         }
         catch (LuaContext::VMcollapseErrorException e)
         {
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
+
+            db.set_contract_run_zone(pre_contract_run_zone);
             throw e;
         }
-        catch(fc::exception e)
+        catch(const fc::exception& e)
         {
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
+
+            db.set_contract_run_zone(pre_contract_run_zone);
             throw e;
         }
         
         vm_drops = lua_getdrops(context.mState);
         lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
         
+        db.set_contract_run_zone(pre_contract_run_zone);
+
         return result_table;
         
     } FC_CAPTURE_AND_RETHROW() }

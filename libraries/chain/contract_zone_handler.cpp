@@ -21,6 +21,7 @@ namespace taiyi { namespace chain {
     {
         type = get_zone_type_string(z.type);
         type_id = int(z.type);
+        ref_prohibited_contract_zone = z.ref_prohibited_contract_zone != zone_id_type::max() ? db.get<zone_object, by_id>(z.ref_prohibited_contract_zone).name : "";
     }
 
 } } // namespace taiyi::chain

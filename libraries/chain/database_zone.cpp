@@ -242,4 +242,29 @@ namespace taiyi { namespace chain {
             }
         }
     }
+    //=============================================================================
+    bool database::is_contract_allowed_by_zone(const contract_object& contract, const zone_id_type& zone_id) const
+    {
+        const auto* zone = find<zone_object, by_id>(zone_id);
+        if (!zone)
+            return true;
+        
+        const auto& permission_idx = get_index< zone_contract_permission_index >().indices().get< chain::by_zone >();
+
+        //先检查区域有没有明确许可
+        const auto* check1 = find< zone_contract_permission_object, by_zone >(boost::make_tuple( zone->id, contract.id ));
+        if (check1)
+            return check1->allowed;
+        
+        //再检查参考区域的直接许可项
+        const auto* ref_zone = find< chain::zone_object, chain::by_id >( zone->ref_prohibited_contract_zone );
+        if(ref_zone) {
+            const auto* check2 = find< zone_contract_permission_object, by_zone >(boost::make_tuple( ref_zone->id, contract.id ));
+            if (check2)
+                return check2->allowed;
+        }
+        
+        //默认是允许的
+        return true;
+    }
 } } //taiyi::chain

@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE( generate_empty_blocks )
             }
         }
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE( undo_block )
             BOOST_CHECK( db.head_block_num() == 7 );
         }
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE( fork_blocks )
         PUSH_BLOCK( db1, good_block );
         BOOST_CHECK_EQUAL(db1.head_block_id().str(), db2.head_block_id().str());
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE( switch_forks_undo_create )
         BOOST_CHECK( db1.get(alice_id).name == "alice");
         BOOST_CHECK( db2.get(alice_id).name == "alice");
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }
@@ -328,7 +328,7 @@ BOOST_AUTO_TEST_CASE( duplicate_transactions )
         BOOST_CHECK_EQUAL(db1.get_balance( "alice", YANG_SYMBOL ).amount.value, 500);
         BOOST_CHECK_EQUAL(db2.get_balance( "alice", YANG_SYMBOL ).amount.value, 500);
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE( tapos )
         trx.sign( init_account_priv_key, db1.get_chain_id(), fc::ecc::fc_canonical );
         BOOST_REQUIRE_THROW( db1.push_transaction(trx, 0/*database::skip_transaction_signatures | database::skip_authority_check*/), fc::exception );
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }
@@ -454,7 +454,7 @@ BOOST_FIXTURE_TEST_CASE( optional_tapos, clean_database_fixture )
         sign( tx, alice_private_key );
         TAIYI_REQUIRE_THROW( PUSH_TX( *db, tx, database::skip_transaction_dupe_check ), fc::exception );
     }
-    catch (fc::exception& e)
+    catch (const fc::exception& e)
     {
         edump((e.to_detail_string()));
         throw;
@@ -790,12 +790,12 @@ BOOST_FIXTURE_TEST_CASE( hardfork_test, database_fixture )
         BOOST_REQUIRE( db->get(itr->op).timestamp == db->head_block_time() - TAIYI_BLOCK_INTERVAL );
 #endif
     }
-    catch( fc::exception& e )
+    catch(const fc::exception& e )
     {
         db->wipe( data_dir->path(), data_dir->path(), true );
         throw e;
     }
-    catch( std::exception& e )
+    catch(const std::exception& e )
     {
         db->wipe( data_dir->path(), data_dir->path(), true );
         throw e;

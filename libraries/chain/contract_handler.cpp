@@ -150,7 +150,7 @@ namespace taiyi { namespace chain {
                 co.check_contract_authority = flag;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState,e.to_string());
         }
@@ -166,7 +166,7 @@ namespace taiyi { namespace chain {
                 co.user_invoke_share_percent = percent;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState,e.to_string());
         }
@@ -184,7 +184,7 @@ namespace taiyi { namespace chain {
             
             db.add_contract_handler_exe_point(1);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState,e.to_string());
         }
@@ -198,7 +198,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(contract != nullptr, "not find contract: ${contract}", ("contract", name));
             return *contract;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -212,7 +212,7 @@ namespace taiyi { namespace chain {
             auto hblock_id = db.head_block_id();
             return protocol::hasher::hash( hblock_id._hash[4] );
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
             return 0;
@@ -242,7 +242,7 @@ namespace taiyi { namespace chain {
             
             return md;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
             return memo_data();
@@ -285,7 +285,7 @@ namespace taiyi { namespace chain {
 
             s_invoking_path.pop_back();
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             s_invoking_path.clear();
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -303,7 +303,7 @@ namespace taiyi { namespace chain {
             logger.message = message;
             result.contract_affecteds.push_back(std::move(logger));
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
@@ -346,7 +346,7 @@ namespace taiyi { namespace chain {
             }
 
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
@@ -416,7 +416,7 @@ namespace taiyi { namespace chain {
             return "";
 #endif
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -442,7 +442,7 @@ namespace taiyi { namespace chain {
 
             return result;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -460,7 +460,7 @@ namespace taiyi { namespace chain {
         {
             return contract_tiandao_property(db.get_tiandao_properties(), db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
         }
@@ -491,7 +491,7 @@ namespace taiyi { namespace chain {
                 log(from_account.name + " transfer " + fc::json::to_string(v) + " to " + to_account.name);
             }
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -506,7 +506,7 @@ namespace taiyi { namespace chain {
             const auto& account_obj = db.get<account_object, by_name>(account_name);
             return db.get_balance(account_obj, symbol).amount.value;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
             return 0;
@@ -524,7 +524,7 @@ namespace taiyi { namespace chain {
             auto token = asset(amount, symbol);
             transfer_by_contract(from, account_to, token, result, enable_logger);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -539,7 +539,7 @@ namespace taiyi { namespace chain {
             const contract_object& contract = db.get<chain::contract_object, by_id>(nfa.main_contract);
             return contract.name;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
             return "";
@@ -558,7 +558,7 @@ namespace taiyi { namespace chain {
             
             return "";
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
             return "";
@@ -577,7 +577,7 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             return contract_nfa_base_info(nfa, db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -602,7 +602,7 @@ namespace taiyi { namespace chain {
 
             return true;
         }
-        catch(fc::exception e)
+        catch(const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -718,7 +718,7 @@ namespace taiyi { namespace chain {
 
             return result_table.v;
         }
-        catch(fc::exception e)
+        catch(const fc::exception& e)
         {
             if(lua_getdropsenabled(context.mState)) {
                 auto vm_drops = lua_getdrops(nfa_context.mState);
@@ -732,12 +732,20 @@ namespace taiyi { namespace chain {
     {
         //TODO: do的权限以及产生的消耗
         LuaContext nfa_context;
+
+        zone_id_type pre_contract_run_zone = db.get_contract_run_zone();
+
         try
         {
             db.add_contract_handler_exe_point(2);
             
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
+            //对actor要设置db的当前运行zone标记
+            const auto* check_actor = db.find_actor_with_parents(nfa);
+            if (check_actor && pre_contract_run_zone == zone_id_type::max())
+                db.set_contract_run_zone(check_actor->location);
+
             //check material valid
             FC_ASSERT(db.is_nfa_material_equivalent_qi_insufficient(nfa), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");
             db.consume_nfa_material_random(nfa, db.head_block_id()._hash[4] + 13997);
@@ -746,6 +754,8 @@ namespace taiyi { namespace chain {
             const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)
                 return lua_map();
+            
+            FC_ASSERT(db.is_contract_allowed_by_zone(*contract_ptr, db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract_ptr->name)("z", db.get_contract_run_zone()));
             
             auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
             if(abi_itr == contract_ptr->contract_ABI.end())
@@ -835,12 +845,18 @@ namespace taiyi { namespace chain {
             }
             ch.result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(ch.result.contract_affecteds);
 
+            db.set_contract_run_zone(pre_contract_run_zone);
+
             return result_table.v;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
+            db.set_contract_run_zone(pre_contract_run_zone);
+
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
+        
+        db.set_contract_run_zone(pre_contract_run_zone);
     }
     //=============================================================================
     lua_map contract_handler::call_nfa_function_with_caller(const account_object& caller, int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist)
@@ -940,7 +956,7 @@ namespace taiyi { namespace chain {
 
             return result_table.v;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -995,7 +1011,7 @@ namespace taiyi { namespace chain {
                 }
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1040,7 +1056,7 @@ namespace taiyi { namespace chain {
 
             return nfa.id;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
             return -1;
@@ -1167,7 +1183,7 @@ namespace taiyi { namespace chain {
 
             return result;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -1188,7 +1204,7 @@ namespace taiyi { namespace chain {
             vector<lua_types> stacks = {};
             write_table_data(contract_data_cache, write_list, data, stacks);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -1216,7 +1232,7 @@ namespace taiyi { namespace chain {
 
             return result;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -1240,7 +1256,7 @@ namespace taiyi { namespace chain {
 
             return result;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -1261,7 +1277,7 @@ namespace taiyi { namespace chain {
             
             db.add_contract_handler_exe_point(2 + fc::raw::pack_size(write_list) / 5);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -1287,7 +1303,7 @@ namespace taiyi { namespace chain {
             
             return result;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -1313,7 +1329,7 @@ namespace taiyi { namespace chain {
             
             db.add_contract_handler_exe_point(2 + fc::raw::pack_size(write_list) / 5);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(this->context.mState, e.to_string());
@@ -1510,7 +1526,7 @@ namespace taiyi { namespace chain {
             const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
             return db.get_nfa_balance(nfa, symbol).amount.value;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1523,7 +1539,7 @@ namespace taiyi { namespace chain {
             const auto& nfa = db.get<nfa_object, by_id>(id);
             return contract_asset_resources(nfa, db, false);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1536,7 +1552,7 @@ namespace taiyi { namespace chain {
             const auto& nfa = db.get<nfa_object, by_id>(id);
             return contract_asset_resources(nfa, db, true);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1574,7 +1590,7 @@ namespace taiyi { namespace chain {
 
             return result;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1610,7 +1626,113 @@ namespace taiyi { namespace chain {
 
             return get_zone_type_string(new_type);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    bool contract_handler::is_contract_allowed_by_zone(const string& zone_name, const string& contract_name)
+    {
+        try
+        {
+            const auto* zone = db.find<zone_object, by_name>(zone_name);
+            FC_ASSERT(zone != nullptr, "zone named ${n} is not exist.", ("n", zone_name));
+
+            const auto* contract = db.find<contract_object, by_name>(contract_name);
+            FC_ASSERT(contract != nullptr, "contract named ${n} is not exist.", ("n", contract_name));
+
+            return db.is_contract_allowed_by_zone(*contract, zone->id);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::set_zone_contract_permission(const string& zone_name, const string& contract_name, bool allowed)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(2);
+
+            const auto* zone = db.find<zone_object, by_name>(zone_name);
+            FC_ASSERT(zone != nullptr, "zone named ${n} is not exist.", ("n", zone_name));
+            const auto& nfa = db.get<nfa_object, by_id>(zone->nfa_id);
+            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", zone->id));
+
+            const auto* contract = db.find<contract_object, by_name>(contract_name);
+            FC_ASSERT(contract != nullptr, "contract named ${n} is not exist.", ("n", contract_name));
+
+            const auto* permission = db.find<zone_contract_permission_object, by_zone>(boost::make_tuple( zone->id, contract->id ));
+            if (permission) {
+                db.modify(*permission, [&](zone_contract_permission_object &obj) {
+                    obj.allowed = allowed;
+                });
+            }
+            else {
+                db.create<zone_contract_permission_object>([&](zone_contract_permission_object& obj) {
+                    obj.zone = zone->id;
+                    obj.contract = contract->id;
+                    obj.allowed = allowed;
+                });
+            }
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::remove_zone_contract_permission(const string& zone_name, const string& contract_name)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+
+            const auto* zone = db.find<zone_object, by_name>(zone_name);
+            FC_ASSERT(zone != nullptr, "zone named ${n} is not exist.", ("n", zone_name));
+            const auto& nfa = db.get<nfa_object, by_id>(zone->nfa_id);
+            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", zone->id));
+
+            const auto* contract = db.find<contract_object, by_name>(contract_name);
+            FC_ASSERT(contract != nullptr, "contract named ${n} is not exist.", ("n", contract_name));
+
+            const auto* permission = db.find<zone_contract_permission_object, by_zone>(boost::make_tuple( zone->id, contract->id ));
+            FC_ASSERT(permission != nullptr, "zone contract permission item is not exist.");
+            db.remove(*permission);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::set_zone_ref_prohibited_contract_zone(const string& zone_name, const string& ref_zone_name)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+
+            const auto* zone = db.find<zone_object, by_name>(zone_name);
+            FC_ASSERT(zone != nullptr, "zone named ${n} is not exist.", ("n", zone_name));
+            const auto& nfa = db.get<nfa_object, by_id>(zone->nfa_id);
+            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", zone->id));
+
+            if (ref_zone_name == "") {
+                db.modify(*zone, [&](zone_object& obj) {
+                    obj.ref_prohibited_contract_zone = zone_id_type::max();
+                });
+            }
+            else {
+                const auto* ref_zone = db.find<zone_object, by_name>(ref_zone_name);
+                FC_ASSERT(ref_zone != nullptr, "ref zone named ${n} is not exist.", ("n", ref_zone_name));
+                db.modify(*zone, [&](zone_object& obj) {
+                    obj.ref_prohibited_contract_zone = ref_zone->id;
+                });
+            }
+        }
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1634,7 +1756,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(zone != nullptr, "NFA #${i} is not a zone", ("i", nfa_id));
             return contract_zone_base_info(*zone, db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1648,7 +1770,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(zone != nullptr, "Zone named ${n} is not exist", ("n", name));
             return contract_zone_base_info(*zone, db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1679,7 +1801,7 @@ namespace taiyi { namespace chain {
             }
             return result;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1727,7 +1849,7 @@ namespace taiyi { namespace chain {
                 o.to = to_zone->id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1751,7 +1873,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(actor != nullptr, "NFA #${i} is not an actor", ("i", nfa_id));
             return contract_actor_base_info(*actor, db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1765,7 +1887,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(actor != nullptr, "Actor named ${n} is not exist", ("n", name));
             return contract_actor_base_info(*actor, db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1779,7 +1901,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(actor != nullptr, "NFA #${i} is not an actor", ("i", nfa_id));
             return contract_actor_core_attributes(*actor, db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1835,7 +1957,7 @@ namespace taiyi { namespace chain {
                 obj.base = zone->id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1894,7 +2016,7 @@ namespace taiyi { namespace chain {
             
             db.push_virtual_operation( actor_movement_operation( caller.name, actor->name, current_zone.name, target_zone->name, actor_nfa.id ) );
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1921,7 +2043,7 @@ namespace taiyi { namespace chain {
                 obj.mirage_contract = contract->id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1948,7 +2070,7 @@ namespace taiyi { namespace chain {
                 obj.mirage_contract = contract->id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -1972,7 +2094,7 @@ namespace taiyi { namespace chain {
                 obj.mirage_contract = contract_id_type::max();
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -2019,7 +2141,7 @@ namespace taiyi { namespace chain {
             param[lua_key(lua_int(1))] = lua_types(lua_int(actor_nfa.id));
             call_nfa_function_with_caller(db.get_account(TAIYI_DANUO_ACCOUNT), target_zone->nfa_id, "on_actor_exploit", param, false);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -2111,7 +2233,7 @@ namespace taiyi { namespace chain {
             
             return new_name;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -2152,7 +2274,7 @@ namespace taiyi { namespace chain {
             return db.create_cultivation(manager_nfa, beneficiaries_map, prepare_time_seconds).id;
 
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -2182,7 +2304,7 @@ namespace taiyi { namespace chain {
             
             db.participate_cultivation(*cult, nfa, value);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -2209,7 +2331,7 @@ namespace taiyi { namespace chain {
 
             db.start_cultivation(*cult);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -2240,7 +2362,7 @@ namespace taiyi { namespace chain {
             
             db.remove(*cult);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
@@ -2271,7 +2393,7 @@ namespace taiyi { namespace chain {
             //reward to treasury
             db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }

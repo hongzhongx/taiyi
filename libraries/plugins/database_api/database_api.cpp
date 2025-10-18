@@ -68,6 +68,7 @@ namespace taiyi { namespace plugins { namespace database_api {
             (list_zones)
             (find_zones_by_name)
             (find_way_to_zone)
+            (list_contracts_prohibited_by_zone)
             (list_actor_relations)
             (list_target_relations)
             (get_actors_relation)
@@ -943,7 +944,7 @@ namespace taiyi { namespace plugins { namespace database_api {
                 TAIYI_MAX_SIG_CHECK_DEPTH
             );
         }
-        catch( fc::exception& ) { result.valid = false; }
+        catch(const fc::exception& ) { result.valid = false; }
         
         return result;
     }
@@ -1296,6 +1297,21 @@ namespace taiyi { namespace plugins { namespace database_api {
                 }
                 break;
             }
+            case( by_prohibited_contract ):
+            {
+                const auto* contract = _db.find< chain::contract_object, chain::by_name >(args.start.as< string >());
+                if (contract) {
+                    iterate_results< chain::zone_contract_permission_index, chain::by_contract >(
+                        boost::make_tuple( contract->id, 0 ),
+                        result.result,
+                        args.limit,
+                        [&]( const zone_contract_permission_object& o ) { return _db.get< chain::zone_object, chain::by_id >(o.zone); },
+                        [&]( const zone_contract_permission_object& o ) { return o.contract != contract->id; }, //stop condition
+                        [&]( const zone_contract_permission_object& o ) { return o.allowed == false; }
+                        );
+                }
+                break;
+            }
             default:
                 FC_ASSERT( false, "Unknown or unsupported sort order" );
         }
@@ -1365,6 +1381,55 @@ namespace taiyi { namespace plugins { namespace database_api {
             }
             itz++;
         }
+        return result;
+    }
+    
+    DEFINE_API_IMPL( database_api_impl, list_contracts_prohibited_by_zone )
+    {
+        const auto* zone = _db.find< chain::zone_object, chain::by_name >( args.zone );
+        FC_ASSERT( zone != nullptr );
+
+        list_contracts_prohibited_by_zone_return result;
+
+        const auto& permission_idx = _db.get_index< zone_contract_permission_index >().indices().get< chain::by_zone >();
+
+        //先检查参考区域的直接许可项
+        const auto* ref_zone = _db.find< chain::zone_object, chain::by_id >( zone->ref_prohibited_contract_zone );
+        if(ref_zone) {
+            auto itz = permission_idx.lower_bound( ref_zone->id );
+            while(itz != permission_idx.end()) {
+                if(itz->id != ref_zone->id)
+                    break;
+                if(!itz->allowed) {
+                    const auto* check = _db.find< chain::zone_contract_permission_object, chain::by_zone >(boost::make_tuple( zone->id, itz->contract ));
+                    if(check && check->allowed)
+                        ; //permission specialized by this zone while forbidden by ref zone
+                    else
+                        result.contracts.push_back(_db.get<chain::contract_object, chain::by_id>(itz->contract).name);
+                }
+                else {
+                    const auto* check = _db.find< chain::zone_contract_permission_object, chain::by_zone >(boost::make_tuple( zone->id, itz->contract ));
+                    //prohibition specialized by this zone while permitted by ref zone
+                    if(check && check->allowed == false)
+                        result.contracts.push_back(_db.get<chain::contract_object, chain::by_id>(itz->contract).name);
+                }
+                itz++;
+            }
+        }
+        
+        //prohibition specialized by this zone while not by ref zone
+        auto itz = permission_idx.lower_bound( zone->id );
+        while(itz != permission_idx.end()) {
+            if(itz->id != ref_zone->id)
+                break;
+            if(!itz->allowed) {
+                const auto& check_contract = _db.get<chain::contract_object, chain::by_id>(itz->contract);
+                if(std::find(result.contracts.begin(), result.contracts.end(), check_contract.name) == result.contracts.end())
+                    result.contracts.push_back(check_contract.name);
+            }
+            itz++;
+        }
+
         return result;
     }
     
@@ -1580,6 +1645,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         (list_zones)
         (find_zones_by_name)
         (find_way_to_zone)
+        (list_contracts_prohibited_by_zone)
         (list_actor_relations)
         (list_target_relations)
         (get_actors_relation)

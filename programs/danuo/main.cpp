@@ -89,7 +89,7 @@ int main( int argc, char** argv )
             {
                 _taiyi_chain_id = chain_id_type( chain_id_str);
             }
-            catch( fc::exception& )
+            catch(const fc::exception& )
             {
                 FC_ASSERT( false, "Could not parse chain_id as hex string. Chain ID String: ${s}", ("s", chain_id_str) );
             }

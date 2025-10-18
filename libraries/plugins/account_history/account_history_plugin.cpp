@@ -456,7 +456,7 @@ namespace taiyi { namespace plugins { namespace account_history {
                 {
                     get_lib();
                 }
-                catch( fc::assert_exception& )
+                catch( const fc::assert_exception& )
                 {
                     update_lib( 0 );
                     flushWriteBuffer(storageDb);

@@ -53,7 +53,7 @@ namespace taiyi { namespace chain {
                 obj.next_tick_time = time_point_sec::min();
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -69,7 +69,7 @@ namespace taiyi { namespace chain {
                 obj.next_tick_time = time_point_sec::maximum();
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -81,7 +81,7 @@ namespace taiyi { namespace chain {
         {
             return contract_nfa_base_info(_caller, _db);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -93,7 +93,7 @@ namespace taiyi { namespace chain {
         {
             return contract_asset_resources(_caller, _db, false);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -105,7 +105,7 @@ namespace taiyi { namespace chain {
         {
             return contract_asset_resources(_caller, _db, true);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -113,6 +113,7 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void contract_nfa_handler::convert_qi_to_resource(int64_t amount, const string& resource_symbol_name)
     {
+        string _err_str = "";
         try
         {
             _db.add_contract_handler_exe_point(2);
@@ -182,11 +183,13 @@ namespace taiyi { namespace chain {
                 }
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
-            wdump((e.to_string()));
-            LUA_C_ERR_THROW(_context.mState, e.to_string());
+            _err_str = e.to_string();
+            wdump((_err_str));
         }
+        
+        if (!_err_str.empty()) { LUA_C_ERR_THROW(_context.mState, _err_str); }
     }
     //=========================================================================
     void contract_nfa_handler::convert_resource_to_qi(int64_t amount, const string& resource_symbol_name)
@@ -260,7 +263,7 @@ namespace taiyi { namespace chain {
                 }
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -283,7 +286,7 @@ namespace taiyi { namespace chain {
                 obj.parent = _caller.id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -305,7 +308,7 @@ namespace taiyi { namespace chain {
                 obj.parent = parent_nfa.id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -327,7 +330,7 @@ namespace taiyi { namespace chain {
                 obj.parent = _caller.id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -349,7 +352,7 @@ namespace taiyi { namespace chain {
                 obj.parent = parent_nfa.id;
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -371,7 +374,7 @@ namespace taiyi { namespace chain {
                 obj.parent = nfa_id_type::max();
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -387,7 +390,7 @@ namespace taiyi { namespace chain {
             auto token = asset(amount, symbol);
             transfer_by_contract(from, to, token, _ch.result, enable_logger);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -426,7 +429,7 @@ namespace taiyi { namespace chain {
                 _ch.log(FORMAT_MESSAGE("nfa #${a} transfer ${token} to nfa #${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_nfa.id)));
             }
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -443,7 +446,7 @@ namespace taiyi { namespace chain {
             auto token = asset(amount, symbol);
             withdraw_by_contract(from, _db.get_account(to).id, token, _ch.result, enable_logger);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -481,7 +484,7 @@ namespace taiyi { namespace chain {
                 _ch.log(FORMAT_MESSAGE("nfa #${a} transfer ${token} to account ${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_account.name)));
             }
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -498,7 +501,7 @@ namespace taiyi { namespace chain {
             auto token = asset(amount, symbol);
             deposit_by_contract(from, to, token, _ch.result, enable_logger);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -536,7 +539,7 @@ namespace taiyi { namespace chain {
                 _ch.log(FORMAT_MESSAGE("account ${a} transfer ${token} to nfa #${b}", ("a", from_account.name)("token", fc::json::to_string(v))("b", to_nfa.id)));
             }
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -549,7 +552,7 @@ namespace taiyi { namespace chain {
         {
             return _ch.read_nfa_contract_data(_caller.id, read_list);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -569,7 +572,7 @@ namespace taiyi { namespace chain {
             
             _ch.write_nfa_contract_data(_caller.id, data, write_list);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -600,7 +603,7 @@ namespace taiyi { namespace chain {
                 obj.next_tick_time = time_point_sec::maximum(); //disable tick
             });
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -728,7 +731,7 @@ namespace taiyi { namespace chain {
                 }
             }
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -830,7 +833,7 @@ namespace taiyi { namespace chain {
             //    wlog("${y}年${m}月，${a}对${b}说道：\"${c}\"", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_me.name)("b", actor_target.name)("c", talk_content));
 
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
@@ -850,7 +853,7 @@ namespace taiyi { namespace chain {
             auto token = asset(amount, symbol);
             inject_material_by_contract(from, to, token, _ch.result, enable_logger);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -911,7 +914,7 @@ namespace taiyi { namespace chain {
                 _ch.log(FORMAT_MESSAGE("nfa #${a} inject material ${token} to nfa #${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_nfa.id)));
             }
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -928,7 +931,7 @@ namespace taiyi { namespace chain {
             auto token = asset(amount, symbol);
             separate_material_by_contract(from, to, token, _ch.result, enable_logger);
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -1009,7 +1012,7 @@ namespace taiyi { namespace chain {
                 _ch.log(FORMAT_MESSAGE("nfa #${a} separate meterial ${token} out to nfa ${b}", ("a", from_nfa.id)("token", fc::json::to_string(v))("b", to_nfa.id)));
             }
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_string()));
             LUA_C_ERR_THROW(_context.mState, e.to_string());
@@ -1126,7 +1129,7 @@ namespace taiyi { namespace chain {
 
             return result_table.v;
         }
-        catch(fc::exception e)
+        catch(const fc::exception& e)
         {
             if(lua_getdropsenabled(_context.mState)) {
                 auto vm_drops = lua_getdrops(nfa_context.mState);
@@ -1140,11 +1143,19 @@ namespace taiyi { namespace chain {
     {
         //TODO: do的权限以及产生的消耗
         LuaContext nfa_context;
+        
+        zone_id_type pre_contract_run_zone = _db.get_contract_run_zone();
+
         try
         {
             _db.add_contract_handler_exe_point(2);
             
             const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
+            
+            //对actor要设置db的当前运行zone标记
+            const auto* check_actor = _db.find_actor_with_parents(nfa);
+            if (check_actor && pre_contract_run_zone == zone_id_type::max())
+                _db.set_contract_run_zone(check_actor->location);
 
             //check material valid
             FC_ASSERT(_db.is_nfa_material_equivalent_qi_insufficient(nfa), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");
@@ -1154,6 +1165,8 @@ namespace taiyi { namespace chain {
             const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr)
                 return lua_map();
+            
+            FC_ASSERT(_db.is_contract_allowed_by_zone(*contract_ptr, _db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract_ptr->name)("z", _db.get_contract_run_zone()));
             
             auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
             if(abi_itr == contract_ptr->contract_ABI.end())
@@ -1242,13 +1255,19 @@ namespace taiyi { namespace chain {
                     ch.result.relevant_datasize += temp.get<contract_result>().relevant_datasize;
             }
             ch.result.relevant_datasize += fc::raw::pack_size(ch.contract_data_cache) + fc::raw::pack_size(ch.account_contract_data_cache) + fc::raw::pack_size(ch.result.contract_affecteds);
+            
+            _db.set_contract_run_zone(pre_contract_run_zone);
 
             return result_table.v;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
+            _db.set_contract_run_zone(pre_contract_run_zone);
+
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
+        
+        _db.set_contract_run_zone(pre_contract_run_zone);
     }
 
 } } // namespace taiyi::chain

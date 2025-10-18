@@ -4484,7 +4484,7 @@ namespace taiyi { namespace net {
                 
                 trigger_p2p_network_connect_loop();
             }
-            catch (fc::exception& except)
+            catch (const fc::exception& except)
             {
                 elog("unable to open peer database ${filename}: ${error}",
                      ("filename", potential_peer_database_file_name)("error", except.to_detail_string()));

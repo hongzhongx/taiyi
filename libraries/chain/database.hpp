@@ -340,23 +340,28 @@ namespace taiyi { namespace chain {
         void initialize_actor_object( actor_object& act, const std::string& name, const nfa_object& nfa );
         void initialize_actor_talents( const actor_object& act );
         void initialize_actor_attributes( const actor_object& act, const vector<uint16_t>& init_attrs );
-        const actor_object&  get_actor( const std::string& name )const;
-        const actor_object*  find_actor( const std::string& name )const;
+        const actor_object& get_actor( const std::string& name )const;
+        const actor_object* find_actor( const std::string& name )const;
         void initialize_actor_talent_rule_object(const account_object& creator, actor_talent_rule_object& rule, long long& vm_drops);
         void born_actor( const actor_object& act, int gender, int sexuality, const zone_object& zone );
         void born_actor( const actor_object& act, int gender, int sexuality, const string& zone_name );
         void try_trigger_actor_talents( const actor_object& act, uint16_t age );
         void try_trigger_actor_contract_grow( const actor_object& act );
         void prepare_actor_relations( const actor_object& actor1, const actor_object& actor2 );
+        const actor_object* find_actor_with_parents( const nfa_object& nfa, const uint16_t depth = 3 );
 
         //************ database_zone.cpp ************//
 
-        const tiandao_property_object& get_tiandao_properties()const;
+        const tiandao_property_object& get_tiandao_properties() const;
         void initialize_zone_object( zone_object& zone, const std::string& name, const nfa_object& nfa, E_ZONE_TYPE type );
-        const zone_object&  get_zone(  const std::string& name )const;
-        const zone_object*  find_zone( const std::string& name )const;
+        const zone_object&  get_zone(  const std::string& name ) const;
+        const zone_object*  find_zone( const std::string& name ) const;
+        bool is_contract_allowed_by_zone(const contract_object& contract, const zone_id_type& zone_id) const;
         int calculate_moving_days_to_zone( const zone_object& zone );
         void process_tiandao();
+        
+        zone_id_type get_contract_run_zone() const { return _contract_run_zone; }
+        void set_contract_run_zone(zone_id_type z) { _contract_run_zone = z; }
         
         //************ database_cultivation.cpp ************//
         const cultivation_object& create_cultivation(const nfa_object& manager_nfa, const chainbase::t_flat_map<nfa_id_type, uint>& beneficiaries, uint64_t prepare_time_seconds);
@@ -600,6 +605,11 @@ namespace taiyi { namespace chain {
           * 用于统计合约中执行handler api的运算消耗
          */
         int64_t _contract_handler_exe_point = 0;
+        
+        /**
+          * 用于在执行合约时临时判断合约执行发起actor所在的zone
+         */
+        zone_id_type _contract_run_zone = zone_id_type::max();
     };
 
     struct reindex_notification

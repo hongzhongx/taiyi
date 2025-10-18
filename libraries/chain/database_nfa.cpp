@@ -369,10 +369,9 @@ namespace taiyi { namespace chain {
                 auto session = start_undo_session();
                 clear_contract_handler_exe_point(); //初始化api执行消耗统计
                 worker.do_nfa_contract_function(nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
-                api_exe_point = get_contract_handler_exe_point();
                 session.squash();
             }
-            catch (fc::exception e) {
+            catch (const fc::exception& e) {
                 //任何错误都不能照成核心循环崩溃
                 beat_fail = true;
                 wlog("NFA (${i}) process heart beat fail. err: ${e}", ("i", nfa.id)("e", e.to_string()));
@@ -382,7 +381,9 @@ namespace taiyi { namespace chain {
                 beat_fail = true;
                 wlog("NFA (${i}) process heart beat fail.", ("i", nfa.id));
             }
+
             int64_t used_drops = old_drops - vm_drops;
+            api_exe_point = get_contract_handler_exe_point();
 
             int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
             int64_t exe_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;

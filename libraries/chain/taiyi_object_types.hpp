@@ -102,6 +102,7 @@ namespace taiyi {
             //zone objects
             zone_object_type,
             zone_connect_object_type,
+            zone_contract_permission_object_type,
             cunzhuang_object_type,
             
             //cultivation
@@ -155,6 +156,7 @@ namespace taiyi {
 
         class zone_object;
         class zone_connect_object;
+        class zone_contract_permission_object;
         class cunzhuang_object;
         
         class cultivation_object;
@@ -205,6 +207,7 @@ namespace taiyi {
 
         typedef oid< zone_object                            > zone_id_type;
         typedef oid< zone_connect_object                    > zone_connect_id_type;
+        typedef oid< zone_contract_permission_object        > zone_contract_permission_id_type;
         typedef oid< cunzhuang_object                       > cunzhuang_id_type;
         
         typedef oid< cultivation_object                     > cultivation_id_type;
@@ -410,6 +413,7 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     //zone objects
     (zone_object_type)
     (zone_connect_object_type)
+    (zone_contract_permission_object_type)
     (cunzhuang_object_type)
     
     //cultivation

@@ -724,7 +724,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 _chain.accept_transaction( trx );
                 _p2p->broadcast_transaction( trx );
             }
-            catch( fc::exception& e )
+            catch(const fc::exception& e )
             {
                 boost::lock_guard< boost::mutex > guard( _mtx );
                 

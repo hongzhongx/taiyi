@@ -126,7 +126,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(lua_istable(L, -1), "import_contract must get a table");
             return 1;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             if(contract) {
                 lua_pushnil(L);
@@ -163,7 +163,7 @@ namespace taiyi { namespace chain {
             LuaContext::Pusher<string>::push(L,fc::json::to_string(fc::variant(temp)) ).release();
             return 1;
         }
-        catch (fc::exception e)
+        catch (const fc::exception& e)
         {
             wdump((e.to_detail_string()));
             LUA_C_ERR_THROW(L, e.to_string());
@@ -262,6 +262,10 @@ namespace taiyi { namespace chain {
         registerFunction("move_actor", &contract_handler::move_actor);
         registerFunction("exploit_zone", &contract_handler::exploit_zone);
         registerFunction("break_new_zone", &contract_handler::break_new_zone);
+        registerFunction("is_contract_allowed_by_zone", &contract_handler::is_contract_allowed_by_zone);
+        registerFunction("set_zone_contract_permission", &contract_handler::set_zone_contract_permission);
+        registerFunction("remove_zone_contract_permission", &contract_handler::remove_zone_contract_permission);
+        registerFunction("set_zone_ref_prohibited_contract_zone", &contract_handler::set_zone_ref_prohibited_contract_zone);
         registerFunction("get_tiandao_property", &contract_handler::get_tiandao_property);
         registerFunction("create_cultivation", &contract_handler::create_cultivation);
         registerFunction("participate_cultivation", &contract_handler::participate_cultivation);
@@ -341,6 +345,7 @@ namespace taiyi { namespace chain {
         registerMember("name", &contract_zone_base_info::name);
         registerMember("type", &contract_zone_base_info::type);
         registerMember("type_id", &contract_zone_base_info::type_id);
+        registerMember("ref_prohibited_contract_zone", &contract_zone_base_info::ref_prohibited_contract_zone);
 
         //actor base info
         registerMember("nfa_id", &contract_actor_base_info::nfa_id);

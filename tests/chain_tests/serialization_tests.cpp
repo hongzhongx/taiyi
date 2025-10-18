@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE( serialization_raw_test )
         unpacked.validate();
         BOOST_CHECK( trx.digest() == unpacked.digest() );
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( serialization_json_test )
         unpacked.validate();
         BOOST_CHECK( trx.digest() == unpacked.digest() );
     }
-    catch (fc::exception& e) {
+    catch (const fc::exception& e) {
         edump((e.to_detail_string()));
         throw;
     }

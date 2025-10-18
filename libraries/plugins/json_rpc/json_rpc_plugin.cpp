@@ -289,7 +289,7 @@ namespace taiyi { namespace plugins { namespace json_rpc {
                             {
                                 call = process_params( method, request, func_args, &method_name );
                             }
-                            catch( fc::assert_exception& e )
+                            catch( const fc::assert_exception& e )
                             {
                                 response.error = json_rpc_error( JSON_RPC_PARSE_PARAMS_ERROR, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );
                             }
@@ -301,11 +301,11 @@ namespace taiyi { namespace plugins { namespace json_rpc {
                                     response.result = (*call)( func_args );
                                 }
                             }
-                            catch( chainbase::lock_exception& e )
+                            catch( const chainbase::lock_exception& e )
                             {
                                 response.error = json_rpc_error( JSON_RPC_ERROR_DURING_CALL, e.what() );
                             }
-                            catch( fc::assert_exception& e )
+                            catch( const fc::assert_exception& e )
                             {
                                 response.error = json_rpc_error( JSON_RPC_ERROR_DURING_CALL, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );
                             }
@@ -315,7 +315,7 @@ namespace taiyi { namespace plugins { namespace json_rpc {
                             response.error = json_rpc_error( JSON_RPC_NO_PARAMS, "A member \"params\" does not exist" );
                         }
                     }
-                    catch( fc::assert_exception& e )
+                    catch( const fc::assert_exception& e )
                     {
                         response.error = json_rpc_error( JSON_RPC_METHOD_NOT_FOUND, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );
                     }
@@ -351,11 +351,11 @@ namespace taiyi { namespace plugins { namespace json_rpc {
                     if( !response.error.valid() )
                         rpc_jsonrpc( request, response );
                 }
-                catch( fc::exception& e )
+                catch( const fc::exception& e )
                 {
                     response.error = json_rpc_error( JSON_RPC_SERVER_ERROR, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );
                 }
-                catch( std::exception& e )
+                catch( const std::exception& e )
                 {
                     response.error = json_rpc_error( JSON_RPC_SERVER_ERROR, "Unknown error - parsing rpc message failed", fc::variant( e.what() ) );
                 }
@@ -364,19 +364,19 @@ namespace taiyi { namespace plugins { namespace json_rpc {
                     response.error = json_rpc_error( JSON_RPC_SERVER_ERROR, "Unknown error - parsing rpc message failed" );
                 }
             }
-            catch( fc::parse_error_exception& e )
+            catch( const fc::parse_error_exception& e )
             {
                 response.error = json_rpc_error( JSON_RPC_PARSE_ERROR, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );
             }
-            catch( fc::bad_cast_exception& e )
+            catch( const fc::bad_cast_exception& e )
             {
                 response.error = json_rpc_error( JSON_RPC_PARSE_ERROR, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );
             }
-            catch( fc::exception& e )
+            catch( const fc::exception& e )
             {
                 response.error = json_rpc_error( JSON_RPC_SERVER_ERROR, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );
             }
-            catch( std::exception& e )
+            catch( const std::exception& e )
             {
                 response.error = json_rpc_error( JSON_RPC_SERVER_ERROR, "Unknown error - parsing rpc message failed", fc::variant( e.what() ) );
             }
@@ -466,7 +466,7 @@ namespace taiyi { namespace plugins { namespace json_rpc {
                 return fc::json::to_string( my->rpc( v ) );
             }
         }
-        catch( fc::exception& e )
+        catch( const fc::exception& e )
         {
             json_rpc_response response;
             response.error = json_rpc_error( JSON_RPC_SERVER_ERROR, e.to_string(), fc::variant( *(e.dynamic_copy_exception()) ) );

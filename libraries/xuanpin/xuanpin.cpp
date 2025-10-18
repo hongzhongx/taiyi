@@ -334,7 +334,7 @@ namespace taiyi { namespace xuanpin {
                     result["server_taiyi_revision"] = v.taiyi_revision;
                     result["server_fc_revision"] = v.fc_revision;
                 }
-                catch( fc::exception& )
+                catch( const fc::exception& )
                 {
                     result["server"] = "could not retrieve server version information";
                 }
@@ -1571,8 +1571,8 @@ namespace taiyi { namespace xuanpin {
             // Check if memo is a private key
             keys.push_back( fc::ecc::extended_private_key::from_base58( memo ).get_public_key() );
         }
-        catch( fc::parse_error_exception& ) {}
-        catch( fc::assert_exception& ) {}
+        catch( const fc::parse_error_exception& ) {}
+        catch( const fc::assert_exception& ) {}
         
         // Get possible keys if memo was an account password
         string owner_seed = account.name + "owner" + memo;

@@ -330,7 +330,6 @@ namespace taiyi { namespace chain {
                     auto session = start_undo_session();
                     clear_contract_handler_exe_point(); //初始化api执行消耗统计
                     lua_table result_table = worker.do_nfa_contract_function(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
-                    api_exe_point = get_contract_handler_exe_point();
 
                     auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
                     if(it_triggered == result_table.v.end()) {
@@ -341,7 +340,7 @@ namespace taiyi { namespace chain {
                         triggered = it_triggered->second.get<lua_bool>().v;
                     session.squash();
                 }
-                catch (fc::exception e) {
+                catch (const fc::exception& e) {
                     //任何错误都不能照成核心循环崩溃
                     trigger_fail = true;
                     wlog("Actor (${a}) trigger talent #${t} fail. err: ${e}", ("a", act.name)("t", tobj.id)("e", e.to_string()));
@@ -352,6 +351,7 @@ namespace taiyi { namespace chain {
                     wlog("Actor (${a}) trigger talent #${t} fail.", ("a", act.name)("t", tobj.id));
                 }
                 int64_t used_drops = old_drops - vm_drops;
+                api_exe_point = get_contract_handler_exe_point();
 
                 //执行错误仍然要扣费，但是不影响下次触发
                 int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
@@ -463,7 +463,7 @@ namespace taiyi { namespace chain {
                 api_exe_point = get_contract_handler_exe_point();
                 session.squash();
             }
-            catch (fc::exception e) {
+            catch (const fc::exception& e) {
                 //任何错误都不能照成核心循环崩溃
                 trigger_fail = true;
                 wlog("Actor (${a}) trigger on_grown fail. err: ${e}", ("a", act.name)("e", e.to_string()));
@@ -538,5 +538,20 @@ namespace taiyi { namespace chain {
             });
         }
     }
-
+    //=============================================================================
+    const actor_object* database::find_actor_with_parents( const nfa_object& nfa, const uint16_t depth)
+    {
+        const auto* check_actor = find<actor_object, by_nfa_id>(nfa.id);
+        if (check_actor)
+            return check_actor;
+        
+        if(depth == 0)
+            return nullptr;
+        
+        const auto* parent = find<nfa_object, by_id>(nfa.parent);
+        if(!parent)
+            return nullptr;
+        
+        return find_actor_with_parents(*parent, depth-1);
+    }
 } } //taiyi::chain

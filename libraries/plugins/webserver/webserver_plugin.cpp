@@ -297,7 +297,7 @@ namespace taiyi { namespace plugins { namespace webserver {
                     else
                         con->send( "error: string payload expected" );
                 }
-                catch( fc::exception& e )
+                catch( const fc::exception& e )
                 {
                     con->send( "error calling API " + e.to_string() );
                 }
@@ -337,7 +337,7 @@ namespace taiyi { namespace plugins { namespace webserver {
                     con->append_header( "Content-Type", "application/json" );
                     con->set_status( websocketpp::http::status_code::ok );
                 }
-                catch( fc::exception& e )
+                catch( const fc::exception& e )
                 {
                     edump( (e) );
                     con->set_body( "Could not call API" );
@@ -382,7 +382,7 @@ namespace taiyi { namespace plugins { namespace webserver {
                     con->append_header( "Content-Type", "application/json" );
                     con->set_status( websocketpp::http::status_code::ok );
                 }
-                catch( fc::exception& e )
+                catch( const fc::exception& e )
                 {
                     edump( (e) );
                     con->set_body( "Could not call API" );

@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE( account_update_validate )
             
             BOOST_FAIL( "An exception was not thrown for an invalid account name" );
         }
-        catch( fc::exception& ) {}
+        catch(const fc::exception& ) {}
         
         validate_database();
     }

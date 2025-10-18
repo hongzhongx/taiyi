@@ -56,7 +56,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         by_zone_from,
         by_zone_to,
         by_location,
-        by_group_leader
+        by_group_leader,
+        by_prohibited_contract
     };
     
     enum order_direction_type
@@ -470,6 +471,15 @@ namespace taiyi { namespace plugins { namespace database_api {
         vector<string> way_points;
     };
 
+    struct list_contracts_prohibited_by_zone_args
+    {
+        string zone;
+    };
+    struct list_contracts_prohibited_by_zone_return
+    {
+        vector<string> contracts;
+    };
+
     /* Relation */
     struct list_actor_relations_args
     {
@@ -529,7 +539,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
 FC_REFLECT( taiyi::plugins::database_api::get_version_return, (blockchain_version)(taiyi_revision)(fc_revision)(chain_id) )
 
-FC_REFLECT_ENUM( taiyi::plugins::database_api::sort_order_type, (by_name)(by_proxy)(by_next_qi_withdrawal_time)(by_account)(by_expiration)(by_effective_date)(by_adore_name)(by_schedule_time)(by_account_siming)(by_siming_account)(by_from_id)(by_ratification_deadline)(by_withdraw_route)(by_destination)(by_complete_from_id)(by_to_complete)(by_delegation)(by_account_expiration)(by_conversion_date)(by_last_update)(by_price)(by_symbol_contributor)(by_symbol)(by_control_account)(by_symbol_time)(by_creator)(by_start_date)(by_end_date)(by_total_adores)(by_contributor)(by_symbol_id)(by_id)(by_owner)(by_health)(by_solor_term)(by_type)(by_zone_from)(by_zone_to)(by_location) )
+FC_REFLECT_ENUM( taiyi::plugins::database_api::sort_order_type, (by_name)(by_proxy)(by_next_qi_withdrawal_time)(by_account)(by_expiration)(by_effective_date)(by_adore_name)(by_schedule_time)(by_account_siming)(by_siming_account)(by_from_id)(by_ratification_deadline)(by_withdraw_route)(by_destination)(by_complete_from_id)(by_to_complete)(by_delegation)(by_account_expiration)(by_conversion_date)(by_last_update)(by_price)(by_symbol_contributor)(by_symbol)(by_control_account)(by_symbol_time)(by_creator)(by_start_date)(by_end_date)(by_total_adores)(by_contributor)(by_symbol_id)(by_id)(by_owner)(by_health)(by_solor_term)(by_type)(by_zone_from)(by_zone_to)(by_location)(by_group_leader)(by_prohibited_contract) )
 
 FC_REFLECT_ENUM( taiyi::plugins::database_api::order_direction_type, (ascending)(descending) )
 
@@ -623,6 +633,9 @@ FC_REFLECT( taiyi::plugins::database_api::find_zones_by_name_args, (name_list) )
 
 FC_REFLECT( taiyi::plugins::database_api::find_way_to_zone_args, (from_zone)(to_zone) )
 FC_REFLECT( taiyi::plugins::database_api::find_way_to_zone_return, (way_points) )
+
+FC_REFLECT( taiyi::plugins::database_api::list_contracts_prohibited_by_zone_args, (zone) )
+FC_REFLECT( taiyi::plugins::database_api::list_contracts_prohibited_by_zone_return, (contracts) )
 
 FC_REFLECT( taiyi::plugins::database_api::list_actor_relations_args, (name) )
 FC_REFLECT( taiyi::plugins::database_api::list_actor_relations_return, (relations) )

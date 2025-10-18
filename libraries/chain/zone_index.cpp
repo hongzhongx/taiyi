@@ -17,6 +17,7 @@ namespace taiyi { namespace chain {
 
         TAIYI_ADD_CORE_INDEX(db, zone_index);
         TAIYI_ADD_CORE_INDEX(db, zone_connect_index);
+        TAIYI_ADD_CORE_INDEX(db, zone_contract_permission_index);
         TAIYI_ADD_CORE_INDEX(db, cunzhuang_index);
     }
 

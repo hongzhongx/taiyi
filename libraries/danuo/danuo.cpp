@@ -316,7 +316,7 @@ namespace taiyi { namespace danuo {
                     result["server_taiyi_revision"] = v.taiyi_revision;
                     result["server_fc_revision"] = v.fc_revision;
                 }
-                catch( fc::exception& )
+                catch( const fc::exception& )
                 {
                     result["server"] = "could not retrieve server version information";
                 }
@@ -863,8 +863,8 @@ namespace taiyi { namespace danuo {
             // Check if memo is a private key
             keys.push_back( fc::ecc::extended_private_key::from_base58( memo ).get_public_key() );
         }
-        catch( fc::parse_error_exception& ) {}
-        catch( fc::assert_exception& ) {}
+        catch( const fc::parse_error_exception& ) {}
+        catch( const fc::assert_exception& ) {}
         
         // Get possible keys if memo was an account password
         string owner_seed = account.name + "owner" + memo;
@@ -1039,7 +1039,7 @@ namespace taiyi { namespace danuo {
             ansi(ss);
             return ss;
         }
-        catch( fc::exception& er )
+        catch( const fc::exception& er )
         {
             //对特定错误信息，识别解析出来直接返回
             string es = er.to_detail_string();

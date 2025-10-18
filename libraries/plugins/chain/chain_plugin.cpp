@@ -125,7 +125,7 @@ namespace taiyi { namespace plugins { namespace chain {
                 {
                     result = db->push_block( *block, skip );
                 }
-                catch( fc::exception& e )
+                catch(const fc::exception& e )
                 {
                     *except = e;
                 }
@@ -147,7 +147,7 @@ namespace taiyi { namespace plugins { namespace chain {
                     
                     result = true;
                 }
-                catch( fc::exception& e )
+                catch(const fc::exception& e )
                 {
                     *except = e;
                 }
@@ -172,7 +172,7 @@ namespace taiyi { namespace plugins { namespace chain {
                     
                     result = true;
                 }
-                catch( fc::exception& e )
+                catch(const fc::exception& e )
                 {
                     *except = e;
                 }
@@ -395,7 +395,7 @@ namespace taiyi { namespace plugins { namespace chain {
             {
                 my->db.set_chain_id( chain_id_type( chain_id_str) );
             }
-            catch( fc::exception& )
+            catch(const fc::exception& )
             {
                 FC_ASSERT( false, "Could not parse chain_id as hex string. Chain ID String: ${s}", ("s", chain_id_str) );
             }

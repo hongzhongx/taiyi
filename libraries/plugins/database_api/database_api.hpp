@@ -140,6 +140,7 @@ namespace taiyi { namespace plugins { namespace database_api {
             (list_zones)
             (find_zones_by_name)
             (find_way_to_zone)
+            (list_contracts_prohibited_by_zone)
                     
             // Relations //
             (list_actor_relations)

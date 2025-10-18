@@ -32,6 +32,8 @@ namespace taiyi { namespace chain {
         std::string         name;
         E_ZONE_TYPE         type;
         uint32_t            last_grow_vmonth = 0;
+        
+        id_type             ref_prohibited_contract_zone = id_type::max();
     };
 
     struct by_name;
@@ -91,6 +93,45 @@ namespace taiyi { namespace chain {
         allocator< zone_connect_object >
     > zone_connect_index;
     //=========================================================================
+    class zone_contract_permission_object : public object < zone_contract_permission_object_type, zone_contract_permission_object >
+    {
+        TAIYI_STD_ALLOCATOR_CONSTRUCTOR(zone_contract_permission_object)
+
+    public:
+        template< typename Constructor, typename Allocator >
+        zone_contract_permission_object(Constructor&& c, allocator< Allocator > a)
+        {
+            c(*this);
+        }
+
+        id_type             id;
+        zone_id_type        zone = zone_id_type::max();
+        contract_id_type    contract = contract_id_type::max();
+        bool                allowed = false;
+    };
+
+    struct by_zone;
+    struct by_contract;
+    typedef multi_index_container<
+        zone_contract_permission_object,
+        indexed_by<
+            ordered_unique< tag< by_id >, member< zone_contract_permission_object, zone_contract_permission_id_type, &zone_contract_permission_object::id > >,
+            ordered_unique< tag< by_zone >,
+                composite_key< zone_contract_permission_object,
+                    member< zone_contract_permission_object, zone_id_type, &zone_contract_permission_object::zone>,
+                    member< zone_contract_permission_object, contract_id_type, &zone_contract_permission_object::contract >
+                >
+            >,
+            ordered_unique< tag< by_contract >,
+                composite_key< zone_contract_permission_object,
+                    member< zone_contract_permission_object, contract_id_type, &zone_contract_permission_object::contract>,
+                    member< zone_contract_permission_object, zone_id_type, &zone_contract_permission_object::zone >
+                >
+            >
+        >,
+        allocator< zone_contract_permission_object >
+    > zone_contract_permission_index;
+    //=========================================================================
     class cunzhuang_object : public object < cunzhuang_object_type, cunzhuang_object >
     {
         TAIYI_STD_ALLOCATOR_CONSTRUCTOR(cunzhuang_object)
@@ -133,12 +174,13 @@ namespace mira {
 
     template<> struct is_static_length< taiyi::chain::cunzhuang_object > : public boost::true_type {};
     template<> struct is_static_length< taiyi::chain::zone_connect_object > : public boost::true_type {};
+    template<> struct is_static_length< taiyi::chain::zone_contract_permission_object > : public boost::true_type {};
 
 } // mira
 
 FC_REFLECT( taiyi::chain::zone_creation_data, (name)(type) )
 
-FC_REFLECT(taiyi::chain::zone_object, (id)(nfa_id)(name)(type)(last_grow_vmonth))
+FC_REFLECT(taiyi::chain::zone_object, (id)(nfa_id)(name)(type)(last_grow_vmonth)(ref_prohibited_contract_zone))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::zone_object, taiyi::chain::zone_index)
 
 FC_REFLECT(taiyi::chain::cunzhuang_object, (id)(zone)(chief))
@@ -146,3 +188,6 @@ CHAINBASE_SET_INDEX_TYPE(taiyi::chain::cunzhuang_object, taiyi::chain::cunzhuang
 
 FC_REFLECT(taiyi::chain::zone_connect_object, (id)(from)(to))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::zone_connect_object, taiyi::chain::zone_connect_index)
+
+FC_REFLECT(taiyi::chain::zone_contract_permission_object, (id)(zone)(contract)(allowed))
+CHAINBASE_SET_INDEX_TYPE(taiyi::chain::zone_contract_permission_object, taiyi::chain::zone_contract_permission_index)

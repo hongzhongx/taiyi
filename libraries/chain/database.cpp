@@ -1672,7 +1672,7 @@ namespace taiyi { namespace chain {
             {
                 FC_ASSERT( next_block.transaction_merkle_root == merkle_root, "Merkle check failed", ("next_block.transaction_merkle_root",next_block.transaction_merkle_root)("calc",merkle_root)("next_block",next_block)("id",next_block.id()) );
             }
-            catch( fc::assert_exception& e )
+            catch( const fc::assert_exception& e )
             {
                 throw e;
             }
