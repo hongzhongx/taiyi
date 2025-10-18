@@ -77,6 +77,9 @@ namespace taiyi { namespace xuanpin {
         vector< database_api::api_zone_object > list_from_zones_by_to(const string&, uint32_t) const { FC_ASSERT( false ); }
         database_api::find_way_to_zone_return find_way_to_zone(const string&, const string&) const { FC_ASSERT( false ); }
         vector< database_api::api_zone_object > find_zones_by_name( vector< string > ) { FC_ASSERT( false ); }
+        vector< database_api::api_zone_object > list_zones_by_prohibited_contract(const string&, uint32_t) const { FC_ASSERT( false ); }
+        vector< string > list_contracts_prohibited_by_zone(const string&) const { FC_ASSERT( false ); }
+        
         database_api::api_tiandao_property_object get_tiandao_properties() const { FC_ASSERT( false ); }
         string get_contract_source_code(const string&) const { FC_ASSERT( false ); }
 
@@ -158,6 +161,8 @@ FC_API( taiyi::xuanpin::remote_node_api,
     (list_from_zones_by_to)
     (find_way_to_zone)
     (find_zones_by_name)
+    (list_zones_by_prohibited_contract)
+    (list_contracts_prohibited_by_zone)
     (get_tiandao_properties)
     (get_contract_source_code)
     (list_relations_from_actor)

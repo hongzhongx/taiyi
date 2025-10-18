@@ -783,7 +783,9 @@ namespace taiyi { namespace xuanpin {
         vector< database_api::api_zone_object > list_zones_by_type(E_ZONE_TYPE type, uint32_t limit);
         vector< database_api::api_zone_object > list_to_zones_by_from(const string& from_zone, uint32_t limit);
         vector< database_api::api_zone_object > list_from_zones_by_to(const string& to_zone, uint32_t limit);
-        
+        vector< database_api::api_zone_object > list_zones_by_prohibited_contract(const string& contract, uint32_t limit);
+        vector< string > list_contracts_prohibited_by_zone(const string& zone);
+
         /** find the path way from from_zone to to_zone
          * This returns the zone names in path.
          *
@@ -927,6 +929,8 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (find_way_to_zone)
     (find_zones)
     (find_zones_by_name)
+    (list_zones_by_prohibited_contract)
+    (list_contracts_prohibited_by_zone)
     (get_tiandao_properties)
 
     (list_relations_from_actor)

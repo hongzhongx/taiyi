@@ -107,6 +107,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
                 (list_to_zones_by_from)
                 (list_from_zones_by_to)
                 (find_way_to_zone)
+                (list_zones_by_prohibited_contract)
+                (list_contracts_prohibited_by_zone)
 
                 (list_relations_from_actor)
                 (list_relations_to_actor)
@@ -1051,6 +1053,18 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             CHECK_ARG_SIZE( 2 )
             return _database_api->find_way_to_zone( { args[0].as< string >(), args[1].as< string >() } );
         }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, list_zones_by_prohibited_contract )
+        {
+            CHECK_ARG_SIZE( 2 )
+            return _database_api->list_zones( { args[0].as< string >(), args[1].as< uint32_t >(), database_api::by_prohibited_contract } ).result;
+        }
+        
+        DEFINE_API_IMPL( baiyujing_api_impl, list_contracts_prohibited_by_zone )
+        {
+            CHECK_ARG_SIZE( 1 )
+            return _database_api->list_contracts_prohibited_by_zone( { args[0].as< string >() } ).contracts;
+        }
 
         DEFINE_API_IMPL( baiyujing_api_impl, get_tiandao_properties )
         {
@@ -1580,6 +1594,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         (list_to_zones_by_from)
         (list_from_zones_by_to)
         (find_way_to_zone)
+        (list_zones_by_prohibited_contract)
+        (list_contracts_prohibited_by_zone)
 
         (list_relations_from_actor)
         (list_relations_to_actor)

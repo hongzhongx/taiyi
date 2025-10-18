@@ -483,6 +483,9 @@ DEFINE_API_ARGS( list_zones_by_type,                vector< variant >, vector< d
 DEFINE_API_ARGS( list_to_zones_by_from,             vector< variant >, vector< database_api::api_zone_object > )
 DEFINE_API_ARGS( list_from_zones_by_to,             vector< variant >, vector< database_api::api_zone_object > )
 DEFINE_API_ARGS( find_way_to_zone,                  vector< variant >, database_api::find_way_to_zone_return )
+DEFINE_API_ARGS( list_zones_by_prohibited_contract, vector< variant >, vector< database_api::api_zone_object > )
+DEFINE_API_ARGS( list_contracts_prohibited_by_zone, vector< variant >, vector< string > )
+
 
 DEFINE_API_ARGS( list_relations_from_actor,         vector< variant >, vector< api_actor_relation_data > )
 DEFINE_API_ARGS( list_relations_to_actor,           vector< variant >, vector< api_actor_relation_data > )
@@ -574,6 +577,8 @@ DEFINE_API_ARGS( get_contract_source_code,          vector< variant >, string )
             (list_to_zones_by_from)
             (list_from_zones_by_to)
             (find_way_to_zone)
+            (list_zones_by_prohibited_contract)
+            (list_contracts_prohibited_by_zone)
 
             (list_relations_from_actor)
             (list_relations_to_actor)

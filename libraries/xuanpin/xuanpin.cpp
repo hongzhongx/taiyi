@@ -2166,6 +2166,16 @@ namespace taiyi { namespace xuanpin {
     {
         return my->_remote_api->find_way_to_zone( from_zone, to_zone ).way_points;
     }
+    
+    vector< database_api::api_zone_object > xuanpin_api::list_zones_by_prohibited_contract(const string& contract, uint32_t limit)
+    {
+        return my->_remote_api->list_zones_by_prohibited_contract( contract, limit );
+    }
+    
+    vector< string > xuanpin_api::list_contracts_prohibited_by_zone(const string& zone)
+    {
+        return my->_remote_api->list_contracts_prohibited_by_zone( zone );
+    }
 
     database_api::api_tiandao_property_object xuanpin_api::get_tiandao_properties() const
     {

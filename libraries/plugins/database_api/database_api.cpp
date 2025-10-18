@@ -1396,9 +1396,9 @@ namespace taiyi { namespace plugins { namespace database_api {
         //先检查参考区域的直接许可项
         const auto* ref_zone = _db.find< chain::zone_object, chain::by_id >( zone->ref_prohibited_contract_zone );
         if(ref_zone) {
-            auto itz = permission_idx.lower_bound( ref_zone->id );
+            auto itz = permission_idx.lower_bound( boost::make_tuple( ref_zone->id, 0 ) );
             while(itz != permission_idx.end()) {
-                if(itz->id != ref_zone->id)
+                if(itz->zone != ref_zone->id)
                     break;
                 if(!itz->allowed) {
                     const auto* check = _db.find< chain::zone_contract_permission_object, chain::by_zone >(boost::make_tuple( zone->id, itz->contract ));
@@ -1418,9 +1418,9 @@ namespace taiyi { namespace plugins { namespace database_api {
         }
         
         //prohibition specialized by this zone while not by ref zone
-        auto itz = permission_idx.lower_bound( zone->id );
+        auto itz = permission_idx.lower_bound( boost::make_tuple( zone->id, 0 ) );
         while(itz != permission_idx.end()) {
-            if(itz->id != ref_zone->id)
+            if(itz->zone != zone->id)
                 break;
             if(!itz->allowed) {
                 const auto& check_contract = _db.get<chain::contract_object, chain::by_id>(itz->contract);
