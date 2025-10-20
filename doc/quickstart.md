@@ -1,14 +1,36 @@
-快速启动指南
-----------
+# 快速启动指南
 
-### 启动太阴（taiyin）
-使用docker来启动：
-```
+有两种方式通过 taiyin 可执行程序快速启动太乙节点。
+
+## 启动太阴（taiyin）
+
+### 使用docker来启动：
+
+运行如下命令来快速启动一个默认的节点：
+
+```sh
 docker run \
     -d -p 2025:2025 -p 8090:8090 --name taiyin-default \
     --restart unless-stopped zuowangdaox/taiyi
 ```
-#### 低内存节点
+
+### 使用编译好的二进制文件:
+
+直接以一些必须的参数运行 taiyin 可执行程序即可
+
+```sh
+./bin/taiyin \
+    --webserver-ws-endpoint=0.0.0.0:8090 \
+    --webserver-http-endpoint=0.0.0.0:8090 \
+    --p2p-endpoint=0.0.0.0:2025 \
+    --data-dir=./taiyi-data-dir
+```
+
+> [!NOTE]
+> 编译可以参考[构建太乙系统](./building.md)来自己构建 taiyin，推荐使用 docker 方式运行，下面的各种配置也是基于 docker 镜像进行。
+
+### 低内存节点
+
 上面的指令就启动了一个低内存节点，这种节点适用于:
 - 种子节点
 - 司命节点（也是出块节点）
@@ -23,13 +45,29 @@ docker run \
     --restart unless-stopped \
     zuowangdaox/taiyi
 ```
-### 根据需求配置示例
 
-#### 完全API节点
+## 将节点数据挂载到储存系统
+
+只需要通过 [`-v` ](https://docs.docker.com/reference/cli/docker/container/run/#volume)参数将容器内的 `/var/taiyi` 目录挂载到主机的指定目录即可
+
+```sh
+docker run \
+    -d -p 2025:2025 -p 8090:8090 --name taiyin-default \
+    -v ~/taiyi-mount:/var/taiyi \
+    --restart unless-stopped zuowangdaox/taiyi
+``` 
+
+## 根据需求配置示例
+
+在运行容器的时候提供环境变量即可配置 taiyin 的启动参数
+
+### 完全API节点
+
 你需要像上述指令一样使用 `USE_WAY_TOO_MUCH_RAM=1` 和 `USE_FULL_WEB_NODE=1`。
 你也可以使用 `contrib/fullnode.config.ini` 作为你自己的`config.ini`文件的基础设置。
 
-#### 用于资源交换的节点（交易）
+### 用于资源交换的节点（交易）
+
 使用低内存配置节点。
 
 同时，确保你的 `config.ini` 文件包含如下配置：
@@ -42,7 +80,6 @@ track-account-range = ["yourexchangeid", "yourexchangeid"]
 
 Docker下使用如下命令也可以激活类似配置：
 
-
 ```
 docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
     --name taiyin \
@@ -50,23 +87,44 @@ docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
     zuowangdaox/taiyi
 ```
 
-### 启动测试节点示例
+### 环境变量配置参数参考
 
-#### 启动同步当前测试网的全节点（Full Node）
+| 环境变量                 | 说明                                                                |
+| ------------------------ | ------------------------------------------------------------------- |
+| `IS_TESTNET`             | 启用测试网络模式                                                    |
+| `USE_WAY_TOO_MUCH_RAM`   | 启用高内存模式，会启动账户历史插件                                  |
+| `USE_FULL_WEB_NODE`      | 启用以 fullnode.config.ini 配置文件启动节点                         |
+| `IS_BROADCAST_NODE`      | 启用以 以 config-for-broadcaster.ini 配置文件启动节点               |
+| `IS_AH_NODE`             | 启用以 config-for-ahnode.ini 配置文件启动节点                       |
+| `IS_OPSWHITELIST_NODE`   | 启用以 fullnode.opswhitelist.config.ini 配置文件启动节点            |
+| `USE_NGINX_FRONTEND`     | 启用 nginx 前端代理，如果有 Web 端请求节点需求一般需要开启避免 CORS |
+| `TAIYI_SEED_NODES`       | 指定种子节点                                                        |
+| `TAIYI_SIMING_NAME`      | 指定节点司命账户名称                                                |
+| `TAIYI_PRIVATE_KEY`      | 指定节点司命账户私钥                                                |
+| `STALE_PRODUCTION`       | 启用区块生成，即使区块链已经过时。                                  |
+| `REQUIRED_PARTICIPATION` | 为了生成区块必须司命参与百分比，启动本地测试网时通常为 0            |
+| `TRACK_ACCOUNT`          | 指定需要追踪的账号                                                  |
+| `REPLAY_BLOCKCHAIN`      | 强制重演已有区块                                                  |
+
+## 启动测试节点示例
+
+### 启动同步当前测试网的全节点（Full Node）
 
 启动一个提供*所有*可查询数据的测试网络节点，同步当前的测试网络。
 
 `TAIYI_SEED_NODES`指向测试网络的一个种子节点，实际中可能会有所不同。
 
-    docker run \
-        --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
-        --env REQUIRED_PARTICIPATION=0 --env TAIYI_SEED_NODES="47.109.49.30:2025" \
-        -d -p 2025:2025 -p 8090:8090 --name taiyin-full \
-        zuowangdaox/taiyi
+```sh
+docker run \
+    --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
+    --env REQUIRED_PARTICIPATION=0 --env TAIYI_SEED_NODES="47.109.49.30:2025" \
+    -d -p 2025:2025 -p 8090:8090 --name taiyin-full \
+    zuowangdaox/taiyi
 
-    docker logs -f taiyin-full
+docker logs -f taiyin-full
+```
 
-#### 本地启动一个初始化的测试网，全节点（Full Node）
+### 本地启动一个初始化的测试网，全节点（Full Node）
 
 对于一些调试和开发工作，可以在本地启动一个全新的测试网络。
 
@@ -74,37 +132,69 @@ docker run -d --env TRACK_ACCOUNT="yourexchangeid" \
 
 `TAIYI_SIMING_NAME`和`TAIYI_PRIVATE_KEY`分别设置为测试网络的初始司命账号名和初始私钥，目前initsiming的账号名和私钥在测试网络上是固定的。
 
-    docker run \
-        --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
-        --env STALE_PRODUCTION=1 --env REQUIRED_PARTICIPATION=0 \
-        --env TAIYI_SIMING_NAME=danuo \
-        --env TAIYI_PRIVATE_KEY=5JNHfZYKGaomSFvd4NUdQ9qMcEAC43kujbfjueTHpVapX1Kzq2n \
-        -d -p 2025:2025 -p 8090:8090 --name taiyin-testnet \
-        zuowangdaox/taiyi
+docker run \
+    --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
+    --env STALE_PRODUCTION=1 --env REQUIRED_PARTICIPATION=0 \
+    --env TAIYI_SIMING_NAME=danuo \
+    --env TAIYI_PRIVATE_KEY=5JNHfZYKGaomSFvd4NUdQ9qMcEAC43kujbfjueTHpVapX1Kzq2n \
+    -d -p 2025:2025 -p 8090:8090 --name taiyin-testnet \
+    zuowangdaox/taiyi
 
-    docker logs -f taiyin-testnet
+docker logs -f taiyin-testnet
+```
 
-### 正常关闭节点
+## 升级节点
 
-停止节点docker容器时，为了保障本地数据库的完整性，可以使用如下方式来让taiyin程序正常退出。下次再开启容器的时候，taiyin程序可以不用再次同步之前的区块。
+> [!NOTE]
+> 如果不使用 `-v` 参数，则需要自己保证容器内的 `/var/taiyi` 目录的完整性以及在不同容器中的数据同步，否则在升级过程中可能会导致节点数据丢失导致重新同步。
 
-    PID=$(docker exec taiyin-testnet pgrep -f /etc/service/taiyi)
-    docker exec taiyin-testnet kill -s SIGTERM $PID
+推荐通过[将节点数据挂载到储存系统](./quickstart.md#将节点数据挂载到储存系统)来保证节点数据储存到本机的指定目录来简化保存 `/var/taiyi` 目录；或者通过其他手段将旧版本容器中的 `/var/taiyi` 目录备份出来。
 
-### 资源使用配置
+然后升级镜像：
+
+```sh
+docker pull zuowangdaox/taiyi:latest
+```
+
+然后停止旧容器然后删除旧容器(或者重新启动时提供不同的容器名称)：
+
+```sh
+docker stop taiyin
+# 可选
+docker rm taiyin
+```
+
+然后应该直接以旧容器相同的参数启动新容器即可，如果未删除旧容器则需要提供不同容器名称：
+
+```sh
+docker run \
+    -d -p 2025:2025 -p 8090:8090 --name taiyin \
+    -v ~/taiyi-mount:/var/taiyi \
+    zuowangdaox/taiyi:latest
+```
+
+## 关于打开文件数量过多的问题（too many open files）
+
+如果出现`too many open files`错误，在运行容器时增加`--ulimit`参数，以提高容器中允许进程打开文件数目的最大值：
+
+```sh
+docker run --ulimit nofile=60000:60000 ...
+```
+
+## 资源使用配置
 
 确保你的机器有足够的运行资源。
 
 区块数据本身占用超过**16GB**的存储空间。
 
-#### 全节点
+### 全节点
 全节点的状态文件使用超过**65GB**的存储空间
 
-#### 交易节点
+### 交易节点
 资源交易用的节点的状态文件使用超过**16GB**的存储空间（主要用于追踪单一账号的历史信息）
 
-#### 种子节点
+### 种子节点
 种子节点的状态文件使用超过**5.5GB**的存储空间
 
-#### 其他情况
+### 其他情况
 不同情况有不同的状态文件占用规模，不同配置占用磁盘规模一般介于“种子节点”和“全节点”之间。
