@@ -828,7 +828,7 @@ namespace taiyi { namespace chain {
             const auto& tiandao = _db.get_tiandao_properties();
             const auto& actor_me_owner = _db.get<account_object, by_id>(_caller.owner_account);
             const auto& actor_target_owner = _db.get<account_object, by_id>(_db.get<nfa_object, by_id>( actor_target.nfa_id).owner_account);
-            _db.push_virtual_operation( actor_talk_operation( tiandao.v_years, tiandao.v_months, tiandao.v_times, actor_me_owner.name, actor_me.nfa_id, actor_me.name, actor_target_owner.name, actor_target.nfa_id, actor_target.name, something, favor_delta_me, favor_delta_target ) );
+            _db.push_virtual_operation( actor_talk_operation( tiandao.v_years, tiandao.v_months, tiandao.v_days, tiandao.v_timeonday, tiandao.v_times, actor_me_owner.name, actor_me.nfa_id, actor_me.name, actor_target_owner.name, actor_target.nfa_id, actor_target.name, something, favor_delta_me, favor_delta_target ) );
             //if(actor_me.name == s_debug_actor)
             //    wlog("${y}年${m}月，${a}对${b}说道：\"${c}\"", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_me.name)("b", actor_target.name)("c", talk_content));
 

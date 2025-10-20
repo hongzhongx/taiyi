@@ -1482,6 +1482,8 @@ namespace taiyi { namespace chain {
             
             p.v_years = 0;
             p.v_months = 0;
+            p.v_days = 0;
+            p.v_timeonday = 0;
             p.v_times = 0;
             
             p.next_npc_born_time = TAIYI_GENESIS_TIME;

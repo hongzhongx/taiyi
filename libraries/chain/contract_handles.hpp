@@ -56,9 +56,11 @@ namespace taiyi { namespace chain {
     {
         uint32_t    v_years;
         uint32_t    v_months;
-        uint32_t    v_times; //same as solar term number
+        uint32_t    v_days;         //当月第几日
+        uint32_t    v_timeonday;    //当天什么时候
+        uint32_t    v_times;        //same as solar term number
         
-        uint32_t    v_1day_blocks = TAIYI_VMONTH_BLOCK_NUM / 30; //虚拟的一日有多少息
+        uint32_t    v_1day_blocks = TAIYI_VDAY_BLOCK_NUM; //虚拟的一日有多少息
 
         contract_tiandao_property(const tiandao_property_object& obj, database& db);
     };

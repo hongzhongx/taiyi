@@ -179,6 +179,8 @@ namespace taiyi { namespace chain {
             
             a.born_vyears = int(tiandao.v_years);
             a.born_vmonths = int(tiandao.v_months);
+            a.born_vdays = int(tiandao.v_days);
+            a.born_vtod = int(tiandao.v_timeonday);
             a.born_vtimes = int(tiandao.v_times);
             
             a.standpoint = (hasher::hash( seed + a.id + 1619) % 1000);
@@ -238,7 +240,7 @@ namespace taiyi { namespace chain {
                 //try grow
                 int should_age = tiandao.v_years - actor.born_vyears;
                 if(actor.age < should_age) {
-                    if(tiandao.v_times >= actor.born_vtimes) {
+                    if(tiandao.v_months >= actor.born_vmonths && tiandao.v_days >= actor.born_vdays) {
                         uint16_t age = actor.age + 1;
                         //process talents
                         try_trigger_actor_talents(actor, age);
@@ -259,7 +261,7 @@ namespace taiyi { namespace chain {
                         try_trigger_actor_contract_grow(actor);
                         
                         //push event message
-                        push_virtual_operation( actor_grown_operation( get<account_object, by_id>(get<nfa_object, by_id>(actor.nfa_id).owner_account).name, actor.name, actor.nfa_id, tiandao.v_years, tiandao.v_months, tiandao.v_times, actor.age, actor.health ) );
+                        push_virtual_operation( actor_grown_operation( get<account_object, by_id>(get<nfa_object, by_id>(actor.nfa_id).owner_account).name, actor.name, actor.nfa_id, tiandao.v_years, tiandao.v_months, tiandao.v_days, tiandao.v_timeonday, tiandao.v_times, actor.age, actor.health ) );
                     }
                 }
                                         

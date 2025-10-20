@@ -197,6 +197,8 @@ namespace taiyi { namespace chain {
         registerMember("v_years", &contract_tiandao_property::v_years);
         registerMember("v_months", &contract_tiandao_property::v_months);
         registerMember("v_times", &contract_tiandao_property::v_times);
+        registerMember("v_days", &contract_tiandao_property::v_days);
+        registerMember("v_timeonday", &contract_tiandao_property::v_timeonday);
         registerMember("v_1day_blocks", &contract_tiandao_property::v_1day_blocks);
 
         //contract handler

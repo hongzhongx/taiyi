@@ -26,7 +26,7 @@
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (20) // about 60 seconds
 #define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (20) // about 60 seconds
 
-#define TAIYI_VMONTH_BLOCK_NUM                  (20*10) // 10 minutes
+#define TAIYI_VDAY_BLOCK_NUM                    12      //1 virtual day per 36 seconds
 
 #define TAIYI_CULTIVATION_MAX_SECONDS           (60*10) // 10 minutes
 
@@ -50,7 +50,7 @@
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
 #define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (100) // about 5 minutes
 
-#define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_BLOCKS_PER_HOUR*2*7) // 1 virtual year per real week
+#define TAIYI_VDAY_BLOCK_NUM                    TAIYI_BLOCKS_PER_HOUR       // 1 virtual day per hour
 
 #define TAIYI_CULTIVATION_MAX_SECONDS           (60*60*24*7) // 7 day
 
@@ -79,6 +79,8 @@
 #define TAIYI_BLOCKS_PER_HOUR                   (60*60/TAIYI_BLOCK_INTERVAL)
 #define TAIYI_START_QI_BLOCK                    (TAIYI_BLOCKS_PER_DAY * 7)
 #define TAIYI_START_MINER_ADORING_BLOCK         (TAIYI_BLOCKS_PER_DAY * 30)
+
+#define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_VDAY_BLOCK_NUM*30)   // 1 virtual month
 
 #define TAIYI_INIT_SIMING_NAME                  "danuo"
 #define TAIYI_NUM_INIT_SIMINGS                  1

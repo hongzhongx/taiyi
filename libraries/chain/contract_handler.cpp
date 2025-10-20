@@ -97,7 +97,7 @@ namespace taiyi { namespace chain {
     }
     //=============================================================================
     contract_tiandao_property::contract_tiandao_property(const tiandao_property_object& obj, database& db)
-    : v_years(obj.v_years), v_months(obj.v_months), v_times(obj.v_times)
+    : v_years(obj.v_years), v_months(obj.v_months), v_days(obj.v_days), v_timeonday(obj.v_timeonday), v_times(obj.v_times)
     {
     }
     //=============================================================================
@@ -317,8 +317,10 @@ namespace taiyi { namespace chain {
 
             const auto& tiandao = db.get_tiandao_properties();
 
-            if(time_prefix)
-                message = FORMAT_MESSAGE("&YEL&${y}年${m}月&NOR&，${str}", ("y", tiandao.v_years)("m", tiandao.v_months)("str", message));
+            if(time_prefix) {
+                static vector<string> s_todstr = { "凌晨", "上午", "下午", "晚上" };
+                message = FORMAT_MESSAGE("&YEL&${y}年${m}月${d}日${tod}&NOR&，${str}", ("y", tiandao.v_years)("m", tiandao.v_months)("d", tiandao.v_days)("tod", s_todstr[tiandao.v_timeonday])("str", message));
+            }
                         
             wlog(message); //for dubug
                         
@@ -342,7 +344,7 @@ namespace taiyi { namespace chain {
             
             if(!is_in_eval) {
                 //push event message
-                db.push_virtual_operation( narrate_log_operation( affected_account, affected_nfa, tiandao.v_years, tiandao.v_months, tiandao.v_times, message ) );
+                db.push_virtual_operation( narrate_log_operation( affected_account, affected_nfa, tiandao.v_years, tiandao.v_months, tiandao.v_days, tiandao.v_timeonday, tiandao.v_times, message ) );
             }
 
         }

@@ -172,7 +172,11 @@ namespace taiyi { namespace chain {
         bn -= yn * (TAIYI_VMONTH_BLOCK_NUM * 12);
         uint32_t mn = bn / TAIYI_VMONTH_BLOCK_NUM;
         bn -= mn * TAIYI_VMONTH_BLOCK_NUM;
-        uint32_t dn = bn / (TAIYI_VMONTH_BLOCK_NUM / 30);
+        uint32_t dn = bn / TAIYI_VDAY_BLOCK_NUM;
+        bn -= dn * TAIYI_VDAY_BLOCK_NUM;
+        uint32_t tod = bn / (TAIYI_VDAY_BLOCK_NUM/4); //time on a day, 0=凌晨；1=上午；2=下午；3=夜晚
+        //wlog("${y}年${m}月${d}日tod=${tod}, bn=${bn}", ("y", yn)("m", mn)("d", dn)("tod", tod)("bn", bn));
+        
         uint32_t tn = mn * 2 + (dn < 15 ? 0 : 1); //solar term number
         
         const auto& tiandao = get_tiandao_properties();
@@ -202,6 +206,8 @@ namespace taiyi { namespace chain {
             modify(tiandao, [&]( tiandao_property_object& t ) {
                 t.v_years = yn;
                 t.v_months = mn;
+                t.v_days = dn;
+                t.v_timeonday = tod;
                 t.v_times = tn;
                 
                 t.amount_actor_last_vyear = amount_actor;
@@ -222,6 +228,8 @@ namespace taiyi { namespace chain {
 
                 modify(tiandao, [&]( tiandao_property_object& t ) {
                     t.v_months = mn;
+                    t.v_days = dn;
+                    t.v_timeonday = tod;
                     t.v_times = tn;
                 });
 
@@ -234,10 +242,29 @@ namespace taiyi { namespace chain {
                     //next time
 
                     modify(tiandao, [&]( tiandao_property_object& t ) {
+                        t.v_days = dn;
+                        t.v_timeonday = tod;
                         t.v_times = tn;
                     });
 
                     push_virtual_operation( tiandao_time_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn ) );
+                }
+                else {
+                    FC_ASSERT(tiandao.v_days <= dn, "virtual day number (${dn}) bigger than now (${dnn}).", ("dn", tiandao.v_days)("dnn", dn));
+                    if(dn > tiandao.v_days) {
+                        //next day
+                        FC_ASSERT(tod == 0, "virtual time on day number (${tod}) must be zero!", ("tod", tod));
+
+                        modify(tiandao, [&]( tiandao_property_object& t ) {
+                            t.v_days = dn;
+                            t.v_timeonday = tod;
+                        });
+                    }
+                    else {
+                        modify(tiandao, [&]( tiandao_property_object& t ) {
+                            t.v_timeonday = tod;
+                        });
+                    }
                 }
             }
         }

@@ -46,6 +46,12 @@ namespace taiyi { namespace chain {
     //water     水
     //fire      火
     //earth     土
+    
+    //**********  time of day, number is 0 to 3 ********//
+    //凌晨    0
+    //上午    1
+    //下午    2
+    //夜晚    3
 
     /**
      * @class tiandao_property_object
@@ -77,6 +83,9 @@ namespace taiyi { namespace chain {
         
         uint32_t    v_years;
         uint32_t    v_months;
+        uint32_t    v_days;         //当月第几日
+        uint32_t    v_timeonday;    //当天什么时候
+        
         uint32_t    v_times; //same as solar term number
 
         time_point_sec    next_npc_born_time;
@@ -111,5 +120,5 @@ namespace taiyi { namespace chain {
 
 } } // taiyi::chain
 
-FC_REFLECT( taiyi::chain::tiandao_property_object, (id)(cruelty)(enjoyment)(decay)(falsity)(v_years)(v_months)(v_times)(next_npc_born_time)(zone_grow_gold_speed_map)(zone_grow_food_speed_map)(zone_grow_wood_speed_map)(zone_grow_fabric_speed_map)(zone_grow_herb_speed_map)(zone_gold_max_map)(zone_food_max_map)(zone_wood_max_map)(zone_fabric_max_map)(zone_herb_max_map)(zone_moving_difficulty_map)(zone_type_connection_max_num_map)(amount_actor_last_vyear)(dead_actor_last_vyear) )
+FC_REFLECT( taiyi::chain::tiandao_property_object, (id)(cruelty)(enjoyment)(decay)(falsity)(v_years)(v_months)(v_days)(v_timeonday)(v_times)(next_npc_born_time)(zone_grow_gold_speed_map)(zone_grow_food_speed_map)(zone_grow_wood_speed_map)(zone_grow_fabric_speed_map)(zone_grow_herb_speed_map)(zone_gold_max_map)(zone_food_max_map)(zone_wood_max_map)(zone_fabric_max_map)(zone_herb_max_map)(zone_moving_difficulty_map)(zone_type_connection_max_num_map)(amount_actor_last_vyear)(dead_actor_last_vyear) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::tiandao_property_object, taiyi::chain::tiandao_property_index )

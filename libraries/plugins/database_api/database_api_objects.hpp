@@ -338,7 +338,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         
     struct api_actor_object
     {
-        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), init_attribute_amount_max(a.init_attribute_amount_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vtimes(a.born_vtimes), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update), next_tick_time(a.next_tick_time)
+        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), init_attribute_amount_max(a.init_attribute_amount_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vdays(a.born_vdays), born_vtod(a.born_vtod), born_vtimes(a.born_vtimes), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update), next_tick_time(a.next_tick_time)
         {
             const auto& talents_obj = db.get< actor_talents_object, by_actor >( id );
             for(auto it = talents_obj.talents.begin(); it!=talents_obj.talents.end(); it++)
@@ -415,6 +415,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         time_point_sec      born_time;
         int                 born_vyears;
         int                 born_vmonths;
+        int                 born_vdays;
+        int                 born_vtod;
         int                 born_vtimes;
         int                 five_phase;
         uint                standpoint;
@@ -480,6 +482,6 @@ FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
-FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_time) )
+FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vdays)(born_vtod)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_time) )
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_relation_object, (id)(actor_owner)(actor_name)(target_owner)(target_name)(favor)(favor_level)(last_update) )
