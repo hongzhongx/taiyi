@@ -1145,24 +1145,10 @@ namespace taiyi { namespace chain {
         auto siming_reward = new_yang - content_reward_yang - content_reward_qi_fund;
         siming_reward = std::max(siming_reward, share_type(TAIYI_MIN_REWARD_FUND));
 
-        const auto& csiming = get_siming( props.current_siming );
-        siming_reward *= TAIYI_MAX_SIMINGS;
-        
-        if( csiming.schedule == siming_object::timeshare )
-            siming_reward *= wso.timeshare_weight;
-        else if( csiming.schedule == siming_object::miner )
-            siming_reward *= wso.miner_weight;
-        else if( csiming.schedule == siming_object::elected )
-            siming_reward *= wso.elected_weight;
-        else
-            wlog( "Encountered unknown siming type for siming: ${w}", ("w", csiming.owner) );
-        
-        siming_reward /= wso.siming_pay_normalization_factor;
-        
         new_yang = content_reward_yang + content_reward_qi_fund + siming_reward;
         
         asset last_siming_production_reward;
-                
+        const auto& csiming = get_siming( props.current_siming );
         // pay siming in qi shares
         const auto& siming_account = get_account( csiming.owner );
         if( props.head_block_number >= TAIYI_START_MINER_ADORING_BLOCK || (siming_account.qi.amount.value == 0) )

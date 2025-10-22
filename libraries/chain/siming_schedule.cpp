@@ -204,7 +204,6 @@ namespace taiyi { namespace chain {
             }
             
             _wso.num_scheduled_simings = std::max< uint8_t >( active_simings.size(), 1 );
-            _wso.siming_pay_normalization_factor = _wso.elected_weight * num_elected + _wso.timeshare_weight * num_timeshare;
             
             // shuffle current shuffled simings
             auto now_hi = uint64_t(db.head_block_time().sec_since_epoch()) << 32;

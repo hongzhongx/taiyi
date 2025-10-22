@@ -161,10 +161,6 @@ namespace taiyi { namespace chain {
         uint32_t                                            next_shuffle_block_num = 1;
         fc::array< account_name_type, TAIYI_MAX_SIMINGS >   current_shuffled_simings;
         uint8_t                                             num_scheduled_simings = 1;
-        uint8_t                                             elected_weight = 1;
-        uint8_t                                             timeshare_weight = 5;
-        uint8_t                                             miner_weight = 1;
-        uint32_t                                            siming_pay_normalization_factor = TAIYI_MAX_SIMINGS;
         chain_properties                                    median_props;
         version                                             majority_version;
         
@@ -251,5 +247,5 @@ CHAINBASE_SET_INDEX_TYPE( taiyi::chain::siming_object, taiyi::chain::siming_inde
 FC_REFLECT( taiyi::chain::siming_adore_object, (id)(siming)(account) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::siming_adore_object, taiyi::chain::siming_adore_index )
 
-FC_REFLECT( taiyi::chain::siming_schedule_object, (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_simings)(num_scheduled_simings)(elected_weight)(timeshare_weight)(miner_weight)(siming_pay_normalization_factor)(median_props)(majority_version)(max_adored_simings)(hardfork_required_simings) )
+FC_REFLECT( taiyi::chain::siming_schedule_object, (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_simings)(num_scheduled_simings)(median_props)(majority_version)(max_adored_simings)(hardfork_required_simings) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::siming_schedule_object, taiyi::chain::siming_schedule_index )

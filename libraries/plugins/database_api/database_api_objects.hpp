@@ -167,7 +167,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     {
         api_siming_schedule_object() {}
         
-        api_siming_schedule_object( const siming_schedule_object& wso) : id(wso.id), current_virtual_time(wso.current_virtual_time), next_shuffle_block_num(wso.next_shuffle_block_num), num_scheduled_simings(wso.num_scheduled_simings), elected_weight(wso.elected_weight), timeshare_weight(wso.timeshare_weight), miner_weight(wso.miner_weight), siming_pay_normalization_factor(wso.siming_pay_normalization_factor), median_props(wso.median_props), majority_version(wso.majority_version), max_adored_simings(wso.max_adored_simings), hardfork_required_simings(wso.hardfork_required_simings)
+        api_siming_schedule_object( const siming_schedule_object& wso) : id(wso.id), current_virtual_time(wso.current_virtual_time), next_shuffle_block_num(wso.next_shuffle_block_num), num_scheduled_simings(wso.num_scheduled_simings), median_props(wso.median_props), majority_version(wso.majority_version), max_adored_simings(wso.max_adored_simings), hardfork_required_simings(wso.hardfork_required_simings)
         {
             size_t n = wso.current_shuffled_simings.size();
             current_shuffled_simings.reserve( n );
@@ -181,10 +181,6 @@ namespace taiyi { namespace plugins { namespace database_api {
         uint32_t                   next_shuffle_block_num;
         vector<string>             current_shuffled_simings;   // fc::array<account_name_type,...> -> vector<string>
         uint8_t                    num_scheduled_simings;
-        uint8_t                    elected_weight;
-        uint8_t                    timeshare_weight;
-        uint8_t                    miner_weight;
-        uint32_t                   siming_pay_normalization_factor;
         chain_properties           median_props;
         version                    majority_version;
         
@@ -472,7 +468,7 @@ FC_REFLECT( taiyi::plugins::database_api::api_account_recovery_request_object, (
 
 FC_REFLECT( taiyi::plugins::database_api::api_siming_object, (id)(owner)(created)(url)(adores)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)(last_aslot)(last_confirmed_block_num)(signing_key)(props)(running_version)(hardfork_version_vote)(hardfork_time_vote) )
 
-FC_REFLECT( taiyi::plugins::database_api::api_siming_schedule_object, (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_simings)(num_scheduled_simings)(elected_weight)(timeshare_weight)(miner_weight)(siming_pay_normalization_factor)(median_props)(majority_version)(max_adored_simings)(hardfork_required_simings) )
+FC_REFLECT( taiyi::plugins::database_api::api_siming_schedule_object, (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_simings)(num_scheduled_simings)(median_props)(majority_version)(max_adored_simings)(hardfork_required_simings) )
 
 FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiyi::protocol::signed_block), (block_id)(signing_key)(transaction_ids) )
 

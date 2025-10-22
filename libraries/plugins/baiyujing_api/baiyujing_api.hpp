@@ -168,7 +168,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_siming_schedule_object
     {
         api_siming_schedule_object() {}
-        api_siming_schedule_object(const database_api::api_siming_schedule_object& w) : id(w.id), current_virtual_time(w.current_virtual_time), next_shuffle_block_num(w.next_shuffle_block_num), num_scheduled_simings(w.num_scheduled_simings), elected_weight(w.elected_weight), timeshare_weight(w.timeshare_weight), miner_weight(w.miner_weight), siming_pay_normalization_factor(w.siming_pay_normalization_factor), median_props(w.median_props), majority_version(w.majority_version), max_adored_simings(w.max_adored_simings), hardfork_required_simings(w.hardfork_required_simings)
+        api_siming_schedule_object(const database_api::api_siming_schedule_object& w) : id(w.id), current_virtual_time(w.current_virtual_time), next_shuffle_block_num(w.next_shuffle_block_num), num_scheduled_simings(w.num_scheduled_simings), median_props(w.median_props), majority_version(w.majority_version), max_adored_simings(w.max_adored_simings), hardfork_required_simings(w.hardfork_required_simings)
         {
             current_shuffled_simings.insert(current_shuffled_simings.begin(), w.current_shuffled_simings.begin(), w.current_shuffled_simings.end());
         }
@@ -178,10 +178,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         uint32_t                      next_shuffle_block_num = 1;
         vector< account_name_type >   current_shuffled_simings;
         uint8_t                       num_scheduled_simings = 1;
-        uint8_t                       elected_weight = 1;
-        uint8_t                       timeshare_weight = 5;
-        uint8_t                       miner_weight = 1;
-        uint32_t                      siming_pay_normalization_factor = TAIYI_MAX_SIMINGS;
         api_chain_properties          median_props;
         version                       majority_version;
         uint8_t                       max_adored_simings           = TAIYI_MAX_SIMINGS;
@@ -616,7 +612,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::extended_dynamic_global_properties, (
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_siming_object, (id)(owner)(created)(url)(adores)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)(last_aslot)(last_confirmed_block_num)(signing_key)(props)(running_version)(hardfork_version_vote)(hardfork_time_vote) )
 
-FC_REFLECT( taiyi::plugins::baiyujing_api::api_siming_schedule_object, (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_simings)(num_scheduled_simings)(elected_weight)(timeshare_weight)(miner_weight)(siming_pay_normalization_factor)(median_props)(majority_version)(max_adored_simings)(hardfork_required_simings) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_siming_schedule_object, (id)(current_virtual_time)(next_shuffle_block_num)(current_shuffled_simings)(num_scheduled_simings)(median_props)(majority_version)(max_adored_simings)(hardfork_required_simings) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_reward_fund_object, (id)(name)(reward_balance)(reward_qi_balance)(last_update)(percent_content_rewards) )
 

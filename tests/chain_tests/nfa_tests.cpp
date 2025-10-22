@@ -475,6 +475,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
     cnsop.creator = "alice";
     cnsop.symbol = "nfa.test";
     cnsop.describe = "test";
+    cnsop.max_count = 3;
     cnsop.default_contract = "contract.nfa.base";
         
     tx.operations.clear();
