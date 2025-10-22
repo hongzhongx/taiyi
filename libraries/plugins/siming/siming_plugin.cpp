@@ -353,7 +353,7 @@ namespace taiyi { namespace plugins { namespace siming {
             uint32_t prate = _db.siming_participation_rate();
             if( prate < _required_siming_participation )
             {
-                capture("pct", uint32_t(100*uint64_t(prate) / TAIYI_1_PERCENT));
+                capture("pct", prate / (float)TAIYI_100_PERCENT);
                 return block_production_condition::low_participation;
             }
             

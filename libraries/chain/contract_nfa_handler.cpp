@@ -475,6 +475,8 @@ namespace taiyi { namespace chain {
 
             _db.adjust_nfa_balance(from_nfa, -token);
             _db.adjust_balance(to_account, token);
+            if(token.symbol == QI_SYMBOL)
+                _db.adjust_proxied_siming_adores( to_account, token.amount );
 
             _db.post_push_virtual_operation( vop );
 
@@ -529,8 +531,10 @@ namespace taiyi { namespace chain {
             _db.pre_push_virtual_operation( vop );
 
             _db.adjust_balance(from_account, -token);
+            if(token.symbol == QI_SYMBOL)
+                _db.adjust_proxied_siming_adores( from_account, -token.amount );
             _db.adjust_nfa_balance(to_nfa, token);
-
+            
             _db.post_push_virtual_operation( vop );
 
             if(enable_logger) {
@@ -779,8 +783,6 @@ namespace taiyi { namespace chain {
                     FC_ASSERT(result.size() == 1, "on_actor_talking should return one sigle integer.");
                     auto _itr = result.find(lua_types(lua_int(1)));
                     FC_ASSERT(_itr != result.end(), "on_actor_talking should return one sigle integer.");
-                    auto a = _itr->second.which();
-                    auto b = lua_types::tag<lua_int>::value;
                     FC_ASSERT(_itr->second.which() == lua_types::tag<lua_int>::value, "on_actor_talking should return one sigle integer.");
                     favor_delta_me = _itr->second.get<lua_int>().v;
                 }
