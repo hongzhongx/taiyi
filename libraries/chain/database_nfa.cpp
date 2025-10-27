@@ -368,7 +368,8 @@ namespace taiyi { namespace chain {
             try {
                 auto session = start_undo_session();
                 clear_contract_handler_exe_point(); //初始化api执行消耗统计
-                worker.do_nfa_contract_function(nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                const auto& caller = get<account_object, by_id>(nfa.owner_account);
+                worker.do_nfa_contract_function(caller, nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
                 session.squash();
             }
             catch (const fc::exception& e) {

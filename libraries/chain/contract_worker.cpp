@@ -313,7 +313,7 @@ namespace taiyi { namespace chain {
                             
         flat_set<public_key_type> sigkeys; //no signature keys
         string function_name = "eval_" + action;
-        lua_table result_table = do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db, true);
+        lua_table result_table = do_nfa_contract_function(caller, caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db, true);
         
         result.clear();
         for(auto itr=result_table.v.begin(); itr!=result_table.v.end(); itr++)
@@ -322,15 +322,15 @@ namespace taiyi { namespace chain {
         return "";        
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
-    std::string contract_worker::do_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, vector<lua_types>&result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
+    std::string contract_worker::do_nfa_contract_action(const account_object& caller, const nfa_object& nfa, const string& action, vector<lua_types> value_list, vector<lua_types>&result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check material valid
-        if (!db.is_nfa_material_equivalent_qi_insufficient(caller_nfa))
+        if (!db.is_nfa_material_equivalent_qi_insufficient(nfa))
             return "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)";
-        db.consume_nfa_material_random(caller_nfa, db.head_block_id()._hash[4] + 14489);
+        db.consume_nfa_material_random(nfa, db.head_block_id()._hash[4] + 14489);
 
         //check existence and consequence type
-        const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.is_miraged?caller_nfa.mirage_contract:caller_nfa.main_contract);
+        const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
         if(contract_ptr == nullptr)
             return "NFA main contract not exist(#t&&y#实体缺乏内禀天道#a&&i#)";
         
@@ -346,13 +346,12 @@ namespace taiyi { namespace chain {
         FC_ASSERT(def_itr->second.get<lua_bool>().v == true, "Can not perform action ${a} in nfa without consequence history. should eval it in api.", ("a", action));
 
         //evaluate contract authority
-        const auto& caller = db.get<account_object, by_id>(caller_nfa.owner_account);
         if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
             FC_ASSERT(contract_ptr->can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract_ptr->name));
                             
         flat_set<public_key_type> sigkeys; //no signature keys
         string function_name = "do_" + action;
-        lua_table result_table = do_nfa_contract_function(caller_nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db, false);
+        lua_table result_table = do_nfa_contract_function(caller, nfa, function_name, value_list, sigkeys, *contract_ptr, vm_drops, reset_vm_memused, context, db, false);
 
         result.clear();
         for(auto itr=result_table.v.begin(); itr!=result_table.v.end(); itr++)
@@ -361,7 +360,7 @@ namespace taiyi { namespace chain {
         return "";
     } FC_CAPTURE_AND_RETHROW() }
     //=============================================================================
-    lua_table contract_worker::do_nfa_contract_function(const nfa_object& caller_nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db, bool eval)
+    lua_table contract_worker::do_nfa_contract_function(const account_object& caller, const nfa_object& nfa, const string& function_name, vector<lua_types> value_list, const flat_set<public_key_type> &sigkeys, const contract_object& contract, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db, bool eval)
     { try {
         lua_table result_table;
 
@@ -373,13 +372,12 @@ namespace taiyi { namespace chain {
         try
         {
             //对actor要设置db的当前运行zone标记
-            const auto* check_actor = db.find_actor_with_parents(caller_nfa);
+            const auto* check_actor = db.find_actor_with_parents(nfa);
             if (check_actor && pre_contract_run_zone == zone_id_type::max())
                 db.set_contract_run_zone(check_actor->location);
             
             FC_ASSERT(db.is_contract_allowed_by_zone(contract, db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract.name)("z", db.get_contract_run_zone()));
             
-            const auto& caller_account = db.get<account_object, by_id>(caller_nfa.owner_account);
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
@@ -389,9 +387,9 @@ namespace taiyi { namespace chain {
                 FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(), "#t&&y#行为输入参数数量错误，输入了${n}个参数，但是行为“${f}”的参数列表是${p}#a&&i#", ("n", value_list.size())("f", function_name)("p", abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
             
-            contract_base_info cbi(db, context, contract_owner, contract.name, caller_account.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
-            contract_handler ch(db, caller_account, 0, contract, result, context, sigkeys, eval);
-            contract_nfa_handler cnh(caller_account, caller_nfa, context, db, ch);
+            contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
+            contract_handler ch(db, caller, 0, contract, result, context, sigkeys, eval);
+            contract_nfa_handler cnh(caller, nfa, context, db, ch);
 
             const auto& name = contract.name;
             context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox

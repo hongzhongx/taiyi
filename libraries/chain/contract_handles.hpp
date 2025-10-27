@@ -105,6 +105,8 @@ namespace taiyi { namespace chain {
         bool        born;
         int         born_vyears;
         int         born_vmonths;
+        int         born_vdays;
+        int         born_vtod;
         int         born_vtimes;            //solar term, 0-23
         int         five_phase;
 

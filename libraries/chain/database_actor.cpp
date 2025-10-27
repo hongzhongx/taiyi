@@ -331,7 +331,8 @@ namespace taiyi { namespace chain {
                 try {
                     auto session = start_undo_session();
                     clear_contract_handler_exe_point(); //初始化api执行消耗统计
-                    lua_table result_table = worker.do_nfa_contract_function(nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                    const auto& caller = get<account_object, by_id>(nfa.owner_account);
+                    lua_table result_table = worker.do_nfa_contract_function(caller, nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
 
                     auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
                     if(it_triggered == result_table.v.end()) {
@@ -461,7 +462,8 @@ namespace taiyi { namespace chain {
             try {
                 auto session = start_undo_session();
                 clear_contract_handler_exe_point(); //初始化api执行消耗统计
-                worker.do_nfa_contract_function(nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                const auto& caller = get<account_object, by_id>(nfa.owner_account);
+                worker.do_nfa_contract_function(caller, nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
                 api_exe_point = get_contract_handler_exe_point();
                 session.squash();
             }

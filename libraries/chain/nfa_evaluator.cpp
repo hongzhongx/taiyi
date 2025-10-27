@@ -168,7 +168,7 @@ namespace taiyi { namespace chain {
         long long vm_drops = old_drops;
         vector<lua_types> action_result;
         _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
-        string err = worker.do_nfa_contract_action(*nfa, o.action, value_list, action_result, vm_drops, true, context, _db);
+        string err = worker.do_nfa_contract_action(caller, *nfa, o.action, value_list, action_result, vm_drops, true, context, _db);
         FC_ASSERT(err == "", "NFA do contract action fail: ${err}", ("err", err));
         int64_t api_exe_point = _db.get_contract_handler_exe_point();
         int64_t used_drops = old_drops - vm_drops;

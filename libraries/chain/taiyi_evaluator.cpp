@@ -763,6 +763,7 @@ namespace taiyi { namespace chain {
         //reward feigang as qi
         _db.adjust_reward_balance( acnt, asset(0, YANG_SYMBOL), asset(0, QI_SYMBOL), -op.reward_feigang );
         _db.adjust_balance( acnt, op.reward_feigang ); //convert to qi immediately
+        _db.adjust_proxied_siming_adores( acnt, op.reward_feigang.amount );
 
         _db.modify( _db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
             gpo.total_qi += op.reward_qi + op.reward_feigang;

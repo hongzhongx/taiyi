@@ -358,6 +358,8 @@ namespace taiyi { namespace chain {
         registerMember("born", &contract_actor_base_info::born);
         registerMember("born_vyears", &contract_actor_base_info::born_vyears);
         registerMember("born_vmonths", &contract_actor_base_info::born_vmonths);
+        registerMember("born_vdays", &contract_actor_base_info::born_vdays);
+        registerMember("born_vtod", &contract_actor_base_info::born_vtod);
         registerMember("born_vtimes", &contract_actor_base_info::born_vtimes);
         registerMember("five_phase", &contract_actor_base_info::five_phase);
         registerMember("gender", &contract_actor_base_info::gender);
