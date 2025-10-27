@@ -245,6 +245,7 @@ namespace taiyi { namespace chain {
         registerFunction("get_nfa_resources", &contract_handler::get_nfa_resources);
         registerFunction("get_nfa_materials", &contract_handler::get_nfa_materials);
         registerFunction("list_nfa_inventory", &contract_handler::list_nfa_inventory);
+        registerFunction("get_nfa_location", &contract_handler::get_nfa_location);
         registerFunction("enter_nfa_mirage", &contract_handler::enter_nfa_mirage);
         registerFunction("enter_nfa_next_mirage", &contract_handler::enter_nfa_next_mirage);
         registerFunction("exit_nfa_mirage", &contract_handler::exit_nfa_mirage);

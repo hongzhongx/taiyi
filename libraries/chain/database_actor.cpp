@@ -558,4 +558,25 @@ namespace taiyi { namespace chain {
         
         return find_actor_with_parents(*parent, depth-1);
     }
+    //=============================================================================
+    string database::find_location_with_parents( const nfa_object& nfa, const uint16_t depth)
+    {
+        const auto* check_zone = find<zone_object, by_nfa_id>(nfa.id);
+        if (check_zone)
+            return check_zone->name;
+
+        const auto* check_actor = find<actor_object, by_nfa_id>(nfa.id);
+        if (check_actor)
+            return get<zone_object, by_id>(check_actor->location).name;
+        
+        if(depth == 0)
+            return "";
+        
+        const auto* parent = find<nfa_object, by_id>(nfa.parent);
+        if(!parent)
+            return "";
+        
+        return find_location_with_parents(*parent, depth-1);
+    }
+
 } } //taiyi::chain

@@ -567,6 +567,20 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    string contract_handler::get_nfa_location(int64_t nfa_id)
+    {
+        try
+        {
+            const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
+            return db.find_location_with_parents(nfa);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+            return "";
+        }
+    }
+    //=============================================================================
     bool contract_handler::is_nfa_valid(int64_t nfa_id)
     {
         return db.find<nfa_object, by_id>(nfa_id) != nullptr;

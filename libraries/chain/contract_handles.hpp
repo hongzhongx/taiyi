@@ -271,6 +271,7 @@ namespace taiyi { namespace chain {
         contract_asset_resources get_nfa_resources(int64_t id);
         contract_asset_resources get_nfa_materials(int64_t id);
         vector<contract_nfa_base_info> list_nfa_inventory(int64_t nfa_id, const string& symbol_name);
+        string get_nfa_location(int64_t nfa_id);
 
         lua_map read_nfa_contract_data(int64_t nfa_id, const lua_map& read_list);
         void write_nfa_contract_data(int64_t nfa_id, const lua_map& data, const lua_map& write_list);
