@@ -7,13 +7,13 @@
 
 #ifdef IS_TEST_NET
 
-#define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 0) )
+#define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 1) )
 
 #define TAIYI_INIT_PRIVATE_KEY                  (fc::ecc::private_key::regenerate(fc::sha256::hash(std::string("init_key"))))
 #define TAIYI_INIT_PUBLIC_KEY_STR               (std::string( taiyi::protocol::public_key_type(TAIYI_INIT_PRIVATE_KEY.get_public_key()) ))
 #define TAIYI_CHAIN_ID                          (fc::sha256::hash("testnet"))
 
-#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1757691000))  //2025-9-12 23:30:00
+#define TAIYI_GENESIS_TIME                      (fc::time_point_sec(1761545700))  //2025-10-27 14:15:00
 
 #define TAIYI_OWNER_AUTH_RECOVERY_PERIOD                  fc::seconds(60)
 #define TAIYI_ACCOUNT_RECOVERY_REQUEST_EXPIRATION_PERIOD  fc::seconds(12)
@@ -22,13 +22,6 @@
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
 
 #define TAIYI_DELEGATION_RETURN_PERIOD          (60*60*1) // 1 hour
-
-#define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (20) // about 60 seconds
-#define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (20) // about 60 seconds
-
-#define TAIYI_VDAY_BLOCK_NUM                    12      //1 virtual day per 36 seconds
-
-#define TAIYI_CULTIVATION_MAX_SECONDS           (60*10) // 10 minutes
 
 #else // IS LIVE TAIYI NETWORK
 
@@ -46,13 +39,6 @@
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
 
 #define TAIYI_DELEGATION_RETURN_PERIOD          (5*60*60*24) // 5 day
-
-#define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
-#define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (100) // about 5 minutes
-
-#define TAIYI_VDAY_BLOCK_NUM                    TAIYI_BLOCKS_PER_HOUR       // 1 virtual day per hour
-
-#define TAIYI_CULTIVATION_MAX_SECONDS           (60*60*24*7) // 7 day
 
 #endif // END LIVE TAIYI NETWORK
 
@@ -78,9 +64,13 @@
 #define TAIYI_BLOCKS_PER_DAY                    (24*60*60/TAIYI_BLOCK_INTERVAL)
 #define TAIYI_BLOCKS_PER_HOUR                   (60*60/TAIYI_BLOCK_INTERVAL)
 #define TAIYI_START_QI_BLOCK                    (TAIYI_BLOCKS_PER_DAY * 7)
-#define TAIYI_START_MINER_ADORING_BLOCK         (TAIYI_BLOCKS_PER_DAY * 30)
+#define TAIYI_START_ADORING_BLOCK               (TAIYI_BLOCKS_PER_DAY * 30)
 
+#define TAIYI_VDAY_BLOCK_NUM                    TAIYI_BLOCKS_PER_HOUR       // 1 virtual day per hour
 #define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_VDAY_BLOCK_NUM*30)   // 1 virtual month
+
+#define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
+#define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (100) // about 5 minutes
 
 #define TAIYI_INIT_SIMING_NAME                  "danuo"
 #define TAIYI_NUM_INIT_SIMINGS                  1
@@ -134,25 +124,11 @@
 
 #define TAIYI_MAX_UNDO_HISTORY                  10000
 
-#define TAIYI_BLOCKCHAIN_PRECISION              uint64_t( 1000 )
-#define TAIYI_BLOCKCHAIN_PRECISION_DIGITS       3
 #define TAIYI_MAX_AUTHORITY_MEMBERSHIP          40
 
 #define TAIYI_IRREVERSIBLE_THRESHOLD            (75 * TAIYI_1_PERCENT)
 
 #define TAIYI_VIRTUAL_SCHEDULE_LAP_LENGTH       ( fc::uint128::max_value() )
-
-#define TAIYI_RD_MIN_DECAY_BITS                 6
-#define TAIYI_RD_MAX_DECAY_BITS                 32
-#define TAIYI_RD_DECAY_DENOM_SHIFT              36
-#define TAIYI_RD_MAX_POOL_BITS                  64
-#define TAIYI_RD_MAX_BUDGET_1                   ((uint64_t(1) << (TAIYI_RD_MAX_POOL_BITS + TAIYI_RD_MIN_DECAY_BITS - TAIYI_RD_DECAY_DENOM_SHIFT))-1)
-#define TAIYI_RD_MAX_BUDGET_2                   ((uint64_t(1) << (64-TAIYI_RD_DECAY_DENOM_SHIFT))-1)
-#define TAIYI_RD_MAX_BUDGET_3                   (uint64_t( std::numeric_limits<int32_t>::max() ))
-#define TAIYI_RD_MAX_BUDGET                     (int32_t( std::min( { TAIYI_RD_MAX_BUDGET_1, TAIYI_RD_MAX_BUDGET_2, TAIYI_RD_MAX_BUDGET_3 } )) )
-#define TAIYI_RD_MIN_DECAY                      (uint32_t(1) << TAIYI_RD_MIN_DECAY_BITS)
-#define TAIYI_RD_MIN_BUDGET                     1
-#define TAIYI_RD_MAX_DECAY                      (uint32_t(0xFFFFFFFF))
 
 #define TAIYI_BLOCK_GENERATION_POSTPONED_TX_LIMIT 5
 #define TAIYI_PENDING_TRANSACTION_EXECUTION_LIMIT fc::milliseconds(200)
@@ -170,8 +146,6 @@
 #define TAIYI_TEMP_ACCOUNT                      "temp"
 /// Represents the canonical account for specifying you will adore for directly (as opposed to a proxy)
 #define TAIYI_PROXY_TO_SELF_ACCOUNT             ""
-/// Represents the canonical root post parent account
-#define TAIYI_ROOT_POST_PARENT                  (account_name_type())
 /// Represents the account with NO authority who holds resources for payouts according to given proposals
 #define TAIYI_TREASURY_ACCOUNT                  "zuowang.dao"
 /// Represents the account with NO authority who can operate tiandao
@@ -209,17 +183,13 @@
 
 #define TAIYI_ACTOR_OBJ_STATE_BYTES             1000
 
-#define TAIYI_MIN_ACTOR_CREATION_FEE            0
 #define TAIYI_MAX_ACTOR_CREATION_FEE            int64_t(1000000000000)
 #define TAIYI_ACTOR_NAME_LIMIT                  (64)
-#define TAIYI_MAX_BORN_ACTOR_FEE                int64_t(1000000000000)
 #define TAIYI_ACTOR_INIT_ATTRIBUTE_AMOUNT       (800)
 
-#define TAIYI_MIN_ZONE_CREATION_FEE             0
-#define TAIYI_MAX_ZONE_CREATION_FEE             int64_t(1000000000000)
 #define TAIYI_ZONE_NAME_LIMIT                   (256)
-#define TAIYI_ZONE_TYPE_NAME_LIMIT              (128)
 
 #define TAIYI_USEMANA_ACTOR_ACTION_SCALE        1000
 
 #define TAIYI_CULTIVATION_PREPARE_MIN_SECONDS   60 // 60 seconds
+#define TAIYI_CULTIVATION_MAX_SECONDS           (60*60*24*7) // 7 day

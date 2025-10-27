@@ -1151,7 +1151,7 @@ namespace taiyi { namespace chain {
         const auto& csiming = get_siming( props.current_siming );
         // pay siming in qi shares
         const auto& siming_account = get_account( csiming.owner );
-        if( props.head_block_number >= TAIYI_START_MINER_ADORING_BLOCK || (siming_account.qi.amount.value == 0) )
+        if( props.head_block_number >= TAIYI_START_ADORING_BLOCK || (siming_account.qi.amount.value == 0) )
         {
             operation vop = producer_reward_operation( csiming.owner, asset( 0, QI_SYMBOL ) );
             create_qi2( *this, siming_account, asset( siming_reward, YANG_SYMBOL ), false, [&]( const asset& qi ) {
@@ -2140,7 +2140,7 @@ namespace taiyi { namespace chain {
         /**
          * Prior to adoring taking over, we must be more conservative...
          */
-        if( head_block_num() < TAIYI_START_MINER_ADORING_BLOCK )
+        if( head_block_num() < TAIYI_START_ADORING_BLOCK )
         {
             modify( dpo, [&]( dynamic_global_property_object& _dpo ) {
                 if ( head_block_num() > TAIYI_MAX_SIMINGS )
