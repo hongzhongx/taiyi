@@ -50,7 +50,8 @@ namespace taiyi { namespace chain {
             FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
             
             _db.modify(_caller, [&]( nfa_object& obj ) {
-                obj.next_tick_time = time_point_sec::min();
+                if(obj.next_tick_time == time_point_sec::maximum())
+                    obj.next_tick_time = time_point_sec::min();
             });
         }
         catch (const fc::exception& e)
