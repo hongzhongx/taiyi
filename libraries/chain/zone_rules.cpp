@@ -142,7 +142,7 @@ namespace taiyi { namespace chain {
         FiveElements effective_elements = CalculateEffectiveElements(elements, K_GENERATION, K_OVERCOMING);
 
         // 步骤2: 使用有效五行值进行后续计算
-        double total_elements = effective_elements.metal + effective_elements.wood + effective_elements.water + effective_elements.fire + effective_elements.earth;
+        int64_t total_elements = effective_elements.metal + effective_elements.wood + effective_elements.water + effective_elements.fire + effective_elements.earth;
         // 特殊情况处理：如果五行总值过低，直接判定为虚空
         if (total_elements < 500) { // 这个阈值可以调整
             return XUKONG;
@@ -158,7 +158,7 @@ namespace taiyi { namespace chain {
 
             // 使用有效五行值计算分数。计算点积作为基础分数，这能很好地反映“占比”和“绝对值”
             // 输入元素的向量与类型亲和度的向量越接近，分数越高
-            double score = effective_elements.metal * affinity.metal +
+            int64_t score = effective_elements.metal * affinity.metal +
                            effective_elements.wood  * affinity.wood +
                            effective_elements.water * affinity.water +
                            effective_elements.fire  * affinity.fire +
@@ -177,9 +177,9 @@ namespace taiyi { namespace chain {
             return XUKONG;
         }
 
-        std::mt19937 gen(seed);
-        std::uniform_int_distribution<> dis(0, total_score);
-        int64_t random_pick = dis(gen);
+        std::mt19937_64 gen(seed);
+        int64_t random_pick = gen() % total_score;
+        printf("\n===== seed=%u, total=%lld, random_pick=%lld\n", seed, total_score, random_pick);
 
         int64_t cumulative_score = 0;
         for (const auto& pair : zone_scores) {
