@@ -309,7 +309,7 @@ namespace taiyi { namespace chain {
         string move_actor(const string& actor_name, const string& zone_name);
         
         //Cultivation
-        int64_t create_cultivation(int64_t nfa_id, const lua_map& beneficiary_nfa_ids, const lua_map& beneficiary_shares, uint64_t prepare_time_seconds);
+        int64_t create_cultivation(int64_t nfa_id, const lua_map& beneficiary_nfa_ids, const lua_map& beneficiary_shares, uint32_t prepare_time_blocks);
         string participate_cultivation(int64_t cult_id, int64_t nfa_id, uint64_t value);
         string start_cultivation(int64_t cult_id);
         string stop_and_close_cultivation(int64_t cult_id);

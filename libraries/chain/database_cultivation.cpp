@@ -40,9 +40,9 @@
 
 namespace taiyi { namespace chain {
 
-    const cultivation_object& database::create_cultivation(const nfa_object& manager_nfa, const chainbase::t_flat_map<nfa_id_type, uint>& beneficiaries, uint64_t prepare_time_seconds)
+    const cultivation_object& database::create_cultivation(const nfa_object& manager_nfa, const chainbase::t_flat_map<nfa_id_type, uint>& beneficiaries, uint32_t prepare_time_blocks)
     {
-        FC_ASSERT(prepare_time_seconds >= TAIYI_CULTIVATION_PREPARE_MIN_SECONDS, "prepare time not enough");
+        FC_ASSERT(prepare_time_blocks >= TAIYI_CULTIVATION_PREPARE_MIN_TIME_BLOCK_NUM, "prepare time not enough");
         
         uint total_share_check = 0;
         for (const auto& b : beneficiaries) {
@@ -53,12 +53,12 @@ namespace taiyi { namespace chain {
         }
         FC_ASSERT(total_share_check == TAIYI_100_PERCENT, "sum of beneficiaries share is not 100%");
         
-        auto now = head_block_time();
+        auto now = head_block_num();
         const auto& cultivation = create<cultivation_object>([&](cultivation_object& obj) {
             obj.manager_nfa_id = manager_nfa.id;
             obj.beneficiary_map = beneficiaries;
             obj.create_time = now;
-            obj.start_deadline = obj.create_time + prepare_time_seconds;
+            obj.start_deadline = obj.create_time + prepare_time_blocks;
         });
         
         return cultivation;
@@ -81,7 +81,7 @@ namespace taiyi { namespace chain {
 
         modify(cult, [&](cultivation_object& obj) {
             obj.participants.clear();
-            obj.start_time = time_point_sec::maximum();
+            obj.start_time = std::numeric_limits<uint32_t>::max();
         });
 
         if(total_cultivation_qi.amount > 0) {
@@ -94,7 +94,7 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void database::participate_cultivation(const cultivation_object& cult, const nfa_object& nfa, uint64_t value)
     {
-        FC_ASSERT(cult.start_time == time_point_sec::maximum(), "can not participate in a started cultivation");
+        FC_ASSERT(cult.start_time == std::numeric_limits<uint32_t>::max(), "can not participate in a started cultivation");
         FC_ASSERT(nfa.cultivation_value == 0, "nfa already in underway cultivation");
         FC_ASSERT(value > 0, "can not participate in a cultivation without any value");
         FC_ASSERT(nfa.qi.amount.value >= value, "nfa have not enough qi to participate");
@@ -116,22 +116,22 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void database::start_cultivation(const cultivation_object& cult)
     {
-        FC_ASSERT(cult.start_time == time_point_sec::maximum(), "cultivation is already underway");
+        FC_ASSERT(cult.start_time == std::numeric_limits<uint32_t>::max(), "cultivation is already underway");
         FC_ASSERT(cult.participants.size() > 0, "cultivation can not start without any participants");
         
         modify(cult, [&](cultivation_object& obj) {
-            obj.start_time = head_block_time();
+            obj.start_time = head_block_num();
         });
     }
     //=========================================================================
     void database::stop_cultivation(const cultivation_object& cult)
     {
-        FC_ASSERT(cult.start_time != time_point_sec::maximum(), "cultivation have not started");
+        FC_ASSERT(cult.start_time != std::numeric_limits<uint32_t>::max(), "cultivation have not started");
         
-        auto now = head_block_time();
+        auto now = head_block_num();
         FC_ASSERT(cult.start_time < now, "invalid start time");
-        uint64_t t = (now - cult.start_time).to_seconds();
-        t = std::min<uint64_t>(t, TAIYI_CULTIVATION_MAX_SECONDS);
+        uint32_t t = now - cult.start_time;
+        t = std::min<uint32_t>(t, TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM);
         
         if(t > 0) {
             //calculate reward qi
@@ -140,7 +140,7 @@ namespace taiyi { namespace chain {
             uint64_t k = 0;
             for (const auto& p : cult.participants)
                 k += get<nfa_object, by_id>(p).cultivation_value;
-            int64_t rv = k * p * t / TAIYI_CULTIVATION_MAX_SECONDS / TAIYI_100_PERCENT;
+            int64_t rv = k * p * t / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT;
             
             //检查基金池
             const reward_fund_object& rf = get< reward_fund_object, by_name >( TAIYI_CULTIVATION_REWARD_FUND_NAME );
@@ -211,7 +211,7 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void database::process_cultivations()
     {
-        auto now = head_block_time();
+        auto now = head_block_num();
         std::set<const cultivation_object*> removed;
 
         //首先剔除截止开始时间还未开始的修真
@@ -219,7 +219,7 @@ namespace taiyi { namespace chain {
         for (auto itr = cidx_by_start_deadline.begin(); itr != cidx_by_start_deadline.end(); ++itr) {
             if (itr->start_deadline > now)
                 break;
-            if (itr->start_time == time_point_sec::maximum()) {
+            if (itr->start_time == std::numeric_limits<uint32_t>::max()) {
                 dissolve_cultivation(*itr);
                 removed.insert(&(*itr));
             }
@@ -228,7 +228,7 @@ namespace taiyi { namespace chain {
         //再剔除修真时间超过最大修真时间的
         const auto& cidx_by_start_time = get_index< cultivation_index >().indices().get< by_start_time >();
         for (auto itr = cidx_by_start_time.begin(); itr != cidx_by_start_time.end(); ++itr) {
-            if (itr->start_time == time_point_sec::maximum() || (itr->start_time + TAIYI_CULTIVATION_MAX_SECONDS) > now)
+            if (itr->start_time == std::numeric_limits<uint32_t>::max() || (itr->start_time + TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM) > now)
                 break;
             stop_cultivation(*itr);
             removed.insert(&(*itr));

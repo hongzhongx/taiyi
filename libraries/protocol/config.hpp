@@ -191,5 +191,5 @@
 
 #define TAIYI_USEMANA_ACTOR_ACTION_SCALE        1000
 
-#define TAIYI_CULTIVATION_PREPARE_MIN_SECONDS   60 // 60 seconds
-#define TAIYI_CULTIVATION_MAX_SECONDS           (60*60*24*7) // 7 day
+#define TAIYI_CULTIVATION_PREPARE_MIN_TIME_BLOCK_NUM   20                       // about 60 seconds
+#define TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM           (TAIYI_BLOCKS_PER_DAY*7) // about 7 day

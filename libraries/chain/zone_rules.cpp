@@ -179,7 +179,6 @@ namespace taiyi { namespace chain {
 
         std::mt19937_64 gen(seed);
         int64_t random_pick = gen() % total_score;
-        printf("\n===== seed=%u, total=%lld, random_pick=%lld\n", seed, total_score, random_pick);
 
         int64_t cumulative_score = 0;
         for (const auto& pair : zone_scores) {

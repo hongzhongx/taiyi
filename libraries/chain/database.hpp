@@ -365,7 +365,7 @@ namespace taiyi { namespace chain {
         void set_contract_run_zone(zone_id_type z) { _contract_run_zone = z; }
         
         //************ database_cultivation.cpp ************//
-        const cultivation_object& create_cultivation(const nfa_object& manager_nfa, const chainbase::t_flat_map<nfa_id_type, uint>& beneficiaries, uint64_t prepare_time_seconds);
+        const cultivation_object& create_cultivation(const nfa_object& manager_nfa, const chainbase::t_flat_map<nfa_id_type, uint>& beneficiaries, uint32_t prepare_time_blocks);
         void participate_cultivation(const cultivation_object& cult, const nfa_object& nfa, uint64_t value);
         void start_cultivation(const cultivation_object& cult);
         void stop_cultivation(const cultivation_object& cult);

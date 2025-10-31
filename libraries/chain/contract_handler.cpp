@@ -2255,7 +2255,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
-    int64_t contract_handler::create_cultivation(int64_t nfa_id, const lua_map& beneficiary_nfa_ids, const lua_map& beneficiary_shares, uint64_t prepare_time_seconds)
+    int64_t contract_handler::create_cultivation(int64_t nfa_id, const lua_map& beneficiary_nfa_ids, const lua_map& beneficiary_shares, uint32_t prepare_time_blocks)
     {
         try
         {
@@ -2285,9 +2285,9 @@ namespace taiyi { namespace chain {
                         
             FC_ASSERT(total_share_check == TAIYI_100_PERCENT, "传入受益者分配比率总合不等于${a}", ("a", TAIYI_100_PERCENT));
             
-            FC_ASSERT(prepare_time_seconds >= TAIYI_CULTIVATION_PREPARE_MIN_SECONDS, "传入准备时间不够，必须大于${a}秒", ("a", TAIYI_CULTIVATION_PREPARE_MIN_SECONDS));
+            FC_ASSERT(prepare_time_blocks >= TAIYI_CULTIVATION_PREPARE_MIN_TIME_BLOCK_NUM, "传入准备时间不够，必须大于${a}息", ("a", TAIYI_CULTIVATION_PREPARE_MIN_TIME_BLOCK_NUM));
             
-            return db.create_cultivation(manager_nfa, beneficiaries_map, prepare_time_seconds).id;
+            return db.create_cultivation(manager_nfa, beneficiaries_map, prepare_time_blocks).id;
 
         }
         catch (const fc::exception& e)
@@ -2305,7 +2305,7 @@ namespace taiyi { namespace chain {
             const auto* cult = db.find<cultivation_object, by_id>(cult_id);
             if(cult == nullptr)
                 return "指定修真活动不存在";
-            if(cult->start_time != time_point_sec::maximum())
+            if(cult->start_time != std::numeric_limits<uint32_t>::max())
                 return "修真活动已经开始，不能再加入了";
             
             const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
@@ -2340,7 +2340,7 @@ namespace taiyi { namespace chain {
             if(manager_nfa.owner_account != caller.id && manager_nfa.active_account != caller.id)
                 return "无权操作修真活动";
             
-            if(cult->start_time != time_point_sec::maximum())
+            if(cult->start_time != std::numeric_limits<uint32_t>::max())
                 return "指定修真活动已经开始";
             if(cult->participants.empty())
                 return "指定修真活动没有任何参与者";
@@ -2367,7 +2367,7 @@ namespace taiyi { namespace chain {
             if(manager_nfa.owner_account != caller.id && manager_nfa.active_account != caller.id)
                 return "无权操作修真活动";
             
-            if(cult->start_time != time_point_sec::maximum()) {
+            if(cult->start_time != std::numeric_limits<uint32_t>::max()) {
                 //修真活动已经开始，结束修真获得奖励
                 db.stop_cultivation(*cult);
             }

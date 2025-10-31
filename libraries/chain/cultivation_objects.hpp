@@ -28,9 +28,9 @@ namespace taiyi { namespace chain {
         t_flat_map<nfa_id_type, uint>   beneficiary_map; ///修真受益人以及对应的分配比例，比例总合必须等于 TAIYI_100_PERCENT
         std::set<nfa_id_type>           participants; /// 修真参与者
 
-        time_point_sec                  create_time = time_point_sec::maximum();
-        time_point_sec                  start_deadline = time_point_sec::maximum(); //如果在截止时间之前还未开始，则自动释放修真对象
-        time_point_sec                  start_time = time_point_sec::maximum();
+        uint32_t                        create_time = std::numeric_limits<uint32_t>::max();
+        uint32_t                        start_deadline = std::numeric_limits<uint32_t>::max(); //如果在截止时间之前还未开始，则自动释放修真对象
+        uint32_t                        start_time = std::numeric_limits<uint32_t>::max();
     };
 
     struct by_start_deadline;
@@ -48,13 +48,13 @@ namespace taiyi { namespace chain {
             >,
             ordered_unique< tag< by_start_deadline >,
                 composite_key< cultivation_object,
-                    member< cultivation_object, time_point_sec, &cultivation_object::start_deadline >,
+                    member< cultivation_object, uint32_t, &cultivation_object::start_deadline >,
                     member< cultivation_object, cultivation_id_type, &cultivation_object::id >
                 >
             >,
             ordered_unique< tag< by_start_time >,
                 composite_key< cultivation_object,
-                    member< cultivation_object, time_point_sec, &cultivation_object::start_time >,
+                    member< cultivation_object, uint32_t, &cultivation_object::start_time >,
                     member< cultivation_object, cultivation_id_type, &cultivation_object::id >
                 >
             >
