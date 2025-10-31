@@ -292,7 +292,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     
     struct api_nfa_object
     {
-        api_nfa_object(const database_api::api_nfa_object& o) : id(o.id), creator_account(o.creator_account), owner_account(o.owner_account), active_account(o.active_account), symbol(o.symbol), parent(o.parent), children(o.children), main_contract(o.main_contract), contract_data(o.contract_data), qi(legacy_asset::from_asset(o.qi)), debt_value(o.debt_value), debt_contract(o.debt_contract), cultivation_value(o.cultivation_value), mirage_contract(o.mirage_contract), created_time(o.created_time), next_tick_time(o.next_tick_time), gold(legacy_asset::from_asset(o.gold)), food(legacy_asset::from_asset(o.food)), wood(legacy_asset::from_asset(o.wood)), fabric(legacy_asset::from_asset(o.fabric)), herb(legacy_asset::from_asset(o.herb)), material_gold(legacy_asset::from_asset(o.material_gold)), material_food(legacy_asset::from_asset(o.material_food)), material_wood(legacy_asset::from_asset(o.material_wood)), material_fabric(legacy_asset::from_asset(o.material_fabric)), material_herb(legacy_asset::from_asset(o.material_herb)), five_phase(o.five_phase)
+        api_nfa_object(const database_api::api_nfa_object& o) : id(o.id), creator_account(o.creator_account), owner_account(o.owner_account), active_account(o.active_account), symbol(o.symbol), parent(o.parent), children(o.children), main_contract(o.main_contract), contract_data(o.contract_data), qi(legacy_asset::from_asset(o.qi)), debt_value(o.debt_value), debt_contract(o.debt_contract), cultivation_value(o.cultivation_value), mirage_contract(o.mirage_contract), created_time(o.created_time), next_tick_block(o.next_tick_block), gold(legacy_asset::from_asset(o.gold)), food(legacy_asset::from_asset(o.food)), wood(legacy_asset::from_asset(o.wood)), fabric(legacy_asset::from_asset(o.fabric)), herb(legacy_asset::from_asset(o.herb)), material_gold(legacy_asset::from_asset(o.material_gold)), material_food(legacy_asset::from_asset(o.material_food)), material_wood(legacy_asset::from_asset(o.material_wood)), material_fabric(legacy_asset::from_asset(o.material_fabric)), material_herb(legacy_asset::from_asset(o.material_herb)), five_phase(o.five_phase)
         {}
         
         api_nfa_object(){}
@@ -320,7 +320,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         string              mirage_contract; //幻觉状态下所处的合约剧情节点，为空表示正常状态
 
         time_point_sec      created_time;
-        time_point_sec      next_tick_time;
+        uint32_t            next_tick_block;
 
         legacy_asset        gold;
         legacy_asset        food;
@@ -630,7 +630,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::broadcast_transaction_synchronous_ret
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_resource_assets, (gold)(food)(wood)(fabric)(herb) )
 
-FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
+FC_REFLECT(taiyi::plugins::baiyujing_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_block)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::api_contract_action_info, (exist)(consequence) )
 

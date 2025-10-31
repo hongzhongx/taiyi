@@ -77,7 +77,7 @@ namespace taiyi { namespace chain {
         uint32_t            pregnant_lock_end_block_num = 0;    //怀孕锁定期结束时间
 
         time_point_sec      last_update;
-        time_point_sec      next_tick_time;
+        uint32_t            next_tick_block = std::numeric_limits<uint32_t>::max();
 
         E_ACTOR_STANDPOINT_TYPE get_standpoint_type() const {
             if(standpoint <= 124)
@@ -133,7 +133,7 @@ namespace taiyi { namespace chain {
             >,
             ordered_unique< tag< by_tick_time >,
                 composite_key< actor_object,
-                    member< actor_object, time_point_sec, &actor_object::next_tick_time >,
+                    member< actor_object, uint32_t, &actor_object::next_tick_block >,
                     member< actor_object, actor_id_type, &actor_object::id >
                 >
             >
@@ -463,7 +463,7 @@ namespace mira {
 
 FC_REFLECT_ENUM( taiyi::chain::E_ACTOR_STANDPOINT_TYPE, (UPRIGHT)(KINDNESS)(MIDDLEBROW)(REBEL)(SOLIPSISM) )
 
-FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(init_attribute_amount_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vdays)(born_vtod)(born_vtimes)(standpoint)(loyalty)(location)(base)(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update)(next_tick_time))
+FC_REFLECT(taiyi::chain::actor_object, (id)(nfa_id)(name)(family_name)(mid_name)(last_name)(age)(health)(health_max)(init_attribute_amount_max)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vdays)(born_vtod)(born_vtimes)(standpoint)(loyalty)(location)(base)(need_mating_target)(need_mating_end_block_num)(need_bullying_target)(need_bullying_end_block_num)(is_pregnant)(pregnant_father)(pregnant_mother)(pregnant_end_block_num)(pregnant_lock_end_block_num)(last_update)(next_tick_block))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_object, taiyi::chain::actor_index)
 
 FC_REFLECT(taiyi::chain::actor_core_attributes_object, (id)(actor)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(last_update)(created))

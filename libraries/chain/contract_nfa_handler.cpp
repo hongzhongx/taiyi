@@ -50,8 +50,8 @@ namespace taiyi { namespace chain {
             FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
             
             _db.modify(_caller, [&]( nfa_object& obj ) {
-                if(obj.next_tick_time == time_point_sec::maximum())
-                    obj.next_tick_time = time_point_sec::min();
+                if(obj.next_tick_block == std::numeric_limits<uint32_t>::max())
+                    obj.next_tick_block = 0;
             });
         }
         catch (const fc::exception& e)
@@ -67,7 +67,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
 
             _db.modify(_caller, [&]( nfa_object& obj ) {
-                obj.next_tick_time = time_point_sec::maximum();
+                obj.next_tick_block = std::numeric_limits<uint32_t>::max();
             });
         }
         catch (const fc::exception& e)
@@ -605,7 +605,7 @@ namespace taiyi { namespace chain {
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 obj.owner_account = _db.get_account(TAIYI_NULL_ACCOUNT).id;
                 obj.active_account = obj.owner_account;
-                obj.next_tick_time = time_point_sec::maximum(); //disable tick
+                obj.next_tick_block = std::numeric_limits<uint32_t>::max(); //disable tick
             });
         }
         catch (const fc::exception& e)

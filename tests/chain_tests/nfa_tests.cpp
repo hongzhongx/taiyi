@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
 //    sign( tx, charlie_private_key );
 //    db->push_transaction( tx, 0 );
 //
-//    BOOST_REQUIRE( nfa.next_tick_time == time_point_sec::min() );
+//    BOOST_REQUIRE( nfa.next_tick_block == 0 );
 //
 //    used_mana = old_mana.amount - db->get_account( "charlie" ).qi.amount;
 //    idump( (used_mana) );
@@ -680,7 +680,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     db->push_transaction( tx, 0 );
     
     nfa = db->find<nfa_object, by_id>(affected.affected_item);
-    BOOST_REQUIRE( nfa->next_tick_time == time_point_sec::min() );
+    BOOST_REQUIRE( nfa->next_tick_block == 0 );
 
     BOOST_TEST_MESSAGE( "--- Test heat beat failure when nfa has not enough qi" );
 
@@ -688,7 +688,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     
     BOOST_REQUIRE_EQUAL( nfa->qi.amount.value, 0 );
     BOOST_REQUIRE_EQUAL( nfa->debt_value, 58 );
-    BOOST_REQUIRE( nfa->next_tick_time == time_point_sec::maximum() );
+    BOOST_REQUIRE( nfa->next_tick_block == std::numeric_limits<uint32_t>::max() );
 
     BOOST_TEST_MESSAGE( "--- Test heat beat nfa" );
 
@@ -698,7 +698,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     db_plugin->debug_update( [&]( database& db ) {
         db.modify( *nfa, [&](nfa_object& obj) {
             obj.qi += asset(5000000, QI_SYMBOL);
-            obj.next_tick_time = time_point_sec::min(); //激活
+            obj.next_tick_block = 0; //激活
         });
         db.modify( db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
             obj.current_supply += asset(5000, YANG_SYMBOL);
@@ -721,7 +721,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
         generate_block(); //REVIEW: 如果没有这句，后面debug_updata不会进入
         db_plugin->debug_update( [&]( database& db ) {
             db.modify( *nfa, [&]( nfa_object& obj ) {
-                obj.next_tick_time = time_point_sec::min();
+                obj.next_tick_block = 0;
             });
         });
         generate_block(); //beat
@@ -734,7 +734,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
         else {
             idump( (old_mana)(nfa->qi.amount) );
             BOOST_CHECK_EQUAL( nfa->qi.amount.value, old_mana - used_mana );
-            BOOST_REQUIRE( nfa->next_tick_time == (db->head_block_time() + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL) );
+            BOOST_REQUIRE( nfa->next_tick_block == (db->head_block_num() + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM) );
         }
     }
     

@@ -86,7 +86,7 @@ namespace taiyi { namespace chain {
         contract_id_type    mirage_contract = contract_id_type::max(); //幻觉状态下所处的合约剧情节点
 
         time_point_sec      created_time;
-        time_point_sec      next_tick_time = time_point_sec::maximum();
+        uint32_t            next_tick_block = std::numeric_limits<uint32_t>::max();
     };
 
     struct by_symbol;
@@ -132,7 +132,7 @@ namespace taiyi { namespace chain {
 //            >,
             ordered_unique< tag< by_tick_time >,
                 composite_key< nfa_object,
-                    member< nfa_object, time_point_sec, &nfa_object::next_tick_time >,
+                    member< nfa_object, uint32_t, &nfa_object::next_tick_block >,
                     member< nfa_object, nfa_id_type, &nfa_object::id >
                 >
             >
@@ -181,7 +181,7 @@ namespace taiyi { namespace chain {
 FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
-FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(is_miraged)(mirage_contract)(created_time)(next_tick_time))
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(is_miraged)(mirage_contract)(created_time)(next_tick_block))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)
 
 FC_REFLECT(taiyi::chain::nfa_material_object, (id)(nfa)(gold)(food)(wood)(fabric)(herb))

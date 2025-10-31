@@ -249,7 +249,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     struct api_nfa_object
     {
-        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), contract_data(o.contract_data), qi(o.qi), debt_value(o.debt_value), cultivation_value(o.cultivation_value), created_time(o.created_time), next_tick_time(o.next_tick_time)
+        api_nfa_object( const nfa_object& o, const database& db ) : id(o.id), parent(o.parent), contract_data(o.contract_data), qi(o.qi), debt_value(o.debt_value), cultivation_value(o.cultivation_value), created_time(o.created_time), next_tick_block(o.next_tick_block)
         {
             creator_account = db.get<account_object, by_id>(o.creator_account).name;
             owner_account = db.get<account_object, by_id>(o.owner_account).name;
@@ -315,7 +315,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         string              mirage_contract; //幻觉状态下所处的合约剧情节点，为空表示正常状态
 
         time_point_sec      created_time;
-        time_point_sec      next_tick_time;
+        uint32_t            next_tick_block;
 
         asset               gold;
         asset               food;
@@ -334,7 +334,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         
     struct api_actor_object
     {
-        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), init_attribute_amount_max(a.init_attribute_amount_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vdays(a.born_vdays), born_vtod(a.born_vtod), born_vtimes(a.born_vtimes), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update), next_tick_time(a.next_tick_time)
+        api_actor_object( const actor_object& a, const database& db ) : id(a.id), nfa_id(a.nfa_id), name(a.name), age(a.age), health(a.health), health_max(a.health_max), init_attribute_amount_max(a.init_attribute_amount_max), born(a.born), gender(a.gender), sexuality(a.sexuality), fertility(a.fertility), born_time(a.born_time), born_vyears(a.born_vyears), born_vmonths(a.born_vmonths), born_vdays(a.born_vdays), born_vtod(a.born_vtod), born_vtimes(a.born_vtimes), standpoint(a.standpoint), loyalty(a.loyalty), last_update(a.last_update), next_tick_block(a.next_tick_block)
         {
             const auto& talents_obj = db.get< actor_talents_object, by_actor >( id );
             for(auto it = talents_obj.talents.begin(); it!=talents_obj.talents.end(); it++)
@@ -423,7 +423,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         string              base_name;  //从属地名称
         
         time_point_sec      last_update;
-        time_point_sec      next_tick_time;
+        uint32_t            next_tick_block;
     };
 
     struct api_actor_relation_object
@@ -476,8 +476,8 @@ FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(pro
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_time)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_block)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
-FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vdays)(born_vtod)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_time) )
+FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vdays)(born_vtod)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_block) )
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_relation_object, (id)(actor_owner)(actor_name)(target_owner)(target_name)(favor)(favor_level)(last_update) )

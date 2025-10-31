@@ -186,7 +186,7 @@ namespace taiyi { namespace chain {
             a.standpoint = (hasher::hash( seed + a.id + 1619) % 1000);
 
             a.last_update = now;
-            a.next_tick_time = now; //will active actor tick
+            a.next_tick_block = head_block_num(); //will active actor tick on current or next block
         });
                         
         //grow as first birthday
@@ -203,9 +203,9 @@ namespace taiyi { namespace chain {
     //=============================================================================
     void database::process_actor_tick()
     {
-        uint32_t hbn = head_block_num();
+        uint32_t now = head_block_num();
+        time_point_sec now_time = head_block_time();
         const auto& tiandao = get_tiandao_properties();
-        auto now = head_block_time();
 
         //list Actors this tick will sim
         const auto& actor_idx = get_index< actor_index, by_tick_time >();
@@ -216,7 +216,7 @@ namespace taiyi { namespace chain {
         tick_actors.reserve(run_num);
         while( itactor != endactor && run_num > 0  )
         {
-            if(itactor->next_tick_time > now)
+            if(itactor->next_tick_block > now)
                 break;
             
             tick_actors.push_back(&(*itactor));
@@ -229,7 +229,7 @@ namespace taiyi { namespace chain {
             const auto& actor = *a;
             
             modify(actor, [&]( actor_object& obj ) {
-                obj.next_tick_time = now + TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL;
+                obj.next_tick_block = now + TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM;
             });
             
             if(actor.health <= 0) {
@@ -254,7 +254,7 @@ namespace taiyi { namespace chain {
                                 act.health = std::min(act.health, act.health_max);
                             }
                             
-                            act.last_update = now;
+                            act.last_update = now_time;
                         });
 
                         //trigger actor grow

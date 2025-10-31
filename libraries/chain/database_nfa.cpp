@@ -292,7 +292,7 @@ namespace taiyi { namespace chain {
     //=============================================================================
     void database::process_nfa_tick()
     {
-        auto now = head_block_time();
+        auto now = head_block_num();
 
         //list NFAs this tick will sim
         const auto& nfa_idx = get_index< nfa_index, by_tick_time >();
@@ -303,7 +303,7 @@ namespace taiyi { namespace chain {
         tick_nfas.reserve(run_num);
         while( itnfa != endnfa && run_num > 0  )
         {
-            if(itnfa->next_tick_time > now)
+            if(itnfa->next_tick_block > now)
                 break;
             
             tick_nfas.push_back(&(*itnfa));
@@ -319,7 +319,7 @@ namespace taiyi { namespace chain {
             if(nfa.debt_value > 0) {
                 //try pay back
                 if(nfa.debt_value > nfa.qi.amount.value) {
-                    modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
+                    modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_block = std::numeric_limits<uint32_t>::max(); }); //disable tick
                     continue;
                 }
                 
@@ -339,18 +339,18 @@ namespace taiyi { namespace chain {
             const auto* contract_ptr = find<contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
             if(contract_ptr == nullptr) {
                 //主合约无效
-                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
+                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_block = std::numeric_limits<uint32_t>::max(); }); //disable tick
                 continue;
             }
             auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));
             if(abi_itr == contract_ptr->contract_ABI.end()) {
                 //主合约无心跳入口
-                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_time = time_point_sec::maximum(); }); //disable tick
+                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_block = std::numeric_limits<uint32_t>::max(); }); //disable tick
                 continue;
             }
             
             modify(nfa, [&]( nfa_object& obj ) {
-                obj.next_tick_time = now + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM * TAIYI_BLOCK_INTERVAL;
+                obj.next_tick_block = now + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM;
             });
 
             vector<lua_types> value_list; //no params.
@@ -419,7 +419,7 @@ namespace taiyi { namespace chain {
                         obj.debt_value = debt_qi;
                         obj.debt_contract = contract_ptr->id;
                     }
-                    obj.next_tick_time = time_point_sec::maximum();
+                    obj.next_tick_block = std::numeric_limits<uint32_t>::max();
                 });
             }
         }
