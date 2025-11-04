@@ -877,8 +877,9 @@ namespace taiyi { namespace chain {
             FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
 
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
-            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account is not the owner or active operator of nfa #${i}", ("i", from));
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
+            FC_ASSERT(to_nfa.owner_account == _caller_account.id || to_nfa.active_account == _caller_account.id, "caller account is not the owner or active operator of nfa #${i}", ("i", to));
             try
             {
                 FC_ASSERT(_db.get_nfa_balance(from_nfa, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", _db.get_nfa_balance(from_nfa, token.symbol)));
