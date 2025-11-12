@@ -9,6 +9,7 @@
 #include <chain/contract_objects.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/actor_objects.hpp>
+#include <chain/zone_objects.hpp>
 #include <chain/tiandao_property_object.hpp>
 
 #include <chain/lua_context.hpp>
@@ -1156,10 +1157,12 @@ namespace taiyi { namespace chain {
             
             const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
             
-            //对actor要设置db的当前运行zone标记
-            const auto* check_actor = _db.find_actor_with_parents(nfa);
-            if (check_actor && pre_contract_run_zone == zone_id_type::max())
-                _db.set_contract_run_zone(check_actor->location);
+            //设置db的当前运行zone标记
+            if (pre_contract_run_zone == zone_id_type::max()) {
+                const auto* check_zone = _db.find_location_with_parents(nfa);
+                if(check_zone)
+                    _db.set_contract_run_zone(check_zone->id);
+            }
 
             //check material valid
             FC_ASSERT(_db.is_nfa_material_equivalent_qi_insufficient(nfa), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");

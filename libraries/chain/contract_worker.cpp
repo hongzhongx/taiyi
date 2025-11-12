@@ -5,6 +5,7 @@
 #include <chain/account_object.hpp>
 #include <chain/nfa_objects.hpp>
 #include <chain/actor_objects.hpp>
+#include <chain/zone_objects.hpp>
 #include <chain/contract_objects.hpp>
 #include <chain/contract_handles.hpp>
 
@@ -371,11 +372,13 @@ namespace taiyi { namespace chain {
 
         try
         {
-            //对actor要设置db的当前运行zone标记
-            const auto* check_actor = db.find_actor_with_parents(nfa);
-            if (check_actor && pre_contract_run_zone == zone_id_type::max())
-                db.set_contract_run_zone(check_actor->location);
-            
+            //设置db的当前运行zone标记
+            if (pre_contract_run_zone == zone_id_type::max()) {
+                const auto* check_zone = db.find_location_with_parents(nfa);
+                if(check_zone)
+                    db.set_contract_run_zone(check_zone->id);
+            }
+
             FC_ASSERT(db.is_contract_allowed_by_zone(contract, db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract.name)("z", db.get_contract_run_zone()));
             
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;

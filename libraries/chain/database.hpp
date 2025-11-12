@@ -349,7 +349,7 @@ namespace taiyi { namespace chain {
         void try_trigger_actor_contract_grow( const actor_object& act );
         void prepare_actor_relations( const actor_object& actor1, const actor_object& actor2 );
         const actor_object* find_actor_with_parents( const nfa_object& nfa, const uint16_t depth = 3 );
-        string find_location_with_parents( const nfa_object& nfa, const uint16_t depth = 3 );
+        const zone_object* find_location_with_parents( const nfa_object& nfa, const uint16_t depth = 3 );
 
         //************ database_zone.cpp ************//
 
