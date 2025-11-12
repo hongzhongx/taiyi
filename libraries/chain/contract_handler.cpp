@@ -1057,6 +1057,8 @@ namespace taiyi { namespace chain {
                     }
                 }
                 
+                obj.owner_account = actor_nfa.owner_account;
+                obj.active_account = actor_nfa.active_account;
                 obj.parent = nfa_id_type(to_actor_nfa_id);
             });
 
