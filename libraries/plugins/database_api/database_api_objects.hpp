@@ -287,9 +287,6 @@ namespace taiyi { namespace plugins { namespace database_api {
             material_herb = material.herb;
             
             five_phase = db.get_nfa_five_phase(o);
-            
-            if(o.is_miraged)
-                mirage_contract = db.get<contract_object, by_id>(o.mirage_contract).name;
         }
         
         api_nfa_object(){}
@@ -314,8 +311,6 @@ namespace taiyi { namespace plugins { namespace database_api {
 
         uint64_t            cultivation_value; ///参与修真的真气值，> 0表示正在参与修真
         
-        string              mirage_contract; //幻觉状态下所处的合约剧情节点，为空表示正常状态
-
         time_point_sec      created_time;
         uint32_t            next_tick_block;
 
@@ -478,7 +473,7 @@ FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(pro
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator_account)(authority_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_block)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_block)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
 FC_REFLECT( taiyi::plugins::database_api::api_actor_object, (id)(name)(nfa_id)(age)(health)(health_max)(init_attribute_amount_max)(strength)(strength_max)(physique)(physique_max)(agility)(agility_max)(vitality)(vitality_max)(comprehension)(comprehension_max)(willpower)(willpower_max)(charm)(charm_max)(mood)(mood_max)(talents)(born)(gender)(sexuality)(fertility)(born_time)(born_vyears)(born_vmonths)(born_vdays)(born_vtod)(born_vtimes)(five_phase)(standpoint)(standpoint_type)(loyalty)(location)(base_name)(last_update)(next_tick_block) )
 

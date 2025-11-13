@@ -75,7 +75,6 @@ namespace taiyi { namespace chain {
         int64_t     parent;
         int         five_phase;
         string      main_contract;
-        string      mirage_contract; //幻觉状态下所处的合约剧情节点，为空表示在正常状态
         lua_map     data;
                 
         contract_nfa_base_info(const nfa_object& nfa, database& db);
@@ -259,7 +258,6 @@ namespace taiyi { namespace chain {
 
         //NFA
         string get_nfa_contract(int64_t nfa_id);
-        string get_nfa_mirage_contract(int64_t nfa_id);
         bool is_nfa_valid(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
         int64_t get_nfa_balance(int64_t nfa_id, const string& symbol_name);
@@ -275,9 +273,6 @@ namespace taiyi { namespace chain {
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
         int64_t create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger);
-        bool enter_nfa_mirage(int64_t nfa_id, const string& mirage_entry_contract);
-        bool enter_nfa_next_mirage(int64_t nfa_id, const string& mirage_entry_contract);
-        bool exit_nfa_mirage(int64_t nfa_id);
 
         //Zone
         bool is_zone_valid(int64_t nfa_id);

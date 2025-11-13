@@ -83,9 +83,6 @@ namespace taiyi { namespace chain {
         
         uint64_t            cultivation_value = 0; ///参与修真的真气值，> 0表示正在参与修真
         
-        bool                is_miraged      = false; //是否在幻觉状态
-        contract_id_type    mirage_contract = contract_id_type::max(); //幻觉状态下所处的合约剧情节点
-
         time_point_sec      created_time;
         uint32_t            next_tick_block = std::numeric_limits<uint32_t>::max();
     };
@@ -188,7 +185,7 @@ namespace mira {
 FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
-FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(is_miraged)(mirage_contract)(created_time)(next_tick_block))
+FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_block))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_object, taiyi::chain::nfa_index)
 
 FC_REFLECT(taiyi::chain::nfa_material_object, (id)(nfa)(gold)(food)(wood)(fabric)(herb))

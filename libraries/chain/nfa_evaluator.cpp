@@ -174,7 +174,7 @@ namespace taiyi { namespace chain {
         int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
         used_qi -= used_qi_for_treasury;
         FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
-        const auto& contract = _db.get<contract_object, by_id>(nfa->is_miraged?nfa->mirage_contract:nfa->main_contract);
+        const auto& contract = _db.get<contract_object, by_id>(nfa->main_contract);
         const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
         _db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
         

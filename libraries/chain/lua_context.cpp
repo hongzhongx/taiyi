@@ -226,7 +226,6 @@ namespace taiyi { namespace chain {
         registerFunction("get_contract_source_code", &contract_handler::get_contract_source_code);
         registerFunction("get_contract_data", &contract_handler::get_contract_data);
         registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);
-        registerFunction("get_nfa_mirage_contract", &contract_handler::get_nfa_mirage_contract);        
         registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);
         registerFunction("create_nfa", &contract_handler::create_nfa);        
         registerFunction("read_nfa_contract_data", &contract_handler::read_nfa_contract_data);
@@ -241,9 +240,6 @@ namespace taiyi { namespace chain {
         registerFunction("get_nfa_materials", &contract_handler::get_nfa_materials);
         registerFunction("list_nfa_inventory", &contract_handler::list_nfa_inventory);
         registerFunction("get_nfa_location", &contract_handler::get_nfa_location);
-        registerFunction("enter_nfa_mirage", &contract_handler::enter_nfa_mirage);
-        registerFunction("enter_nfa_next_mirage", &contract_handler::enter_nfa_next_mirage);
-        registerFunction("exit_nfa_mirage", &contract_handler::exit_nfa_mirage);
         registerFunction("refine_zone", &contract_handler::refine_zone);
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
@@ -293,7 +289,6 @@ namespace taiyi { namespace chain {
         registerMember("five_phase", &contract_nfa_base_info::five_phase);
         registerMember("data", &contract_nfa_base_info::data);
         registerMember("main_contract", &contract_nfa_base_info::main_contract);
-        registerMember("mirage_contract", &contract_nfa_base_info::mirage_contract);
 
         //nfa handler
         registerFunction("enable_tick", &contract_nfa_handler::enable_tick);

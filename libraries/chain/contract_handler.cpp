@@ -499,25 +499,6 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    string contract_handler::get_nfa_mirage_contract(int64_t nfa_id)
-    {
-        try
-        {
-            const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
-            if (nfa.is_miraged) {
-                const contract_object& contract = db.get<chain::contract_object, by_id>(nfa.mirage_contract);
-                return contract.name;
-            }
-            
-            return "";
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(context.mState, e.to_string());
-            return "";
-        }
-    }
-    //=============================================================================
     string contract_handler::get_nfa_location(int64_t nfa_id)
     {
         try
@@ -558,12 +539,9 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
-            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                return false;
-
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
-            if(abi_itr == contract_ptr->contract_ABI.end())
+            const auto& contract = db.get<chain::contract_object, by_id>(nfa.main_contract);
+            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
+            if(abi_itr == contract.contract_ABI.end())
                 return false;
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
                 return false;
@@ -592,12 +570,9 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
-            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                return lua_map();
-            
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
-            if(abi_itr == contract_ptr->contract_ABI.end())
+            const auto& contract = db.get<chain::contract_object, by_id>(nfa.main_contract);
+            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
+            if(abi_itr == contract.contract_ABI.end())
                 return lua_map();
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
                 return lua_map();
@@ -618,8 +593,8 @@ namespace taiyi { namespace chain {
                 value_list.push_back(p->second);
             }
             
-            auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
-            FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
+            auto func_abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
+            FC_ASSERT(func_abi_itr != contract.contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
@@ -631,7 +606,7 @@ namespace taiyi { namespace chain {
             auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = *contract_ptr;
+            const auto& nfa_contract = contract;
             const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
@@ -721,14 +696,12 @@ namespace taiyi { namespace chain {
             db.consume_nfa_material_random(nfa, db.head_block_id()._hash[4] + 13997);
 
             //check existence and consequence type
-            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                return lua_map();
+            const auto& contract = db.get<chain::contract_object, by_id>(nfa.main_contract);
+
+            FC_ASSERT(db.is_contract_allowed_by_zone(contract, db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract.name)("z", db.get_contract_run_zone()));
             
-            FC_ASSERT(db.is_contract_allowed_by_zone(*contract_ptr, db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract_ptr->name)("z", db.get_contract_run_zone()));
-            
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
-            if(abi_itr == contract_ptr->contract_ABI.end())
+            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
+            if(abi_itr == contract.contract_ABI.end())
                 return lua_map();
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
                 return lua_map();
@@ -749,8 +722,8 @@ namespace taiyi { namespace chain {
                 value_list.push_back(p->second);
             }
                         
-            auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
-            FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
+            auto func_abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
+            FC_ASSERT(func_abi_itr != contract.contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
@@ -762,7 +735,7 @@ namespace taiyi { namespace chain {
             auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = *contract_ptr;
+            const auto& nfa_contract = contract;
             const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
@@ -840,9 +813,7 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = db.get<nfa_object, by_id>(nfa_id);
             
             //check function existence
-            const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                return lua_map();
+            const auto& contract = db.get<chain::contract_object, by_id>(nfa.main_contract);
                         
             //准备参数
             vector<lua_types> value_list;
@@ -853,8 +824,8 @@ namespace taiyi { namespace chain {
                 value_list.push_back(p->second);
             }
                         
-            auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
-            if(func_abi_itr == contract_ptr->contract_ABI.end()) {
+            auto func_abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
+            if(func_abi_itr == contract.contract_ABI.end()) {
                 if (assert_when_function_not_exist)
                     FC_ASSERT(false, "${f} not found", ("f", function_name));
                 else
@@ -871,7 +842,7 @@ namespace taiyi { namespace chain {
             auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = *contract_ptr;
+            const auto& nfa_contract = contract;
             const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
@@ -1992,84 +1963,6 @@ namespace taiyi { namespace chain {
         }
         
         return "";
-    }
-    //=========================================================================
-    bool contract_handler::enter_nfa_mirage(int64_t nfa_id, const string& mirage_entry_contract)
-    {
-        try
-        {
-            db.add_contract_handler_exe_point(1);
-
-            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
-            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
-            FC_ASSERT(!nfa->is_miraged, "实体#${d}已经在幻觉世界了", ("d", nfa_id));
-            
-            const auto* contract = db.find<contract_object, by_name>(mirage_entry_contract);
-            FC_ASSERT(contract, "幻觉世界入口不存在");
-            
-            db.modify(*nfa, [&](nfa_object& obj) {
-                obj.is_miraged = true;
-                obj.mirage_contract = contract->id;
-            });
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(context.mState, e.to_string());
-        }
-
-        return true;
-    }
-    //=========================================================================
-    bool contract_handler::enter_nfa_next_mirage(int64_t nfa_id, const string& mirage_entry_contract)
-    {
-        try
-        {
-            db.add_contract_handler_exe_point(1);
-
-            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
-            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
-            FC_ASSERT(nfa->is_miraged, "实体#${d}还没有在幻觉世界", ("d", nfa_id));
-            
-            const auto* contract = db.find<contract_object, by_name>(mirage_entry_contract);
-            FC_ASSERT(contract, "幻觉世界入口不存在");
-            
-            db.modify(*nfa, [&](nfa_object& obj) {
-                obj.is_miraged = true;
-                obj.mirage_contract = contract->id;
-            });
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(context.mState, e.to_string());
-        }
-
-        return true;
-    }
-    //=========================================================================
-    bool contract_handler::exit_nfa_mirage(int64_t nfa_id)
-    {
-        try
-        {
-            db.add_contract_handler_exe_point(1);
-
-            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa != nullptr, "实体#${d}不存在", ("d", nfa_id));
-            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作实体#${d}", ("d", nfa_id));
-            FC_ASSERT(nfa->is_miraged, "实体#${d}并没有在幻觉世界", ("d", nfa_id));
-            
-            db.modify(*nfa, [&](nfa_object& obj) {
-                obj.is_miraged = false;
-                obj.mirage_contract = contract_id_type::max();
-            });
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(context.mState, e.to_string());
-        }
-
-        return true;
     }
     //=========================================================================
     //返回错误信息

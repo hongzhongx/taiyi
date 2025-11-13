@@ -292,12 +292,9 @@ namespace taiyi { namespace chain {
     string contract_worker::eval_nfa_contract_action(const nfa_object& caller_nfa, const string& action, vector<lua_types> value_list, vector<lua_types>&result, long long& vm_drops, bool reset_vm_memused, LuaContext& context, database &db)
     { try {
         //check existence and consequence type
-        const auto* contract_ptr = db.find<chain::contract_object, by_id>(caller_nfa.is_miraged?caller_nfa.mirage_contract:caller_nfa.main_contract);
-        if(contract_ptr == nullptr)
-            return "NFA main contract not exist(#t&&y#实体缺乏内禀天道#a&&i#)";
-
-        auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
-        if(abi_itr == contract_ptr->contract_ABI.end())
+        const auto& contract = db.get<chain::contract_object, by_id>(caller_nfa.main_contract);
+        auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
+        if(abi_itr == contract.contract_ABI.end())
             return FORMAT_MESSAGE("#t&&y#实体不具备名为\"${a}\"的行为#a&&i#", ("a", action));
         if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
             return FORMAT_MESSAGE("#t&&y#实体的行为\"${a}\"没有定义好#a&&i#", ("a", action));;
@@ -310,10 +307,10 @@ namespace taiyi { namespace chain {
         //evaluate contract authority
         const auto& caller = db.get<account_object, by_id>(caller_nfa.owner_account);
         if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
-            FC_ASSERT(contract_ptr->can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract_ptr->name));
+            FC_ASSERT(contract.can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract.name));
                             
         string function_name = "eval_" + action;
-        lua_table result_table = do_nfa_contract_function(caller, caller_nfa, function_name, value_list, *contract_ptr, vm_drops, reset_vm_memused, context, db, true);
+        lua_table result_table = do_nfa_contract_function(caller, caller_nfa, function_name, value_list, contract, vm_drops, reset_vm_memused, context, db, true);
         
         result.clear();
         for(auto itr=result_table.v.begin(); itr!=result_table.v.end(); itr++)
@@ -330,12 +327,9 @@ namespace taiyi { namespace chain {
         db.consume_nfa_material_random(nfa, db.head_block_id()._hash[4] + 14489);
 
         //check existence and consequence type
-        const auto* contract_ptr = db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-        if(contract_ptr == nullptr)
-            return "NFA main contract not exist(#t&&y#实体缺乏内禀天道#a&&i#)";
-        
-        auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
-        if(abi_itr == contract_ptr->contract_ABI.end())
+        const auto& contract = db.get<chain::contract_object, by_id>(nfa.main_contract);
+        auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
+        if(abi_itr == contract.contract_ABI.end())
             return FORMAT_MESSAGE("#t&&y#实体不具备名为\"${a}\"的行为#a&&i#", ("a", action));
         if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
             return FORMAT_MESSAGE("#t&&y#实体的行为\"${a}\"没有定义好#a&&i#", ("a", action));;
@@ -347,10 +341,10 @@ namespace taiyi { namespace chain {
 
         //evaluate contract authority
         if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
-            FC_ASSERT(contract_ptr->can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract_ptr->name));
+            FC_ASSERT(contract.can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract.name));
                             
         string function_name = "do_" + action;
-        lua_table result_table = do_nfa_contract_function(caller, nfa, function_name, value_list, *contract_ptr, vm_drops, reset_vm_memused, context, db, false);
+        lua_table result_table = do_nfa_contract_function(caller, nfa, function_name, value_list, contract, vm_drops, reset_vm_memused, context, db, false);
 
         result.clear();
         for(auto itr=result_table.v.begin(); itr!=result_table.v.end(); itr++)

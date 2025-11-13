@@ -328,14 +328,9 @@ namespace taiyi { namespace chain {
                 });
             }
             
-            const auto* contract_ptr = find<contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr) {
-                //主合约无效
-                modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_block = std::numeric_limits<uint32_t>::max(); }); //disable tick
-                continue;
-            }
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string("on_heart_beat")));
-            if(abi_itr == contract_ptr->contract_ABI.end()) {
+            const auto& contract = get<contract_object, by_id>(nfa.main_contract);
+            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string("on_heart_beat")));
+            if(abi_itr == contract.contract_ABI.end()) {
                 //主合约无心跳入口
                 modify(nfa, [&]( nfa_object& obj ) { obj.next_tick_block = std::numeric_limits<uint32_t>::max(); }); //disable tick
                 continue;
@@ -360,7 +355,7 @@ namespace taiyi { namespace chain {
                 auto session = start_undo_session();
                 clear_contract_handler_exe_point(); //初始化api执行消耗统计
                 const auto& caller = get<account_object, by_id>(nfa.owner_account);
-                worker.do_nfa_contract_function(caller, nfa, "on_heart_beat", value_list, *contract_ptr, vm_drops, true, context, *this, false);
+                worker.do_nfa_contract_function(caller, nfa, "on_heart_beat", value_list, contract, vm_drops, true, context, *this, false);
                 session.squash();
             }
             catch (const fc::exception& e) {
@@ -397,7 +392,7 @@ namespace taiyi { namespace chain {
             int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
             used_qi -= used_qi_for_treasury;
             if( used_qi > 0)
-                reward_feigang(get<account_object, by_id>(contract_ptr->owner), nfa, asset(used_qi, QI_SYMBOL));
+                reward_feigang(get<account_object, by_id>(contract.owner), nfa, asset(used_qi, QI_SYMBOL));
             
             //reward to treasury
             if( (exe_qi + used_qi_for_treasury) > 0)
@@ -408,7 +403,7 @@ namespace taiyi { namespace chain {
                 modify( nfa, [&]( nfa_object& obj ) {
                     if(debt_qi > 0) {
                         obj.debt_value = debt_qi;
-                        obj.debt_contract = contract_ptr->id;
+                        obj.debt_contract = contract.id;
                     }
                     obj.next_tick_block = std::numeric_limits<uint32_t>::max();
                 });

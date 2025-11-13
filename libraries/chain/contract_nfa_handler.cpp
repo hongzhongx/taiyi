@@ -31,8 +31,6 @@ namespace taiyi { namespace chain {
         five_phase = db.get_nfa_five_phase(nfa);
 
         main_contract = db.get<contract_object, by_id>(nfa.main_contract).name;
-        if(nfa.is_miraged)
-            mirage_contract = db.get<contract_object, by_id>(nfa.mirage_contract).name;
     }
     //=============================================================================
     contract_nfa_handler::contract_nfa_handler(const account_object& caller_account, const nfa_object& caller, LuaContext &context, database &db, contract_handler& ch)
@@ -1040,12 +1038,9 @@ namespace taiyi { namespace chain {
             const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
             
             //check existence and consequence type
-            const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                return lua_map();
-            
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
-            if(abi_itr == contract_ptr->contract_ABI.end())
+            const auto& contract = _db.get<chain::contract_object, by_id>(nfa.main_contract);
+            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
+            if(abi_itr == contract.contract_ABI.end())
                 return lua_map();
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
                 return lua_map();
@@ -1066,8 +1061,8 @@ namespace taiyi { namespace chain {
                 value_list.push_back(p->second);
             }
             
-            auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
-            FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
+            auto func_abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
+            FC_ASSERT(func_abi_itr != contract.contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
@@ -1079,7 +1074,7 @@ namespace taiyi { namespace chain {
             auto current_ch = _context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = _db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = *contract_ptr;
+            const auto& nfa_contract = contract;
             const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
@@ -1169,14 +1164,11 @@ namespace taiyi { namespace chain {
             _db.consume_nfa_material_random(nfa, _db.head_block_id()._hash[4] + 14071);
 
             //check existence and consequence type
-            const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                return lua_map();
+            const auto& contract = _db.get<chain::contract_object, by_id>(nfa.main_contract);
+            FC_ASSERT(_db.is_contract_allowed_by_zone(contract, _db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract.name)("z", _db.get_contract_run_zone()));
             
-            FC_ASSERT(_db.is_contract_allowed_by_zone(*contract_ptr, _db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract_ptr->name)("z", _db.get_contract_run_zone()));
-            
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action)));
-            if(abi_itr == contract_ptr->contract_ABI.end())
+            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
+            if(abi_itr == contract.contract_ABI.end())
                 return lua_map();
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
                 return lua_map();
@@ -1197,8 +1189,8 @@ namespace taiyi { namespace chain {
                 value_list.push_back(p->second);
             }
                         
-            auto func_abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(function_name)));
-            FC_ASSERT(func_abi_itr != contract_ptr->contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
+            auto func_abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
+            FC_ASSERT(func_abi_itr != contract.contract_ABI.end(), "${f} not found, maybe a internal function", ("f", function_name));
             if(!func_abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == func_abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", func_abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
@@ -1210,7 +1202,7 @@ namespace taiyi { namespace chain {
             auto current_ch = _context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = _db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = *contract_ptr;
+            const auto& nfa_contract = contract;
             const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             

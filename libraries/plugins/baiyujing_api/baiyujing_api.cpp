@@ -870,12 +870,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             const auto& nfa = _db.get<chain::nfa_object, chain::by_id>(args[0].as<int64_t>());
             string action_name = args[1].as< string >();
             
-            const auto* contract_ptr = _db.find<chain::contract_object, by_id>(nfa.is_miraged?nfa.mirage_contract:nfa.main_contract);
-            if(contract_ptr == nullptr)
-                return result;
-            
-            auto abi_itr = contract_ptr->contract_ABI.find(lua_types(lua_string(action_name)));
-            if(abi_itr == contract_ptr->contract_ABI.end())
+            const auto& contract = _db.get<chain::contract_object, by_id>(nfa.main_contract);
+            auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action_name)));
+            if(abi_itr == contract.contract_ABI.end())
                 return result;
             if(abi_itr->second.which() != lua_types::tag<lua_table>::value)
                 return result;
