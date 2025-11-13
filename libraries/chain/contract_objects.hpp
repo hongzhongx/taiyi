@@ -29,11 +29,8 @@ namespace taiyi { namespace chain {
         
         account_id_type     owner;
         std::string         name;
-        uint32_t            user_invoke_share_percent = 100;
         transaction_id_type current_version;
-        public_key_type     contract_authority;
         bool                is_release = false;
-        bool                check_contract_authority = false;
         lua_map             contract_data;
         lua_map             contract_ABI;
         contract_bin_code_id_type lua_code_b_id;
@@ -41,7 +38,6 @@ namespace taiyi { namespace chain {
         time_point_sec      creation_date;
         
     public:
-        bool check_contract_authority_falg() { return check_contract_authority; }
         optional<lua_types> get_lua_data(LuaContext &context, int index, bool check_fc = false);
         void push_global_parameters(LuaContext &context, lua_map &global_variable_list, string tablename = "");
         void push_table_parameters(LuaContext &context, lua_map &table_variable, string tablename);
@@ -137,7 +133,7 @@ namespace taiyi { namespace chain {
 } } // taiyi::chain
 
 
-FC_REFLECT(taiyi::chain::contract_object, (id)(owner)(name)(user_invoke_share_percent)(current_version)(contract_authority)(is_release)(check_contract_authority)(contract_data)(contract_ABI)(lua_code_b_id)(creation_date) )
+FC_REFLECT(taiyi::chain::contract_object, (id)(owner)(name)(current_version)(is_release)(contract_data)(contract_ABI)(lua_code_b_id)(creation_date) )
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::contract_object, taiyi::chain::contract_index)
 
 FC_REFLECT(taiyi::chain::account_contract_data_object, (id)(owner)(contract_id)(contract_data) )

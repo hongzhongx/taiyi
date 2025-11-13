@@ -113,17 +113,14 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    size_t database::create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops)
+    size_t database::create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, long long& vm_drops)
     {
         const contract_object& contract = create<contract_object>([&](contract_object &c) {
             c.owner = owner.id;
             c.name = contract_name;
             
             if (c.id != contract_id_type())
-            {
-                c.contract_authority = contract_authority;
                 c.current_version = get_current_trx();
-            }
             c.creation_date = head_block_time();
         });
         
@@ -150,10 +147,10 @@ namespace taiyi { namespace chain {
     {
         const auto& owner = get_account( TAIYI_DANUO_ACCOUNT );
         long long vm_drops = 1000000;
-        create_contract_objects(owner, "contract.baseENV", CONTRACT_BASE_ENV, public_key_type(), vm_drops);
+        create_contract_objects(owner, "contract.baseENV", CONTRACT_BASE_ENV, vm_drops);
 
-        create_contract_objects(owner, "contract.actor.default", CONTRACT_BASE_ACTOR, public_key_type(), vm_drops);
-        create_contract_objects(owner, "contract.zone.default", CONTRACT_BASE_ZONE, public_key_type(), vm_drops);
+        create_contract_objects(owner, "contract.actor.default", CONTRACT_BASE_ACTOR, vm_drops);
+        create_contract_objects(owner, "contract.zone.default", CONTRACT_BASE_ZONE, vm_drops);
     }
     //=========================================================================
     lua_map database::prepare_account_contract_data(const account_object& account, const contract_object& contract)

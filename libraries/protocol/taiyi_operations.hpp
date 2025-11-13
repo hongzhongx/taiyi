@@ -418,7 +418,6 @@ namespace taiyi { namespace protocol {
         account_name_type   owner;      // 合约创建者
         string              name;       // 合约名字
         string              data;       // 合约内容
-        public_key_type     contract_authority;//合约权限
         vector<string>      extensions;
        
         void validate()const;
@@ -556,7 +555,7 @@ FC_REFLECT( taiyi::protocol::decline_adoring_rights_operation, (account)(decline
 FC_REFLECT( taiyi::protocol::claim_reward_balance_operation, (account)(reward_yang)(reward_qi)(reward_feigang) )
 FC_REFLECT( taiyi::protocol::delegate_qi_operation, (delegator)(delegatee)(qi) );
 
-FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(contract_authority)(extensions) )
+FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)(contract_name)(function_name)(value_list)(extensions) )
 

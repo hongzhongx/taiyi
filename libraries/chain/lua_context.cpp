@@ -76,16 +76,15 @@ namespace taiyi { namespace chain {
                 const auto &baseENV = current_cbi->db.get<contract_bin_code_object, by_id>(0);
                 context.new_sandbox(contract->name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
                 
-                contract_base_info cbi(current_cbi->db, context, current_cbi->db.get<account_object, by_id>(contract->owner).name, contract->name, current_cbi->caller, string(contract->creation_date), string(contract->contract_authority), current_cbi->invoker_contract_name);
+                contract_base_info cbi(current_cbi->db, context, current_cbi->db.get<account_object, by_id>(contract->owner).name, contract->name, current_cbi->caller, string(contract->creation_date), current_cbi->invoker_contract_name);
                 context.writeVariable(contract->name, "contract_base_info", &cbi);
                 
                 auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
                 contract_result tmp_result;
-                flat_set<public_key_type> tmp_sigkeys;
                 contract_handler* ch = 0;
                 if(current_ch) {
                     //导入的合约需要创建新的ch，由于在导入后会对合约函数进行调用，因此这里创建的ch必须有效，因此需要保留在上层ch中，直到上层ch释放时释放
-                    ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), current_ch->nfa_caller, *contract, current_ch->result, current_ch->context, current_ch->sigkeys, current_ch->is_in_eval);
+                    ch = new contract_handler(current_cbi->db, current_cbi->db.get_account(current_cbi->caller), current_ch->nfa_caller, *contract, current_ch->result, current_ch->context, current_ch->is_in_eval);
                     FC_ASSERT(current_ch->context.mState == L);
                     current_ch->_sub_chs.push_back(ch);
                     context.writeVariable(contract->name, "contract_helper", ch);
@@ -183,7 +182,6 @@ namespace taiyi { namespace chain {
         registerMember("name", &contract_base_info::name);
         registerMember("caller", &contract_base_info::caller);
         registerMember("creation_date", &contract_base_info::creation_date);
-        registerMember("contract_authority", &contract_base_info::contract_authority);
         registerMember("invoker_contract_name", &contract_base_info::invoker_contract_name);
         
         //resources
@@ -224,10 +222,7 @@ namespace taiyi { namespace chain {
         registerFunction("read_account_contract_data", &contract_handler::read_account_contract_data);
         registerFunction("write_account_contract_data", &contract_handler::write_account_contract_data);
         registerFunction("get_account_balance", &contract_handler::get_account_balance);        
-        registerFunction("set_permissions_flag", &contract_handler::set_permissions_flag);
-        registerFunction("set_invoke_share_percent", &contract_handler::set_invoke_share_percent);
         registerFunction("invoke_contract_function", &contract_handler::invoke_contract_function);
-        registerFunction("change_contract_authority", &contract_handler::change_contract_authority);
         registerFunction("get_contract_source_code", &contract_handler::get_contract_source_code);
         registerFunction("get_contract_data", &contract_handler::get_contract_data);
         registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);

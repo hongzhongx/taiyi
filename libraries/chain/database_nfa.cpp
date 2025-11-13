@@ -190,7 +190,8 @@ namespace taiyi { namespace chain {
         FC_ASSERT(abi_itr != contract->contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract->name)("i", TAIYI_NFA_INIT_FUNC_NAME));
         
         /*const auto& nfa_symbol_obj = */create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
-            obj.creator = creator.name;
+            obj.creator_account = creator.id;
+            obj.authority_account = creator.id;
             obj.symbol = symbol;
             obj.describe = describe;
             obj.default_contract = contract->id;
@@ -202,9 +203,12 @@ namespace taiyi { namespace chain {
         return TAIYI_NFA_SYMBOL_OBJ_STATE_BYTES; //fix size to avoid fc::raw::pack_size(nfa_symbol_obj) changing in future structure defination;
     }
     //=========================================================================
-    const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa)
+    const nfa_object& database::create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa)
     {
         const auto& caller = creator;
+        
+        //检查创建者权限
+        FC_ASSERT(nfa_symbol.authority_account == creator.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", creator.name)("s", nfa_symbol.symbol));
         
         //检查NFA最大数量限制
         FC_ASSERT(nfa_symbol.count < nfa_symbol.max_count, "The quantity of nfa with symbol \"${s}\" has reached the maximum limit ${c}", ("s", nfa_symbol.symbol)("c", nfa_symbol.max_count));
@@ -226,18 +230,6 @@ namespace taiyi { namespace chain {
         
         //运行主合约初始化nfa数据
         const auto& contract = get<contract_object, by_id>(nfa.main_contract);
-        
-        //evaluate contract authority
-        if (contract.check_contract_authority)
-        {
-            auto skip = node_properties().skip_flags;
-            if (!(skip & (database::validation_steps::skip_transaction_signatures | database::validation_steps::skip_authority_check)))
-            {
-                auto key_itr = std::find(sigkeys.begin(), sigkeys.end(), contract.contract_authority);
-                FC_ASSERT(key_itr != sigkeys.end(), "No contract related permissions were found in the signature, contract_authority:${c}", ("c", contract.contract_authority));
-            }
-        }
-                
         contract_worker worker;
         vector<lua_types> value_list;
         
@@ -246,7 +238,7 @@ namespace taiyi { namespace chain {
         long long vm_drops = old_drops;
         int64_t backup_api_exe_point = get_contract_handler_exe_point();
         clear_contract_handler_exe_point(); //初始化api执行消耗统计
-        lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, reset_vm_memused, context, *this);
+        lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, contract, vm_drops, reset_vm_memused, context, *this);
         int64_t api_exe_point = get_contract_handler_exe_point();
         clear_contract_handler_exe_point(backup_api_exe_point);
         int64_t used_drops = old_drops - vm_drops;
@@ -358,7 +350,6 @@ namespace taiyi { namespace chain {
 
             LuaContext context;
             initialize_VM_baseENV(context);
-            flat_set<public_key_type> sigkeys;
 
             //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
             long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
@@ -369,7 +360,7 @@ namespace taiyi { namespace chain {
                 auto session = start_undo_session();
                 clear_contract_handler_exe_point(); //初始化api执行消耗统计
                 const auto& caller = get<account_object, by_id>(nfa.owner_account);
-                worker.do_nfa_contract_function(caller, nfa, "on_heart_beat", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                worker.do_nfa_contract_function(caller, nfa, "on_heart_beat", value_list, *contract_ptr, vm_drops, true, context, *this, false);
                 session.squash();
             }
             catch (const fc::exception& e) {

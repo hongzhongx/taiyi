@@ -25,7 +25,8 @@ namespace taiyi { namespace chain {
         
         id_type                     id;
 
-        account_name_type           creator;
+        account_id_type             creator_account;
+        account_id_type             authority_account;
         string                      symbol;
         string                      describe;
         contract_id_type            default_contract = contract_id_type::max();
@@ -178,7 +179,13 @@ namespace taiyi { namespace chain {
 
 } } // taiyi::chain
 
-FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
+namespace mira {
+
+    template<> struct is_static_length< taiyi::chain::nfa_material_object > : public boost::true_type {};
+
+} // mira
+
+FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
 FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(is_miraged)(mirage_contract)(created_time)(next_tick_block))

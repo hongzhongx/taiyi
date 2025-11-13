@@ -31,11 +31,10 @@ namespace taiyi { namespace chain {
         string name;
         string caller;
         string creation_date;
-        string contract_authority;
         string invoker_contract_name;
         
-        contract_base_info(database& db_, LuaContext &context_, const account_name_type& owner_, const string& name_, const account_name_type& caller_, const string& creation_date_, const string& contract_authority_, const string& invoker_contract_name_)
-            : db(db_), context(context_), owner(owner_), name(name_), caller(caller_), creation_date(creation_date_), contract_authority(contract_authority_), invoker_contract_name(invoker_contract_name_)
+        contract_base_info(database& db_, LuaContext &context_, const account_name_type& owner_, const string& name_, const account_name_type& caller_, const string& creation_date_, const string& invoker_contract_name_)
+            : db(db_), context(context_), owner(owner_), name(name_), caller(caller_), creation_date(creation_date_), invoker_contract_name(invoker_contract_name_)
         {}
         
         const contract_object& get_contract(string name);
@@ -215,14 +214,13 @@ namespace taiyi { namespace chain {
         const nfa_object*                   nfa_caller = 0; //隐含由某个NFA发起的调用
         contract_result&                    result;
         LuaContext&                         context;
-        const flat_set<public_key_type>&    sigkeys;
         lua_map                             account_contract_data_cache;
         lua_map                             contract_data_cache;
         bool                                is_in_eval; //只读模式标记，表示在eval调用中
         
         std::vector<contract_handler*>      _sub_chs;
         
-        contract_handler(database &db, const account_object& caller, const nfa_object* nfa_caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys, bool eval);
+        contract_handler(database &db, const account_object& caller, const nfa_object* nfa_caller, const contract_object &contract, contract_result &result, LuaContext &context, bool eval);
         ~contract_handler();
     
         void assert_contract_data_size();
@@ -231,8 +229,6 @@ namespace taiyi { namespace chain {
         void log(string message);
         void narrate(string message, bool time_prefix = false);
         uint32_t contract_random();
-        void set_permissions_flag(bool flag);
-        void set_invoke_share_percent(uint32_t percent);
         string get_contract_source_code(const string& contract_name);
         lua_map get_contract_data(const string& contract_name, const lua_map& read_list);
         lua_map read_contract_data(const lua_map& read_list);
@@ -250,7 +246,6 @@ namespace taiyi { namespace chain {
         uint32_t head_block_num();
         int64_t generate_hash(uint32_t offset);
         int64_t get_account_balance(const string& account_name, const string& symbol_name);
-        void change_contract_authority(const string& authority);
         memo_data make_memo(const string& receiver_account_name, const string& key, const string& value, uint64_t ss, bool enable_logger = false);
         void invoke_contract_function(const string& contract_name, const string& function_name, const string& value_list_json);
         void make_release();

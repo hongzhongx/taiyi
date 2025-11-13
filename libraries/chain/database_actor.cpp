@@ -53,12 +53,11 @@ namespace taiyi { namespace chain {
     {
         LuaContext context;
         initialize_VM_baseENV(context);
-        flat_set<public_key_type> sigkeys;
         contract_worker worker;
         vector<lua_types> value_list;
         //运行主合约获取初始化数据
         const auto& contract = get<contract_object, by_id>(rule.main_contract);
-        lua_table result_table = worker.do_contract_function(creator, TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME, value_list, sigkeys, contract, vm_drops, true, context, *this);
+        lua_table result_table = worker.do_contract_function(creator, TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME, value_list, contract, vm_drops, true, context, *this);
         
         auto it_name = result_table.v.find(lua_types(lua_string("name")));
         FC_ASSERT(it_name != result_table.v.end(), "talent contract init data invalid, need \"name\"");
@@ -320,7 +319,6 @@ namespace taiyi { namespace chain {
 
                 LuaContext context;
                 initialize_VM_baseENV(context);
-                flat_set<public_key_type> sigkeys;
 
                 //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
                 long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
@@ -332,7 +330,7 @@ namespace taiyi { namespace chain {
                     auto session = start_undo_session();
                     clear_contract_handler_exe_point(); //初始化api执行消耗统计
                     const auto& caller = get<account_object, by_id>(nfa.owner_account);
-                    lua_table result_table = worker.do_nfa_contract_function(caller, nfa, "trigger", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                    lua_table result_table = worker.do_nfa_contract_function(caller, nfa, "trigger", value_list, *contract_ptr, vm_drops, true, context, *this, false);
 
                     auto it_triggered = result_table.v.find(lua_types(lua_string("triggered")));
                     if(it_triggered == result_table.v.end()) {
@@ -452,7 +450,6 @@ namespace taiyi { namespace chain {
 
             LuaContext context;
             initialize_VM_baseENV(context);
-            flat_set<public_key_type> sigkeys;
 
             //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
             long long old_drops = nfa.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
@@ -463,7 +460,7 @@ namespace taiyi { namespace chain {
                 auto session = start_undo_session();
                 clear_contract_handler_exe_point(); //初始化api执行消耗统计
                 const auto& caller = get<account_object, by_id>(nfa.owner_account);
-                worker.do_nfa_contract_function(caller, nfa, "on_grown", value_list, sigkeys, *contract_ptr, vm_drops, true, context, *this, false);
+                worker.do_nfa_contract_function(caller, nfa, "on_grown", value_list, *contract_ptr, vm_drops, true, context, *this, false);
                 api_exe_point = get_contract_handler_exe_point();
                 session.squash();
             }

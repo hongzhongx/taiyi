@@ -45,7 +45,7 @@ namespace taiyi { namespace chain {
         long long old_drops = creator.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
-        size_t new_state_size = _db.create_contract_objects( creator, o.name, o.data, o.contract_authority, vm_drops );
+        size_t new_state_size = _db.create_contract_objects( creator, o.name, o.data, vm_drops );
         int64_t api_exe_point = _db.get_contract_handler_exe_point();
         int64_t used_drops = old_drops - vm_drops;
 
@@ -109,23 +109,10 @@ namespace taiyi { namespace chain {
         
         const auto& caller = _db.get<account_object, by_name>(o.caller);
         const auto& contract = _db.get<contract_object, by_name>(o.contract_name);
-
-        const auto* current_trx = _db.get_current_trx_ptr();
-        FC_ASSERT(current_trx);
-        const flat_set<public_key_type>& sigkeys = current_trx->get_signature_keys(_db.get_chain_id(), fc::ecc::fc_canonical);
         
         //evaluate contract authority
         if(o.caller != TAIYI_COMMITTEE_ACCOUNT)
             FC_ASSERT(contract.can_do(_db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", o.contract_name));
-        if (contract.check_contract_authority)
-        {
-            auto skip = _db.node_properties().skip_flags;
-            if (!(skip & (database::validation_steps::skip_transaction_signatures | database::validation_steps::skip_authority_check)))
-            {
-                auto key_itr = std::find(sigkeys.begin(), sigkeys.end(), contract.contract_authority);
-                FC_ASSERT(key_itr != sigkeys.end(), "No contract related permissions were found in the signature, contract_authority:${c}", ("c", contract.contract_authority));
-            }
-        }
                 
         contract_worker worker;
         
@@ -137,7 +124,7 @@ namespace taiyi { namespace chain {
         long long vm_drops = old_drops;
         int64_t backup_api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
-        worker.do_contract_function(caller, o.function_name, o.value_list, sigkeys, contract, vm_drops, true,  context, _db);
+        worker.do_contract_function(caller, o.function_name, o.value_list, contract, vm_drops, true,  context, _db);
         int64_t api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(backup_api_exe_point);
         int64_t used_drops = old_drops - vm_drops;

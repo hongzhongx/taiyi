@@ -37,15 +37,11 @@ namespace taiyi { namespace chain {
         const auto& creator = _db.get_account( o.creator );
         const auto* nfa_symbol = _db.find<nfa_symbol_object, by_symbol>(o.symbol);
         FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", o.symbol));
-        
-        const auto* current_trx = _db.get_current_trx_ptr();
-        FC_ASSERT(current_trx);
-        const flat_set<public_key_type>& sigkeys = current_trx->get_signature_keys(_db.get_chain_id(), fc::ecc::fc_canonical);
-        
+                
         LuaContext context;
         _db.initialize_VM_baseENV(context);
         
-        const auto& nfa = _db.create_nfa(creator, *nfa_symbol, sigkeys, true, context);
+        const auto& nfa = _db.create_nfa(creator, *nfa_symbol, true, context);
         
         contract_result result;
         

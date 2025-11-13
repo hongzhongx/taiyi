@@ -1083,8 +1083,8 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(_db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->is_in_eval);
+            contract_base_info cbi(_db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, nfa_context,  current_ch->is_in_eval);
             contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, _db, ch);
             
             const auto& name = nfa_contract.name;
@@ -1214,8 +1214,8 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(_db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, false);
+            contract_base_info cbi(_db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, nfa_context, false);
             contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, _db, ch);
             
             const auto& name = nfa_contract.name;

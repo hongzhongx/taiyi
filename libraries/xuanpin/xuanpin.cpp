@@ -1803,14 +1803,13 @@ namespace taiyi { namespace xuanpin {
         return my->_remote_api->get_account_resources( names );
     }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_contract(const account_name_type& owner, const string& name, const public_key_type& contract_authority, const string& data, bool broadcast)
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_contract(const account_name_type& owner, const string& name, const string& data, bool broadcast)
     { try {
         FC_ASSERT( !is_locked() );
 
         create_contract_operation op;
         op.owner = owner;
         op.name = name;
-        op.contract_authority = contract_authority;
         op.data = data;
 
         signed_transaction tx;
@@ -1818,9 +1817,9 @@ namespace taiyi { namespace xuanpin {
         tx.validate();
 
         return my->sign_transaction( tx, broadcast );
-    } FC_CAPTURE_AND_RETHROW( (owner)(name)(contract_authority)(data) ) }
+    } FC_CAPTURE_AND_RETHROW( (owner)(name)(data) ) }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_contract_from_file(const account_name_type& owner, const string& name, const public_key_type&  contract_authority, const string& filename, bool broadcast)
+    baiyujing_api::legacy_signed_transaction xuanpin_api::create_contract_from_file(const account_name_type& owner, const string& name, const string& filename, bool broadcast)
     { try {
         FC_ASSERT( !is_locked() );
 
@@ -1828,8 +1827,8 @@ namespace taiyi { namespace xuanpin {
         std::string contract_data;
         fc::read_file_contents(filename, contract_data);
 
-        return create_contract(owner, name, contract_authority, contract_data, broadcast);
-    } FC_CAPTURE_AND_RETHROW( (owner)(name)(contract_authority)(filename) ) }
+        return create_contract(owner, name, contract_data, broadcast);
+    } FC_CAPTURE_AND_RETHROW( (owner)(name)(filename) ) }
     
     void xuanpin_api::get_contract_source_code(const string& name) const
     {

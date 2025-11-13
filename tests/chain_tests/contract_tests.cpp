@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE( callback_functions )
     
     const contract_object& contract = db->get<contract_object, by_id>(0);
     const account_object& caller = alice;
-    contract_base_info cbi(*db, context, "alice", contract.name, caller.name, string(contract.creation_date), string(contract.contract_authority), contract.name);
+    contract_base_info cbi(*db, context, "alice", contract.name, caller.name, string(contract.creation_date), contract.name);
     contract_result result;
     lua_map account_data;
     flat_set<public_key_type> sigkeys;

@@ -101,8 +101,8 @@ namespace taiyi { namespace chain {
     {
     }
     //=============================================================================
-    contract_handler::contract_handler(database &db, const account_object& caller, const nfa_object* nfa_caller, const contract_object &contract, contract_result &result, LuaContext &context, const flat_set<public_key_type>& sigkeys, bool eval)
-    : db(db), contract(contract), caller(caller), nfa_caller(nfa_caller), result(result), context(context), sigkeys(sigkeys), is_in_eval(eval)
+    contract_handler::contract_handler(database &db, const account_object& caller, const nfa_object* nfa_caller, const contract_object &contract, contract_result &result, LuaContext &context, bool eval)
+    : db(db), contract(contract), caller(caller), nfa_caller(nfa_caller), result(result), context(context), is_in_eval(eval)
     {
         result.contract_name = contract.name;
         account_contract_data_cache = db.prepare_account_contract_data(caller, contract);
@@ -139,55 +139,6 @@ namespace taiyi { namespace chain {
             return nfa_caller->id._id;
         else
             return nfa_id_type::max()._id;
-    }
-    //=============================================================================
-    void contract_handler::set_permissions_flag(bool flag)
-    {
-        try
-        {
-            FC_ASSERT(is_owner(), "You`re not the contract`s owner");
-            db.modify(db.get<contract_object, by_id>(contract.id), [&](contract_object &co) {
-                co.check_contract_authority = flag;
-            });
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(this->context.mState,e.to_string());
-        }
-    };
-    //=============================================================================
-    void contract_handler::set_invoke_share_percent(uint32_t percent)
-    {
-        try
-        {
-            FC_ASSERT(percent <= 100, "percent should be in range 0-100 ");
-            FC_ASSERT(is_owner(), "You`re not the contract`s owner");
-            db.modify(db.get<contract_object, by_id>(contract.id), [&](contract_object &co) {
-                co.user_invoke_share_percent = percent;
-            });
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(this->context.mState,e.to_string());
-        }
-    };
-    //=============================================================================
-    void contract_handler::change_contract_authority(const string& authority)
-    {
-        try
-        {
-            FC_ASSERT(is_owner(), "You`re not the contract`s owner");
-            auto new_authority= public_key_type(authority);
-            db.modify(db.get<contract_object, by_id>(contract.id), [&](contract_object &co) {
-                co.contract_authority = new_authority;
-            });
-            
-            db.add_contract_handler_exe_point(1);
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(this->context.mState,e.to_string());
-        }
     }
     //=============================================================================
     const contract_object& contract_base_info::get_contract(string name)
@@ -684,8 +635,8 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, 0, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->is_in_eval);
+            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(db, current_ch->caller, 0, nfa_contract, current_ch->result, nfa_context, current_ch->is_in_eval);
             contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
@@ -815,8 +766,8 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, 0, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, false);
+            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(db, current_ch->caller, 0, nfa_contract, current_ch->result, nfa_context, false);
             contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
@@ -924,8 +875,8 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, caller.name, string(nfa_contract.creation_date), string(nfa_contract.contract_authority), current_cbi->invoker_contract_name);
-            contract_handler ch(db, caller, 0, nfa_contract, current_ch->result, nfa_context, current_ch->sigkeys, current_ch->is_in_eval);
+            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, caller.name, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(db, caller, 0, nfa_contract, current_ch->result, nfa_context, current_ch->is_in_eval);
             contract_nfa_handler cnh(caller, nfa, nfa_context, db, ch);
             
             const auto& name = nfa_contract.name;
@@ -1004,11 +955,10 @@ namespace taiyi { namespace chain {
             
             contract_worker worker;
             vector<lua_types> value_list;
-            flat_set<public_key_type> sigkeys;
             
             long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
-            lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, sigkeys, *contract, vm_drops, true, context, db);
+            lua_table result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, *contract, vm_drops, true, context, db);
             int64_t used_drops = old_drops - vm_drops;
             
             int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
@@ -1042,12 +992,11 @@ namespace taiyi { namespace chain {
         {
             db.add_contract_handler_exe_point(2);
             
-            const auto& contract_owner = db.get<account_object, by_id>(contract.owner);
             const auto& actor_nfa = db.get<nfa_object, by_id>(to_actor_nfa_id);
             const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
 
-            const nfa_object& nfa = db.create_nfa(contract_owner, *nfa_symbol, sigkeys, false, context);
+            const nfa_object& nfa = db.create_nfa(caller, *nfa_symbol, false, context);
             db.modify(nfa, [&](nfa_object& obj) {
                 for(const auto& p : data) {
                     if(obj.contract_data.find(p.first) != obj.contract_data.end())
@@ -1070,7 +1019,7 @@ namespace taiyi { namespace chain {
                 affected.action = nfa_affected_type::create_for;
                 result.contract_affecteds.push_back(std::move(affected));
 
-                affected.affected_account = contract_owner.name;
+                affected.affected_account = caller.name;
                 affected.action = nfa_affected_type::create_by;
                 result.contract_affecteds.push_back(std::move(affected));
             }
@@ -2224,15 +2173,11 @@ namespace taiyi { namespace chain {
             //先创建NFA
             string nfa_symbol_name = "nfa.zone.default";
             const auto& nfa_symbol = db.get<nfa_symbol_object, by_symbol>(nfa_symbol_name);
-            
-            const auto* current_trx = db.get_current_trx_ptr();
-            FC_ASSERT(current_trx);
-            const flat_set<public_key_type>& sigkeys = current_trx->get_signature_keys(db.get_chain_id(), fc::ecc::fc_canonical);
-            
+                        
             LuaContext context;
             db.initialize_VM_baseENV(context);
             
-            const auto& new_nfa = db.create_nfa(creator, nfa_symbol, sigkeys, true, context, &actor_nfa);
+            const auto& new_nfa = db.create_nfa(creator, nfa_symbol, true, context, &actor_nfa);
             
             //创建一个新区域
             const auto& new_zone = db.create< zone_object >( [&]( zone_object& zone ) {
@@ -2405,7 +2350,7 @@ namespace taiyi { namespace chain {
             const auto& creator = caller;
             long long old_drops = creator.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
             long long vm_drops = old_drops;
-            size_t new_state_size = db.create_contract_objects( creator, name, code, public_key_type(), vm_drops );
+            size_t new_state_size = db.create_contract_objects( creator, name, code, vm_drops );
             int64_t used_drops = old_drops - vm_drops;
             
             int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;

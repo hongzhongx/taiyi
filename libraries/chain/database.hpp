@@ -182,7 +182,7 @@ namespace taiyi { namespace chain {
         const account_object&  get_account(  const account_name_type& name )const;
         const account_object*  find_account( const account_name_type& name )const;
 
-        const nfa_object& create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, const flat_set<public_key_type>& sigkeys, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa = 0);
+        const nfa_object& create_nfa(const account_object& creator, const nfa_symbol_object& nfa_symbol, bool reset_vm_memused, LuaContext& context, const nfa_object* caller_nfa = 0);
         
         const dynamic_global_property_object&  get_dynamic_global_properties()const;
         const node_property_object&            get_node_properties()const;
@@ -419,7 +419,7 @@ namespace taiyi { namespace chain {
         void initialize_VM_baseENV(LuaContext& context);
 
         void create_basic_contract_objects();
-        size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, const public_key_type& contract_authority, long long& vm_drops);
+        size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, long long& vm_drops);
         lua_map prepare_account_contract_data(const account_object& account, const contract_object& contract);
         
         void add_contract_handler_exe_point(int64_t p) { _contract_handler_exe_point += p; }

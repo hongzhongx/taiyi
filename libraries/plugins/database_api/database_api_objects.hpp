@@ -228,9 +228,10 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     struct api_nfa_symbol_object
     {
-        api_nfa_symbol_object( const nfa_symbol_object& o, const database& db ) : id(o.id), creator(o.creator),
-            symbol(o.symbol), describe(o.describe), count(o.count), max_count(o.max_count), min_equivalent_qi(o.min_equivalent_qi)
+        api_nfa_symbol_object( const nfa_symbol_object& o, const database& db ) : id(o.id), symbol(o.symbol), describe(o.describe), count(o.count), max_count(o.max_count), min_equivalent_qi(o.min_equivalent_qi)
         {
+            creator_account = db.get<account_object, by_id>(o.creator_account).name;
+            authority_account = db.get<account_object, by_id>(o.authority_account).name;
             default_contract = db.get<contract_object, by_id>(o.default_contract).name;
         }
         
@@ -238,7 +239,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         
         nfa_symbol_id_type          id;
 
-        account_name_type           creator;
+        account_name_type           creator_account;
+        account_name_type           authority_account;
         string                      symbol;
         string                      describe;
         string                      default_contract;
@@ -474,7 +476,7 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator_account)(authority_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(mirage_contract)(created_time)(next_tick_block)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 
