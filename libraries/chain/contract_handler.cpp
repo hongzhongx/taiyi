@@ -484,6 +484,83 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    void contract_handler::create_nfa_symbol(const string& symbol, const string& describe, const string& default_contract, uint64_t max_count, uint64_t min_equivalent_qi)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(2);
+                                
+            FC_ASSERT(memcmp(symbol.data(), "nfa.", 4) == 0, "symbol name is not start with \"nfa.\"");
+            FC_ASSERT(is_valid_nfa_symbol(symbol), "symbol ${q} is invalid", ("n", symbol));
+            
+            FC_ASSERT(describe.size() > 0, "describe is empty");
+            FC_ASSERT(describe.size() < 512, "describe is too long");
+            FC_ASSERT(fc::is_utf8(describe), "describe not formatted in UTF8");
+
+            FC_ASSERT(memcmp(default_contract.data(), "contract.", 9) == 0, "contract name is not strat with \"contract.\"");
+            FC_ASSERT(is_valid_contract_name(default_contract), "contract name ${n} is invalid", ("n", default_contract));
+            
+            const auto& creator = caller;
+            size_t new_state_size = db.create_nfa_symbol_object(creator, symbol, describe, default_contract, max_count, min_equivalent_qi);
+            
+            operation vop = nfa_symbol_create_operation( creator.name, symbol, describe, default_contract, max_count, min_equivalent_qi );
+            db.pre_push_virtual_operation( vop );
+            
+            db.add_contract_handler_exe_point(new_state_size + 100);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    int64_t contract_handler::create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(2);
+            
+            const auto& actor_nfa = db.get<nfa_object, by_id>(to_actor_nfa_id);
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
+
+            const nfa_object& nfa = db.create_nfa(caller, *nfa_symbol, false, context);
+            db.modify(nfa, [&](nfa_object& obj) {
+                for(const auto& p : data) {
+                    if(obj.contract_data.find(p.first) != obj.contract_data.end())
+                        obj.contract_data[p.first] = p.second;
+                    else {
+                        FC_ASSERT(false, "nfa data not support the key \"${k}\"", ("k", p.first));
+                    }
+                }
+                
+                obj.owner_account = actor_nfa.owner_account;
+                obj.active_account = actor_nfa.active_account;
+                obj.parent = nfa_id_type(to_actor_nfa_id);
+            });
+
+            if (enable_logger)
+            {
+                protocol::nfa_affected affected;
+                affected.affected_account = db.get<account_object, by_id>(actor_nfa.owner_account).name;
+                affected.affected_item = nfa.id;
+                affected.action = nfa_affected_type::create_for;
+                result.contract_affecteds.push_back(std::move(affected));
+
+                affected.affected_account = caller.name;
+                affected.action = nfa_affected_type::create_by;
+                result.contract_affecteds.push_back(std::move(affected));
+            }
+
+            return nfa.id;
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+            return -1;
+        }
+    }
+    //=============================================================================
     string contract_handler::get_nfa_contract(int64_t nfa_id)
     {
         try
@@ -954,53 +1031,6 @@ namespace taiyi { namespace chain {
         catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
-        }
-    }
-    //=============================================================================
-    int64_t contract_handler::create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger)
-    {
-        try
-        {
-            db.add_contract_handler_exe_point(2);
-            
-            const auto& actor_nfa = db.get<nfa_object, by_id>(to_actor_nfa_id);
-            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
-            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
-
-            const nfa_object& nfa = db.create_nfa(caller, *nfa_symbol, false, context);
-            db.modify(nfa, [&](nfa_object& obj) {
-                for(const auto& p : data) {
-                    if(obj.contract_data.find(p.first) != obj.contract_data.end())
-                        obj.contract_data[p.first] = p.second;
-                    else {
-                        FC_ASSERT(false, "nfa data not support the key \"${k}\"", ("k", p.first));
-                    }
-                }
-                
-                obj.owner_account = actor_nfa.owner_account;
-                obj.active_account = actor_nfa.active_account;
-                obj.parent = nfa_id_type(to_actor_nfa_id);
-            });
-
-            if (enable_logger)
-            {
-                protocol::nfa_affected affected;
-                affected.affected_account = db.get<account_object, by_id>(actor_nfa.owner_account).name;
-                affected.affected_item = nfa.id;
-                affected.action = nfa_affected_type::create_for;
-                result.contract_affecteds.push_back(std::move(affected));
-
-                affected.affected_account = caller.name;
-                affected.action = nfa_affected_type::create_by;
-                result.contract_affecteds.push_back(std::move(affected));
-            }
-
-            return nfa.id;
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(this->context.mState, e.to_string());
-            return -1;
         }
     }
     //=========================================================================

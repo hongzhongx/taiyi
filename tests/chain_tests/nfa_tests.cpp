@@ -32,6 +32,12 @@ using std::string;
 
 BOOST_FIXTURE_TEST_SUITE( nfa_tests, clean_database_fixture )
 
+const string s_code_nfa_basic = " \
+    function create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi) \
+        contract_helper:create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi) \
+    end                           \
+";
+
 BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
 { try {
     BOOST_TEST_MESSAGE( "Testing: create_nfa_symbol_apply" );
@@ -46,6 +52,12 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
     generate_block();
         
     create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+    
     op.owner = "bob";
     op.name = "contract.nfa.fail";
     op.data = nfa_init_lua_f;
@@ -65,28 +77,34 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
 
     BOOST_TEST_MESSAGE( "--- Test failure when no entrance in contract" );
 
-    create_nfa_symbol_operation cnsop;
-    cnsop.creator = "alice";
-    cnsop.symbol = "nfa.test";
-    cnsop.describe = "test";
-    cnsop.default_contract = "contract.nfa.fail";
-        
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test"),
+        lua_string("contract.nfa.fail"),
+        lua_int(100),
+        lua_int(0)
+    };
+
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
 
     BOOST_TEST_MESSAGE( "--- Test failure when invalid symbol" );
 
-    cnsop.symbol = "nft.test";
-    cnsop.default_contract = "contract.nfa.good";
+    cop.value_list[0] = lua_string("nft.test");
+    cop.value_list[2] = lua_string("contract.nfa.good");
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
 
@@ -94,17 +112,19 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
 
     const auto& contract_base = db->get<contract_object, by_name>("contract.nfa.good");
 
-    cnsop.symbol = "nfa.test";
+    cop.value_list[0] = lua_string("nfa.test");
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     
     const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
-    BOOST_REQUIRE( nfa_symbol.creator == "alice" );
+    const auto& aac = db->get<account_object, by_name>("alice");
+    BOOST_REQUIRE( nfa_symbol.creator_account == aac.id );
+    BOOST_REQUIRE( nfa_symbol.authority_account == aac.id );
     BOOST_REQUIRE( nfa_symbol.symbol == "nfa.test" );
     BOOST_REQUIRE( nfa_symbol.describe == "test" );
     BOOST_REQUIRE( nfa_symbol.default_contract == contract_base.id );
@@ -126,11 +146,17 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
     generate_block();
         
     create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
     op.owner = "bob";
     op.name = "contract.nfa.base";
     op.data = nfa_init_lua;
-
     tx.operations.push_back( op );
+    
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, bob_private_key );
     db->push_transaction( tx, 0 );
@@ -138,17 +164,22 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
     
     generate_block();
     
-    create_nfa_symbol_operation cnsop;
-    cnsop.creator = "alice";
-    cnsop.symbol = "nfa.test";
-    cnsop.describe = "test";
-    cnsop.max_count = 10;
-    cnsop.default_contract = "contract.nfa.base";
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test"),
+        lua_string("contract.nfa.base"),
+        lua_int(10),
+        lua_int(0)
+    };
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
@@ -168,7 +199,7 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
     sign( tx, charlie_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
 
-    BOOST_TEST_MESSAGE( "--- Test create nfa" );
+    BOOST_TEST_MESSAGE( "--- Test failure create nfa from account without authority" );
 
     cnop.symbol = "nfa.test";
         
@@ -177,6 +208,17 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cnop );
     sign( tx, charlie_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+
+    BOOST_TEST_MESSAGE( "--- Test create nfa" );
+
+    cnop.creator = "alice";
+        
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( cnop );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     
     const auto& to = db->get<transaction_object, by_trx_id>(tx.id());
@@ -185,14 +227,15 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
     BOOST_REQUIRE( result.contract_affecteds.size() == 2 );
     nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
     
-    BOOST_REQUIRE( affected.affected_account == "charlie" );
+    BOOST_REQUIRE( affected.affected_account == "alice" );
     BOOST_REQUIRE( affected.affected_item == 0 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
     const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
-    BOOST_REQUIRE( nfa.creator_account == charlie_id );
-    BOOST_REQUIRE( nfa.owner_account == charlie_id );
+    const auto& acc = db->get<account_object, by_name>("alice");
+    BOOST_REQUIRE( nfa.creator_account == acc.id );
+    BOOST_REQUIRE( nfa.owner_account == acc.id );
     BOOST_REQUIRE( nfa.symbol_id == nfa_symbol.id );
 
 } FC_LOG_AND_RETHROW() }
@@ -212,11 +255,17 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     generate_block();
         
     create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
     op.owner = "bob";
     op.name = "contract.nfa.base";
     op.data = nfa_init_lua;
-
     tx.operations.push_back( op );
+    
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, bob_private_key );
     db->push_transaction( tx, 0 );
@@ -224,16 +273,22 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     
     generate_block();
     
-    create_nfa_symbol_operation cnsop;
-    cnsop.creator = "alice";
-    cnsop.symbol = "nfa.test";
-    cnsop.describe = "test";
-    cnsop.default_contract = "contract.nfa.base";
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test"),
+        lua_string("contract.nfa.base"),
+        lua_int(100),
+        lua_int(0)
+    };
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
@@ -241,14 +296,14 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     generate_block();
 
     create_nfa_operation cnop;
-    cnop.creator = "charlie";
+    cnop.creator = "alice";
     cnop.symbol = "nfa.test";
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cnop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
     
@@ -260,29 +315,30 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     BOOST_REQUIRE( result.contract_affecteds.size() == 2 );
     nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
     
-    BOOST_REQUIRE( affected.affected_account == "charlie" );
+    BOOST_REQUIRE( affected.affected_account == "alice" );
     BOOST_REQUIRE( affected.affected_item == 0 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
     const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
-    BOOST_REQUIRE( nfa.creator_account == charlie_id );
-    BOOST_REQUIRE( nfa.owner_account == charlie_id );
+    const auto& ida = db->get<account_object, by_name>("alice").id;
+    BOOST_REQUIRE( nfa.creator_account == ida );
+    BOOST_REQUIRE( nfa.owner_account == ida );
     BOOST_REQUIRE( nfa.symbol_id == nfa_symbol.id );
     
     BOOST_TEST_MESSAGE( "--- Test transfer nfa" );
 
     transfer_nfa_operation tnop;
 
-    tnop.from = "charlie";
-    tnop.to = "alice";
+    tnop.from = "alice";
+    tnop.to = "charlie";
     tnop.id = nfa.id;
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( tnop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
 
     const auto& to2 = db->get<transaction_object, by_trx_id>(tx.id());
@@ -291,17 +347,19 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     BOOST_REQUIRE( result.contract_affecteds.size() == 2 );
     
     affected = result.contract_affecteds[0].get<nfa_affected>();
-    BOOST_REQUIRE( affected.affected_account == "charlie" );
+    BOOST_REQUIRE( affected.affected_account == "alice" );
     BOOST_REQUIRE( affected.affected_item == nfa.id._id );
     BOOST_REQUIRE( affected.action == nfa_affected_type::transfer_from );
     
     affected = result.contract_affecteds[1].get<nfa_affected>();
-    BOOST_REQUIRE( affected.affected_account == "alice" );
+    BOOST_REQUIRE( affected.affected_account == "charlie" );
     BOOST_REQUIRE( affected.affected_item == nfa.id._id );
     BOOST_REQUIRE( affected.action == nfa_affected_type::transfer_to );
     
-    BOOST_REQUIRE( nfa.creator_account == charlie_id );
-    BOOST_REQUIRE( nfa.owner_account == alice_id );
+    const auto& id1 = db->get<account_object, by_name>("alice").id;
+    BOOST_REQUIRE( nfa.creator_account == id1 );
+    const auto& id2 = db->get<account_object, by_name>("charlie").id;
+    BOOST_REQUIRE( nfa.owner_account == id2 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -326,11 +384,17 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     auto init_mana = db->get_account( "charlie" ).qi;
         
     create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
     op.owner = "bob";
     op.name = "contract.nfa.base";
     op.data = nfa_code_lua;
-
     tx.operations.push_back( op );
+    
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, bob_private_key );
     db->push_transaction( tx, 0 );
@@ -338,16 +402,22 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     
     generate_block();
     
-    create_nfa_symbol_operation cnsop;
-    cnsop.creator = "alice";
-    cnsop.symbol = "nfa.test";
-    cnsop.describe = "test";
-    cnsop.default_contract = "contract.nfa.base";
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test"),
+        lua_string("contract.nfa.base"),
+        lua_int(100),
+        lua_int(0)
+    };
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
@@ -355,14 +425,14 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     generate_block();
 
     create_nfa_operation cnop;
-    cnop.creator = "charlie";
+    cnop.creator = "alice";
     cnop.symbol = "nfa.test";
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cnop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
     
@@ -374,14 +444,15 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     BOOST_REQUIRE( cresult.contract_affecteds.size() == 2 );
     nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
     
-    BOOST_REQUIRE( affected.affected_account == "charlie" );
+    BOOST_REQUIRE( affected.affected_account == "alice" );
     BOOST_REQUIRE( affected.affected_item == 0 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
     const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
-    BOOST_REQUIRE( nfa.creator_account == charlie_id );
-    BOOST_REQUIRE( nfa.owner_account == charlie_id );
+    const auto& id1 = db->get<account_object, by_name>("alice").id;
+    BOOST_REQUIRE( nfa.creator_account == id1 );
+    BOOST_REQUIRE( nfa.owner_account == id1 );
     BOOST_REQUIRE( nfa.symbol_id == nfa_symbol.id );
     
     generate_blocks(10); //给奖励基金充值
@@ -390,22 +461,22 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     
     action_nfa_operation anop;
 
-    anop.caller = "charlie";
+    anop.caller = "alice";
     anop.id = nfa.id;
     anop.action = "hello_nfa";
 
-    db->modify( db->get_account( "charlie" ), [&]( account_object& a ) {
+    db->modify( db->get_account( "alice" ), [&]( account_object& a ) {
         a.qi = init_mana;
     });
 
-    auto old_mana = db->get_account( "charlie" ).qi;
+    auto old_mana = db->get_account( "alice" ).qi;
     auto old_reward_feigang = db->get_account("bob").reward_feigang_balance;
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( anop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
 
     const auto& to2 = db->get<transaction_object, by_trx_id>(tx.id());
@@ -422,7 +493,7 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     BOOST_REQUIRE( sresult.size() == 1 );
     BOOST_REQUIRE( sresult[0] == "hello nfa" );
     
-    int64_t used_mana = old_mana.amount.value - db->get_account( "charlie" ).qi.amount.value;
+    int64_t used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
     idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 442 );
 
@@ -459,11 +530,17 @@ BOOST_AUTO_TEST_CASE( action_drops )
     auto init_mana = db->get_account( "charlie" ).qi;
 
     create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
     op.owner = "bob";
     op.name = "contract.nfa.base";
     op.data = nfa_code_lua;
-
     tx.operations.push_back( op );
+    
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, bob_private_key );
     db->push_transaction( tx, 0 );
@@ -471,17 +548,22 @@ BOOST_AUTO_TEST_CASE( action_drops )
     
     generate_block();
     
-    create_nfa_symbol_operation cnsop;
-    cnsop.creator = "alice";
-    cnsop.symbol = "nfa.test";
-    cnsop.describe = "test";
-    cnsop.max_count = 3;
-    cnsop.default_contract = "contract.nfa.base";
-        
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test"),
+        lua_string("contract.nfa.base"),
+        lua_int(3),
+        lua_int(0)
+    };
+                
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
@@ -489,14 +571,14 @@ BOOST_AUTO_TEST_CASE( action_drops )
     generate_block();
 
     create_nfa_operation cnop;
-    cnop.creator = "charlie";
+    cnop.creator = "alice";
     cnop.symbol = "nfa.test";
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cnop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
     
@@ -508,14 +590,15 @@ BOOST_AUTO_TEST_CASE( action_drops )
     BOOST_REQUIRE( cresult.contract_affecteds.size() == 2 );
     nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
     
-    BOOST_REQUIRE( affected.affected_account == "charlie" );
+    BOOST_REQUIRE( affected.affected_account == "alice" );
     BOOST_REQUIRE( affected.affected_item == 0 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
     const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
-    BOOST_REQUIRE( nfa.creator_account == charlie_id );
-    BOOST_REQUIRE( nfa.owner_account == charlie_id );
+    const auto& id1 = db->get<account_object, by_name>("alice").id;
+    BOOST_REQUIRE( nfa.creator_account == id1 );
+    BOOST_REQUIRE( nfa.owner_account == id1 );
     BOOST_REQUIRE( nfa.symbol_id == nfa_symbol.id );
     
     generate_blocks(10); //给奖励基金充值
@@ -527,7 +610,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     action_nfa_operation anop;
 
-    anop.caller = "charlie";
+    anop.caller = "alice";
     anop.id = nfa.id;
 
 //    anop.action = "active";
@@ -548,16 +631,16 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     anop.action = "heart_beat";
 
-    old_mana = db->get_account( "charlie" ).qi;
+    old_mana = db->get_account( "alice" ).qi;
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( anop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
 
-    used_mana = old_mana.amount.value - db->get_account( "charlie" ).qi.amount.value;
+    used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
     idump( (used_mana) );
     BOOST_REQUIRE( used_mana == 466 );
 
@@ -585,47 +668,59 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
     generate_block();
-        
+
     auto init_mana = db->get_account( "charlie" ).qi;
 
     create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
     op.owner = "bob";
     op.name = "contract.nfa.base";
     op.data = nfa_code_lua;
-
     tx.operations.push_back( op );
+
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, bob_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
-    
+
     generate_block();
-    
-    create_nfa_symbol_operation cnsop;
-    cnsop.creator = "alice";
-    cnsop.symbol = "nfa.test";
-    cnsop.describe = "test";
-    cnsop.default_contract = "contract.nfa.base";
-        
+
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test"),
+        lua_string("contract.nfa.base"),
+        lua_int(3),
+        lua_int(0)
+    };
+                
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnsop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
-    
+
     generate_block();
 
     create_nfa_operation cnop;
-    cnop.creator = "charlie";
+    cnop.creator = "alice";
     cnop.symbol = "nfa.test";
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cnop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
     
@@ -637,20 +732,23 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     BOOST_REQUIRE( cresult.contract_affecteds.size() == 2 );
     nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
     
-    BOOST_REQUIRE( affected.affected_account == "charlie" );
+    BOOST_REQUIRE( affected.affected_account == "alice" );
     BOOST_REQUIRE( affected.affected_item == 0 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto* nfa = db->find<nfa_object, by_id>(affected.affected_item);
     const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
-    BOOST_REQUIRE( nfa->creator_account == charlie_id );
-    BOOST_REQUIRE( nfa->owner_account == charlie_id );
+    const auto& id1 = db->get<account_object, by_name>("alice").id;
+    BOOST_REQUIRE( nfa->creator_account == id1 );
+    BOOST_REQUIRE( nfa->owner_account == id1 );
     BOOST_REQUIRE( nfa->symbol_id == nfa_symbol.id );
     
     auto old_nfa_qi = nfa->qi;
-    
+
     //给nfa充气
     db_plugin->debug_update( [&]( database& db ) {
+        //注意之前的nfa指向的对象有可能被db释放重建，因此不可保持
+        nfa = db.find<nfa_object, by_id>(affected.affected_item);
         db.modify( *nfa, [&](nfa_object& obj) {
             obj.qi += asset(10, QI_SYMBOL);
         });
@@ -658,6 +756,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
             obj.total_qi += asset(10, QI_SYMBOL);
         });
     });
+
     generate_block();
 
     //注意之前的nfa指向的对象有可能被db释放重建，因此不可保持
@@ -668,7 +767,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     BOOST_TEST_MESSAGE( "--- Test enable tick nfa" );
     
     action_nfa_operation anop;
-    anop.caller = "charlie";
+    anop.caller = "alice";
     anop.id = nfa->id;
     anop.action = "active";
 
@@ -676,7 +775,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( anop );
-    sign( tx, charlie_private_key );
+    sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     
     nfa = db->find<nfa_object, by_id>(affected.affected_item);
@@ -737,7 +836,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
             BOOST_REQUIRE( nfa->next_tick_block == (db->head_block_num() + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM) );
         }
     }
-    
+
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_SUITE_END()

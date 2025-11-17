@@ -1881,26 +1881,6 @@ namespace taiyi { namespace xuanpin {
         return revise_contract(reviser, name, contract_data, broadcast);
     } FC_CAPTURE_AND_RETHROW( (reviser)(name)(filename) ) }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_nfa_symbol( const account_name_type& creator, const string& symbol, const string& describe, const string& contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi, bool broadcast )
-    { try {
-        FC_ASSERT( !is_locked() );
-        create_nfa_symbol_operation op;
-        op.creator = creator;
-        op.symbol = symbol;
-        op.describe = describe;
-        op.default_contract = contract;
-        op.max_count = max_count;
-        op.min_equivalent_qi = min_equivalent_qi;
-
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
-
-        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
-        transaction.operation_results = get_transaction_results(transaction.transaction_id);
-        return transaction;
-    } FC_CAPTURE_AND_RETHROW( (creator)(symbol)(describe)(broadcast) ) }
-
     baiyujing_api::legacy_signed_transaction xuanpin_api::create_nfa( const account_name_type& creator, const string& symbol, bool broadcast )
     { try {
         FC_ASSERT( !is_locked() );

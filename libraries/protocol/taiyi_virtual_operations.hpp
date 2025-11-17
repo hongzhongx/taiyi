@@ -57,6 +57,20 @@ namespace taiyi { namespace protocol {
         account_name_type owner;
     };
     
+    struct nfa_symbol_create_operation : public virtual_operation
+    {
+        nfa_symbol_create_operation() {}
+        nfa_symbol_create_operation(const account_name_type& creator_, const string& symbol_, const string& describe_, const string& default_contract_, const uint64_t& max_count_, const uint64_t& min_equivalent_qi_)
+        : creator(creator_), symbol(symbol_), describe(describe_), default_contract(default_contract_), max_count(max_count_), min_equivalent_qi(min_equivalent_qi_) {}
+        
+        account_name_type   creator;
+        string              symbol;
+        string              describe;
+        string              default_contract;
+        uint64_t            max_count;
+        uint64_t            min_equivalent_qi;
+    };
+    
     struct nfa_convert_resources_operation : public virtual_operation
     {
         nfa_convert_resources_operation(){}
@@ -275,6 +289,7 @@ FC_REFLECT( taiyi::protocol::hardfork_operation, (hardfork_id) )
 FC_REFLECT( taiyi::protocol::return_qi_delegation_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(reward) )
 FC_REFLECT( taiyi::protocol::shutdown_siming_operation, (owner) )
+FC_REFLECT( taiyi::protocol::nfa_symbol_create_operation, (creator)(symbol)(describe)(default_contract)(max_count)(min_equivalent_qi) )
 FC_REFLECT( taiyi::protocol::nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
 FC_REFLECT( taiyi::protocol::nfa_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )

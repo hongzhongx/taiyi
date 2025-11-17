@@ -18,20 +18,6 @@ extern std::string wstring_to_utf8(const std::wstring& str);
 
 namespace taiyi { namespace chain {
     
-    operation_result create_nfa_symbol_evaluator::do_apply( const create_nfa_symbol_operation& o )
-    { try {
-        const auto& creator = _db.get_account( o.creator );
-                
-        size_t new_state_size = _db.create_nfa_symbol_object(creator, o.symbol, o.describe, o.default_contract, o.max_count, o.min_equivalent_qi);
-        
-        //reward to treasury
-        int64_t used_qi = new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + 100 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create nfa symbol." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
-
-        return void_result();
-    } FC_CAPTURE_AND_RETHROW( (o) ) }
-    //=============================================================================
     operation_result create_nfa_evaluator::do_apply( const create_nfa_operation& o )
     { try {
         const auto& creator = _db.get_account( o.creator );

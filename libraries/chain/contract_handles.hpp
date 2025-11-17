@@ -257,6 +257,8 @@ namespace taiyi { namespace chain {
         static bool write_in_table(lua_map* table, const vector<lua_types>& path, const lua_types& value, int start = 0);
 
         //NFA
+        void create_nfa_symbol(const string& symbol, const string& describe, const string& default_contract, uint64_t max_count, uint64_t min_equivalent_qi);
+        int64_t create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger);
         string get_nfa_contract(int64_t nfa_id);
         bool is_nfa_valid(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);
@@ -272,7 +274,6 @@ namespace taiyi { namespace chain {
         lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
-        int64_t create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger);
 
         //Zone
         bool is_zone_valid(int64_t nfa_id);
