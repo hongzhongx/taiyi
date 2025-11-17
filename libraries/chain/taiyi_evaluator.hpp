@@ -31,7 +31,6 @@ namespace taiyi { namespace chain {
     TAIYI_DEFINE_EVALUATOR( revise_contract )
     TAIYI_DEFINE_EVALUATOR( call_contract_function )
 
-    TAIYI_DEFINE_EVALUATOR( transfer_nfa )
     TAIYI_DEFINE_EVALUATOR( approve_nfa_active )
     TAIYI_DEFINE_EVALUATOR( action_nfa )
 

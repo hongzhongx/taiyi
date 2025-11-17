@@ -39,6 +39,9 @@ const string s_code_nfa_basic = " \
     function create_nfa_to_me(symbol) \
         contract_helper:create_nfa_to_account(contract_base_info.caller, symbol, {}, true) \
     end                           \
+    function transfer_nfa_to_account(to_account, nfa_id) \
+        contract_helper:transfer_nfa_from_caller(to_account, nfa_id, true) \
+    end                           \
 ";
 
 BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
@@ -337,23 +340,25 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     
     BOOST_TEST_MESSAGE( "--- Test transfer nfa" );
 
-    transfer_nfa_operation tnop;
-
-    tnop.from = "alice";
-    tnop.to = "charlie";
-    tnop.id = nfa.id;
-        
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "transfer_nfa_to_account";
+    cop.value_list = {
+        lua_string("charlie"),
+        lua_int(nfa.id)
+    };
+            
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( tnop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
 
     const auto& to2 = db->get<transaction_object, by_trx_id>(tx.id());
     BOOST_REQUIRE( to2.operation_results.size() == 1 );
     result = to2.operation_results[0].get<contract_result>();
-    BOOST_REQUIRE( result.contract_affecteds.size() == 2 );
+    BOOST_REQUIRE( result.contract_affecteds.size() == 3 );
     
     affected = result.contract_affecteds[0].get<nfa_affected>();
     BOOST_REQUIRE( affected.affected_account == "alice" );

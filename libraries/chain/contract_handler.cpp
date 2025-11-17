@@ -451,6 +451,61 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    void contract_handler::transfer_nfa_by_contract(account_id_type from, account_id_type to, int64_t nfa_id, contract_result &result, bool enable_logger)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+
+            FC_ASSERT(from != to, "It's no use transferring nfa to yourself");
+            const account_object &from_account = db.get<account_object, by_id>(from);
+            const account_object &to_account = db.get<account_object, by_id>(to);
+
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found", ("i", nfa_id));
+
+            const auto* parent_nfa = db.find<nfa_object, by_id>(nfa->parent);
+            FC_ASSERT(parent_nfa == nullptr, "Can not transfer child NFA, only can transfer root NFA");
+            
+            FC_ASSERT(from_account.id == nfa->owner_account, "Can not transfer NFA not ownd by ${a}", ("a", from_account.name));
+
+            operation vop = nfa_transfer_operation(from_account.name, to_account.name, nfa_id);
+            db.pre_push_virtual_operation( vop );
+
+            db.modify(*nfa, [&](nfa_object &obj) {
+                obj.owner_account = to_account.id;
+            });
+            
+            //TODO: 转移子节点里面所有子节点的所有权，是否同时也要转移使用权？
+            std::set<nfa_id_type> look_checker;
+            db.modify_nfa_children_owner(*nfa, to_account, look_checker);
+            
+            db.post_push_virtual_operation( vop );
+
+            db.add_contract_handler_exe_point(10);
+
+            if(enable_logger) {
+                protocol::nfa_affected affected;
+                affected.affected_account = from_account.name;
+                affected.affected_item = nfa->id;
+                affected.action = nfa_affected_type::transfer_from;
+                result.contract_affecteds.push_back(std::move(affected));
+                
+                affected.affected_account = to_account.name;
+                affected.affected_item = nfa->id;
+                affected.action = nfa_affected_type::transfer_to;
+                result.contract_affecteds.push_back(std::move(affected));
+
+                log(from_account.name + " transfer nfa #" + fc::json::to_string(nfa->id) + " to " + to_account.name);
+            }
+        }
+        catch (const fc::exception& e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     int64_t contract_handler::get_account_balance(const string& account_name, const string& symbol_name)
     {
         try
@@ -476,6 +531,24 @@ namespace taiyi { namespace chain {
             asset_symbol_type symbol = s_get_symbol_type_from_string(symbol_name);
             auto token = asset(amount, symbol);
             transfer_by_contract(from, account_to, token, result, enable_logger);
+        }
+        catch (const fc::exception& e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::transfer_nfa_from(account_id_type from, const account_name_type& to, int64_t nfa_id, bool enable_logger)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+            
+            validate_account_name( to);
+            const auto& to_account = db.find<account_object, by_name>(to);
+            FC_ASSERT(to_account != nullptr, "account named ${n} is not exist", ("n", to));
+            transfer_nfa_by_contract(from, to_account->id, nfa_id, result, enable_logger);
         }
         catch (const fc::exception& e)
         {

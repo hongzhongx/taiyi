@@ -133,14 +133,6 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.reviser );
         }
         
-        void operator()( const transfer_nfa_operation& op )
-        {
-            _impacted.insert( op.from );
-            _impacted.insert( op.to );
-
-            _impacted_nfas.insert( op.id );
-        }
-
         void operator()( const approve_nfa_active_operation& op )
         {
             _impacted.insert( op.owner );
@@ -172,7 +164,7 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
 
-        void operator()( const nfa_transfer_operation& op )
+        void operator()( const nfa_asset_transfer_operation& op )
         {
             _impacted.insert( op.from_owner );
             if(op.from_owner != op.to_owner)
@@ -181,6 +173,14 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.from );
             if(op.from != op.to)
                 _impacted_nfas.insert( op.to );
+        }
+
+        void operator()( const nfa_transfer_operation& op )
+        {
+            _impacted.insert( op.from );
+            _impacted.insert( op.to );
+
+            _impacted_nfas.insert( op.id );
         }
 
         void operator()( const nfa_deposit_withdraw_operation& op )

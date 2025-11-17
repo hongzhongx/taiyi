@@ -18,48 +18,6 @@ extern std::string wstring_to_utf8(const std::wstring& str);
 
 namespace taiyi { namespace chain {
     
-    operation_result transfer_nfa_evaluator::do_apply( const transfer_nfa_operation& o )
-    { try {
-        const auto& from_account = _db.get_account(o.from);
-        const auto& to_account = _db.get_account(o.to);
-        
-        const auto* nfa = _db.find<nfa_object, by_id>(o.id);
-        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found", ("i", o.id));
-
-        const auto* parent_nfa = _db.find<nfa_object, by_id>(nfa->parent);
-        FC_ASSERT(parent_nfa == nullptr, "Can not transfer child NFA, only can transfer root NFA");
-        
-        FC_ASSERT(from_account.id == nfa->owner_account, "Can not transfer NFA not ownd by you");
-        
-        _db.modify(*nfa, [&](nfa_object &obj) {
-            obj.owner_account = to_account.id;
-        });
-        
-        //TODO: 转移子节点里面所有子节点的所有权，是否同时也要转移使用权？
-        std::set<nfa_id_type> look_checker;
-        _db.modify_nfa_children_owner(*nfa, to_account, look_checker);
-        
-        contract_result result;
-        
-        protocol::nfa_affected affected;
-        affected.affected_account = o.from;
-        affected.affected_item = nfa->id;
-        affected.action = nfa_affected_type::transfer_from;
-        result.contract_affecteds.push_back(std::move(affected));
-        
-        affected.affected_account = o.to;
-        affected.affected_item = nfa->id;
-        affected.action = nfa_affected_type::transfer_to;
-        result.contract_affecteds.push_back(std::move(affected));
-        
-        //reward to treasury
-        int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( from_account.qi.amount.value >= used_qi, "From account does not have enough qi to operation." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
-        
-        return result;
-    } FC_CAPTURE_AND_RETHROW( (o) ) }
-    //=============================================================================
     operation_result approve_nfa_active_evaluator::do_apply( const approve_nfa_active_operation& o )
     { try {
         const auto& owner_account = _db.get_account(o.owner);

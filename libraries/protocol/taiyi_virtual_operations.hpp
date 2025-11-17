@@ -80,6 +80,16 @@ namespace taiyi { namespace protocol {
         string              symbol;
     };
     
+    struct nfa_transfer_operation : public virtual_operation
+    {
+        nfa_transfer_operation() {}
+        nfa_transfer_operation(const account_name_type& from_, const account_name_type& to_, const int64_t& id_) : from(from_), to(to_), id(id_) {}
+        
+        account_name_type       from;
+        account_name_type       to;
+        int64_t                 id; ///nfa id
+    };
+    
     struct nfa_convert_resources_operation : public virtual_operation
     {
         nfa_convert_resources_operation(){}
@@ -93,10 +103,10 @@ namespace taiyi { namespace protocol {
         bool                is_qi_to_resource;
     };
 
-    struct nfa_transfer_operation : public virtual_operation
+    struct nfa_asset_transfer_operation : public virtual_operation
     {
-        nfa_transfer_operation(){}
-        nfa_transfer_operation( const int64_t& f, const account_name_type& fo, const int64_t& t, const account_name_type& to, const asset& a )
+        nfa_asset_transfer_operation(){}
+        nfa_asset_transfer_operation( const int64_t& f, const account_name_type& fo, const int64_t& t, const account_name_type& to, const asset& a )
             : from(f), from_owner(fo), to(t), to_owner(to), amount(a) {}
         
         int64_t             from;
@@ -301,7 +311,8 @@ FC_REFLECT( taiyi::protocol::shutdown_siming_operation, (owner) )
 FC_REFLECT( taiyi::protocol::nfa_symbol_create_operation, (creator)(symbol)(describe)(default_contract)(max_count)(min_equivalent_qi) )
 FC_REFLECT( taiyi::protocol::nfa_create_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
-FC_REFLECT( taiyi::protocol::nfa_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
+FC_REFLECT( taiyi::protocol::nfa_asset_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
+FC_REFLECT( taiyi::protocol::nfa_transfer_operation, (from)(to)(id) )
 FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
 FC_REFLECT( taiyi::protocol::reward_feigang_operation, (from)(from_nfa)(to)(qi) )
 FC_REFLECT( taiyi::protocol::reward_cultivation_operation, (account)(nfa)(qi) )

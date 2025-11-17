@@ -1333,7 +1333,6 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< revise_contract_evaluator                >();
         _my->_evaluator_registry.register_evaluator< call_contract_function_evaluator         >();
         
-        _my->_evaluator_registry.register_evaluator< transfer_nfa_evaluator                   >();
         _my->_evaluator_registry.register_evaluator< approve_nfa_active_evaluator             >();
         _my->_evaluator_registry.register_evaluator< action_nfa_evaluator                     >();
         

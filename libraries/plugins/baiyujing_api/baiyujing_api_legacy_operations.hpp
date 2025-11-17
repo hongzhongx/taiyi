@@ -44,7 +44,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef call_contract_function_operation        legacy_call_contract_function_operation;
     typedef nfa_symbol_create_operation             legacy_nfa_symbol_create_operation;
     typedef nfa_create_operation                    legacy_nfa_create_operation;
-    typedef transfer_nfa_operation                  legacy_transfer_nfa_operation;
+    typedef nfa_transfer_operation                  legacy_nfa_transfer_operation;
     typedef approve_nfa_active_operation            legacy_approve_nfa_active_operation;
     typedef action_nfa_operation                    legacy_action_nfa_operation;
     typedef tiandao_year_change_operation           legacy_tiandao_year_change_operation;
@@ -316,16 +316,16 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool                is_qi_to_resource;
     };
 
-    struct legacy_nfa_transfer_operation
+    struct legacy_nfa_asset_transfer_operation
     {
-        legacy_nfa_transfer_operation(){}
-        legacy_nfa_transfer_operation( const nfa_transfer_operation& op )
+        legacy_nfa_asset_transfer_operation(){}
+        legacy_nfa_asset_transfer_operation( const nfa_asset_transfer_operation& op )
             : from(op.from), from_owner(op.from_owner), to(op.to), to_owner(op.to_owner), amount(legacy_asset::from_asset(op.amount))
         {}
 
-        operator nfa_transfer_operation()const
+        operator nfa_asset_transfer_operation()const
         {
-            nfa_transfer_operation op;
+            nfa_asset_transfer_operation op;
             op.from = from;
             op.from_owner = from_owner;
             op.to = to;
@@ -472,9 +472,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_revise_contract_operation,
         legacy_call_contract_function_operation,
 
-        legacy_nfa_symbol_create_operation,
-        legacy_nfa_create_operation,
-        legacy_transfer_nfa_operation,
         legacy_approve_nfa_active_operation,
         legacy_action_nfa_operation,
 
@@ -488,8 +485,12 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_return_qi_delegation_operation,
         legacy_producer_reward_operation,
 
-        legacy_nfa_convert_resources_operation,
+        legacy_nfa_symbol_create_operation,
+        legacy_nfa_create_operation,
         legacy_nfa_transfer_operation,
+    
+        legacy_nfa_convert_resources_operation,
+        legacy_nfa_asset_transfer_operation,
         legacy_nfa_deposit_withdraw_operation,
         legacy_reward_feigang_operation,
         legacy_reward_cultivation_operation,
@@ -533,7 +534,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const call_contract_function_operation& op )const          { l_op = op; return true; }
         bool operator()( const nfa_symbol_create_operation& op )const               { l_op = op; return true; }
         bool operator()( const nfa_create_operation& op )const                      { l_op = op; return true; }
-        bool operator()( const transfer_nfa_operation& op )const                    { l_op = op; return true; }
+        bool operator()( const nfa_transfer_operation& op )const                    { l_op = op; return true; }
         bool operator()( const approve_nfa_active_operation& op )const              { l_op = op; return true; }
         bool operator()( const action_nfa_operation& op )const                      { l_op = op; return true; }
         bool operator()( const tiandao_year_change_operation& op )const             { l_op = op; return true; }
@@ -614,9 +615,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return true;
         }
         
-        bool operator()( const nfa_transfer_operation& op )const
+        bool operator()( const nfa_asset_transfer_operation& op )const
         {
-            l_op = legacy_nfa_transfer_operation( op );
+            l_op = legacy_nfa_asset_transfer_operation( op );
             return true;
         }
 
@@ -722,9 +723,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return operation( nfa_convert_resources_operation( op ) );
         }
         
-        operation operator()( const legacy_nfa_transfer_operation& op )const
+        operation operator()( const legacy_nfa_asset_transfer_operation& op )const
         {
-            return operation( nfa_transfer_operation( op ) );
+            return operation( nfa_asset_transfer_operation( op ) );
         }
 
         operation operator()( const legacy_nfa_deposit_withdraw_operation& op )const
@@ -819,7 +820,7 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_fill_qi_withdraw_operation, (f
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_return_qi_delegation_operation, (account)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_producer_reward_operation, (producer)(reward) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
-FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_asset_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_feigang_operation, (from)(from_nfa)(to)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_cultivation_operation, (account)(nfa)(qi) )
