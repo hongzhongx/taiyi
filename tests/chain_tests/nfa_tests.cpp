@@ -36,6 +36,9 @@ const string s_code_nfa_basic = " \
     function create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi) \
         contract_helper:create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi) \
     end                           \
+    function create_nfa_to_me(symbol) \
+        contract_helper:create_nfa_to_account(contract_base_info.caller, symbol, {}, true) \
+    end                           \
 ";
 
 BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
@@ -188,36 +191,39 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
 
     BOOST_TEST_MESSAGE( "--- Test failure create nfa with invalid symbol" );
 
-    create_nfa_operation cnop;
-    cnop.creator = "charlie";
-    cnop.symbol = "nfa.not.exist";
-        
+    cop.caller = "charlie";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.not.exist")
+    };
+
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnop );
+    tx.operations.push_back( cop );
     sign( tx, charlie_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
 
     BOOST_TEST_MESSAGE( "--- Test failure create nfa from account without authority" );
 
-    cnop.symbol = "nfa.test";
+    cop.value_list[0] = lua_string("nfa.test");
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnop );
+    tx.operations.push_back( cop );
     sign( tx, charlie_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
 
     BOOST_TEST_MESSAGE( "--- Test create nfa" );
 
-    cnop.creator = "alice";
+    cop.caller = "alice";
         
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     
@@ -295,14 +301,17 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     
     generate_block();
 
-    create_nfa_operation cnop;
-    cnop.creator = "alice";
-    cnop.symbol = "nfa.test";
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.test")
+    };
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
@@ -424,14 +433,17 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     
     generate_block();
 
-    create_nfa_operation cnop;
-    cnop.creator = "alice";
-    cnop.symbol = "nfa.test";
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.test")
+    };
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
@@ -570,14 +582,17 @@ BOOST_AUTO_TEST_CASE( action_drops )
     
     generate_block();
 
-    create_nfa_operation cnop;
-    cnop.creator = "alice";
-    cnop.symbol = "nfa.test";
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.test")
+    };
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();
@@ -712,14 +727,17 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
     generate_block();
 
-    create_nfa_operation cnop;
-    cnop.creator = "alice";
-    cnop.symbol = "nfa.test";
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.test")
+    };
 
     tx.operations.clear();
     tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
-    tx.operations.push_back( cnop );
+    tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
     validate_database();

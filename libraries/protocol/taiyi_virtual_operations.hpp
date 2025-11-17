@@ -71,6 +71,15 @@ namespace taiyi { namespace protocol {
         uint64_t            min_equivalent_qi;
     };
     
+    struct nfa_create_operation : public virtual_operation
+    {
+        nfa_create_operation() {}
+        nfa_create_operation(const account_name_type& creator_, const string& symbol_) : creator(creator_), symbol(symbol_) {}
+
+        account_name_type   creator;
+        string              symbol;
+    };
+    
     struct nfa_convert_resources_operation : public virtual_operation
     {
         nfa_convert_resources_operation(){}
@@ -290,6 +299,7 @@ FC_REFLECT( taiyi::protocol::return_qi_delegation_operation, (account)(qi) )
 FC_REFLECT( taiyi::protocol::producer_reward_operation, (producer)(reward) )
 FC_REFLECT( taiyi::protocol::shutdown_siming_operation, (owner) )
 FC_REFLECT( taiyi::protocol::nfa_symbol_create_operation, (creator)(symbol)(describe)(default_contract)(max_count)(min_equivalent_qi) )
+FC_REFLECT( taiyi::protocol::nfa_create_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
 FC_REFLECT( taiyi::protocol::nfa_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )

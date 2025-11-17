@@ -18,32 +18,6 @@ extern std::string wstring_to_utf8(const std::wstring& str);
 
 namespace taiyi { namespace chain {
     
-    operation_result create_nfa_evaluator::do_apply( const create_nfa_operation& o )
-    { try {
-        const auto& creator = _db.get_account( o.creator );
-        const auto* nfa_symbol = _db.find<nfa_symbol_object, by_symbol>(o.symbol);
-        FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", o.symbol));
-                
-        LuaContext context;
-        _db.initialize_VM_baseENV(context);
-        
-        const auto& nfa = _db.create_nfa(creator, *nfa_symbol, true, context);
-        
-        contract_result result;
-        
-        protocol::nfa_affected affected;
-        affected.affected_account = creator.name;
-        affected.affected_item = nfa.id;
-        affected.action = nfa_affected_type::create_for;
-        result.contract_affecteds.push_back(std::move(affected));
-        
-        affected.affected_account = creator.name;
-        affected.action = nfa_affected_type::create_by;
-        result.contract_affecteds.push_back(std::move(affected));
-        
-        return result;
-    } FC_CAPTURE_AND_RETHROW( (o) ) }
-    //=============================================================================
     operation_result transfer_nfa_evaluator::do_apply( const transfer_nfa_operation& o )
     { try {
         const auto& from_account = _db.get_account(o.from);

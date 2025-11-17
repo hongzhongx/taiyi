@@ -501,10 +501,12 @@ namespace taiyi { namespace chain {
             FC_ASSERT(is_valid_contract_name(default_contract), "contract name ${n} is invalid", ("n", default_contract));
             
             const auto& creator = caller;
-            size_t new_state_size = db.create_nfa_symbol_object(creator, symbol, describe, default_contract, max_count, min_equivalent_qi);
-            
             operation vop = nfa_symbol_create_operation( creator.name, symbol, describe, default_contract, max_count, min_equivalent_qi );
             db.pre_push_virtual_operation( vop );
+
+            size_t new_state_size = db.create_nfa_symbol_object(creator, symbol, describe, default_contract, max_count, min_equivalent_qi);
+            
+            db.post_push_virtual_operation( vop );
             
             db.add_contract_handler_exe_point(new_state_size + 100);
         }
@@ -514,15 +516,23 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    int64_t contract_handler::create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger)
+    int64_t contract_handler::create_nfa_to_actor(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger)
     {
         try
         {
             db.add_contract_handler_exe_point(2);
             
-            const auto& actor_nfa = db.get<nfa_object, by_id>(to_actor_nfa_id);
+            const auto* actor_nfa = db.find<nfa_object, by_id>(to_actor_nfa_id);
+            FC_ASSERT(actor_nfa != nullptr, "target nfa #${n} is not exist", ("n", to_actor_nfa_id));
+            FC_ASSERT(is_actor_valid(to_actor_nfa_id), "target nfa #${n} is not an actor", ("n", to_actor_nfa_id));
+
+            FC_ASSERT(memcmp(symbol.data(), "nfa.", 4) == 0, "symbol name is not start with \"nfa.\"");
+            FC_ASSERT(is_valid_nfa_symbol(symbol), "symbol ${q} is invalid", ("n", symbol));
             const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
+
+            operation vop = nfa_create_operation(caller.name, symbol);
+            db.pre_push_virtual_operation( vop );
 
             const nfa_object& nfa = db.create_nfa(caller, *nfa_symbol, false, context);
             db.modify(nfa, [&](nfa_object& obj) {
@@ -534,15 +544,73 @@ namespace taiyi { namespace chain {
                     }
                 }
                 
-                obj.owner_account = actor_nfa.owner_account;
-                obj.active_account = actor_nfa.active_account;
+                obj.owner_account = actor_nfa->owner_account;
+                obj.active_account = actor_nfa->active_account;
                 obj.parent = nfa_id_type(to_actor_nfa_id);
             });
+
+            db.post_push_virtual_operation( vop );
 
             if (enable_logger)
             {
                 protocol::nfa_affected affected;
-                affected.affected_account = db.get<account_object, by_id>(actor_nfa.owner_account).name;
+                affected.affected_account = db.get<account_object, by_id>(actor_nfa->owner_account).name;
+                affected.affected_item = nfa.id;
+                affected.action = nfa_affected_type::create_for;
+                result.contract_affecteds.push_back(std::move(affected));
+
+                affected.affected_account = caller.name;
+                affected.action = nfa_affected_type::create_by;
+                result.contract_affecteds.push_back(std::move(affected));
+            }
+
+            return nfa.id;
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+            return -1;
+        }
+    }
+    //=============================================================================
+    int64_t contract_handler::create_nfa_to_account(const string& to_account_name, string symbol, lua_map data, bool enable_logger)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(2);
+            
+            validate_account_name( to_account_name );
+            const auto* to_account = db.find<account_object, by_name>(to_account_name);
+            FC_ASSERT(to_account != nullptr, "account named \"${n}\" is not exist", ("n", to_account_name));
+
+            FC_ASSERT(memcmp(symbol.data(), "nfa.", 4) == 0, "symbol name is not start with \"nfa.\"");
+            FC_ASSERT(is_valid_nfa_symbol(symbol), "symbol ${q} is invalid", ("n", symbol));
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
+
+            operation vop = nfa_create_operation(caller.name, symbol);
+            db.pre_push_virtual_operation( vop );
+
+            const nfa_object& nfa = db.create_nfa(caller, *nfa_symbol, false, context);
+            db.modify(nfa, [&](nfa_object& obj) {
+                for(const auto& p : data) {
+                    if(obj.contract_data.find(p.first) != obj.contract_data.end())
+                        obj.contract_data[p.first] = p.second;
+                    else {
+                        FC_ASSERT(false, "nfa data not support the key \"${k}\"", ("k", p.first));
+                    }
+                }
+                
+                obj.owner_account = to_account->id;
+                obj.active_account = to_account->id;
+            });
+
+            db.post_push_virtual_operation( vop );
+
+            if (enable_logger)
+            {
+                protocol::nfa_affected affected;
+                affected.affected_account = to_account->name;
                 affected.affected_item = nfa.id;
                 affected.action = nfa_affected_type::create_for;
                 result.contract_affecteds.push_back(std::move(affected));

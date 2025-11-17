@@ -43,7 +43,6 @@ namespace taiyi { namespace protocol {
         call_contract_function_operation,   //20
 
         // nfa (non fungible asset)
-        create_nfa_operation,               //22
         transfer_nfa_operation,             //23
         approve_nfa_active_operation,       //24
         action_nfa_operation,               //25
@@ -62,6 +61,7 @@ namespace taiyi { namespace protocol {
         producer_reward_operation,          //32
     
         nfa_symbol_create_operation,        //
+        nfa_create_operation,               //
 
         nfa_convert_resources_operation,    //33
         nfa_transfer_operation,             //34

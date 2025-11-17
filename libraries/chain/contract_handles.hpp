@@ -258,7 +258,8 @@ namespace taiyi { namespace chain {
 
         //NFA
         void create_nfa_symbol(const string& symbol, const string& describe, const string& default_contract, uint64_t max_count, uint64_t min_equivalent_qi);
-        int64_t create_nfa(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger);
+        int64_t create_nfa_to_actor(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger);
+        int64_t create_nfa_to_account(const string& to_account_name, string symbol, lua_map data, bool enable_logger);
         string get_nfa_contract(int64_t nfa_id);
         bool is_nfa_valid(int64_t nfa_id);
         contract_nfa_base_info get_nfa_info(int64_t nfa_id);

@@ -228,7 +228,8 @@ namespace taiyi { namespace chain {
         registerFunction("create_nfa_symbol", &contract_handler::create_nfa_symbol);
         registerFunction("get_nfa_contract", &contract_handler::get_nfa_contract);
         registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);
-        registerFunction("create_nfa", &contract_handler::create_nfa);        
+        registerFunction("create_nfa_to_actor", &contract_handler::create_nfa_to_actor);
+        registerFunction("create_nfa_to_account", &contract_handler::create_nfa_to_account);
         registerFunction("read_nfa_contract_data", &contract_handler::read_nfa_contract_data);
         registerFunction("write_nfa_contract_data", &contract_handler::write_nfa_contract_data);
         registerFunction("is_nfa_action_exist", &contract_handler::is_nfa_action_exist);
