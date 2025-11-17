@@ -512,18 +512,18 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     
     int64_t used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 442 );
+    BOOST_REQUIRE( used_mana == 490 );
 
     asset reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
     idump( (reward_feigang) );
-    BOOST_REQUIRE( reward_feigang.amount == 313 );
+    BOOST_REQUIRE( reward_feigang.amount == 352 );
 
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( action_drops )
 { try {
     
-    BOOST_TEST_MESSAGE( "Testing: heart_beat" );
+    BOOST_TEST_MESSAGE( "Testing: action_drops" );
 
     string nfa_code_lua = " heart_beat = { consequence = true } \n \
                             active = { consequence = true }     \n \
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 466 );
+    BOOST_REQUIRE( used_mana == 514 );
 
 } FC_LOG_AND_RETHROW() }
 
@@ -859,6 +859,170 @@ BOOST_AUTO_TEST_CASE( heart_beat )
             BOOST_REQUIRE( nfa->next_tick_block == (db->head_block_num() + TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM) );
         }
     }
+
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( inter_nfa_action_drops )
+{ try {
+    
+    BOOST_TEST_MESSAGE( "Testing: inter_nfa_action_drops" );
+
+    string nfa1_code_lua = "action_nfa = { consequence = true } \n \
+                                                                \n \
+                            function init_data() return {} end  \n \
+                                                                \n \
+                            function do_action_nfa(nfa_id)      \n \
+                                contract_helper:do_nfa_action(nfa_id, 'action', {})   \n \
+                            end";
+
+    string nfa2_code_lua = "action = { consequence = true }    \n \
+                                                                \n \
+                            function init_data() return {} end  \n \
+                                                                \n \
+                            function do_action()                \n \
+                                contract_helper:log('action')   \n \
+                            end";
+
+    signed_transaction tx;
+    ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
+    generate_block();
+
+    auto init_mana = db->get_account( "charlie" ).qi;
+
+    create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
+    op.owner = "bob";
+    op.name = "contract.nfa.caller";
+    op.data = nfa1_code_lua;
+    tx.operations.push_back( op );
+
+    op.owner = "bob";
+    op.name = "contract.nfa.called";
+    op.data = nfa2_code_lua;
+    tx.operations.push_back( op );
+
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, bob_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+    
+    call_contract_function_operation cop;
+
+    tx.operations.clear();
+
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.caller"),
+        lua_string("test"),
+        lua_string("contract.nfa.caller"),
+        lua_int(3),
+        lua_int(0)
+    };
+    tx.operations.push_back( cop );
+
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.called"),
+        lua_string("test"),
+        lua_string("contract.nfa.called"),
+        lua_int(3),
+        lua_int(0)
+    };
+    tx.operations.push_back( cop );
+
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+
+    tx.operations.clear();
+
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.caller")
+    };
+    tx.operations.push_back( cop );
+
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.called")
+    };
+    tx.operations.push_back( cop );
+
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+
+    const auto& to1 = db->get<transaction_object, by_trx_id>(tx.id());
+    BOOST_REQUIRE( to1.operation_results.size() == 2 );
+    contract_result cresult = to1.operation_results[0].get<contract_result>();
+    BOOST_REQUIRE( cresult.contract_affecteds.size() == 2 );
+    nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
+    
+    BOOST_REQUIRE( affected.affected_account == "alice" );
+    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
+
+    const auto& nfa_caller = db->get<nfa_object, by_id>(affected.affected_item);
+    const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.caller");
+    const auto& id1 = db->get<account_object, by_name>("alice").id;
+    BOOST_REQUIRE( nfa_caller.creator_account == id1 );
+    BOOST_REQUIRE( nfa_caller.owner_account == id1 );
+    BOOST_REQUIRE( nfa_caller.symbol_id == nfa_symbol.id );
+    
+    generate_blocks(10); //给奖励基金充值
+
+    BOOST_TEST_MESSAGE( "--- Test active action drops" );
+    
+    int64_t used_mana;
+    auto old_mana = db->get_account( "charlie" ).qi;
+
+    action_nfa_operation anop;
+
+    anop.caller = "alice";
+    anop.id = nfa_caller.id;
+    anop.action = "action_nfa";
+    anop.value_list = {
+        lua_int(nfa_caller.id + 1)
+    };
+
+    old_mana = db->get_account( "alice" ).qi;
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( anop );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+
+    used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
+    idump( (used_mana) );
+    BOOST_REQUIRE( used_mana == 889 );
 
 } FC_LOG_AND_RETHROW() }
 

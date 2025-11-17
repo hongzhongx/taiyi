@@ -1022,23 +1022,14 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
-    lua_map contract_nfa_handler::eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
+    lua_map contract_nfa_handler::eval_action(const string& action, const lua_map& params)
     {
-        LuaContext nfa_context;
-        
-        if(lua_getdropsenabled(_context.mState)) {
-            lua_enabledrops(nfa_context.mState, 1, 1);
-            lua_setdrops(nfa_context.mState, lua_getdrops(_context.mState)); //上层虚拟机还剩下的drops可用
-        }
-
         try
         {
             _db.add_contract_handler_exe_point(2);
-            
-            const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
-            
+                        
             //check existence and consequence type
-            const auto& contract = _db.get<chain::contract_object, by_id>(nfa.main_contract);
+            const auto& contract = _db.get<chain::contract_object, by_id>(_caller.main_contract);
             auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
             if(abi_itr == contract.contract_ABI.end())
                 return lua_map();
@@ -1048,7 +1039,7 @@ namespace taiyi { namespace chain {
             lua_map action_def = abi_itr->second.get<lua_table>().v;
             auto def_itr = action_def.find(lua_types(lua_string("consequence")));
             if(def_itr != action_def.end())
-                FC_ASSERT(def_itr->second.get<lua_bool>().v == false, "Can not eval action ${a} in nfa ${nfa} with consequence history. should signing it in transaction.", ("a", action)("nfa", nfa_id));
+                FC_ASSERT(def_itr->second.get<lua_bool>().v == false, "Can not eval action ${a} in nfa ${nfa} with consequence history. should signing it in transaction.", ("a", action)("nfa", _caller.id));
             
             string function_name = "eval_" + action;
             
@@ -1078,44 +1069,44 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(_db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, nfa_context,  current_ch->is_in_eval);
-            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, _db, ch);
+            contract_base_info cbi(_db, _context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, _context,  current_ch->is_in_eval);
+            contract_nfa_handler cnh(current_ch->caller, _caller, _context, _db, ch);
             
             const auto& name = nfa_contract.name;
-            nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
+            _context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
             
             FC_ASSERT(nfa_contract_code.lua_code_b.size()>0);
-            nfa_context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
+            _context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
             
-            nfa_context.writeVariable("current_contract", name);
-            nfa_context.writeVariable(name, "_G", "protected");
+            _context.writeVariable("current_contract", name);
+            _context.writeVariable(name, "_G", "protected");
 
-            nfa_context.writeVariable(name, "contract_helper", &ch);
-            nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "nfa_helper", &cnh);
+            _context.writeVariable(name, "contract_helper", &ch);
+            _context.writeVariable(name, "contract_base_info", &cbi);
+            _context.writeVariable(name, "nfa_helper", &cnh);
 
-            nfa_context.get_function(name, function_name);
+            _context.get_function(name, function_name);
             //push function actual parameters
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
-                LuaContext::Pusher<lua_types>::push(nfa_context.mState, *itr).release();
+                LuaContext::Pusher<lua_types>::push(_context.mState, *itr).release();
             
-            int err = lua_pcall(nfa_context.mState, value_list.size(), 1, 0);
+            int err = lua_pcall(_context.mState, value_list.size(), 1, 0);
             lua_types error_message;
             lua_table result_table;
             try
             {
                 if (err)
-                    error_message = *LuaContext::Reader<lua_types>::read(nfa_context.mState, -1);
-                else if(lua_istable(nfa_context.mState, -1))
-                    result_table = *LuaContext::Reader<lua_table>::read(nfa_context.mState, -1);
+                    error_message = *LuaContext::Reader<lua_types>::read(_context.mState, -1);
+                else if(lua_istable(_context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(_context.mState, -1);
             }
             catch (...)
             {
                 error_message = lua_string(" Unexpected errors ");
             }
-            lua_pop(nfa_context.mState, -1);
-            nfa_context.close_sandbox(name);
+            lua_pop(_context.mState, -1);
+            _context.close_sandbox(name);
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
@@ -1131,40 +1122,33 @@ namespace taiyi { namespace chain {
         }
         catch(const fc::exception& e)
         {
-            if(lua_getdropsenabled(_context.mState)) {
-                auto vm_drops = lua_getdrops(nfa_context.mState);
-                lua_setdrops(_context.mState, vm_drops); //即使崩溃了也要将使用drops情况反馈到上层
-            }
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
     //=========================================================================
-    lua_map contract_nfa_handler::do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
+    lua_map contract_nfa_handler::do_action(const string& action, const lua_map& params)
     {
-        //TODO: do的权限以及产生的消耗
-        LuaContext nfa_context;
-        
         zone_id_type pre_contract_run_zone = _db.get_contract_run_zone();
 
         try
         {
             _db.add_contract_handler_exe_point(2);
-            
-            const nfa_object& nfa = _db.get<nfa_object, by_id>(nfa_id);
-            
+                        
+            FC_ASSERT(_caller_account.id == _caller.owner_account || _caller_account.id == _caller.active_account, "#t&&y#没有权限操作实体#a&&i#");
+
             //设置db的当前运行zone标记
             if (pre_contract_run_zone == zone_id_type::max()) {
-                const auto* check_zone = _db.find_location_with_parents(nfa);
+                const auto* check_zone = _db.find_location_with_parents(_caller);
                 if(check_zone)
                     _db.set_contract_run_zone(check_zone->id);
             }
 
             //check material valid
-            FC_ASSERT(_db.is_nfa_material_equivalent_qi_insufficient(nfa), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");
-            _db.consume_nfa_material_random(nfa, _db.head_block_id()._hash[4] + 14071);
+            FC_ASSERT(_db.is_nfa_material_equivalent_qi_insufficient(_caller), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");
+            _db.consume_nfa_material_random(_caller, _db.head_block_id()._hash[4] + 14071);
 
             //check existence and consequence type
-            const auto& contract = _db.get<chain::contract_object, by_id>(nfa.main_contract);
+            const auto& contract = _db.get<chain::contract_object, by_id>(_caller.main_contract);
             FC_ASSERT(_db.is_contract_allowed_by_zone(contract, _db.get_contract_run_zone()), "contract ${c} is not allowed by zone #${z}(#t&&y#所在区域禁止该天道运行#a&&i#)", ("c", contract.name)("z", _db.get_contract_run_zone()));
             
             auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(action)));
@@ -1176,7 +1160,7 @@ namespace taiyi { namespace chain {
             lua_map action_def = abi_itr->second.get<lua_table>().v;
             auto def_itr = action_def.find(lua_types(lua_string("consequence")));
             if(def_itr != action_def.end())
-                FC_ASSERT(def_itr->second.get<lua_bool>().v == true, "Can not perform action ${a} in nfa ${nfa} without consequence history. should eval it in api.", ("a", action)("nfa", nfa_id));
+                FC_ASSERT(def_itr->second.get<lua_bool>().v == true, "Can not perform action ${a} in nfa ${nfa} without consequence history. should eval it in api.", ("a", action)("nfa", _caller.id));
             
             string function_name = "do_" + action;
             
@@ -1206,44 +1190,44 @@ namespace taiyi { namespace chain {
             const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
             const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
             
-            contract_base_info cbi(_db, nfa_context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, nfa_context, false);
-            contract_nfa_handler cnh(current_ch->caller, nfa, nfa_context, _db, ch);
+            contract_base_info cbi(_db, _context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, _context, false);
+            contract_nfa_handler cnh(current_ch->caller, _caller, _context, _db, ch);
             
             const auto& name = nfa_contract.name;
-            nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
+            _context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
             
             FC_ASSERT(nfa_contract_code.lua_code_b.size()>0);
-            nfa_context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
+            _context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
             
-            nfa_context.writeVariable("current_contract", name);
-            nfa_context.writeVariable(name, "_G", "protected");
+            _context.writeVariable("current_contract", name);
+            _context.writeVariable(name, "_G", "protected");
 
-            nfa_context.writeVariable(name, "contract_helper", &ch);
-            nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "nfa_helper", &cnh);
+            _context.writeVariable(name, "contract_helper", &ch);
+            _context.writeVariable(name, "contract_base_info", &cbi);
+            _context.writeVariable(name, "nfa_helper", &cnh);
 
-            nfa_context.get_function(name, function_name);
+            _context.get_function(name, function_name);
             //push function actual parameters
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
-                LuaContext::Pusher<lua_types>::push(nfa_context.mState, *itr).release();
+                LuaContext::Pusher<lua_types>::push(_context.mState, *itr).release();
             
-            int err = lua_pcall(nfa_context.mState, value_list.size(), 1, 0);
+            int err = lua_pcall(_context.mState, value_list.size(), 1, 0);
             lua_types error_message;
             lua_table result_table;
             try
             {
                 if (err)
-                    error_message = *LuaContext::Reader<lua_types>::read(nfa_context.mState, -1);
-                else if(lua_istable(nfa_context.mState, -1))
-                    result_table = *LuaContext::Reader<lua_table>::read(nfa_context.mState, -1);
+                    error_message = *LuaContext::Reader<lua_types>::read(_context.mState, -1);
+                else if(lua_istable(_context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(_context.mState, -1);
             }
             catch (...)
             {
                 error_message = lua_string(" Unexpected errors ");
             }
-            lua_pop(nfa_context.mState, -1);
-            nfa_context.close_sandbox(name);
+            lua_pop(_context.mState, -1);
+            _context.close_sandbox(name);
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             

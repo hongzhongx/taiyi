@@ -115,16 +115,16 @@ namespace taiyi { namespace chain {
             FC_ASSERT(contract.can_do(_db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", o.contract_name));
                 
         contract_worker worker;
-        
         LuaContext context;
-        _db.initialize_VM_baseENV(context);
         
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         int64_t backup_api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
+        
         worker.do_contract_function(caller, o.function_name, o.value_list, contract, vm_drops, true,  context, _db);
+        
         int64_t api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(backup_api_exe_point);
         int64_t used_drops = old_drops - vm_drops;

@@ -708,11 +708,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 
     int64_t used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
     idump( (used_mana) );
-    BOOST_REQUIRE( used_mana == 416 );
+    BOOST_REQUIRE( used_mana == 464 );
     
     asset reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
     idump( (reward_feigang.amount) );
-    BOOST_REQUIRE( reward_feigang.amount == 293 ); //part reward to contract owner, others reward to treasure.
+    BOOST_REQUIRE( reward_feigang.amount == 332 ); //part reward to contract owner, others reward to treasure.
     
     BOOST_TEST_MESSAGE( "--- Test again use same mana" );
     
@@ -731,11 +731,11 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
         
         used_mana = old_mana.amount.value - db->get_account( "alice" ).qi.amount.value;
         //idump( (used_mana) );
-        BOOST_REQUIRE( used_mana == 416 );
+        BOOST_REQUIRE( used_mana == 464 );
         
         reward_feigang = db->get_account("bob").reward_feigang_balance - old_reward_feigang;
         //idump( (reward_feigang) );
-        BOOST_REQUIRE( reward_feigang.amount == 293 );
+        BOOST_REQUIRE( reward_feigang.amount == 332 );
     }
     
 } FC_LOG_AND_RETHROW() }

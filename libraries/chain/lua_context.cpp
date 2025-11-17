@@ -320,8 +320,8 @@ namespace taiyi { namespace chain {
         registerFunction("read_contract_data", &contract_nfa_handler::read_contract_data);
         registerFunction("write_contract_data", &contract_nfa_handler::write_contract_data);
         registerFunction("destroy", &contract_nfa_handler::destroy);
-        registerFunction("eval_nfa_action", &contract_nfa_handler::eval_nfa_action);
-        registerFunction("do_nfa_action", &contract_nfa_handler::do_nfa_action);
+        registerFunction("eval_action", &contract_nfa_handler::eval_action);
+        registerFunction("do_action", &contract_nfa_handler::do_action);
         //nfa handler - actor
         registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
         registerFunction("talk_to_actor", &contract_nfa_handler::talk_to_actor);

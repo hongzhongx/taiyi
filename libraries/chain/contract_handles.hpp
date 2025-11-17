@@ -169,8 +169,8 @@ namespace taiyi { namespace chain {
         lua_map read_contract_data(const lua_map& read_list);
         void write_contract_data(const lua_map& data, const lua_map& write_list);
         void destroy();
-        lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
-        lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
+        lua_map eval_action(const string& action, const lua_map& params);
+        lua_map do_action(const string& action, const lua_map& params);
         
         //Actor
         void modify_actor_attributes(const lua_map& values);
