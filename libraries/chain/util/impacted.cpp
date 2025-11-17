@@ -133,14 +133,6 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.reviser );
         }
         
-        void operator()( const approve_nfa_active_operation& op )
-        {
-            _impacted.insert( op.owner );
-            _impacted.insert( op.active_account );
-
-            _impacted_nfas.insert( op.id );
-        }
-        
         void operator()( const action_nfa_operation& op )
         {
             _impacted.insert( op.caller );
@@ -183,6 +175,14 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.id );
         }
 
+        void operator()( const nfa_active_approve_operation& op )
+        {
+            _impacted.insert( op.owner );
+            _impacted.insert( op.active_account );
+
+            _impacted_nfas.insert( op.id );
+        }
+        
         void operator()( const nfa_deposit_withdraw_operation& op )
         {
             _impacted.insert( op.account );

@@ -45,7 +45,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef nfa_symbol_create_operation             legacy_nfa_symbol_create_operation;
     typedef nfa_create_operation                    legacy_nfa_create_operation;
     typedef nfa_transfer_operation                  legacy_nfa_transfer_operation;
-    typedef approve_nfa_active_operation            legacy_approve_nfa_active_operation;
+    typedef nfa_active_approve_operation            legacy_nfa_active_approve_operation;
     typedef action_nfa_operation                    legacy_action_nfa_operation;
     typedef tiandao_year_change_operation           legacy_tiandao_year_change_operation;
     typedef tiandao_month_change_operation          legacy_tiandao_month_change_operation;
@@ -472,7 +472,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_revise_contract_operation,
         legacy_call_contract_function_operation,
 
-        legacy_approve_nfa_active_operation,
         legacy_action_nfa_operation,
 
         legacy_create_zone_operation,
@@ -488,7 +487,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_nfa_symbol_create_operation,
         legacy_nfa_create_operation,
         legacy_nfa_transfer_operation,
-    
+        legacy_nfa_active_approve_operation,
+
         legacy_nfa_convert_resources_operation,
         legacy_nfa_asset_transfer_operation,
         legacy_nfa_deposit_withdraw_operation,
@@ -535,7 +535,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const nfa_symbol_create_operation& op )const               { l_op = op; return true; }
         bool operator()( const nfa_create_operation& op )const                      { l_op = op; return true; }
         bool operator()( const nfa_transfer_operation& op )const                    { l_op = op; return true; }
-        bool operator()( const approve_nfa_active_operation& op )const              { l_op = op; return true; }
+        bool operator()( const nfa_active_approve_operation& op )const              { l_op = op; return true; }
         bool operator()( const action_nfa_operation& op )const                      { l_op = op; return true; }
         bool operator()( const tiandao_year_change_operation& op )const             { l_op = op; return true; }
         bool operator()( const tiandao_month_change_operation& op )const            { l_op = op; return true; }

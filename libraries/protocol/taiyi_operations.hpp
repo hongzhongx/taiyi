@@ -448,17 +448,6 @@ namespace taiyi { namespace protocol {
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(caller); }
     };
 
-    struct approve_nfa_active_operation : public base_operation
-    {
-        account_name_type       owner;
-        account_name_type       active_account;
-
-        int64_t                 id; ///nfa id
-        
-        void validate()const;
-        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
-    };
-    
     struct action_nfa_operation : public base_operation
     {
         account_name_type   caller;     ///nfa operator account name
@@ -526,7 +515,6 @@ FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(exte
 FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)(contract_name)(function_name)(value_list)(extensions) )
 
-FC_REFLECT( taiyi::protocol::approve_nfa_active_operation, (owner)(active_account)(id) )
 FC_REFLECT( taiyi::protocol::action_nfa_operation, (caller)(id)(action)(value_list)(extensions) )
 
 FC_REFLECT( taiyi::protocol::create_actor_talent_rule_operation, (creator)(contract) )

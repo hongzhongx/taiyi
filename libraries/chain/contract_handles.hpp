@@ -312,6 +312,8 @@ namespace taiyi { namespace chain {
         void transfer_by_contract(account_id_type from, account_id_type to, asset token, contract_result &result, bool enable_logger=false);
         void transfer_nfa_from(account_id_type from, const account_name_type& to, int64_t nfa_id, bool enable_logger=false);
         void transfer_nfa_by_contract(account_id_type from, account_id_type to, int64_t nfa_id, contract_result &result, bool enable_logger=false);
+        void approve_nfa_active_from(account_id_type from, const account_name_type& new_active_account, int64_t nfa_id, bool enable_logger=false);
+        void approve_nfa_active_by_contract(account_id_type from, account_id_type new_active_account, int64_t nfa_id, contract_result &result, bool enable_logger=false);
         void write_table_data(lua_map& target_table, const lua_map& keys, const lua_map& data, vector<lua_types>& stacks);
         void read_table_data(lua_map& out_data, const lua_map& keys, const lua_map& target_table, vector<lua_types>& stacks);
         lua_map call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist = true);

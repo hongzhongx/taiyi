@@ -482,7 +482,7 @@ namespace taiyi { namespace chain {
             
             db.post_push_virtual_operation( vop );
 
-            db.add_contract_handler_exe_point(10);
+            db.add_contract_handler_exe_point(1);
 
             if(enable_logger) {
                 protocol::nfa_affected affected;
@@ -497,6 +497,51 @@ namespace taiyi { namespace chain {
                 result.contract_affecteds.push_back(std::move(affected));
 
                 log(from_account.name + " transfer nfa #" + fc::json::to_string(nfa->id) + " to " + to_account.name);
+            }
+        }
+        catch (const fc::exception& e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::approve_nfa_active_by_contract(account_id_type from, account_id_type new_active_account, int64_t nfa_id, contract_result &result, bool enable_logger)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found", ("i", nfa_id));
+
+            const account_object &from_account = db.get<account_object, by_id>(from);
+            FC_ASSERT(from_account.id == nfa->owner_account, "Can not change active operator of NFA not ownd by ${a}", ("a", from_account.name));
+            
+            const auto& to_active_account = db.get<account_object, by_id>(new_active_account);
+
+            operation vop = nfa_active_approve_operation(from_account.name, to_active_account.name, nfa_id);
+            db.pre_push_virtual_operation( vop );
+
+            db.modify(*nfa, [&](nfa_object &obj) {
+                obj.active_account = to_active_account.id;
+            });
+
+            db.post_push_virtual_operation( vop );
+
+            db.add_contract_handler_exe_point(1);
+
+            if(enable_logger) {
+                protocol::nfa_affected affected;
+                affected.affected_account = from_account.name;
+                affected.affected_item = nfa->id;
+                affected.action = nfa_affected_type::modified;
+                result.contract_affecteds.push_back(std::move(affected));
+                
+                affected.affected_account = to_active_account.name;
+                affected.affected_item = nfa->id;
+                affected.action = nfa_affected_type::modified;
+                result.contract_affecteds.push_back(std::move(affected));
             }
         }
         catch (const fc::exception& e)
@@ -549,6 +594,26 @@ namespace taiyi { namespace chain {
             const auto& to_account = db.find<account_object, by_name>(to);
             FC_ASSERT(to_account != nullptr, "account named ${n} is not exist", ("n", to));
             transfer_nfa_by_contract(from, to_account->id, nfa_id, result, enable_logger);
+        }
+        catch (const fc::exception& e)
+        {
+            wdump((e.to_string()));
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::approve_nfa_active_from(account_id_type from, const account_name_type& new_active_account, int64_t nfa_id, bool enable_logger)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+            
+            validate_account_name(new_active_account);
+            
+            const auto& to_new_active_account = db.find<account_object, by_name>(new_active_account);
+            FC_ASSERT(to_new_active_account != nullptr, "account named ${n} is not exist", ("n", new_active_account));
+            
+            approve_nfa_active_by_contract(from, to_new_active_account->id, nfa_id, result, enable_logger);
         }
         catch (const fc::exception& e)
         {

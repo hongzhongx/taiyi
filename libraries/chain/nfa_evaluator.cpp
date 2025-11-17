@@ -18,43 +18,6 @@ extern std::string wstring_to_utf8(const std::wstring& str);
 
 namespace taiyi { namespace chain {
     
-    operation_result approve_nfa_active_evaluator::do_apply( const approve_nfa_active_operation& o )
-    { try {
-        const auto& owner_account = _db.get_account(o.owner);
-        const auto& to_account = _db.get_account(o.active_account);
-        
-        const auto* nfa = _db.find<nfa_object, by_id>(o.id);
-        FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found", ("i", o.id));
-        
-        FC_ASSERT(owner_account.id == nfa->owner_account, "Can not change active operator of NFA not ownd by you");
-        
-        _db.modify(*nfa, [&](nfa_object &obj) {
-            obj.active_account = to_account.id;
-        });
-                
-        contract_result result;
-        
-        protocol::nfa_affected affected;
-        affected.affected_account = o.owner;
-        affected.affected_item = nfa->id;
-        affected.action = nfa_affected_type::modified;
-        result.contract_affecteds.push_back(std::move(affected));
-        
-        if(o.owner != o.active_account) {
-            affected.affected_account = o.active_account;
-            affected.affected_item = nfa->id;
-            affected.action = nfa_affected_type::modified;
-            result.contract_affecteds.push_back(std::move(affected));
-        }
-
-        //reward to treasury
-        int64_t used_qi = 1 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( owner_account.qi.amount.value >= used_qi, "Owner account does not have enough qi to operation." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), owner_account, asset(used_qi, QI_SYMBOL));
-
-        return result;
-    } FC_CAPTURE_AND_RETHROW( (o) ) }
-    //=============================================================================
     operation_result action_nfa_evaluator::do_apply( const action_nfa_operation& o )
     { try {
         

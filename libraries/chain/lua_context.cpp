@@ -285,6 +285,12 @@ namespace taiyi { namespace chain {
         registerFunction<contract_handler, void(const string&, int64_t, bool)>("transfer_nfa_from_caller", [](contract_handler &handler, const string& to, int64_t nfa_id, bool enable_logger = false) {
             handler.transfer_nfa_from(handler.caller.id, to, nfa_id, enable_logger);
         });
+        registerFunction<contract_handler, void(const string&, int64_t, bool)>("approve_nfa_active_from_owner", [](contract_handler &handler, const string& to, int64_t nfa_id, bool enable_logger = false) {
+            handler.approve_nfa_active_from(handler.contract.owner, to, nfa_id, enable_logger);
+        });
+        registerFunction<contract_handler, void(const string&, int64_t, bool)>("approve_nfa_active_from_caller", [](contract_handler &handler, const string& to, int64_t nfa_id, bool enable_logger = false) {
+            handler.approve_nfa_active_from(handler.caller.id, to, nfa_id, enable_logger);
+        });
 
         //nfa base info
         registerMember("id", &contract_nfa_base_info::id);

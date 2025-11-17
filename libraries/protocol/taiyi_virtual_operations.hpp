@@ -90,6 +90,16 @@ namespace taiyi { namespace protocol {
         int64_t                 id; ///nfa id
     };
     
+    struct nfa_active_approve_operation : public virtual_operation
+    {
+        nfa_active_approve_operation() {}
+        nfa_active_approve_operation(const account_name_type& owner_, const account_name_type& active_account_, const int64_t& id_) : owner(owner_), active_account(active_account_), id(id_) {}
+
+        account_name_type       owner;
+        account_name_type       active_account;
+        int64_t                 id; ///nfa id
+    };
+    
     struct nfa_convert_resources_operation : public virtual_operation
     {
         nfa_convert_resources_operation(){}
@@ -313,6 +323,7 @@ FC_REFLECT( taiyi::protocol::nfa_create_operation, (creator)(symbol) )
 FC_REFLECT( taiyi::protocol::nfa_convert_resources_operation, (nfa)(owner)(qi)(resource)(is_qi_to_resource) )
 FC_REFLECT( taiyi::protocol::nfa_asset_transfer_operation, (from)(from_owner)(to)(to_owner)(amount) )
 FC_REFLECT( taiyi::protocol::nfa_transfer_operation, (from)(to)(id) )
+FC_REFLECT( taiyi::protocol::nfa_active_approve_operation, (owner)(active_account)(id) )
 FC_REFLECT( taiyi::protocol::nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
 FC_REFLECT( taiyi::protocol::reward_feigang_operation, (from)(from_nfa)(to)(qi) )
 FC_REFLECT( taiyi::protocol::reward_cultivation_operation, (account)(nfa)(qi) )
