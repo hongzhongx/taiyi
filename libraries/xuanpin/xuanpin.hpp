@@ -658,7 +658,9 @@ namespace taiyi { namespace xuanpin {
 
         baiyujing_api::legacy_signed_transaction revise_contract(const account_name_type& reviser, const string& name, const string& data, bool broadcast);
         baiyujing_api::legacy_signed_transaction revise_contract_from_file(const account_name_type& reviser, const string& name, const string& filename, bool broadcast);
-        
+
+        baiyujing_api::legacy_signed_transaction release_contract(const account_name_type& owner, const string& name, bool broadcast);
+
         //value_list 目前仅支持string, bool, double, int64
         baiyujing_api::legacy_signed_transaction call_contract_function(const account_name_type& account, const string& contract_name, const string& function_name, const vector<fc::variant>& value_list, bool broadcast);
                 
@@ -854,6 +856,7 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (create_contract_from_file)
     (revise_contract)
     (revise_contract_from_file)
+    (release_contract)
     (call_contract_function)
     (get_contract_source_code)
        

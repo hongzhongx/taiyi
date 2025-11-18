@@ -104,6 +104,22 @@ namespace taiyi { namespace chain {
         return logger_result(previous_version);
     } FC_CAPTURE_AND_RETHROW( (o) ) }
     //=============================================================================
+    operation_result release_contract_evaluator::do_apply( const release_contract_operation& o )
+    { try {
+        const auto* contract = _db.find<contract_object, by_name>(o.contract_name);
+        FC_ASSERT(contract != nullptr, "contract named \"${c}\" is not exist", ("c", o.contract_name));
+        FC_ASSERT(!contract->is_release," The current contract is already release version");
+
+        const auto &contract_owner = _db.get<account_object, by_id>(contract->owner);
+        FC_ASSERT(contract_owner.name == o.owner, "You do not have the authority to modify the contract, the contract owner is ${owner}", ("owner", contract_owner.name));
+        
+        _db.modify(*contract, [&](contract_object &c) {
+            c.is_release = true;
+        });
+                
+        return void_result();
+    } FC_CAPTURE_AND_RETHROW( (o) ) }
+    //=============================================================================
     operation_result call_contract_function_evaluator::do_apply( const call_contract_function_operation& o )
     { try {
         

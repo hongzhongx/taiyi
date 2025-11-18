@@ -41,6 +41,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef hardfork_operation                      legacy_hardfork_operation;
     typedef create_contract_operation               legacy_create_contract_operation;
     typedef revise_contract_operation               legacy_revise_contract_operation;
+    typedef release_contract_operation              legacy_release_contract_operation;
     typedef call_contract_function_operation        legacy_call_contract_function_operation;
     typedef nfa_symbol_create_operation             legacy_nfa_symbol_create_operation;
     typedef nfa_create_operation                    legacy_nfa_create_operation;
@@ -432,6 +433,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
         legacy_create_contract_operation,
         legacy_revise_contract_operation,
+        legacy_release_contract_operation,
         legacy_call_contract_function_operation,
 
         legacy_action_nfa_operation,
@@ -494,6 +496,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const hardfork_operation& op )const                        { l_op = op; return true; }
         bool operator()( const create_contract_operation& op )const                 { l_op = op; return true; }
         bool operator()( const revise_contract_operation& op )const                 { l_op = op; return true; }
+        bool operator()( const release_contract_operation& op )const                { l_op = op; return true; }
         bool operator()( const call_contract_function_operation& op )const          { l_op = op; return true; }
         bool operator()( const nfa_symbol_create_operation& op )const               { l_op = op; return true; }
         bool operator()( const nfa_create_operation& op )const                      { l_op = op; return true; }

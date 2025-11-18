@@ -237,6 +237,14 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( is_valid_contract_name( contract_name ), "contract name ${n} is invalid", ("n", contract_name) );
     }    
 
+    void release_contract_operation::validate() const
+    {
+        validate_account_name( owner );
+        
+        FC_ASSERT(memcmp(contract_name.data(), "contract.", 9) == 0);
+        FC_ASSERT( is_valid_contract_name( contract_name ), "contract name ${n} is invalid", ("n", contract_name) );
+    }
+
     void action_nfa_operation::validate() const
     {
         validate_account_name( caller );

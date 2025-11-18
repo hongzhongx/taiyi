@@ -40,7 +40,8 @@ namespace taiyi { namespace protocol {
         // contract
         create_contract_operation,          //18
         revise_contract_operation,          //19
-        call_contract_function_operation,   //20
+        release_contract_operation,         //20
+        call_contract_function_operation,   //
 
         // nfa (non fungible asset)
         action_nfa_operation,               //25

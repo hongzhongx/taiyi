@@ -435,6 +435,15 @@ namespace taiyi { namespace protocol {
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(reviser); }
     };
 
+    struct release_contract_operation : public base_operation
+    {
+        account_name_type   owner;          // 合约创建者
+        string              contract_name;  // 合约名字
+        
+        void validate()const;
+        void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(owner); }
+    };
+
     struct call_contract_function_operation : public base_operation
     {
         account_name_type   caller;        // 合约调用者
@@ -484,6 +493,7 @@ FC_REFLECT( taiyi::protocol::delegate_qi_operation, (delegator)(delegatee)(qi) )
 
 FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )
+FC_REFLECT( taiyi::protocol::release_contract_operation, (owner)(contract_name) )
 FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)(contract_name)(function_name)(value_list)(extensions) )
 
 FC_REFLECT( taiyi::protocol::action_nfa_operation, (caller)(id)(action)(value_list)(extensions) )

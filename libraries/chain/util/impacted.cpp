@@ -123,16 +123,21 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.owner );
         }
 
-        void operator()( const call_contract_function_operation& op )
-        {
-            _impacted.insert( op.caller );
-        }
-
         void operator()( const revise_contract_operation& op )
         {
             _impacted.insert( op.reviser );
         }
         
+        void operator()( const release_contract_operation& op )
+        {
+            _impacted.insert( op.owner );
+        }
+
+        void operator()( const call_contract_function_operation& op )
+        {
+            _impacted.insert( op.caller );
+        }
+
         void operator()( const action_nfa_operation& op )
         {
             _impacted.insert( op.caller );

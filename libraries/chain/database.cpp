@@ -1326,11 +1326,12 @@ namespace taiyi { namespace chain {
         _my->_evaluator_registry.register_evaluator< change_recovery_account_evaluator        >();
         _my->_evaluator_registry.register_evaluator< decline_adoring_rights_evaluator         >();
         _my->_evaluator_registry.register_evaluator< claim_reward_balance_evaluator           >();
-        _my->_evaluator_registry.register_evaluator< delegate_qi_evaluator             >();
+        _my->_evaluator_registry.register_evaluator< delegate_qi_evaluator                    >();
         _my->_evaluator_registry.register_evaluator< siming_set_properties_evaluator          >();
         
         _my->_evaluator_registry.register_evaluator< create_contract_evaluator                >();
         _my->_evaluator_registry.register_evaluator< revise_contract_evaluator                >();
+        _my->_evaluator_registry.register_evaluator< release_contract_evaluator               >();
         _my->_evaluator_registry.register_evaluator< call_contract_function_evaluator         >();
         
         _my->_evaluator_registry.register_evaluator< action_nfa_evaluator                     >();

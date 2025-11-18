@@ -1881,6 +1881,22 @@ namespace taiyi { namespace xuanpin {
         return revise_contract(reviser, name, contract_data, broadcast);
     } FC_CAPTURE_AND_RETHROW( (reviser)(name)(filename) ) }
 
+    baiyujing_api::legacy_signed_transaction xuanpin_api::release_contract(const account_name_type& owner, const string& name, bool broadcast)
+    { try {
+        FC_ASSERT( !is_locked() );
+
+        release_contract_operation op;
+
+        op.owner = owner;
+        op.contract_name = name;
+
+        signed_transaction tx;
+        tx.operations.push_back(op);
+        tx.validate();
+
+        return my->sign_transaction( tx, broadcast );
+    } FC_CAPTURE_AND_RETHROW( (owner)(name) ) }
+
     baiyujing_api::api_contract_action_info xuanpin_api::get_nfa_action_info(int64_t nfa_id, const string& action)
     {
         return my->_remote_api->get_nfa_action_info( nfa_id, action );

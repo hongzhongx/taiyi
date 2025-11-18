@@ -634,6 +634,76 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( release_contract_apply )
+{ try {
+    string lua_code1 =  "function hello_world() \n \
+                            -- very important \n \
+                            print('hello world') \n \
+                        end";
+
+    string lua_code2 =  "function hello_world() \n \
+                            -- very important \n \
+                            print('better world') \n \
+                        end";
+
+    BOOST_TEST_MESSAGE( "Testing: release_contract_apply" );
+
+    ACTORS( (alice)(bob)(charlie) )
+        
+    signed_transaction tx;
+
+    create_contract_operation op;
+    op.owner = "alice";
+    op.name = "contract.test";
+    op.data = lua_code1;
+
+    tx.operations.push_back( op );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    generate_block();
+    validate_database();
+    
+    const auto* contract = db->find<contract_object, by_name>("contract.test");
+    BOOST_REQUIRE( contract->is_release == false );
+
+    BOOST_TEST_MESSAGE( "--- Test release contract" );
+    
+    release_contract_operation rco;
+    rco.owner = "alice";
+    rco.contract_name = "contract.test";
+    
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.operations.push_back( rco );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    generate_block();
+    validate_database();
+    
+    contract = db->find<contract_object, by_name>("contract.test");
+    BOOST_REQUIRE( contract->is_release == true );
+
+    BOOST_TEST_MESSAGE( "--- Test revise failed on released contract" );
+
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    generate_block();
+
+    revise_contract_operation rop;
+    rop.reviser = "alice";
+    rop.contract_name = "contract.test";
+    rop.data = lua_code2;
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( rop );
+    sign( tx, alice_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( call_contract_function_apply )
 { try {
     string lua_code1 =  "function hello_world() \n \
