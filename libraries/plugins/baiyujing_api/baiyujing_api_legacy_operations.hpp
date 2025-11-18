@@ -57,6 +57,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef actor_grown_operation                   legacy_actor_grown_operation;
     typedef narrate_log_operation                   legacy_narrate_log_operation;
     typedef actor_talk_operation                    legacy_actor_talk_operation;
+    typedef zone_create_operation                   legacy_zone_create_operation;
     typedef shutdown_siming_operation               legacy_shutdown_siming_operation;
 
     struct api_chain_properties
@@ -429,25 +430,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         string            family_name;
         string            last_name;
     };
-    
-    struct legacy_create_zone_operation
-    {
-        legacy_create_zone_operation() {}
-        legacy_create_zone_operation(const create_zone_operation& op) : creator(op.creator), name(op.name)
-        {}
-
-        operator create_zone_operation()const
-        {
-            create_zone_operation op;
-            op.creator = creator;
-            op.name = name;
-            return op;
-        }
-
-        account_name_type creator;
-        string            name;
-    };
-    
+        
     typedef fc::static_variant<
         legacy_transfer_operation,
         legacy_transfer_to_qi_operation,
@@ -474,7 +457,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
         legacy_action_nfa_operation,
 
-        legacy_create_zone_operation,
         legacy_create_actor_talent_rule_operation,
         legacy_create_actor_operation,
     
@@ -505,6 +487,9 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_actor_grown_operation,
         legacy_narrate_log_operation,
         legacy_actor_talk_operation,
+        
+        legacy_zone_create_operation,
+    
         legacy_shutdown_siming_operation
 
     > legacy_operation;
@@ -547,6 +532,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const actor_grown_operation& op )const                     { l_op = op; return true; }
         bool operator()( const narrate_log_operation& op )const                     { l_op = op; return true; }
         bool operator()( const actor_talk_operation& op )const                      { l_op = op; return true; }
+        bool operator()( const zone_create_operation& op )const                     { l_op = op; return true; }
         bool operator()( const shutdown_siming_operation& op )const                 { l_op = op; return true; }
 
         bool operator()( const transfer_operation& op )const
@@ -642,12 +628,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const create_actor_operation& op )const
         {
             l_op = legacy_create_actor_operation( op );
-            return true;
-        }
-
-        bool operator()( const create_zone_operation& op )const
-        {
-            l_op = legacy_create_zone_operation( op );
             return true;
         }
 
@@ -748,11 +728,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return operation( create_actor_operation( op ) );
         }
 
-        operation operator()( const legacy_create_zone_operation& op )const
-        {
-            return operation( create_zone_operation( op ) );
-        }
-
     };
 
 } } } // taiyi::plugins::baiyujing_api
@@ -825,6 +800,5 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_deposit_withdraw_operation
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_feigang_operation, (from)(from_nfa)(to)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_cultivation_operation, (account)(nfa)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_actor_operation, (fee)(creator)(family_name)(last_name) )
-FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_zone_operation, (creator)(name) )
 
 FC_REFLECT_TYPENAME( taiyi::plugins::baiyujing_api::legacy_operation )

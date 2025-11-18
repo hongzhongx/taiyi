@@ -74,56 +74,6 @@ namespace taiyi { namespace chain {
         else
             return g_zone_type_strings[type];
     }
-    //=============================================================================
-    operation_result create_zone_evaluator::do_apply( const create_zone_operation& o )
-    { try {
-        const auto& creator = _db.get_account( o.creator ); // prove it exists
-                    
-        //check zone existence
-        auto check_zone = _db.find< zone_object, by_name >( o.name );
-        FC_ASSERT( check_zone == nullptr, "There is already exist zone named \"${a}\".", ("a", o.name) );
-
-        contract_result result;
-
-        //先创建NFA
-        string nfa_symbol_name = "nfa.zone.default";
-        const auto* nfa_symbol = _db.find<nfa_symbol_object, by_symbol>(nfa_symbol_name);
-        FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", nfa_symbol_name));
-                
-        LuaContext context;
-        _db.initialize_VM_baseENV(context);
-        
-        const auto& nfa = _db.create_nfa(creator, *nfa_symbol, true, context);
-        
-        protocol::nfa_affected affected;
-        affected.affected_account = creator.name;
-        affected.affected_item = nfa.id;
-        affected.action = nfa_affected_type::create_for;
-        result.contract_affecteds.push_back(std::move(affected));
-        
-        affected.affected_account = creator.name;
-        affected.action = nfa_affected_type::create_by;
-        result.contract_affecteds.push_back(std::move(affected));
-        
-        //创建一个虚空区域
-        const auto& new_zone = _db.create< zone_object >( [&]( zone_object& zone ) {
-            _db.initialize_zone_object( zone, o.name, nfa, XUKONG);
-        });
-        
-        //reward to treasury
-        int64_t used_qi = TAIYI_ZONE_OBJ_STATE_BYTES * TAIYI_USEMANA_STATE_BYTES_SCALE + 1000 * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create zone." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
-
-        affected.affected_account = creator.name;
-        affected.affected_item = nfa.id;
-        affected.action = nfa_affected_type::deposit_qi;
-        result.contract_affecteds.push_back(std::move(affected));
-                                
-        //_db.push_virtual_operation( zone_creation_approved_operation( new_comment.author, new_comment.permlink, new_zone.name ) );
-        
-        return result;
-    } FC_CAPTURE_AND_RETHROW( (o) ) }
 
 } } // taiyi::chain
 

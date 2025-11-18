@@ -227,11 +227,6 @@ namespace taiyi { namespace chain {
         {
             _impacted.insert( op.messager );
         }        
-
-        void operator()( const create_zone_operation& op )
-        {
-            _impacted.insert( op.creator );
-        }
         
         void operator()( const actor_born_operation& op )
         {
@@ -276,6 +271,13 @@ namespace taiyi { namespace chain {
 
             _impacted_nfas.insert( op.actor_nfa );
             _impacted_nfas.insert( op.target_nfa );
+        }
+        
+        void operator()( const zone_create_operation& op )
+        {
+            _impacted.insert( op.creator );
+
+            _impacted_nfas.insert( op.nfa );
         }
 
         //void operator()( const operation& op ){}

@@ -45,9 +45,6 @@ namespace taiyi { namespace protocol {
         // nfa (non fungible asset)
         action_nfa_operation,               //25
     
-        // zone
-        create_zone_operation,              //26
-
         // actor
         create_actor_talent_rule_operation, //27
         create_actor_operation,             //28
@@ -79,6 +76,8 @@ namespace taiyi { namespace protocol {
         actor_movement_operation,           //43
         actor_grown_operation,              //44
         actor_talk_operation,               //45
+    
+        zone_create_operation,              //
     
         narrate_log_operation,              //46
     

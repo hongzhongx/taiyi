@@ -743,17 +743,6 @@ namespace taiyi { namespace xuanpin {
         baiyujing_api::find_actor_talent_rules_return find_actor_talent_rules( vector< int64_t > ids );
 
         /**
-         *  This method will create new empty zone（虚空）. There is a fee associated with zone creation
-         *  that is paid by the creator. The current zone creation fee can be found with the
-         *  'info' xuanpin command.
-         *
-         *  @param creator The account creating the new zone
-         *  @param name The name of the new zone
-         *  @param broadcast true if you wish to broadcast the transaction
-         */
-        baiyujing_api::legacy_signed_transaction create_zone( const account_name_type& creator, const string& name, bool broadcast );
-
-        /**
          * Find zones with given ids
          * @param zone_ids - array with ids of wanted zones to be founded.
          */
@@ -912,7 +901,6 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (action_actor_consequence)
 
     //zone
-    (create_zone)
     (list_zones)
     (list_zones_by_type)
     (list_to_zones_by_from)

@@ -268,13 +268,4 @@ namespace taiyi { namespace protocol {
         FC_ASSERT( fc::is_utf8( last_name ), "Last name not formatted in UTF8" );
     }
 
-    void create_zone_operation::validate() const
-    {
-        validate_account_name( creator );
-        
-        FC_ASSERT( name.size() > 0, "Name is empty" );
-        FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT, "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
-        FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );        
-    }    
-
 } } // taiyi::protocol

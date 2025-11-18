@@ -695,11 +695,11 @@ namespace taiyi { namespace chain {
                 affected.affected_account = db.get<account_object, by_id>(actor_nfa->owner_account).name;
                 affected.affected_item = nfa.id;
                 affected.action = nfa_affected_type::create_for;
-                result.contract_affecteds.push_back(std::move(affected));
+                result.contract_affecteds.push_back(affected);
 
                 affected.affected_account = caller.name;
                 affected.action = nfa_affected_type::create_by;
-                result.contract_affecteds.push_back(std::move(affected));
+                result.contract_affecteds.push_back(affected);
             }
 
             return nfa.id;
@@ -751,11 +751,11 @@ namespace taiyi { namespace chain {
                 affected.affected_account = to_account->name;
                 affected.affected_item = nfa.id;
                 affected.action = nfa_affected_type::create_for;
-                result.contract_affecteds.push_back(std::move(affected));
+                result.contract_affecteds.push_back(affected);
 
                 affected.affected_account = caller.name;
                 affected.action = nfa_affected_type::create_by;
-                result.contract_affecteds.push_back(std::move(affected));
+                result.contract_affecteds.push_back(affected);
             }
 
             return nfa.id;
@@ -1792,6 +1792,56 @@ namespace taiyi { namespace chain {
             db.add_contract_handler_exe_point(used_exe_point);
 
             return get_zone_type_string(new_type);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    int64_t contract_handler::create_zone(const string& name, const string& type_name)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(2);
+
+            E_ZONE_TYPE ztype = get_zone_type_from_string(type_name);
+            FC_ASSERT(ztype != _ZONE_INVALID_TYPE, "\"${s}\" is invalid zone type", ("s", type_name));
+
+            FC_ASSERT( name.size() > 0, "Name is empty" );
+            FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT, "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
+            FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );
+            
+            //check zone existence
+            auto check_zone = db.find< zone_object, by_name >( name );
+            FC_ASSERT( check_zone == nullptr, "There is already exist zone named \"${a}\".", ("a", name) );
+
+            //先创建NFA
+            string nfa_symbol_name = "nfa.zone.default";
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(nfa_symbol_name);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", nfa_symbol_name));
+            
+            const auto& creator = caller;
+            const auto& nfa = db.create_nfa(creator, *nfa_symbol, false, context);
+
+            protocol::nfa_affected affected;
+            affected.affected_account = creator.name;
+            affected.affected_item = nfa.id;
+            affected.action = nfa_affected_type::create_for;
+            result.contract_affecteds.push_back(affected);
+            
+            affected.affected_account = creator.name;
+            affected.action = nfa_affected_type::create_by;
+            result.contract_affecteds.push_back(affected);
+
+            //创建一个新区域
+            /*const auto& new_zone = */db.create< zone_object >( [&]( zone_object& zone ) {
+                db.initialize_zone_object( zone, name, nfa, ztype);
+            });
+
+            db.add_contract_handler_exe_point(TAIYI_ZONE_OBJ_STATE_BYTES + 1000);
+
+            return nfa.id;
         }
         catch (const fc::exception& e)
         {

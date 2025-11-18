@@ -310,6 +310,16 @@ namespace taiyi { namespace protocol {
         int                         favor_delta_actor;
         int                         favor_delta_target;
     };
+    
+    struct zone_create_operation : public virtual_operation
+    {
+        zone_create_operation() {}
+        zone_create_operation(const account_name_type& creator_, const string& name_, const int64_t& nfa_) : creator(creator_), name(name_), nfa(nfa_) {}
+        
+        account_name_type creator;
+        string            name;
+        int64_t           nfa;
+    };
 
 } } //taiyi::protocol
 
@@ -336,3 +346,4 @@ FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(
 FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(months)(days)(tod)(times)(age)(health) )
 FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(days)(tod)(times)(log) )
 FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_days)(v_tod)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content)(favor_delta_actor)(favor_delta_target) )
+FC_REFLECT( taiyi::protocol::zone_create_operation, (creator)(name) )
