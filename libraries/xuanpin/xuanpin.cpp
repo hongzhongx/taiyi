@@ -1962,24 +1962,6 @@ namespace taiyi { namespace xuanpin {
         return my->_remote_api->get_nfa_history( nfa_id, from, limit );
     }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor( const account_name_type& creator, const string& family_name, const string& last_name, bool broadcast )
-    { try {
-        FC_ASSERT( !is_locked() );
-        create_actor_operation op;
-        op.creator = creator;
-        op.family_name = family_name;
-        op.last_name = last_name;
-        op.fee = my->_remote_api->get_chain_properties().account_creation_fee * TAIYI_QI_SHARE_PRICE;
-
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
-
-        auto transaction = baiyujing_api::legacy_signed_transaction(my->sign_transaction( tx, broadcast ));
-        transaction.operation_results = get_transaction_results(transaction.transaction_id);
-        return transaction;
-    } FC_CAPTURE_AND_RETHROW( (creator)(family_name)(last_name) ) }
-
     baiyujing_api::find_actor_return xuanpin_api::find_actor( const string& name )
     {
         return my->_remote_api->find_actor( name );

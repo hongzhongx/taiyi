@@ -2118,6 +2118,69 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    int64_t contract_handler::create_actor(const string& family_name, const string& last_name)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(2);
+
+            FC_ASSERT( family_name.size() > 0, "Family name is empty" );
+            FC_ASSERT( family_name.size() < TAIYI_ACTOR_NAME_LIMIT,
+                      "Family name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ACTOR_NAME_LIMIT - 1)("n", family_name.size()) );
+            FC_ASSERT( fc::is_utf8( family_name ), "Family name not formatted in UTF8" );
+            
+            FC_ASSERT( last_name.size() > 0, "Last name is empty" );
+            FC_ASSERT( last_name.size() < TAIYI_ACTOR_NAME_LIMIT,
+                      "Last name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ACTOR_NAME_LIMIT - 1)("n", last_name.size()) );
+            FC_ASSERT( fc::is_utf8( last_name ), "Last name not formatted in UTF8" );
+
+            //check existence
+            std::string name = family_name + last_name;
+            auto check_act = db.find< actor_object, by_name >( name );
+            FC_ASSERT( check_act == nullptr, "There is already exist actor named \"${a}\".", ("a", name) );
+
+            //先创建NFA
+            string nfa_symbol_name = "nfa.actor.default";
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(nfa_symbol_name);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", nfa_symbol_name));
+
+            const auto& creator = caller;
+            const auto& nfa = db.create_nfa(creator, *nfa_symbol, false, context);
+            
+            protocol::nfa_affected affected;
+            affected.affected_account = creator.name;
+            affected.affected_item = nfa.id;
+            affected.action = nfa_affected_type::create_for;
+            result.contract_affecteds.push_back(affected);
+            
+            affected.affected_account = creator.name;
+            affected.action = nfa_affected_type::create_by;
+            result.contract_affecteds.push_back(affected);
+            
+            operation vop = actor_create_operation(caller.name, family_name, last_name, nfa.id);
+            db.pre_push_virtual_operation( vop );
+
+            const auto& new_actor = db.create< actor_object >( [&]( actor_object& act ) {
+                db.initialize_actor_object( act, name, nfa );
+                
+                act.family_name = family_name;
+                act.last_name = last_name;
+            });
+            
+            db.initialize_actor_talents(new_actor);
+
+            db.post_push_virtual_operation( vop );
+
+            db.add_contract_handler_exe_point(TAIYI_ACTOR_OBJ_STATE_BYTES + 1000);
+
+            return nfa.id;
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     bool contract_handler::is_actor_valid(int64_t nfa_id)
     {
         return db.find<actor_object, by_nfa_id>(nfa_id) != nullptr;

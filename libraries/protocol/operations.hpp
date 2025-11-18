@@ -45,9 +45,6 @@ namespace taiyi { namespace protocol {
         // nfa (non fungible asset)
         action_nfa_operation,               //25
     
-        // actor
-        create_actor_operation,             //28
-
         //**** virtual operations below this point
         hardfork_operation,                 //29
         fill_qi_withdraw_operation,         //30
@@ -71,6 +68,7 @@ namespace taiyi { namespace protocol {
         tiandao_time_change_operation,      //40
 
         actor_talent_rule_create_operation, //
+        actor_create_operation,             //
         actor_born_operation,               //41
         actor_talent_trigger_operation,     //42
         actor_movement_operation,           //43

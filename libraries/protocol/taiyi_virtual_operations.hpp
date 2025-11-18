@@ -215,6 +215,17 @@ namespace taiyi { namespace protocol {
         account_name_type           creator;
         string                      contract;
     };
+    
+    struct actor_create_operation : public virtual_operation
+    {
+        actor_create_operation() {}
+        actor_create_operation(const account_name_type& creator_, const string& family_name_, const string& last_name_, const int64_t& nfa_) : creator(creator_), family_name(family_name_), last_name(last_name_), nfa(nfa_) {}
+        
+        account_name_type           creator;
+        string                      family_name;
+        string                      last_name;
+        int64_t                     nfa;
+    };
 
     struct actor_born_operation : public virtual_operation
     {
@@ -350,6 +361,7 @@ FC_REFLECT( taiyi::protocol::tiandao_year_change_operation, (messager)(years)(mo
 FC_REFLECT( taiyi::protocol::tiandao_month_change_operation, (messager)(years)(months)(times) )
 FC_REFLECT( taiyi::protocol::tiandao_time_change_operation, (messager)(years)(months)(times) )
 FC_REFLECT( taiyi::protocol::actor_talent_rule_create_operation, (creator)(contract) )
+FC_REFLECT( taiyi::protocol::actor_create_operation, (creator)(family_name)(last_name)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_born_operation, (owner)(name)(zone)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_talent_trigger_operation, (owner)(name)(nfa)(tid)(title)(desc)(age) )
 FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(to_zone)(nfa) )

@@ -293,6 +293,7 @@ namespace taiyi { namespace chain {
 
         //Actor
         int64_t create_actor_talent_rule(const string& contract_name);
+        int64_t create_actor(const string& family_name, const string& last_name);
         bool is_actor_valid(int64_t nfa_id);
         bool is_actor_valid_by_name(const string& name);
         contract_actor_base_info get_actor_info(int64_t nfa_id);

@@ -51,6 +51,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef tiandao_month_change_operation          legacy_tiandao_month_change_operation;
     typedef tiandao_time_change_operation           legacy_tiandao_time_change_operation;
     typedef actor_talent_rule_create_operation      legacy_actor_talent_rule_create_operation;
+    typedef actor_create_operation                  legacy_actor_create_operation;
     typedef actor_born_operation                    legacy_actor_born_operation;
     typedef actor_talent_trigger_operation          legacy_actor_talent_trigger_operation;
     typedef actor_movement_operation                legacy_actor_movement_operation;
@@ -408,29 +409,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         int64_t             nfa;
         legacy_asset        qi;
     };
-    
-    struct legacy_create_actor_operation
-    {
-        legacy_create_actor_operation() {}
-        legacy_create_actor_operation(const create_actor_operation& op) : fee(legacy_asset::from_asset(op.fee)), creator(op.creator), family_name(op.family_name), last_name(op.last_name)
-        {}
-
-        operator create_actor_operation()const
-        {
-            create_actor_operation op;
-            op.fee = fee;
-            op.creator = creator;
-            op.family_name = family_name;
-            op.last_name = last_name;
-            return op;
-        }
-
-        legacy_asset      fee;
-        account_name_type creator;
-        string            family_name;
-        string            last_name;
-    };
-        
+            
     typedef fc::static_variant<
         legacy_transfer_operation,
         legacy_transfer_to_qi_operation,
@@ -456,8 +435,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_call_contract_function_operation,
 
         legacy_action_nfa_operation,
-
-        legacy_create_actor_operation,
     
         //**** virtual operations below this point
         legacy_fill_qi_withdraw_operation,
@@ -481,6 +458,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_tiandao_time_change_operation,
     
         legacy_actor_talent_rule_create_operation,
+        legacy_actor_create_operation,
         legacy_actor_born_operation,
         legacy_actor_talent_trigger_operation,
         legacy_actor_movement_operation,
@@ -526,6 +504,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const tiandao_month_change_operation& op )const            { l_op = op; return true; }
         bool operator()( const tiandao_time_change_operation& op )const             { l_op = op; return true; }
         bool operator()( const actor_talent_rule_create_operation& op )const        { l_op = op; return true; }
+        bool operator()( const actor_create_operation& op )const                    { l_op = op; return true; }
         bool operator()( const actor_born_operation& op )const                      { l_op = op; return true; }
         bool operator()( const actor_talent_trigger_operation& op )const            { l_op = op; return true; }
         bool operator()( const actor_movement_operation& op )const                  { l_op = op; return true; }
@@ -625,12 +604,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             return true;
         }
 
-        bool operator()( const create_actor_operation& op )const
-        {
-            l_op = legacy_create_actor_operation( op );
-            return true;
-        }
-
         // Should only be FA ops
         template< typename T >
         bool operator()( const T& )const { return false; }
@@ -722,12 +695,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         {
             return operation( reward_cultivation_operation( op ) );
         }
-
-        operation operator()( const legacy_create_actor_operation& op )const
-        {
-            return operation( create_actor_operation( op ) );
-        }
-
     };
 
 } } } // taiyi::plugins::baiyujing_api
@@ -799,6 +766,5 @@ FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_asset_transfer_operation, 
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_nfa_deposit_withdraw_operation, (nfa)(account)(deposited)(withdrawn) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_feigang_operation, (from)(from_nfa)(to)(qi) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_reward_cultivation_operation, (account)(nfa)(qi) )
-FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_create_actor_operation, (fee)(creator)(family_name)(last_name) )
 
 FC_REFLECT_TYPENAME( taiyi::plugins::baiyujing_api::legacy_operation )

@@ -690,18 +690,6 @@ namespace taiyi { namespace xuanpin {
         vector< baiyujing_api::api_nfa_object > list_nfas(const account_name_type& owner, uint32_t limit);
 
         map< uint32_t, baiyujing_api::api_operation_object > get_nfa_history( const int64_t& nfa_id, uint32_t from, uint32_t limit );
-
-        /**
-         *  This method will create new actor. There is a fee associated with actor creation
-         *  that is paid by the creator. The current actor creation fee can be found with the
-         *  'info' xuanpin command.
-         *
-         *  @param creator The account creating the new actor
-         *  @param family_name 姓
-         *  @param last_name 名
-         *  @param broadcast true if you wish to broadcast the transaction
-         */
-        baiyujing_api::legacy_signed_transaction create_actor( const account_name_type& creator, const string& family_name, const string& last_name, bool broadcast );
         
         /**
          * Find actors with given ids
@@ -881,7 +869,6 @@ FC_API( taiyi::xuanpin::xuanpin_api,
     (get_nfa_action_info)
        
     //actor
-    (create_actor)
     (find_actor)
     (find_actors)
     (list_actors)

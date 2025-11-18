@@ -242,22 +242,4 @@ namespace taiyi { namespace protocol {
         validate_account_name( caller );
     }
 
-    void create_actor_operation::validate() const
-    {
-        validate_account_name( creator );
-
-        FC_ASSERT( is_asset_type( fee, QI_SYMBOL ), "Actor creation fee must be QI" );
-        FC_ASSERT( fee >= asset( 0, QI_SYMBOL ), "Actor creation fee cannot be negative" );
-        
-        FC_ASSERT( family_name.size() > 0, "Family name is empty" );
-        FC_ASSERT( family_name.size() < TAIYI_ACTOR_NAME_LIMIT,
-                  "Family name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ACTOR_NAME_LIMIT - 1)("n", family_name.size()) );
-        FC_ASSERT( fc::is_utf8( family_name ), "Family name not formatted in UTF8" );
-        
-        FC_ASSERT( last_name.size() > 0, "Last name is empty" );
-        FC_ASSERT( last_name.size() < TAIYI_ACTOR_NAME_LIMIT,
-                  "Last name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ACTOR_NAME_LIMIT - 1)("n", last_name.size()) );
-        FC_ASSERT( fc::is_utf8( last_name ), "Last name not formatted in UTF8" );
-    }
-
 } } // taiyi::protocol
