@@ -1833,11 +1833,16 @@ namespace taiyi { namespace chain {
             affected.affected_account = creator.name;
             affected.action = nfa_affected_type::create_by;
             result.contract_affecteds.push_back(affected);
+            
+            operation vop = zone_create_operation(caller.name, name, nfa.id);
+            db.pre_push_virtual_operation( vop );
 
             //创建一个新区域
             /*const auto& new_zone = */db.create< zone_object >( [&]( zone_object& zone ) {
                 db.initialize_zone_object( zone, name, nfa, ztype);
             });
+
+            db.post_push_virtual_operation( vop );
 
             db.add_contract_handler_exe_point(TAIYI_ZONE_OBJ_STATE_BYTES + 1000);
 
@@ -2065,6 +2070,47 @@ namespace taiyi { namespace chain {
                 o.from = from_zone->id;
                 o.to = to_zone->id;
             });
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    int64_t contract_handler::create_actor_talent_rule(const string& contract_name)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(2);
+
+            const auto& creator = caller;
+            
+            FC_ASSERT(memcmp(contract_name.data(), "contract.", 9) == 0, "contract name ${c} is not begin with \"contract.\"", ("c", contract_name));
+            FC_ASSERT( is_valid_contract_name( contract_name ), "contract name ${n} is invalid", ("n", contract_name) );
+
+            const auto* contract = db.find<contract_object, by_name>(contract_name);
+            FC_ASSERT(contract != nullptr, "contract named \"${c}\" is not exist", ("c", contract_name));
+            auto abi_itr = contract->contract_ABI.find(lua_types(lua_string(TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME)));
+            FC_ASSERT(abi_itr != contract->contract_ABI.end(), "contract ${c} has not init function named ${i}", ("c", contract_name)("i", TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME));
+                        
+            operation vop = actor_talent_rule_create_operation(creator.name, contract_name);
+            db.pre_push_virtual_operation( vop );
+
+            auto now = db.head_block_time();
+            const auto& new_rule = db.create< actor_talent_rule_object >( [&]( actor_talent_rule_object& tr ) {
+                tr.main_contract = contract->id;
+                tr.last_update = now;
+                tr.created = tr.last_update;
+                
+                db.initialize_actor_talent_rule_object(creator, tr, context);
+            });
+
+            db.post_push_virtual_operation( vop );
+
+            size_t new_state_size = fc::raw::pack_size(new_rule.title) + fc::raw::pack_size(new_rule.description);
+            db.add_contract_handler_exe_point(new_state_size + 100);
+
+            return new_rule.id;
         }
         catch (const fc::exception& e)
         {

@@ -50,7 +50,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef tiandao_year_change_operation           legacy_tiandao_year_change_operation;
     typedef tiandao_month_change_operation          legacy_tiandao_month_change_operation;
     typedef tiandao_time_change_operation           legacy_tiandao_time_change_operation;
-    typedef create_actor_talent_rule_operation      legacy_create_actor_talent_rule_operation;
+    typedef actor_talent_rule_create_operation      legacy_actor_talent_rule_create_operation;
     typedef actor_born_operation                    legacy_actor_born_operation;
     typedef actor_talent_trigger_operation          legacy_actor_talent_trigger_operation;
     typedef actor_movement_operation                legacy_actor_movement_operation;
@@ -457,7 +457,6 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
 
         legacy_action_nfa_operation,
 
-        legacy_create_actor_talent_rule_operation,
         legacy_create_actor_operation,
     
         //**** virtual operations below this point
@@ -481,6 +480,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_tiandao_month_change_operation,
         legacy_tiandao_time_change_operation,
     
+        legacy_actor_talent_rule_create_operation,
         legacy_actor_born_operation,
         legacy_actor_talent_trigger_operation,
         legacy_actor_movement_operation,
@@ -525,7 +525,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const tiandao_year_change_operation& op )const             { l_op = op; return true; }
         bool operator()( const tiandao_month_change_operation& op )const            { l_op = op; return true; }
         bool operator()( const tiandao_time_change_operation& op )const             { l_op = op; return true; }
-        bool operator()( const create_actor_talent_rule_operation& op )const        { l_op = op; return true; }
+        bool operator()( const actor_talent_rule_create_operation& op )const        { l_op = op; return true; }
         bool operator()( const actor_born_operation& op )const                      { l_op = op; return true; }
         bool operator()( const actor_talent_trigger_operation& op )const            { l_op = op; return true; }
         bool operator()( const actor_movement_operation& op )const                  { l_op = op; return true; }

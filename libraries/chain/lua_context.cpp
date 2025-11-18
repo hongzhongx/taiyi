@@ -249,7 +249,8 @@ namespace taiyi { namespace chain {
         registerFunction("is_zone_valid", &contract_handler::is_zone_valid);        
         registerFunction("is_zone_valid_by_name", &contract_handler::is_zone_valid_by_name);
         registerFunction("connect_zones", &contract_handler::connect_zones);
-        registerFunction("list_actors_on_zone", &contract_handler::list_actors_on_zone);        
+        registerFunction("create_actor_talent_rule", &contract_handler::create_actor_talent_rule);
+        registerFunction("list_actors_on_zone", &contract_handler::list_actors_on_zone);
         registerFunction("is_actor_valid", &contract_handler::is_actor_valid);
         registerFunction("is_actor_valid_by_name", &contract_handler::is_actor_valid_by_name);
         registerFunction("get_actor_info", &contract_handler::get_actor_info);

@@ -1335,7 +1335,6 @@ namespace taiyi { namespace chain {
         
         _my->_evaluator_registry.register_evaluator< action_nfa_evaluator                     >();
         
-        _my->_evaluator_registry.register_evaluator< create_actor_talent_rule_evaluator       >();
         _my->_evaluator_registry.register_evaluator< create_actor_evaluator                   >();
     }
     

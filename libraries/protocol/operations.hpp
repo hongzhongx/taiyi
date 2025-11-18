@@ -46,7 +46,6 @@ namespace taiyi { namespace protocol {
         action_nfa_operation,               //25
     
         // actor
-        create_actor_talent_rule_operation, //27
         create_actor_operation,             //28
 
         //**** virtual operations below this point
@@ -71,6 +70,7 @@ namespace taiyi { namespace protocol {
         tiandao_month_change_operation,     //39
         tiandao_time_change_operation,      //40
 
+        actor_talent_rule_create_operation, //
         actor_born_operation,               //41
         actor_talent_trigger_operation,     //42
         actor_movement_operation,           //43

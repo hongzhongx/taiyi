@@ -292,6 +292,7 @@ namespace taiyi { namespace chain {
         void set_zone_ref_prohibited_contract_zone(const string& zone_name, const string& ref_zone_name);
 
         //Actor
+        int64_t create_actor_talent_rule(const string& contract_name);
         bool is_actor_valid(int64_t nfa_id);
         bool is_actor_valid_by_name(const string& name);
         contract_actor_base_info get_actor_info(int64_t nfa_id);

@@ -203,11 +203,6 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
 
-        void operator()( const create_actor_talent_rule_operation& op )
-        {
-            _impacted.insert( op.creator );
-        }
-
         void operator()( const create_actor_operation& op )
         {
             _impacted.insert( op.creator );
@@ -228,6 +223,11 @@ namespace taiyi { namespace chain {
             _impacted.insert( op.messager );
         }        
         
+        void operator()( const actor_talent_rule_create_operation& op )
+        {
+            _impacted.insert( op.creator );
+        }
+
         void operator()( const actor_born_operation& op )
         {
             _impacted.insert( op.owner );

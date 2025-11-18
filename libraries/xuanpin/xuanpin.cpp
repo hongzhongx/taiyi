@@ -1962,20 +1962,6 @@ namespace taiyi { namespace xuanpin {
         return my->_remote_api->get_nfa_history( nfa_id, from, limit );
     }
 
-    baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor_talent_rule(account_name_type creator, const string& contract, bool broadcast )
-    { try {
-        FC_ASSERT( !is_locked() );
-        create_actor_talent_rule_operation op;
-        op.creator = creator;
-        op.contract = contract;
-
-        signed_transaction tx;
-        tx.operations.push_back(op);
-        tx.validate();
-
-        return my->sign_transaction( tx, broadcast );
-    } FC_CAPTURE_AND_RETHROW( (creator)(contract) ) }
-
     baiyujing_api::legacy_signed_transaction xuanpin_api::create_actor( const account_name_type& creator, const string& family_name, const string& last_name, bool broadcast )
     { try {
         FC_ASSERT( !is_locked() );

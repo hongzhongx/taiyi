@@ -49,15 +49,14 @@ namespace taiyi { namespace chain {
         act.base = zone_id_type::max();
     }
     //=============================================================================
-    void database::initialize_actor_talent_rule_object(const account_object& creator, actor_talent_rule_object& rule, long long& vm_drops)
+    void database::initialize_actor_talent_rule_object(const account_object& creator, actor_talent_rule_object& rule, LuaContext& context)
     {
-        LuaContext context;
-        initialize_VM_baseENV(context);
         contract_worker worker;
         vector<lua_types> value_list;
         //运行主合约获取初始化数据
         const auto& contract = get<contract_object, by_id>(rule.main_contract);
-        lua_table result_table = worker.do_contract_function(creator, TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME, value_list, contract, vm_drops, true, context, *this);
+        long long drops = lua_getdrops(context.mState);
+        lua_table result_table = worker.do_contract_function(creator, TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME, value_list, contract, drops, false, context, *this);
         
         auto it_name = result_table.v.find(lua_types(lua_string("name")));
         FC_ASSERT(it_name != result_table.v.end(), "talent contract init data invalid, need \"name\"");
