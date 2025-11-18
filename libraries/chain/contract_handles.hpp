@@ -285,7 +285,6 @@ namespace taiyi { namespace chain {
         void connect_zones(int64_t from_zone_nfa_id, int64_t to_zone_nfa_id);
         vector<contract_actor_base_info> list_actors_on_zone(int64_t nfa_id);
         string exploit_zone(const string& actor_name, const string& zone_name);
-        string break_new_zone(const string& actor_name);
         bool is_contract_allowed_by_zone(const string& zone_name, const string& contract_name);
         void set_zone_contract_permission(const string& zone_name, const string& contract_name, bool allowed);
         void remove_zone_contract_permission(const string& zone_name, const string& contract_name);

@@ -257,7 +257,6 @@ namespace taiyi { namespace chain {
         registerFunction("born_actor", &contract_handler::born_actor);
         registerFunction("move_actor", &contract_handler::move_actor);
         registerFunction("exploit_zone", &contract_handler::exploit_zone);
-        registerFunction("break_new_zone", &contract_handler::break_new_zone);
         registerFunction("is_contract_allowed_by_zone", &contract_handler::is_contract_allowed_by_zone);
         registerFunction("set_zone_contract_permission", &contract_handler::set_zone_contract_permission);
         registerFunction("remove_zone_contract_permission", &contract_handler::remove_zone_contract_permission);
