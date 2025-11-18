@@ -654,7 +654,38 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    int64_t contract_handler::create_nfa_to_actor(int64_t to_actor_nfa_id, string symbol, lua_map data, bool enable_logger)
+    void contract_handler::change_nfa_symbol_authority(const string& symbol, const string& authority_account)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+                                
+            FC_ASSERT(memcmp(symbol.data(), "nfa.", 4) == 0, "symbol name is not start with \"nfa.\"");
+            FC_ASSERT(is_valid_nfa_symbol(symbol), "symbol ${q} is invalid", ("n", symbol));
+            
+            validate_account_name( authority_account );
+            const auto* to_account = db.find<account_object, by_name>(authority_account);
+            FC_ASSERT(to_account != nullptr, "account named \"${n}\" is not exist", ("n", authority_account));
+
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
+
+            operation vop = nfa_symbol_authority_change_operation( caller.name, symbol, authority_account );
+            db.pre_push_virtual_operation( vop );
+
+            db.modify(*nfa_symbol, [&](nfa_symbol_object& obj) {
+                obj.authority_account = to_account->id;
+            });
+            
+            db.post_push_virtual_operation( vop );
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    int64_t contract_handler::create_nfa_to_actor(int64_t to_actor_nfa_id, string symbol, lua_map data)
     {
         try
         {
@@ -689,18 +720,15 @@ namespace taiyi { namespace chain {
 
             db.post_push_virtual_operation( vop );
 
-            if (enable_logger)
-            {
-                protocol::nfa_affected affected;
-                affected.affected_account = db.get<account_object, by_id>(actor_nfa->owner_account).name;
-                affected.affected_item = nfa.id;
-                affected.action = nfa_affected_type::create_for;
-                result.contract_affecteds.push_back(affected);
+            protocol::nfa_affected affected;
+            affected.affected_account = db.get<account_object, by_id>(actor_nfa->owner_account).name;
+            affected.affected_item = nfa.id;
+            affected.action = nfa_affected_type::create_for;
+            result.contract_affecteds.push_back(affected);
 
-                affected.affected_account = caller.name;
-                affected.action = nfa_affected_type::create_by;
-                result.contract_affecteds.push_back(affected);
-            }
+            affected.affected_account = caller.name;
+            affected.action = nfa_affected_type::create_by;
+            result.contract_affecteds.push_back(affected);
 
             return nfa.id;
         }
@@ -711,7 +739,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    int64_t contract_handler::create_nfa_to_account(const string& to_account_name, string symbol, lua_map data, bool enable_logger)
+    int64_t contract_handler::create_nfa_to_account(const string& to_account_name, string symbol, lua_map data)
     {
         try
         {
@@ -745,18 +773,15 @@ namespace taiyi { namespace chain {
 
             db.post_push_virtual_operation( vop );
 
-            if (enable_logger)
-            {
-                protocol::nfa_affected affected;
-                affected.affected_account = to_account->name;
-                affected.affected_item = nfa.id;
-                affected.action = nfa_affected_type::create_for;
-                result.contract_affecteds.push_back(affected);
+            protocol::nfa_affected affected;
+            affected.affected_account = to_account->name;
+            affected.affected_item = nfa.id;
+            affected.action = nfa_affected_type::create_for;
+            result.contract_affecteds.push_back(affected);
 
-                affected.affected_account = caller.name;
-                affected.action = nfa_affected_type::create_by;
-                result.contract_affecteds.push_back(affected);
-            }
+            affected.affected_account = caller.name;
+            affected.action = nfa_affected_type::create_by;
+            result.contract_affecteds.push_back(affected);
 
             return nfa.id;
         }

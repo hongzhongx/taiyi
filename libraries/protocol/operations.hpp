@@ -41,46 +41,49 @@ namespace taiyi { namespace protocol {
         create_contract_operation,          //18
         revise_contract_operation,          //19
         release_contract_operation,         //20
-        call_contract_function_operation,   //
+        call_contract_function_operation,   //21
 
         // nfa (non fungible asset)
-        action_nfa_operation,               //25
+        action_nfa_operation,               //22
     
-        //**** virtual operations below this point
-        hardfork_operation,                 //29
-        fill_qi_withdraw_operation,         //30
-        return_qi_delegation_operation,     //31
-        producer_reward_operation,          //32
+        //**********************************************//
+        //**** virtual operations below this point **** //
+        //**********************************************//
+
+        hardfork_operation,                 //23
+        fill_qi_withdraw_operation,         //24
+        return_qi_delegation_operation,     //25
+        producer_reward_operation,          //26
     
-        nfa_symbol_create_operation,        //
-        nfa_create_operation,               //
-        nfa_transfer_operation,             //
-        nfa_active_approve_operation,       //
-
-        nfa_convert_resources_operation,    //33
-        nfa_asset_transfer_operation,       //34
-        nfa_deposit_withdraw_operation,     //35
+        nfa_symbol_create_operation,        //27
+        nfa_symbol_authority_change_operation, //
+        nfa_create_operation,               //28
+        nfa_transfer_operation,             //29
+        nfa_active_approve_operation,       //30
+        nfa_convert_resources_operation,    //31
+        nfa_asset_transfer_operation,       //32
+        nfa_deposit_withdraw_operation,     //33
     
-        reward_feigang_operation,           //36
-        reward_cultivation_operation,       //37
+        reward_feigang_operation,           //34
+        reward_cultivation_operation,       //35
 
-        tiandao_year_change_operation,      //38
-        tiandao_month_change_operation,     //39
-        tiandao_time_change_operation,      //40
+        tiandao_year_change_operation,      //36
+        tiandao_month_change_operation,     //37
+        tiandao_time_change_operation,      //38
 
-        actor_talent_rule_create_operation, //
-        actor_create_operation,             //
+        actor_talent_rule_create_operation, //39
+        actor_create_operation,             //40
         actor_born_operation,               //41
         actor_talent_trigger_operation,     //42
         actor_movement_operation,           //43
         actor_grown_operation,              //44
         actor_talk_operation,               //45
     
-        zone_create_operation,              //
+        zone_create_operation,              //46
     
-        narrate_log_operation,              //46
+        narrate_log_operation,              //47
     
-        shutdown_siming_operation           //47
+        shutdown_siming_operation           //48
     
     > operation;
 

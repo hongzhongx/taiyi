@@ -149,6 +149,13 @@ namespace taiyi { namespace chain {
         {
             _impacted.insert( op.creator );
         }
+        
+        void operator()( const nfa_symbol_authority_change_operation& op )
+        {
+            _impacted.insert( op.creator );
+            if (op.creator != op.authority_account)
+                _impacted.insert( op.authority_account );
+        }
 
         void operator()( const nfa_create_operation& op )
         {

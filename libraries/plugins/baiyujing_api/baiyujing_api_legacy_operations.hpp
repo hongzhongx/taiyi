@@ -44,6 +44,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef release_contract_operation              legacy_release_contract_operation;
     typedef call_contract_function_operation        legacy_call_contract_function_operation;
     typedef nfa_symbol_create_operation             legacy_nfa_symbol_create_operation;
+    typedef nfa_symbol_authority_change_operation   legacy_nfa_symbol_authority_change_operation;
     typedef nfa_create_operation                    legacy_nfa_create_operation;
     typedef nfa_transfer_operation                  legacy_nfa_transfer_operation;
     typedef nfa_active_approve_operation            legacy_nfa_active_approve_operation;
@@ -445,13 +446,14 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_producer_reward_operation,
 
         legacy_nfa_symbol_create_operation,
+        legacy_nfa_symbol_authority_change_operation,
         legacy_nfa_create_operation,
         legacy_nfa_transfer_operation,
         legacy_nfa_active_approve_operation,
-
         legacy_nfa_convert_resources_operation,
         legacy_nfa_asset_transfer_operation,
         legacy_nfa_deposit_withdraw_operation,
+    
         legacy_reward_feigang_operation,
         legacy_reward_cultivation_operation,
 
@@ -499,6 +501,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const release_contract_operation& op )const                { l_op = op; return true; }
         bool operator()( const call_contract_function_operation& op )const          { l_op = op; return true; }
         bool operator()( const nfa_symbol_create_operation& op )const               { l_op = op; return true; }
+        bool operator()( const nfa_symbol_authority_change_operation& op )const     { l_op = op; return true; }
         bool operator()( const nfa_create_operation& op )const                      { l_op = op; return true; }
         bool operator()( const nfa_transfer_operation& op )const                    { l_op = op; return true; }
         bool operator()( const nfa_active_approve_operation& op )const              { l_op = op; return true; }
