@@ -243,7 +243,6 @@ namespace taiyi { namespace chain {
         registerFunction("get_nfa_materials", &contract_handler::get_nfa_materials);
         registerFunction("list_nfa_inventory", &contract_handler::list_nfa_inventory);
         registerFunction("get_nfa_location", &contract_handler::get_nfa_location);
-        registerFunction("refine_zone", &contract_handler::refine_zone);
         registerFunction("create_zone", &contract_handler::create_zone);
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);

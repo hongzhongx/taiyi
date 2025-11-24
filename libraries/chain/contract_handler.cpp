@@ -1788,42 +1788,6 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    extern E_ZONE_TYPE g_generate_zone_refining_result(const zone_object& zone, const nfa_material_object& zone_materials, uint32_t seed);
-    string contract_handler::refine_zone(int64_t nfa_id)
-    {
-        try
-        {
-            db.add_contract_handler_exe_point(2);
-
-            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", nfa_id));
-            
-            const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
-            FC_ASSERT(zone != nullptr, "nfa #${z} is not a zone", ("z", nfa_id));
-            
-            uint32_t rand_seed = contract_random();
-            
-            const auto& m = db.get<nfa_material_object, by_nfa_id>(zone->nfa_id);
-            auto new_type = g_generate_zone_refining_result(*zone, m, rand_seed);
-            FC_ASSERT(new_type != _ZONE_INVALID_TYPE, "invalid zone type \"${t}\"", ("t", new_type));
-            if(new_type != zone->type) {
-                db.modify(*zone, [&](zone_object& obj){
-                    obj.type = new_type;
-                });
-            }
-            
-            //随机消耗大量真气（用执行点表示）
-            int64_t used_exe_point = 100 + rand_seed % 1000;
-            db.add_contract_handler_exe_point(used_exe_point);
-
-            return get_zone_type_string(new_type);
-        }
-        catch (const fc::exception& e)
-        {
-            LUA_C_ERR_THROW(context.mState, e.to_string());
-        }
-    }
-    //=============================================================================
     int64_t contract_handler::create_zone(const string& name, const string& type_name)
     {
         try
