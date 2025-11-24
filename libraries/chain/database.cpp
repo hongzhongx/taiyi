@@ -1495,6 +1495,7 @@ namespace taiyi { namespace chain {
         
         // Create basic contracts such as THE default actor symbol
         create_basic_nfa_symbol_objects();
+        create_basic_nfa_objects();
 
     } FC_CAPTURE_AND_RETHROW() }
     

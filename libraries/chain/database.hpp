@@ -432,6 +432,7 @@ namespace taiyi { namespace chain {
 
         // nfa
         void create_basic_nfa_symbol_objects();
+        void create_basic_nfa_objects();
         size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi);
         void modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check);
         int get_nfa_five_phase(const nfa_object& nfa) const;

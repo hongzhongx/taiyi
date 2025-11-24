@@ -166,6 +166,10 @@
 #define TAIYI_NFA_INIT_FUNC_NAME                "init_data"
 #define TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME  "talent_data"
 
+#define TAIYI_NFA_SYMBOL_NAME_XINSU_MARK        "nfa.xinsu.mark"
+#define TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR     "nfa.actor.default"
+#define TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE      "nfa.zone.default"
+
 #define TAIYI_USEMANA_STATE_BYTES_SCALE         1
 #define TAIYI_USEMANA_EXECUTION_SCALE           1
 

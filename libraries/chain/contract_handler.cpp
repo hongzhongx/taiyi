@@ -700,6 +700,9 @@ namespace taiyi { namespace chain {
             const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
 
+            //检查创建者权限
+            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+
             operation vop = nfa_create_operation(caller.name, symbol);
             db.pre_push_virtual_operation( vop );
 
@@ -753,6 +756,9 @@ namespace taiyi { namespace chain {
             FC_ASSERT(is_valid_nfa_symbol(symbol), "symbol ${q} is invalid", ("n", symbol));
             const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
+
+            //检查创建者权限
+            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
 
             operation vop = nfa_create_operation(caller.name, symbol);
             db.pre_push_virtual_operation( vop );
@@ -1806,10 +1812,12 @@ namespace taiyi { namespace chain {
             FC_ASSERT( check_zone == nullptr, "There is already exist zone named \"${a}\".", ("a", name) );
 
             //先创建NFA
-            string nfa_symbol_name = "nfa.zone.default";
-            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(nfa_symbol_name);
-            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", nfa_symbol_name));
-            
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE));
+
+            //检查创建者权限
+            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+
             const auto& creator = caller;
             const auto& nfa = db.create_nfa(creator, *nfa_symbol, false, context);
 
@@ -2129,9 +2137,11 @@ namespace taiyi { namespace chain {
             FC_ASSERT( check_act == nullptr, "There is already exist actor named \"${a}\".", ("a", name) );
 
             //先创建NFA
-            string nfa_symbol_name = "nfa.actor.default";
-            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(nfa_symbol_name);
-            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", nfa_symbol_name));
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR));
+
+            //检查创建者权限
+            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
 
             const auto& creator = caller;
             const auto& nfa = db.create_nfa(creator, *nfa_symbol, false, context);
