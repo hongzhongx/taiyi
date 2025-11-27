@@ -364,12 +364,12 @@ namespace taiyi { namespace chain {
                 session.squash();
             }
             catch (const fc::exception& e) {
-                //任何错误都不能照成核心循环崩溃
+                //任何错误都不能造成核心循环崩溃
                 beat_fail = true;
                 wlog("NFA (${i}) process heart beat fail. err: ${e}", ("i", nfa.id)("e", e.to_string()));
             }
             catch (...) {
-                //任何错误都不能照成核心循环崩溃
+                //任何错误都不能造成核心循环崩溃
                 beat_fail = true;
                 wlog("NFA (${i}) process heart beat fail.", ("i", nfa.id));
             }

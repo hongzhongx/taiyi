@@ -204,20 +204,21 @@ namespace taiyi { namespace chain {
     //=============================================================================
     void contract_handler::invoke_contract_function(const string& contract_name, const string& function_name, const string& value_list_json)
     {
-        const auto& contract = db.get<contract_object, by_name>(contract_name);
-        auto contract_id = contract.id;
         static vector<string> s_invoking_path;
         try
         {
-            if (std::find(s_invoking_path.begin(), s_invoking_path.end(), contract.name) != s_invoking_path.end()) {
+            const auto* contract = db.find<contract_object, by_name>(contract_name);
+            FC_ASSERT(contract != nullptr, "contract named \"${c}\" is not exist", ("c", contract_name));
+            auto contract_id = contract->id;
+
+            if (std::find(s_invoking_path.begin(), s_invoking_path.end(), contract->name) != s_invoking_path.end()) {
                 s_invoking_path.clear();
                 FC_THROW("Contract cicular references are prohibitted in invoking");
             }
-            else {
-                s_invoking_path.push_back(contract.name);
-            }
+            else
+                s_invoking_path.push_back(contract->name);
             
-            FC_ASSERT(contract_id != this->contract.id, " You can't use it to make recursive calls. ");
+            FC_ASSERT(contract_id != this->contract.id, "You can't use it to make recursive calls");
             auto value_list = fc::json::from_string(value_list_json).as<vector<lua_types>>();
             contract_result _contract_result = contract_result();
             auto backup_current_contract_name = context.readVariable<string>("current_contract");
@@ -2558,24 +2559,42 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
-    int64_t contract_handler::create_proposal(const string& target_account_name, const string& subject)
+    int64_t contract_handler::create_proposal(const string& contract_name, const string& function_name, const lua_map& params, const string& subject)
     {
         try
         {
-            db.add_contract_handler_exe_point(5);
+            db.add_contract_handler_exe_point(10);
 
-            validate_account_name(target_account_name);
-            const auto* target_account = db.find_account( target_account_name );
-            FC_ASSERT(target_account != nullptr, "Specified target account: ${r} must exist", ("r", target_account_name));
+            const auto* contract = db.find<contract_object, by_name>(contract_name);
+            FC_ASSERT(contract != nullptr, "contract named \"${c}\" is not exist", ("c", contract_name));
+                                                
+            //准备参数
+            vector<lua_types> value_list;
+            size_t params_ct = params.size();
+            for(int i=1; i< (params_ct+1); i++) {
+                auto p = params.find(lua_key(lua_int(i)));
+                FC_ASSERT(p != params.end(), "invalid function params");
+                value_list.push_back(p->second);
+            }
             
+            auto abi_itr = contract->contract_ABI.find(lua_types(lua_string(function_name)));
+            FC_ASSERT(abi_itr != contract->contract_ABI.end(), "function named \"${n}\" can not be found in contract", ("n", function_name));
+
+            if(!abi_itr->second.get<lua_function>().is_var_arg)
+                FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(), "input parameter values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", abi_itr->second.get<lua_function>().arglist));
+            FC_ASSERT(value_list.size() <= 20, "parameter value list is greater than 20 limit");
+
             time_point_sec end_date = db.head_block_time() + fc::seconds(TAIYI_PROPOSAL_MAINTENANCE_CLEANUP * 2);
             
-            operation vop = create_proposal_operation(caller.name, target_account_name, end_date, subject);
+            operation vop = create_proposal_operation(caller.name, contract_name, function_name, value_list, end_date, subject);
             db.pre_push_virtual_operation( vop );
 
             const auto& proposal = db.create< proposal_object >( [&]( proposal_object& obj ) {
                 obj.creator = caller.id;
-                obj.target_account = target_account->id;
+                
+                obj.contract_name = contract_name;
+                obj.function_name = function_name;
+                obj.value_list = value_list;
                 
                 obj.end_date = end_date;
                 obj.subject = subject;

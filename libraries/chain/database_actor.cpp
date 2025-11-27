@@ -341,12 +341,12 @@ namespace taiyi { namespace chain {
                     session.squash();
                 }
                 catch (const fc::exception& e) {
-                    //任何错误都不能照成核心循环崩溃
+                    //任何错误都不能造成核心循环崩溃
                     trigger_fail = true;
                     wlog("Actor (${a}) trigger talent #${t} fail. err: ${e}", ("a", act.name)("t", tobj.id)("e", e.to_string()));
                 }
                 catch (...) {
-                    //任何错误都不能照成核心循环崩溃
+                    //任何错误都不能造成核心循环崩溃
                     trigger_fail = true;
                     wlog("Actor (${a}) trigger talent #${t} fail.", ("a", act.name)("t", tobj.id));
                 }

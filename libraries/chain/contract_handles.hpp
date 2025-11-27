@@ -250,7 +250,7 @@ namespace taiyi { namespace chain {
         void make_release();
         contract_tiandao_property get_tiandao_property();
         void create_named_contract(const string& name, const string& code);
-        int64_t create_proposal(const string& target_account_name, const string& subject);
+        int64_t create_proposal(const string& contract_name, const string& function_name, const lua_map& params, const string& subject);
         void update_proposal_votes(const lua_map& proposal_ids, bool approve);
         void remove_proposals(const lua_map& proposal_ids);
         

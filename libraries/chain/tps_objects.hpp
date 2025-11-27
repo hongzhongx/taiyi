@@ -18,20 +18,24 @@ namespace taiyi { namespace chain {
         
         template<typename Constructor, typename Allocator>
         proposal_object( Constructor&& c, allocator< Allocator > a )
-            : subject(a)
+            : contract_name(a), function_name(a), value_list(a), subject(a)
         {
             c(*this);
         };
         
-        id_type             id;
+        id_type                 id;
                         
-        account_id_type     creator;        // account that created the proposal
-        account_id_type     target_account; // account that to be empowered
-        time_point_sec      end_date;       // end_date (when the proposal expires and can no longer valid)
-        std::string         subject;        // subject (a very brief description or title for the proposal)
+        account_id_type         creator;        // account that created the proposal
+
+        std::string             contract_name;  // 执行函数的合约名
+        std::string             function_name;  // 执行的目标函数名
+        std::vector<lua_types>  value_list;     // 执行函数的参数列表
+        
+        time_point_sec          end_date;       // end_date (when the proposal expires and can no longer valid)
+        std::string             subject;        // subject (a very brief description or title for the proposal)
                         
-        uint64_t            total_votes = 0;// This will be calculate every maintenance period        
-        bool                removed = false;
+        uint64_t                total_votes = 0;// This will be calculate every maintenance period
+        bool                    removed = false;
         
         time_point_sec get_end_date_with_delay() const { return end_date + TAIYI_PROPOSAL_MAINTENANCE_CLEANUP; }
     };
@@ -120,7 +124,7 @@ namespace mira {
     template<> struct is_static_length< taiyi::chain::proposal_vote_object > : public boost::true_type {};
 } // mira
 
-FC_REFLECT( taiyi::chain::proposal_object, (id)(creator)(target_account)(end_date)(subject)(total_votes)(removed) )
+FC_REFLECT( taiyi::chain::proposal_object, (id)(creator)(contract_name)(function_name)(value_list)(end_date)(subject)(total_votes)(removed) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::proposal_object, taiyi::chain::proposal_index )
 
 FC_REFLECT( taiyi::chain::proposal_vote_object, (id)(voter)(proposal_id) )

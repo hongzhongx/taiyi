@@ -1,22 +1,20 @@
+#include <chain/taiyi_fwd.hpp>
+
+#include <chain/database.hpp>
+
+#include <chain/taiyi_objects.hpp>
+#include <chain/contract_objects.hpp>
+
+#include <chain/lua_context.hpp>
+#include <chain/contract_worker.hpp>
 #include <chain/tps_processor.hpp>
 
+#include <lua.hpp>
+
+#include <fc/macros.hpp>
+
 namespace taiyi { namespace chain {
-    
-    using taiyi::protocol::asset;
-    using taiyi::protocol::operation;
-    
-    using taiyi::chain::proposal_object;
-    using taiyi::chain::by_end_date;
-    using taiyi::chain::proposal_index;
-    using taiyi::chain::proposal_id_type;
-    using taiyi::chain::proposal_vote_index;
-    using taiyi::chain::by_proposal_voter;
-    using taiyi::chain::by_voter_proposal;
-    using taiyi::protocol::proposal_execute_operation;
-    using taiyi::chain::tps_helper;
-    using taiyi::chain::dynamic_global_property_object;
-    using taiyi::chain::block_notification;
-    
+        
     const std::string tps_processor::removing_name = "tps_processor_remove";
     const std::string tps_processor::calculating_name = "tps_processor_calculate";
     
@@ -107,20 +105,54 @@ namespace taiyi { namespace chain {
     void tps_processor::execute_proposals(const time_point_sec& head_time, const t_proposals& proposals)
     {
         auto processing = [this](const proposal_object& _item) {
-            const auto& target_account = db.get<account_object, by_id>(_item.target_account);
-            
-            operation vop = proposal_execute_operation(target_account.name);
-            db.pre_push_virtual_operation(vop);
-            
-            db.modify(target_account, [&](account_object& obj) {
-                obj.is_xinsu = true;
-            });
-            
-            db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
-                obj.xinsu_count++;
-            });
 
-            db.post_push_virtual_operation(vop);
+            const auto& caller = db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT);
+            const auto* contract = db.find<contract_object, by_name>(_item.contract_name);
+            if(contract == nullptr)
+                return;
+
+            contract_worker worker;
+            LuaContext context;
+            
+            //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
+            long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
+            long long vm_drops = old_drops;
+            db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
+
+            try {
+                operation vop = proposal_execute_operation(_item.contract_name, _item.function_name, _item.value_list, _item.subject);
+                db.pre_push_virtual_operation(vop);
+
+                auto session = db.start_undo_session();
+                worker.do_contract_function(caller, _item.function_name, _item.value_list, *contract, vm_drops, true,  context, db);
+
+                db.post_push_virtual_operation(vop);
+                session.squash();
+            }
+            catch (const fc::exception& e) {
+                //任何错误都不能造成核心循环崩溃
+                wlog("Proposal (#${i}) process fail. err: ${e}", ("i", _item.id)("e", e.to_string()));
+            }
+            catch (...) {
+                //任何错误都不能造成核心循环崩溃
+                wlog("Proposal (${i}) process fail.", ("i", _item.id));
+            }
+
+            int64_t used_drops = old_drops - vm_drops;
+            int64_t api_exe_point = db.get_contract_handler_exe_point();
+
+            //reward contract owner
+            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
+            int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
+            used_qi -= used_qi_for_treasury;
+            FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
+            const auto& contract_owner = db.get<account_object, by_id>(contract->owner);
+            db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+
+            //reward to treasury
+            used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
+            FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
         };
         
         for( auto& item : proposals )

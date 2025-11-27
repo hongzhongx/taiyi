@@ -22,7 +22,7 @@ namespace taiyi { namespace chain {
     public:
         template< typename Constructor, typename Allocator >
         transaction_object( Constructor&& c, allocator< Allocator > a )
-            : packed_trx( a )
+            : packed_trx(a), operation_results(a)
         {
             c( *this );
         }

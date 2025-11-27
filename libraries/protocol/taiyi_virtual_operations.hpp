@@ -355,21 +355,28 @@ namespace taiyi { namespace protocol {
     struct proposal_execute_operation : public virtual_operation
     {
         proposal_execute_operation() = default;
-        proposal_execute_operation(const account_name_type& target_)
-        : target(target_) {}
+        proposal_execute_operation(const string& contract_name_, const string& function_name_, const vector<lua_types> value_list_, const string subject_)
+        : contract_name(contract_name_), function_name(function_name_), value_list(value_list_), subject(subject_) {}
                 
-        account_name_type   target; // Name of the account which is empowered
+        string              contract_name;  // 执行函数的合约名
+        string              function_name;  // 执行的目标函数名
+        vector<lua_types>   value_list;     // 执行函数的参数列表
+
+        string              subject;
     };
     
     struct create_proposal_operation : public virtual_operation
     {
         create_proposal_operation() {}
-        create_proposal_operation(const account_name_type& creator_, const account_name_type& target_, const time_point_sec& end_date_, const string& subject_)
-        : creator(creator_), target(target_), end_date(end_date_), subject(subject_) {}
+        create_proposal_operation(const account_name_type& creator_, const string& contract_name_, const string& function_name_, const vector<lua_types>& value_list_, const time_point_sec& end_date_, const string& subject_)
+        : creator(creator_), contract_name(contract_name_), function_name(function_name_), value_list(value_list_), end_date(end_date_), subject(subject_) {}
         
         account_name_type   creator;
-        account_name_type   target;
-        
+
+        string              contract_name;  // 执行函数的合约名
+        string              function_name;  // 执行的目标函数名
+        vector<lua_types>   value_list;     // 执行函数的参数列表
+
         time_point_sec      end_date;
         string              subject;
     };
@@ -426,7 +433,7 @@ FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(mo
 FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(days)(tod)(times)(log) )
 FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_days)(v_tod)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content)(favor_delta_actor)(favor_delta_target) )
 FC_REFLECT( taiyi::protocol::zone_create_operation, (creator)(name)(nfa) )
-FC_REFLECT( taiyi::protocol::proposal_execute_operation, (target) )
-FC_REFLECT( taiyi::protocol::create_proposal_operation, (creator)(target)(end_date)(subject) )
+FC_REFLECT( taiyi::protocol::proposal_execute_operation, (contract_name)(function_name)(value_list)(subject) )
+FC_REFLECT( taiyi::protocol::create_proposal_operation, (creator)(contract_name)(function_name)(value_list)(end_date)(subject) )
 FC_REFLECT( taiyi::protocol::update_proposal_votes_operation, (voter)(proposal_ids)(approve) )
 FC_REFLECT( taiyi::protocol::remove_proposal_operation, (proposal_owner)(proposal_ids) )
