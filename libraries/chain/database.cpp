@@ -19,6 +19,7 @@
 #include <chain/nfa_objects.hpp>
 #include <chain/siming_objects.hpp>
 #include <chain/siming_schedule.hpp>
+#include <chain/tps_processor.hpp>
 
 #include <chain/util/uint256.hpp>
 
@@ -1426,6 +1427,7 @@ namespace taiyi { namespace chain {
                 a.memo_key = init_public_key;
                 a.balance  = asset( i ? 0 : init_supply, YANG_SYMBOL );
                 a.qi  = asset( i ? 0 : init_qi_supply, QI_SYMBOL );
+                a.is_xinsu = ( i ? false : true );
             } );
             
             create< account_authority_object >( [&]( account_authority_object& auth ) {
@@ -1451,6 +1453,8 @@ namespace taiyi { namespace chain {
             p.total_qi = asset( init_qi_supply, QI_SYMBOL );
             p.current_supply = asset( init_supply, YANG_SYMBOL ) + p.total_qi * TAIYI_QI_SHARE_PRICE;
             p.maximum_block_size = TAIYI_MAX_BLOCK_SIZE;
+            p.next_maintenance_time = TAIYI_GENESIS_TIME;
+            p.xinsu_count = 1;
         } );
         
         create< tiandao_property_object >( [&]( tiandao_property_object& p ) {
@@ -1495,7 +1499,6 @@ namespace taiyi { namespace chain {
         
         // Create basic contracts such as THE default actor symbol
         create_basic_nfa_symbol_objects();
-        create_basic_nfa_objects();
 
     } FC_CAPTURE_AND_RETHROW() }
     
@@ -1720,7 +1723,9 @@ namespace taiyi { namespace chain {
         
         account_recovery_processing();
         process_decline_adoring_rights();
-        
+
+        process_proposals(note);
+
         process_tiandao();
         process_nfa_tick();
         process_actor_tick();
@@ -1730,7 +1735,7 @@ namespace taiyi { namespace chain {
         process_hardforks();
         
         // notify observers that the block has been applied
-        notify_post_apply_block( note );
+        notify_post_apply_block(note);
         
         notify_changed_objects();
         
@@ -2751,23 +2756,15 @@ namespace taiyi { namespace chain {
         
     } FC_CAPTURE_LOG_AND_RETHROW( (head_block_num()) ); }
 
-    namespace {
-        template <typename index_type, typename lambda>
-        void add_from_balance_index(const index_type& balance_idx, lambda callback )
-        {
-            auto it = balance_idx.begin();
-            auto end = balance_idx.end();
-            for( ; it != end; ++it )
-            {
-                const auto& balance = *it;
-                callback( balance );
-            }
-        }
-    }
-
     optional< chainbase::database::session >& database::pending_transaction_session()
     {
         return _pending_tx_session;
+    }
+    
+    void database::process_proposals(const block_notification& note)
+    {
+        tps_processor tps(*this);
+        tps.run(note);
     }
         
 } } //taiyi::chain

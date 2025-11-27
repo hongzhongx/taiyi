@@ -351,6 +351,51 @@ namespace taiyi { namespace protocol {
         string            name;
         int64_t           nfa;
     };
+    
+    struct proposal_execute_operation : public virtual_operation
+    {
+        proposal_execute_operation() = default;
+        proposal_execute_operation(const account_name_type& target_)
+        : target(target_) {}
+                
+        account_name_type   target; // Name of the account which is empowered
+    };
+    
+    struct create_proposal_operation : public virtual_operation
+    {
+        create_proposal_operation() {}
+        create_proposal_operation(const account_name_type& creator_, const account_name_type& target_, const time_point_sec& end_date_, const string& subject_)
+        : creator(creator_), target(target_), end_date(end_date_), subject(subject_) {}
+        
+        account_name_type   creator;
+        account_name_type   target;
+        
+        time_point_sec      end_date;
+        string              subject;
+    };
+    
+    struct update_proposal_votes_operation : public virtual_operation
+    {
+        update_proposal_votes_operation() {}
+        update_proposal_votes_operation(const account_name_type& voter_, const flat_set_ex<int64_t>& proposal_ids_, const bool& approve_)
+        : voter(voter_), proposal_ids(proposal_ids_), approve(approve_) {}
+        
+        account_name_type       voter;
+        flat_set_ex<int64_t>    proposal_ids; // IDs of proposals to vote for/against. Nonexisting IDs are ignored.
+        bool                    approve = false;
+    };
+    
+    // Allows to remove proposals specified by given IDs. Operation can be performed only by proposal owner.
+    struct remove_proposal_operation : public virtual_operation
+    {
+        remove_proposal_operation() {}
+        remove_proposal_operation(const account_name_type& proposal_owner_, const flat_set_ex<int64_t>& proposal_ids_)
+        : proposal_owner(proposal_owner_), proposal_ids(proposal_ids_) {}
+        
+        account_name_type       proposal_owner;
+        flat_set_ex<int64_t>    proposal_ids; // IDs of proposals to be removed. Nonexisting IDs are ignored.
+    };
+
 
 } } //taiyi::protocol
 
@@ -381,3 +426,7 @@ FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(mo
 FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(days)(tod)(times)(log) )
 FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_days)(v_tod)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content)(favor_delta_actor)(favor_delta_target) )
 FC_REFLECT( taiyi::protocol::zone_create_operation, (creator)(name)(nfa) )
+FC_REFLECT( taiyi::protocol::proposal_execute_operation, (target) )
+FC_REFLECT( taiyi::protocol::create_proposal_operation, (creator)(target)(end_date)(subject) )
+FC_REFLECT( taiyi::protocol::update_proposal_votes_operation, (voter)(proposal_ids)(approve) )
+FC_REFLECT( taiyi::protocol::remove_proposal_operation, (proposal_owner)(proposal_ids) )

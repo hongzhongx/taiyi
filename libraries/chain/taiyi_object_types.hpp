@@ -109,7 +109,11 @@ namespace taiyi {
             cultivation_object_type,
             
             //tiandao
-            tiandao_property_object_type
+            tiandao_property_object_type,
+            
+            //taiyi proposal system
+            proposal_object_type,
+            proposal_vote_object_type
         };
         
         class dynamic_global_property_object;
@@ -162,6 +166,10 @@ namespace taiyi {
         class cultivation_object;
         
         class tiandao_property_object;
+        
+        class proposal_object;
+        class proposal_vote_object;
+
 
         typedef oid< dynamic_global_property_object         > dynamic_global_property_id_type;
         typedef oid< account_object                         > account_id_type;
@@ -213,6 +221,10 @@ namespace taiyi {
         typedef oid< cultivation_object                     > cultivation_id_type;
         
         typedef oid< tiandao_property_object                > tiandao_property_id_type;
+        
+        typedef oid< proposal_object                        > proposal_id_type;
+        typedef oid< proposal_vote_object                   > proposal_vote_id_type;
+
 
         enum E_ZONE_TYPE
         {
@@ -421,6 +433,10 @@ FC_REFLECT_ENUM( taiyi::chain::object_type,
     
     //tiandao
     (tiandao_property_object_type)
+                
+    //taiyi proposal system
+    (proposal_object_type)
+    (proposal_vote_object_type)
 )
 
 FC_REFLECT_ENUM( taiyi::chain::E_ZONE_TYPE, (XUKONG)(YUANYE)(HUPO)(NONGTIAN)(LINDI)(MILIN)(YUANLIN)(SHANYUE)(DONGXUE)(SHILIN)(QIULIN)(TAOYUAN)(SANGYUAN)(XIAGU)(ZAOZE)(YAOYUAN)(HAIYANG)(SHAMO)(HUANGYE)(ANYUAN)(DUHUI)(MENPAI)(SHIZHEN)(GUANSAI)(CUNZHUANG))

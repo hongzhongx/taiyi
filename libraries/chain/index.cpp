@@ -6,6 +6,7 @@
 #include <chain/account_object.hpp>
 #include <chain/transaction_object.hpp>
 #include <chain/siming_objects.hpp>
+#include <chain/tps_objects.hpp>
 
 namespace taiyi { namespace chain {
 
@@ -39,6 +40,9 @@ namespace taiyi { namespace chain {
         initialize_contract_indexes(db);
         initialize_actor_indexes(db);
         initialize_zone_indexes(db);
+        
+        TAIYI_ADD_CORE_INDEX(db, proposal_index);
+        TAIYI_ADD_CORE_INDEX(db, proposal_vote_index);
     }
     
     index_info::index_info() {}

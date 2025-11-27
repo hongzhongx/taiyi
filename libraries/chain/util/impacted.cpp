@@ -292,6 +292,27 @@ namespace taiyi { namespace chain {
 
             _impacted_nfas.insert( op.nfa );
         }
+        
+        void operator()(const proposal_execute_operation& op)
+        {
+            _impacted.insert( op.target );
+        }
+        
+        void operator()( const create_proposal_operation& op )
+        {
+            _impacted.insert( op.creator );
+            _impacted.insert( op.target );
+        }
+
+        void operator()( const update_proposal_votes_operation& op )
+        {
+            _impacted.insert( op.voter );
+        }
+        
+        void operator()( const remove_proposal_operation& op )
+        {
+            _impacted.insert( op.proposal_owner );
+        }
 
         //void operator()( const operation& op ){}
     };

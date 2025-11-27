@@ -33,7 +33,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_account_object
     {
-        api_account_object( const account_object& a, const database& db ) : id(a.id), name(a.name), memo_key(a.memo_key), proxy(a.proxy), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), balance(a.balance), reward_yang_balance(a.reward_yang_balance), reward_qi_balance(a.reward_qi_balance), reward_feigang_balance(a.reward_feigang_balance), qi(a.qi), delegated_qi(a.delegated_qi), received_qi(a.received_qi), qi_withdraw_rate(a.qi_withdraw_rate), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for)
+        api_account_object( const account_object& a, const database& db ) : id(a.id), name(a.name), memo_key(a.memo_key), proxy(a.proxy), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), balance(a.balance), reward_yang_balance(a.reward_yang_balance), reward_qi_balance(a.reward_qi_balance), reward_feigang_balance(a.reward_feigang_balance), qi(a.qi), delegated_qi(a.delegated_qi), received_qi(a.received_qi), qi_withdraw_rate(a.qi_withdraw_rate), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for), is_xinsu(a.is_xinsu)
         {
             size_t n = a.proxied_vsf_adores.size();
             proxied_vsf_adores.reserve( n );
@@ -103,7 +103,8 @@ namespace taiyi { namespace plugins { namespace database_api {
         vector< share_type > proxied_vsf_adores;
         
         uint16_t          simings_adored_for = 0;
-        
+        bool              is_xinsu = false;
+
         asset               gold;
         asset               food;
         asset               wood;
@@ -457,7 +458,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
 } } } // taiyi::plugins::database_api
 
-FC_REFLECT( taiyi::plugins::database_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(mined)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for)(gold)(food)(wood)(fabric)(herb) )
+FC_REFLECT( taiyi::plugins::database_api::api_account_object, (id)(name)(owner)(active)(posting)(memo_key)(json_metadata)(proxy)(last_owner_update)(last_account_update)(created)(mined)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for)(is_xinsu)(gold)(food)(wood)(fabric)(herb) )
 
 FC_REFLECT( taiyi::plugins::database_api::api_owner_authority_history_object, (id)(account)(previous_owner_authority)(last_valid_time) )
 

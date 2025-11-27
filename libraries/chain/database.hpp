@@ -432,7 +432,6 @@ namespace taiyi { namespace chain {
 
         // nfa
         void create_basic_nfa_symbol_objects();
-        void create_basic_nfa_objects();
         size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi);
         void modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check);
         int get_nfa_five_phase(const nfa_object& nfa) const;
@@ -462,6 +461,8 @@ namespace taiyi { namespace chain {
 
         const siming_object& validate_block_header( uint32_t skip, const signed_block& next_block )const;
         void create_block_summary(const signed_block& next_block);
+
+        void process_proposals( const block_notification& note );
 
         void update_global_dynamic_data( const signed_block& b );
         void update_signing_siming(const siming_object& signing_siming, const signed_block& new_block);
@@ -501,6 +502,9 @@ namespace taiyi { namespace chain {
         const signed_transaction* get_current_trx_ptr() const { return _current_trx; }
         uint16_t get_current_op_in_trx() const { return _current_op_in_trx; }
 
+        int16_t get_tps_remove_threshold() const { return _tps_remove_threshold; }
+        void set_tps_remove_threshold( int16_t val ) { _tps_remove_threshold = val; }
+
         util::advanced_benchmark_dumper& get_benchmark_dumper() { return _benchmark_dumper; }
 
         const hardfork_versions& get_hardfork_versions() { return _hardfork_versions; }
@@ -532,6 +536,8 @@ namespace taiyi { namespace chain {
 
         uint32_t                      _flush_blocks = 0;
         uint32_t                      _next_flush_block = 0;
+        
+        int16_t                       _tps_remove_threshold = -1;
 
         flat_map< custom_id_type, std::shared_ptr< custom_operation_interpreter > >   _custom_operation_interpreters;
 

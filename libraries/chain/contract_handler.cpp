@@ -12,6 +12,8 @@
 #include <chain/zone_objects.hpp>
 #include <chain/actor_objects.hpp>
 #include <chain/cultivation_objects.hpp>
+#include <chain/tps_objects.hpp>
+#include <chain/tps_helper.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -2549,6 +2551,142 @@ namespace taiyi { namespace chain {
             
             //reward to treasury
             db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    int64_t contract_handler::create_proposal(const string& target_account_name, const string& subject)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(5);
+
+            validate_account_name(target_account_name);
+            const auto* target_account = db.find_account( target_account_name );
+            FC_ASSERT(target_account != nullptr, "Specified target account: ${r} must exist", ("r", target_account_name));
+            
+            time_point_sec end_date = db.head_block_time() + fc::seconds(TAIYI_PROPOSAL_MAINTENANCE_CLEANUP * 2);
+            
+            operation vop = create_proposal_operation(caller.name, target_account_name, end_date, subject);
+            db.pre_push_virtual_operation( vop );
+
+            const auto& proposal = db.create< proposal_object >( [&]( proposal_object& obj ) {
+                obj.creator = caller.id;
+                obj.target_account = target_account->id;
+                
+                obj.end_date = end_date;
+                obj.subject = subject;
+            });
+            
+            db.post_push_virtual_operation( vop );
+            
+            return proposal.id;
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    void contract_handler::update_proposal_votes(const lua_map& proposal_ids, bool approve)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+            
+            const account_object& voter = caller;
+            
+            FC_ASSERT(proposal_ids.size() > 0, "input proposal ids is empty");
+            flat_set_ex<int64_t> pids;
+            for(size_t i=1; i<=proposal_ids.size(); i++) {
+                auto p = proposal_ids.find(lua_key(lua_int(i)));
+                FC_ASSERT(p != proposal_ids.end(), "input invalid proposal ids");
+                pids.insert(p->second.get<lua_int>().v);
+            }
+
+            operation vop = update_proposal_votes_operation(caller.name, pids, approve);
+            db.pre_push_virtual_operation( vop );
+
+            const auto& pidx = db.get_index<proposal_index>().indices().get<by_id>();
+            const auto& pvidx = db.get_index<proposal_vote_index>().indices().get<by_voter_proposal>();
+
+            for(const auto id : pids )
+            {
+                //checking if proposal id exists
+                auto found_id = pidx.find( id );
+                if( found_id == pidx.end() || found_id->removed )
+                    continue;
+
+                auto found = pvidx.find( boost::make_tuple( voter.id, id ) );
+
+                if(approve)
+                {
+                    if(found == pvidx.end()) {
+                        db.create<proposal_vote_object>([&](proposal_vote_object& obj) {
+                            obj.voter = voter.id;
+                            obj.proposal_id = id;
+                        });
+                    }
+                }
+                else
+                {
+                    if(found != pvidx.end())
+                        db.remove(*found);
+                }
+            }
+            
+            db.post_push_virtual_operation( vop );
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    //Allows to remove proposals specified by given IDs. Operation can be performed only by proposal owner.
+    void contract_handler::remove_proposals(const lua_map& proposal_ids)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+            
+            FC_ASSERT(proposal_ids.size() > 0, "input proposal ids is empty");
+            flat_set_ex<int64_t> pids;
+            for(size_t i=1; i<=proposal_ids.size(); i++) {
+                auto p = proposal_ids.find(lua_key(lua_int(i)));
+                FC_ASSERT(p != proposal_ids.end(), "input invalid proposal ids");
+                pids.insert(p->second.get<lua_int>().v);
+            }
+
+            operation vop = remove_proposal_operation(caller.name, pids);
+            db.pre_push_virtual_operation( vop );
+
+            tps_helper::remove_proposals(db, pids, caller.id );
+
+            /*
+                Because of performance removing proposals are restricted due to the `tps_remove_threshold` threshold.
+                Therefore all proposals are marked with flag `removed` and `end_date` is moved beyond 'head_time + TAIYI_PROPOSAL_MAINTENANCE_CLEANUP`
+                flag `removed` - it's information for 'tps_api' plugin
+                moving `end_date` - triggers the algorithm in `tps_processor::remove_proposals`
+            */
+            const auto& pidx = db.get_index<proposal_index>().indices().get<by_id >();
+            auto head_time = db.head_block_time();
+            for( const auto id : pids )
+            {
+                auto found_id = pidx.find(id);
+                if(found_id == pidx.end() || found_id->removed)
+                    continue;
+
+                db.modify(*found_id, [&](proposal_object& obj) {
+                    obj.removed = true;
+                    obj.end_date = head_time - fc::seconds(TAIYI_PROPOSAL_MAINTENANCE_CLEANUP);
+                });
+            }
+
+            db.post_push_virtual_operation( vop );
         }
         catch (const fc::exception& e)
         {

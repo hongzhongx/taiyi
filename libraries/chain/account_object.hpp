@@ -59,6 +59,8 @@ namespace taiyi { namespace chain {
         fc::array<share_type, TAIYI_MAX_PROXY_RECURSION_DEPTH> proxied_vsf_adores;// = std::vector<share_type>( TAIYI_MAX_PROXY_RECURSION_DEPTH, 0 ); ///< the total VFS adores proxied to this account
         
         uint16_t          simings_adored_for = 0;
+        
+        bool              is_xinsu = false;
                 
         /// This function should be used only when the account adores for a siming directly
         share_type        siming_adore_weight()const { return std::accumulate( proxied_vsf_adores.begin(), proxied_vsf_adores.end(), qi.amount ); }
@@ -377,7 +379,7 @@ namespace mira {
 
 } // mira
 
-FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for) )
+FC_REFLECT( taiyi::chain::account_object, (id)(name)(memo_key)(proxy)(last_account_update)(created)(recovery_account)(last_account_recovery)(can_adore)(balance)(reward_yang_balance)(reward_qi_balance)(reward_feigang_balance)(qi)(delegated_qi)(received_qi)(qi_withdraw_rate)(next_qi_withdrawal_time)(withdrawn)(to_withdraw)(withdraw_routes)(proxied_vsf_adores)(simings_adored_for)(is_xinsu) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::account_object, taiyi::chain::account_index )
 
 FC_REFLECT( taiyi::chain::account_metadata_object, (id)(account)(json_metadata) )

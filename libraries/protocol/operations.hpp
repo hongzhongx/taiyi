@@ -56,34 +56,39 @@ namespace taiyi { namespace protocol {
         producer_reward_operation,          //26
     
         nfa_symbol_create_operation,        //27
-        nfa_symbol_authority_change_operation, //
-        nfa_create_operation,               //28
-        nfa_transfer_operation,             //29
-        nfa_active_approve_operation,       //30
-        nfa_convert_resources_operation,    //31
-        nfa_asset_transfer_operation,       //32
-        nfa_deposit_withdraw_operation,     //33
+        nfa_symbol_authority_change_operation, //28
+        nfa_create_operation,               //29
+        nfa_transfer_operation,             //30
+        nfa_active_approve_operation,       //31
+        nfa_convert_resources_operation,    //32
+        nfa_asset_transfer_operation,       //33
+        nfa_deposit_withdraw_operation,     //34
     
-        reward_feigang_operation,           //34
-        reward_cultivation_operation,       //35
+        reward_feigang_operation,           //35
+        reward_cultivation_operation,       //36
 
-        tiandao_year_change_operation,      //36
-        tiandao_month_change_operation,     //37
-        tiandao_time_change_operation,      //38
+        tiandao_year_change_operation,      //37
+        tiandao_month_change_operation,     //38
+        tiandao_time_change_operation,      //39
 
-        actor_talent_rule_create_operation, //39
-        actor_create_operation,             //40
-        actor_born_operation,               //41
-        actor_talent_trigger_operation,     //42
-        actor_movement_operation,           //43
-        actor_grown_operation,              //44
-        actor_talk_operation,               //45
+        actor_talent_rule_create_operation, //40
+        actor_create_operation,             //41
+        actor_born_operation,               //42
+        actor_talent_trigger_operation,     //43
+        actor_movement_operation,           //44
+        actor_grown_operation,              //45
+        actor_talk_operation,               //46
     
-        zone_create_operation,              //46
+        zone_create_operation,              //47
     
-        narrate_log_operation,              //47
+        narrate_log_operation,              //48
     
-        shutdown_siming_operation           //48
+        shutdown_siming_operation,          //49
+    
+        create_proposal_operation,          //50
+        update_proposal_votes_operation,    //51
+        remove_proposal_operation,          //52
+        proposal_execute_operation          //53
     
     > operation;
 

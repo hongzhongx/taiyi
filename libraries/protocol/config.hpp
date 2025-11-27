@@ -166,7 +166,6 @@
 #define TAIYI_NFA_INIT_FUNC_NAME                "init_data"
 #define TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME  "talent_data"
 
-#define TAIYI_NFA_SYMBOL_NAME_XINSU_MARK        "nfa.xinsu.mark"
 #define TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR     "nfa.actor.default"
 #define TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE      "nfa.zone.default"
 
@@ -197,3 +196,11 @@
 
 #define TAIYI_CULTIVATION_PREPARE_MIN_TIME_BLOCK_NUM   20                       // about 60 seconds
 #define TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM           (TAIYI_BLOCKS_PER_DAY*7) // about 7 day
+
+/// TAIYI PROPOSAL SYSTEM support
+
+#define TAIYI_PROPOSAL_MAINTENANCE_PERIOD       3600
+#define TAIYI_PROPOSAL_MAINTENANCE_CLEANUP      (60*60*24*1) /// 1 day
+#define TAIYI_PROPOSAL_SUBJECT_MAX_LENGTH       80
+// Max number of IDs passed at once to the update_proposal_voter_operation or remove_proposal_operation.
+#define TAIYI_PROPOSAL_MAX_IDS_NUMBER           5

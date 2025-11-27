@@ -271,6 +271,9 @@ namespace taiyi { namespace chain {
         registerFunction("stop_and_close_cultivation", &contract_handler::stop_and_close_cultivation);
         registerFunction("is_cultivation_exist", &contract_handler::is_cultivation_exist);        
         registerFunction("create_named_contract", &contract_handler::create_named_contract);
+        registerFunction("create_proposal", &contract_handler::create_proposal);
+        registerFunction("update_proposal_votes", &contract_handler::update_proposal_votes);
+        registerFunction("remove_proposals", &contract_handler::remove_proposals);
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "format_vector_with_table", &format_vector_with_table);

@@ -250,6 +250,9 @@ namespace taiyi { namespace chain {
         void make_release();
         contract_tiandao_property get_tiandao_property();
         void create_named_contract(const string& name, const string& code);
+        int64_t create_proposal(const string& target_account_name, const string& subject);
+        void update_proposal_votes(const lua_map& proposal_ids, bool approve);
+        void remove_proposals(const lua_map& proposal_ids);
         
         static std::pair<bool, const lua_types*> search_in_table(const lua_map* table, const vector<lua_types>& path, int start = 0);
         static std::pair<bool, lua_types*> get_in_table(lua_map* table, const vector<lua_types>& path, int start = 0);

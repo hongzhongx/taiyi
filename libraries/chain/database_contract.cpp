@@ -98,23 +98,6 @@
     end                                     \
 "
 
-#define CONTRACT_NFA_XINSU_MARK "           \
-    short = { consequence = false }         \
-    long = { consequence = false }          \
-    function init_data()                    \
-        return {                            \
-            name = '心素标记',                \
-            unit = '个'                      \
-        }                                   \
-    end                                     \
-    function eval_short()                   \
-        return { '心素标记' }                 \
-    end                                     \
-    function eval_long()                    \
-        return { '具有心素体质' }             \
-    end                                     \
-"
-
 namespace taiyi { namespace chain {
 
     void database::initialize_VM_baseENV(LuaContext& context)
@@ -168,7 +151,6 @@ namespace taiyi { namespace chain {
 
         create_contract_objects(owner, "contract.actor.default", CONTRACT_BASE_ACTOR, vm_drops);
         create_contract_objects(owner, "contract.zone.default", CONTRACT_BASE_ZONE, vm_drops);
-        create_contract_objects(owner, "contract.nfa.xinsumark", CONTRACT_NFA_XINSU_MARK, vm_drops);
     }
     //=========================================================================
     lua_map database::prepare_account_contract_data(const account_object& account, const contract_object& contract)

@@ -447,7 +447,6 @@ namespace taiyi { namespace protocol {
     struct call_contract_function_operation : public base_operation
     {
         account_name_type   caller;        // 合约调用者
-        account_name_type   creator;
         string              contract_name; // 合约名
         string              function_name; // 目标函数名
         vector<lua_types>   value_list;    // 参数列表
@@ -494,6 +493,6 @@ FC_REFLECT( taiyi::protocol::delegate_qi_operation, (delegator)(delegatee)(qi) )
 FC_REFLECT( taiyi::protocol::create_contract_operation, (owner)(name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::revise_contract_operation, (reviser)(contract_name)(data)(extensions) )
 FC_REFLECT( taiyi::protocol::release_contract_operation, (owner)(contract_name) )
-FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(creator)(contract_name)(function_name)(value_list)(extensions) )
+FC_REFLECT( taiyi::protocol::call_contract_function_operation, (caller)(contract_name)(function_name)(value_list)(extensions) )
 
 FC_REFLECT( taiyi::protocol::action_nfa_operation, (caller)(id)(action)(value_list)(extensions) )
