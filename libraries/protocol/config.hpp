@@ -150,8 +150,6 @@
 #define TAIYI_TREASURY_ACCOUNT                  "zuowang.dao"
 /// Represents the account with NO authority who can operate tiandao
 #define TAIYI_DANUO_ACCOUNT                     "taiyi.danuo"
-
-#define TAIYI_COMMITTEE_ACCOUNT                 "sifu"
 ///@}
 
 #define TAIYI_MIN_ACCOUNT_CREATION_FEE          int64_t(1)
@@ -163,9 +161,12 @@
 #define TAIYI_MIN_NFA_SYMBOL_LENGTH             4
 #define TAIYI_MAX_NFA_SYMBOL_LENGTH             128
 
+#define TAIYI_BLACKLIST_CONTRACT_NAME           "contract.blacklist"
+
 #define TAIYI_NFA_INIT_FUNC_NAME                "init_data"
 #define TAIYI_ACTOR_TALENT_RULE_INIT_FUNC_NAME  "talent_data"
 
+#define TAIYI_NFA_SYMBOL_NAME_XINSU_MARK        "nfa.xinsu.mark"
 #define TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR     "nfa.actor.default"
 #define TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE      "nfa.zone.default"
 

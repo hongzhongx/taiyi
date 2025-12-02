@@ -808,10 +808,8 @@ BOOST_FIXTURE_TEST_CASE( generate_block_size, clean_database_fixture )
 {
     try
     {
-        db_plugin->debug_update( [=]( database& db )
-                                {
-            db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo )
-                      {
+        db_plugin->debug_update( [=]( database& db ) {
+            db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& gpo ) {
                 gpo.maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT;
             });
         });
@@ -852,6 +850,7 @@ BOOST_FIXTURE_TEST_CASE( generate_block_size, clean_database_fixture )
         
         // The last transfer should have been delayed due to size
         auto head_block = db->fetch_block_by_number( db->head_block_num() );
+        idump((head_block->transactions.size()));
         BOOST_REQUIRE( head_block->transactions.size() == 1 );
     }
     FC_LOG_AND_RETHROW()

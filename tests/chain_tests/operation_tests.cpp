@@ -727,11 +727,11 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         BOOST_TEST_MESSAGE( "Testing: transfer_to_qi_apply" );
         
         ACTORS( (alice)(bob) )
-        fund( "alice", 10000 );
+        fund( "alice", 17500 );
         
         const auto& gpo = db->get_dynamic_global_properties();
         
-        BOOST_REQUIRE( alice.balance == ASSET( "10.000 YANG" ) );
+        BOOST_REQUIRE( alice.balance == ASSET( "17.500 YANG" ) );
         
         auto shares = asset( gpo.total_qi.amount, QI_SYMBOL );
         auto alice_shares = alice.qi;
@@ -746,8 +746,10 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         tx.operations.push_back( op );
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         sign( tx, alice_private_key );
-        TAIYI_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
-        
+        db->push_transaction( tx, 0 );
+        const auto& dao_account = db->get_account(TAIYI_TREASURY_ACCOUNT);
+        BOOST_REQUIRE( dao_account.qi.amount.value == ASSET( "7.500000 QI" ).amount.value );
+
         op.to = "";
         tx.clear();
         tx.operations.push_back( op );
@@ -755,18 +757,18 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         db->push_transaction( tx, 0 );
         
         auto new_vest = op.amount * TAIYI_QI_SHARE_PRICE;
-        shares += new_vest;
+        shares += new_vest + new_vest; //one for dao and one for alice
         alice_shares += new_vest;
 
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "2.500 YANG" ).amount.value );
 
         idump((alice_shares));
         idump((alice.qi));
-        BOOST_REQUIRE( (alice.qi.amount.value + 10) == alice_shares.amount.value ); //10 as feigang reward to treasure
+        BOOST_REQUIRE( (alice.qi.amount.value + 20) == alice_shares.amount.value ); //20 as feigang reward to treasure
 
         idump((shares));
         idump((gpo.total_qi));
-        BOOST_REQUIRE( (gpo.total_qi.amount.value + 10) == shares.amount.value ); //10 as feigang reward to treasure
+        BOOST_REQUIRE( (gpo.total_qi.amount.value + 20) == shares.amount.value ); //20 as feigang reward to treasure
         validate_database();
         
         op.to = "bob";
@@ -783,19 +785,19 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         bob_shares += new_vest;
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "0.500 YANG" ).amount.value );
-        BOOST_REQUIRE( (alice.qi.amount.value + 20) == alice_shares.amount.value );
+        BOOST_REQUIRE( (alice.qi.amount.value + 30) == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
         BOOST_REQUIRE( bob.qi.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( (gpo.total_qi.amount.value + 20) == shares.amount.value );
+        BOOST_REQUIRE( (gpo.total_qi.amount.value + 30) == shares.amount.value );
         validate_database();
         
         TAIYI_REQUIRE_THROW( db->push_transaction( tx, database::skip_transaction_dupe_check ), fc::exception );
         
         BOOST_REQUIRE( alice.balance.amount.value == ASSET( "0.500 YANG").amount.value );
-        BOOST_REQUIRE( (alice.qi.amount.value + 20) == alice_shares.amount.value );
+        BOOST_REQUIRE( (alice.qi.amount.value + 30) == alice_shares.amount.value );
         BOOST_REQUIRE( bob.balance.amount.value == ASSET( "0.000 YANG" ).amount.value );
         BOOST_REQUIRE( bob.qi.amount.value == bob_shares.amount.value );
-        BOOST_REQUIRE( (gpo.total_qi.amount.value + 20) == shares.amount.value );
+        BOOST_REQUIRE( (gpo.total_qi.amount.value + 30) == shares.amount.value );
         validate_database();
     }
     FC_LOG_AND_RETHROW()

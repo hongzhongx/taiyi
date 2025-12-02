@@ -168,11 +168,9 @@ namespace taiyi { namespace chain {
     //=============================================================================
     bool contract_object::can_do(const database&db) const
     {
-        const auto* contract = db.find<contract_object, by_name>("contract.blacklist");
+        const auto* contract = db.find<contract_object, by_name>(TAIYI_BLACKLIST_CONTRACT_NAME);
         if(contract != nullptr)
         {
-            auto committee_id = db.get<account_object, by_name>(TAIYI_COMMITTEE_ACCOUNT).id;
-            FC_ASSERT(contract->owner == committee_id, "The blacklist of contracts is not controlled by the committee");
             const auto black_list_p = contract->contract_data.find(lua_key(lua_string("black_list")));
             if(black_list_p == contract->contract_data.end() || black_list_p->second.which() != lua_types::tag<lua_table>::value)
             {
@@ -189,9 +187,7 @@ namespace taiyi { namespace chain {
             }
         }
         else
-        {
             return true;
-        }
     }
 
 } } // namespace taiyi::chain

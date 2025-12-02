@@ -249,7 +249,12 @@ namespace taiyi { namespace chain {
         virtual ~clean_database_fixture();
         
         void resize_shared_mem( uint64_t size );
-        void validate_database();
+
+        void create_contract(const std::string& creator, const string& contract_name, const string& contract_code);
+        int64_t create_proposal(const std::string& creator, const string& contract_name, const string& function_name, const lua_map& params, const string& subject, time_point_sec end_date, const fc::ecc::private_key& key);
+        void vote_proposal(const std::string& voter, const std::vector<int64_t>& id_proposals, bool approve, const fc::ecc::private_key& key);
+        void generate_xinsu(const std::vector<account_name_type>& accounts);
+        uint64_t get_nr_blocks_until_maintenance_block();
     };
 
     struct live_database_fixture : public database_fixture
@@ -258,6 +263,26 @@ namespace taiyi { namespace chain {
         virtual ~live_database_fixture();
         
         fc::path _chain_dir;
+    };
+    
+    struct tps_database_fixture : public clean_database_fixture
+    {
+        tps_database_fixture();
+        virtual ~tps_database_fixture() {}
+        
+        bool exist_proposal(int64_t id);
+        const proposal_object* find_proposal(int64_t id);
+        void remove_proposal(const account_name_type& deleter, const std::vector<int64_t>& proposal_id, const fc::ecc::private_key& key);
+        bool find_vote_for_proposal(const std::string& user, int64_t id);
+    };
+    
+    struct tps_database_fixture_performance : public tps_database_fixture
+    {
+        tps_database_fixture_performance() : tps_database_fixture()
+        {
+            db->get_benchmark_dumper().set_enabled( true );
+            db->set_tps_remove_threshold( -1 );
+        }
     };
     
     struct json_rpc_database_fixture : public database_fixture

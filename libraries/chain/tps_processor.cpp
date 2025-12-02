@@ -47,8 +47,7 @@ namespace taiyi { namespace chain {
     void tps_processor::find_active_proposals(const time_point_sec& head_time, t_proposals& proposals)
     {
         const auto& pidx = db.get_index<proposal_index>().indices().get< by_end_date >();
-        
-        std::for_each(pidx.begin(), pidx.upper_bound(head_time), [&](auto& proposal) {
+        std::for_each(pidx.lower_bound(head_time), pidx.end(), [&](auto& proposal) {
             if( head_time <= proposal.end_date )
                 proposals.emplace_back( proposal );
         });
@@ -63,7 +62,7 @@ namespace taiyi { namespace chain {
         while(found != pvidx.end() && found->proposal_id == id)
         {
             const auto& _voter = db.get<account_object, by_id>(found->voter);
-            if(_voter.is_xinsu)
+            if( db.is_xinsu(_voter) )
                 ret += 1;
             
             ++found;
@@ -104,12 +103,19 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void tps_processor::execute_proposals(const time_point_sec& head_time, const t_proposals& proposals)
     {
-        auto processing = [this](const proposal_object& _item) {
+        auto processing = [this](const proposal_object& _item) -> bool {
 
             const auto& caller = db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT);
+            if(caller.qi.amount.value < 100) {
+                wlog("account \"${a}\" have not enough qi to execute proposal #${p}", ("a", TAIYI_TREASURY_ACCOUNT)("p", _item.id));
+                return false; //真气不够，未执行提案
+            }
+            
             const auto* contract = db.find<contract_object, by_name>(_item.contract_name);
-            if(contract == nullptr)
-                return;
+            if(contract == nullptr) {
+                wlog("proposal #${p} can not be processed with non exist contract \"$c\"", ("p", _item.id)("c", _item.contract_name));
+                return true; //尽管合约不存在，也要算提案执行了
+            }
 
             contract_worker worker;
             LuaContext context;
@@ -145,14 +151,28 @@ namespace taiyi { namespace chain {
             int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
             int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
             used_qi -= used_qi_for_treasury;
-            FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
             const auto& contract_owner = db.get<account_object, by_id>(contract->owner);
-            db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+            if(caller.qi.amount.value >= used_qi) {
+                db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+            }
+            else {
+                wlog("account \"${a}\" does not have enough qi to call contract of proposal #${p}.", ("a", TAIYI_TREASURY_ACCOUNT)("p", _item.id));
+                if(caller.qi.amount > 0)
+                    db.reward_feigang(contract_owner, caller, caller.qi); //真气不够也要消耗完
+            }
 
             //reward to treasury
             used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
-            FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
-            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
+            if(caller.qi.amount.value >= used_qi) {
+                db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
+            }
+            else {
+                wlog("account \"${a}\" does not have enough qi to call contract of proposal #${p}.", ("a", TAIYI_TREASURY_ACCOUNT)("p", _item.id));
+                if(caller.qi.amount > 0)
+                    db.reward_feigang(contract_owner, caller, caller.qi); //真气不够也要消耗完
+            }
+            
+            return true;
         };
         
         for( auto& item : proposals )
@@ -163,18 +183,18 @@ namespace taiyi { namespace chain {
             if( _item.total_votes == 0 )
                 break;
             
-            processing(_item);
-            
-            /*
-                Because of performance removing proposals are restricted due to the `tps_remove_threshold` threshold.
-                Therefore all proposals are marked with flag `removed` and `end_date` is moved beyond 'head_time + TAIYI_PROPOSAL_MAINTENANCE_CLEANUP`
-                flag `removed` - it's information for 'tps_api' plugin
-                moving `end_date` - triggers the algorithm in `tps_processor::remove_proposals`
-            */
-            db.modify(_item, [&](proposal_object& obj) {
-                obj.removed = true;
-                obj.end_date = head_time - fc::seconds(TAIYI_PROPOSAL_MAINTENANCE_CLEANUP);
-            });
+            if( processing(_item) ) {
+                /*
+                 Because of performance removing proposals are restricted due to the `tps_remove_threshold` threshold.
+                 Therefore all proposals are marked with flag `removed` and `end_date` is moved beyond 'head_time + TAIYI_PROPOSAL_MAINTENANCE_CLEANUP`
+                 flag `removed` - it's information for 'tps_api' plugin
+                 moving `end_date` - triggers the algorithm in `tps_processor::remove_proposals`
+                 */
+                db.modify(_item, [&](proposal_object& obj) {
+                    obj.removed = true;
+                    obj.end_date = head_time - fc::seconds(TAIYI_PROPOSAL_MAINTENANCE_CLEANUP);
+                });
+            }
         }
     }
     //=========================================================================

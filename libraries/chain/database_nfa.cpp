@@ -172,9 +172,23 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
+    void database::create_basic_nfa_objects()
+    {
+        //第一个心素
+        const auto& nfa_symbol = get<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_XINSU_MARK);
+        const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
+        const auto& first_one = get_account( TAIYI_INIT_SIMING_NAME );
+        LuaContext context;
+        const auto& xinsu_mark = create_nfa(creator, nfa_symbol, true, context);
+        modify(xinsu_mark, [&](nfa_object &obj) {
+            obj.owner_account = first_one.id;
+        });
+    }
+    //=========================================================================
     void database::create_basic_nfa_symbol_objects()
     {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
+        create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_XINSU_MARK, "心素标记", "contract.nfa.xinsumark", 10000, 0);
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR, "默认的角色", "contract.actor.default", 1000000000, 1000000);
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE, "默认的区域", "contract.zone.default", 1000000000, 10000000);
     }
@@ -575,6 +589,16 @@ namespace taiyi { namespace chain {
         
         uint32_t p = hasher::hash( hblock_id._hash[4] + nfa.id ) % maxones.size();
         return maxones[p];
+    }
+    //=========================================================================
+    bool database::is_xinsu(const account_object& account) const
+    {
+        const auto& nfaidx = get_index<nfa_index>().indices().get<by_owner>();
+        auto found = nfaidx.lower_bound(account.id);
+        if(found != nfaidx.end() && found->owner_account == account.id)
+            return true;
+        else
+            return false;
     }
 
 } } //taiyi::chain

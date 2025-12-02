@@ -1427,7 +1427,6 @@ namespace taiyi { namespace chain {
                 a.memo_key = init_public_key;
                 a.balance  = asset( i ? 0 : init_supply, YANG_SYMBOL );
                 a.qi  = asset( i ? 0 : init_qi_supply, QI_SYMBOL );
-                a.is_xinsu = ( i ? false : true );
             } );
             
             create< account_authority_object >( [&]( account_authority_object& auth ) {
@@ -1499,6 +1498,7 @@ namespace taiyi { namespace chain {
         
         // Create basic contracts such as THE default actor symbol
         create_basic_nfa_symbol_objects();
+        create_basic_nfa_objects();
 
     } FC_CAPTURE_AND_RETHROW() }
     

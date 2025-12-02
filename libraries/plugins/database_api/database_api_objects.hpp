@@ -33,7 +33,7 @@ namespace taiyi { namespace plugins { namespace database_api {
 
     struct api_account_object
     {
-        api_account_object( const account_object& a, const database& db ) : id(a.id), name(a.name), memo_key(a.memo_key), proxy(a.proxy), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), balance(a.balance), reward_yang_balance(a.reward_yang_balance), reward_qi_balance(a.reward_qi_balance), reward_feigang_balance(a.reward_feigang_balance), qi(a.qi), delegated_qi(a.delegated_qi), received_qi(a.received_qi), qi_withdraw_rate(a.qi_withdraw_rate), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for), is_xinsu(a.is_xinsu)
+        api_account_object( const account_object& a, const database& db ) : id(a.id), name(a.name), memo_key(a.memo_key), proxy(a.proxy), last_account_update(a.last_account_update), created(a.created), recovery_account(a.recovery_account), last_account_recovery(a.last_account_recovery), can_adore(a.can_adore), balance(a.balance), reward_yang_balance(a.reward_yang_balance), reward_qi_balance(a.reward_qi_balance), reward_feigang_balance(a.reward_feigang_balance), qi(a.qi), delegated_qi(a.delegated_qi), received_qi(a.received_qi), qi_withdraw_rate(a.qi_withdraw_rate), next_qi_withdrawal_time(a.next_qi_withdrawal_time), withdrawn(a.withdrawn), to_withdraw(a.to_withdraw), withdraw_routes(a.withdraw_routes), simings_adored_for(a.simings_adored_for)
         {
             size_t n = a.proxied_vsf_adores.size();
             proxied_vsf_adores.reserve( n );
@@ -58,6 +58,8 @@ namespace taiyi { namespace plugins { namespace database_api {
             wood = db.get_balance(a, WOOD_SYMBOL);
             fabric = db.get_balance(a, FABRIC_SYMBOL);
             herb = db.get_balance(a, HERB_SYMBOL);
+            
+            is_xinsu = db.is_xinsu(a);
         }
     
         api_account_object(){}

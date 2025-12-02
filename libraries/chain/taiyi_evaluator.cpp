@@ -347,8 +347,6 @@ namespace taiyi { namespace chain {
         const auto& from_account = _db.get_account(o.from);
         const auto& to_account = o.to.size() ? _db.get_account(o.to) : from_account;
         
-        FC_ASSERT( o.to != TAIYI_TREASURY_ACCOUNT, "Can only transfer YANG to ${s}", ("s", TAIYI_TREASURY_ACCOUNT) );
-
         //reward to treasury
         int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( from_account.qi.amount.value >= used_qi, "From account does not have enough qi to operation." );

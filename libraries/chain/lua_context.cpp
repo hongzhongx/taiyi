@@ -214,6 +214,7 @@ namespace taiyi { namespace chain {
         registerFunction("make_memo", &contract_handler::make_memo);
         registerFunction("make_release", &contract_handler::make_release);
         registerFunction("random", &contract_handler::contract_random);
+        registerFunction("zuowangdao_account_name", &contract_handler::zuowangdao_account_name);
         registerFunction("is_owner", &contract_handler::is_owner);
         registerFunction("get_nfa_caller", &contract_handler::get_nfa_caller);
         registerFunction("read_contract_data", &contract_handler::read_contract_data);
@@ -274,6 +275,8 @@ namespace taiyi { namespace chain {
         registerFunction("create_proposal", &contract_handler::create_proposal);
         registerFunction("update_proposal_votes", &contract_handler::update_proposal_votes);
         registerFunction("remove_proposals", &contract_handler::remove_proposals);
+        registerFunction("grant_xinsu", &contract_handler::grant_xinsu);
+        registerFunction("revoke_xinsu", &contract_handler::revoke_xinsu);
 
         lua_register(mState, "import_contract", &import_contract);
         lua_register(mState, "format_vector_with_table", &format_vector_with_table);

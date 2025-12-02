@@ -228,6 +228,7 @@ namespace taiyi { namespace chain {
         void log(string message);
         void narrate(string message, bool time_prefix = false);
         uint32_t contract_random();
+        string zuowangdao_account_name();
         string get_contract_source_code(const string& contract_name);
         lua_map get_contract_data(const string& contract_name, const lua_map& read_list);
         lua_map read_contract_data(const lua_map& read_list);
@@ -250,9 +251,11 @@ namespace taiyi { namespace chain {
         void make_release();
         contract_tiandao_property get_tiandao_property();
         void create_named_contract(const string& name, const string& code);
-        int64_t create_proposal(const string& contract_name, const string& function_name, const lua_map& params, const string& subject);
+        int64_t create_proposal(const string& contract_name, const string& function_name, const lua_map& params, const string& subject, const uint32_t end_time);
         void update_proposal_votes(const lua_map& proposal_ids, bool approve);
         void remove_proposals(const lua_map& proposal_ids);
+        void grant_xinsu(const string& receiver_account);
+        void revoke_xinsu(const string& account_name);
         
         static std::pair<bool, const lua_types*> search_in_table(const lua_map* table, const vector<lua_types>& path, int start = 0);
         static std::pair<bool, lua_types*> get_in_table(lua_map* table, const vector<lua_types>& path, int start = 0);

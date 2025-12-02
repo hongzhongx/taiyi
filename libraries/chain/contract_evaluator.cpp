@@ -37,9 +37,10 @@ namespace taiyi { namespace chain {
     operation_result create_contract_evaluator::do_apply( const create_contract_operation& o )
     { try {
         const auto& creator = _db.get_account(o.owner);
-                
-        if(o.name == "contract.blacklist")
-            FC_ASSERT(o.owner == TAIYI_COMMITTEE_ACCOUNT);
+        FC_ASSERT(_db.is_xinsu(creator), "you have no authority to create contract");
+        
+        const auto* contract = _db.find<contract_object, by_name>(o.name);
+        FC_ASSERT(contract == nullptr, "contract named \"${c}\" is already exist", ("c", o.name));
         
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
         long long old_drops = creator.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
@@ -59,29 +60,29 @@ namespace taiyi { namespace chain {
     //=============================================================================
     operation_result revise_contract_evaluator::do_apply( const revise_contract_operation& o )
     { try {
-        const auto &contract = _db.get<contract_object, by_name>(o.contract_name);
-        const auto &contract_owner = _db.get<account_object, by_id>(contract.owner);
-        
-        if(o.reviser != TAIYI_COMMITTEE_ACCOUNT)
-            FC_ASSERT(contract.can_do(_db), "The current contract may have been listed in the forbidden call list");
-        
-        FC_ASSERT(!contract.is_release," The current contract is release version cannot be change ");
-        FC_ASSERT(contract_owner.name == o.reviser, "You do not have the authority to modify the contract, the contract owner is ${owner}", ("owner", contract_owner.name));
+        const auto* reviser = _db.find<account_object, by_name>(o.reviser);
+        FC_ASSERT(reviser != nullptr, "reviser named \"${n}\" is not exist",("n", o.reviser));
+        FC_ASSERT(_db.is_xinsu(*reviser), "you have no authority to revise any contract");
 
-        const auto& reviser = _db.get_account(o.reviser);
-        
+        const auto *contract = _db.find<contract_object, by_name>(o.contract_name);
+        FC_ASSERT(contract != nullptr, "contract named \"${c}\" is not exist", ("c", o.contract_name));
+        FC_ASSERT(!contract->is_release,"The current contract is release version cannot be change");
+
+        const auto &contract_owner = _db.get<account_object, by_id>(contract->owner);
+        FC_ASSERT(contract_owner.id == reviser->id, "You do not have the authority to modify the contract, the contract owner is ${owner}", ("owner", contract_owner.name));
+
         vector<char> lua_code_b;
         contract_worker worker;
 
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
-        long long old_drops = reviser.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long old_drops = reviser->qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
-        lua_table aco = worker.do_contract(contract.id, contract.name, o.data, lua_code_b, vm_drops, _db);
+        lua_table aco = worker.do_contract(contract->id, contract->name, o.data, lua_code_b, vm_drops, _db);
         int64_t api_exe_point = _db.get_contract_handler_exe_point();
         int64_t used_drops = old_drops - vm_drops;
 
-        const auto& code_bin_object = _db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+        const auto& code_bin_object = _db.get<contract_bin_code_object, by_id>(contract->lua_code_b_id);
         _db.modify(code_bin_object, [&](contract_bin_code_object&cbo) {
             cbo.lua_code_b = lua_code_b;
 #ifndef IS_LOW_MEM
@@ -89,17 +90,17 @@ namespace taiyi { namespace chain {
 #endif
         });
         
-        string previous_version = contract.current_version.str();
-        _db.modify(contract, [&](contract_object &c) {
+        string previous_version = contract->current_version.str();
+        _db.modify(*contract, [&](contract_object &c) {
             c.current_version = _db.get_current_trx();
             c.contract_ABI = aco.v;
         });
         
         //reward to treasury
-        size_t new_state_size = fc::raw::pack_size(contract.contract_ABI) + fc::raw::pack_size(code_bin_object.lua_code_b);
+        size_t new_state_size = fc::raw::pack_size(contract->contract_ABI) + fc::raw::pack_size(code_bin_object.lua_code_b);
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
-        FC_ASSERT( reviser.qi.amount.value >= used_qi, "reviser account does not have enough qi to revise contract." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), reviser, asset(used_qi, QI_SYMBOL));
+        FC_ASSERT( reviser->qi.amount.value >= used_qi, "reviser account does not have enough qi to revise contract." );
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), *reviser, asset(used_qi, QI_SYMBOL));
         
         return logger_result(previous_version);
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -112,6 +113,7 @@ namespace taiyi { namespace chain {
 
         const auto &contract_owner = _db.get<account_object, by_id>(contract->owner);
         FC_ASSERT(contract_owner.name == o.owner, "You do not have the authority to modify the contract, the contract owner is ${owner}", ("owner", contract_owner.name));
+        FC_ASSERT(_db.is_xinsu(contract_owner), "you have no authority to release this contract now");
         
         _db.modify(*contract, [&](contract_object &c) {
             c.is_release = true;
@@ -123,23 +125,24 @@ namespace taiyi { namespace chain {
     operation_result call_contract_function_evaluator::do_apply( const call_contract_function_operation& o )
     { try {
         
-        const auto& caller = _db.get<account_object, by_name>(o.caller);
-        const auto& contract = _db.get<contract_object, by_name>(o.contract_name);
+        const auto* caller = _db.find<account_object, by_name>(o.caller);
+        FC_ASSERT(caller != nullptr, "caller account named \"${n}\" is not exist", ("n", o.caller));
+        const auto* contract = _db.find<contract_object, by_name>(o.contract_name);
+        FC_ASSERT(contract != nullptr, "contract named \"${c}\" is not exist", ("c", o.contract_name));
         
         //evaluate contract authority
-        if(o.caller != TAIYI_COMMITTEE_ACCOUNT)
-            FC_ASSERT(contract.can_do(_db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", o.contract_name));
+        FC_ASSERT(contract->can_do(_db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", o.contract_name));
                 
         contract_worker worker;
         LuaContext context;
         
         //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
-        long long old_drops = caller.qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
+        long long old_drops = caller->qi.amount.value / TAIYI_USEMANA_EXECUTION_SCALE;
         long long vm_drops = old_drops;
         int64_t backup_api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
         
-        worker.do_contract_function(caller, o.function_name, o.value_list, contract, vm_drops, true,  context, _db);
+        worker.do_contract_function(*caller, o.function_name, o.value_list, *contract, vm_drops, true,  context, _db);
         
         int64_t api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(backup_api_exe_point);
@@ -149,14 +152,14 @@ namespace taiyi { namespace chain {
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
         int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
         used_qi -= used_qi_for_treasury;
-        FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
-        const auto& contract_owner = _db.get<account_object, by_id>(contract.owner);
-        _db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
+        FC_ASSERT( caller->qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
+        const auto& contract_owner = _db.get<account_object, by_id>(contract->owner);
+        _db.reward_feigang(contract_owner, *caller, asset(used_qi, QI_SYMBOL));
 
         //reward to treasury
         used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
-        FC_ASSERT( caller.qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
+        FC_ASSERT( caller->qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), *caller, asset(used_qi, QI_SYMBOL));
 
         return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }

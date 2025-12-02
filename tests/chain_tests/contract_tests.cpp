@@ -501,17 +501,37 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     ACTORS( (alice)(bob)(charlie) )
     generate_block();
         
-    BOOST_TEST_MESSAGE( "--- Test failure name invalid" );
+    BOOST_TEST_MESSAGE( "--- Test failure not xinsu" );
     
     create_contract_operation op;
     op.owner = "alice";
-    op.name = "contract.tt"; //less than 3 letters
+    op.name = "contract.test";
     op.data = lua_code;
 
     tx.operations.push_back( op );
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, alice_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+    tx.operations.clear();
+    tx.signatures.clear();
+
+    BOOST_TEST_MESSAGE( "--- Test failure DAO have not enough qi to proposal new xinsu" );
+    BOOST_REQUIRE_THROW(generate_xinsu({"alice"}), fc::exception );
+
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice"});
+    
+    BOOST_TEST_MESSAGE( "--- Test failure name invalid" );
+    
+    op.owner = "alice";
+    op.name = "contract.tt"; //less than 3 letters
+
+    tx.operations.push_back( op );
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+    tx.operations.clear();
+    tx.signatures.clear();
 
     BOOST_TEST_MESSAGE( "--- Test failure not enough qi" );
 
@@ -528,13 +548,13 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
         });
     }, default_skip);
 
-    tx.operations.clear();
-    tx.signatures.clear();
     op.name = "contract.test";
     tx.operations.push_back( op );
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, alice_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+    tx.operations.clear();
+    tx.signatures.clear();
 
     BOOST_TEST_MESSAGE( "--- Test use mana" );
 
@@ -543,8 +563,6 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
 
     auto old_mana = db->get_account( "alice" ).qi.amount;
         
-    tx.operations.clear();
-    tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( op );
     sign( tx, alice_private_key );
@@ -574,7 +592,9 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     BOOST_TEST_MESSAGE( "Testing: revise_contract_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
-        
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice"});
+
     signed_transaction tx;
 
     create_contract_operation op;
@@ -649,7 +669,9 @@ BOOST_AUTO_TEST_CASE( release_contract_apply )
     BOOST_TEST_MESSAGE( "Testing: release_contract_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
-        
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice"});
+
     signed_transaction tx;
 
     create_contract_operation op;
@@ -719,6 +741,8 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     BOOST_TEST_MESSAGE( "Testing: call_contract_function_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice", "bob"});
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
         

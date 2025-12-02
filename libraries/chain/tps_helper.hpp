@@ -68,9 +68,8 @@ namespace taiyi { namespace chain {
         static ProposalObjectIterator remove_proposal(ProposalObjectIterator& proposal, ProposalIndex& proposalIndex, VotesIndex& votesIndex, const ByVoterIdx& byVoterIdx, tps_removing_reducer& obj_perf)
         {
             // Now remove all votes specific to given proposal.
-            auto propI = byVoterIdx.lower_bound(boost::make_tuple(proposal->id, account_id_type()));
-            
-            while(propI != byVoterIdx.end() && static_cast<size_t>(propI->proposal_id) == static_cast<size_t>(proposal->id))
+            auto propI = byVoterIdx.lower_bound( boost::make_tuple(proposal->id, account_id_type()) );            
+            while(propI != byVoterIdx.end() && propI->proposal_id == proposal->id)
             {
                 auto result_itr = checker< ByProposalType, true/*Loop*/ >(proposal, proposalIndex, obj_perf);
                 if(obj_perf.done)

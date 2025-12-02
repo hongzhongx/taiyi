@@ -56,6 +56,8 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice", "bob"});
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -149,6 +151,8 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
@@ -240,7 +244,7 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
     nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
     
     BOOST_REQUIRE( affected.affected_account == "alice" );
-    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.affected_item == 3 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
@@ -261,6 +265,8 @@ BOOST_AUTO_TEST_CASE( change_nfa_symbol_authority_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
@@ -370,7 +376,7 @@ BOOST_AUTO_TEST_CASE( change_nfa_symbol_authority_apply )
     nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
     
     BOOST_REQUIRE( affected.affected_account == "charlie" );
-    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.affected_item == 3 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
@@ -391,6 +397,8 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
@@ -461,7 +469,7 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
     nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
     
     BOOST_REQUIRE( affected.affected_account == "alice" );
-    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.affected_item == 3 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
@@ -523,6 +531,8 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
@@ -595,7 +605,7 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
     nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
     
     BOOST_REQUIRE( affected.affected_account == "alice" );
-    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.affected_item == 3 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
@@ -672,6 +682,8 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
@@ -744,7 +756,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
     nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
     
     BOOST_REQUIRE( affected.affected_account == "alice" );
-    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.affected_item == 3 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
@@ -817,6 +829,8 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
@@ -889,7 +903,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
     nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
     
     BOOST_REQUIRE( affected.affected_account == "alice" );
-    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.affected_item == 3 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto* nfa = db->find<nfa_object, by_id>(affected.affected_item);
@@ -1018,6 +1032,8 @@ BOOST_AUTO_TEST_CASE( inter_nfa_action_drops )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
@@ -1118,7 +1134,7 @@ BOOST_AUTO_TEST_CASE( inter_nfa_action_drops )
     nfa_affected affected = cresult.contract_affecteds[0].get<nfa_affected>();
     
     BOOST_REQUIRE( affected.affected_account == "alice" );
-    BOOST_REQUIRE( affected.affected_item == 0 );
+    BOOST_REQUIRE( affected.affected_item == 3 );
     BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
 
     const auto& nfa_caller = db->get<nfa_object, by_id>(affected.affected_item);

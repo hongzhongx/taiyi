@@ -4,8 +4,10 @@
 #include <utilities/tempdir.hpp>
 #include <utilities/database_configuration.hpp>
 
+#include <chain/taiyi_fwd.hpp>
 #include <chain/taiyi_objects.hpp>
 #include <chain/account_object.hpp>
+#include <chain/tps_objects.hpp>
 
 #include <plugins/account_history/account_history_objects.hpp>
 #include <plugins/account_history/account_history_plugin.hpp>
@@ -37,6 +39,29 @@ namespace taiyi { namespace chain {
 
     using std::cout;
     using std::cerr;
+    
+    const string s_code_tps_basic = "   \
+        function create_proposal(contract_name, function_name, params, subject, end_time) \
+            return contract_helper:create_proposal(contract_name, function_name, params, subject, end_time) \
+        end                             \
+        function update_proposal_votes(proposal_ids, approve) \
+            contract_helper:update_proposal_votes(proposal_ids, approve) \
+        end                             \
+        function remove_proposals(proposal_ids) \
+            contract_helper:remove_proposals(proposal_ids)  \
+        end                             \
+    ";
+    
+    const string s_code_xinsu_basic = "   \
+        function grant_xinsu(receiver_account) \
+            assert(contract_base_info.caller == contract_helper:zuowangdao_account_name(), 'no auth') \
+            return contract_helper:grant_xinsu(receiver_account) \
+        end                             \
+        function revoke_xinsu(account_name) \
+            assert(contract_base_info.caller == contract_helper:zuowangdao_account_name(), 'no auth') \
+            contract_helper:revoke_xinsu(account_name) \
+        end                             \
+    ";
     
     clean_database_fixture::clean_database_fixture()
     {
@@ -86,37 +111,49 @@ namespace taiyi { namespace chain {
             }
             
             validate_database();
+            
+            signed_transaction tx;
+            create_contract_operation op;
+            
+            op.owner = TAIYI_INIT_SIMING_NAME;
+            op.name = "contract.tps.basic";
+            op.data = s_code_tps_basic;
+            tx.operations.push_back( op );
+            
+            op.owner = TAIYI_INIT_SIMING_NAME;
+            op.name = "contract.xinsu.basic";
+            op.data = s_code_xinsu_basic;
+            tx.operations.push_back( op );
+            
+            tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+            sign( tx, init_account_priv_key );
+            db->push_transaction( tx, 0 );
+
+            validate_database();
         }
         catch ( const fc::exception& e )
         {
             edump( (e.to_detail_string()) );
             throw;
         }
-        
-        return;
     }
 
     clean_database_fixture::~clean_database_fixture()
-    { try {
-        // If we're unwinding due to an exception, don't do any more checks.
-        // This way, boost test's last checkpoint tells us approximately where the error was.
-        if( !std::uncaught_exception() )
-        {
-            BOOST_CHECK( db->get_node_properties().skip_flags == database::skip_nothing );
-        }
-        
-        if( data_dir )
-            db->wipe( data_dir->path(), data_dir->path(), true );
-        return;
-    } FC_CAPTURE_AND_LOG( () )
-        exit(1);
-    }
-    
-    void clean_database_fixture::validate_database()
     {
-        database_fixture::validate_database();
+        try {
+            // If we're unwinding due to an exception, don't do any more checks.
+            // This way, boost test's last checkpoint tells us approximately where the error was.
+            if( !std::uncaught_exception() )
+            {
+                BOOST_CHECK( db->get_node_properties().skip_flags == database::skip_nothing );
+            }
+            
+            if( data_dir )
+                db->wipe( data_dir->path(), data_dir->path(), true );
+
+        } FC_CAPTURE_AND_LOG( () )
     }
-    
+        
     void clean_database_fixture::resize_shared_mem( uint64_t size )
     {
         db->wipe( data_dir->path(), data_dir->path(), true );
@@ -161,6 +198,125 @@ namespace taiyi { namespace chain {
         }
         
         validate_database();
+    }
+
+    void clean_database_fixture::create_contract(const std::string& creator, const string& contract_name, const string& contract_code)
+    {
+        signed_transaction tx;
+        create_contract_operation op;
+
+        op.owner = creator;
+        op.name = contract_name;
+        op.data = contract_code;
+        tx.operations.push_back( op );
+
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, init_account_priv_key );
+        db->push_transaction( tx, 0 );
+        tx.signatures.clear();
+        tx.operations.clear();
+
+        validate_database();
+    }
+    
+    int64_t clean_database_fixture::create_proposal(const std::string& creator, const string& contract_name, const string& function_name, const lua_map& params, const string& subject, time_point_sec end_date, const fc::ecc::private_key& key)
+    {
+        signed_transaction tx;
+
+        call_contract_function_operation cop;
+        cop.caller = creator;
+        cop.contract_name = "contract.tps.basic";
+        cop.function_name = "create_proposal";
+        cop.value_list = {
+            lua_string(contract_name),
+            lua_string(function_name),
+            lua_table(params),
+            lua_string(subject),
+            lua_int(end_date.sec_since_epoch())
+        };
+            
+        tx.operations.push_back( cop );
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, key );
+        db->push_transaction( tx, 0 );
+        tx.signatures.clear();
+        tx.operations.clear();
+
+        const auto& proposal_idx = db-> template get_index<proposal_index>().indices(). template get< by_id >();
+        auto itr = proposal_idx.end();
+        BOOST_REQUIRE( proposal_idx.begin() != itr );
+        --itr;
+        BOOST_REQUIRE( db->get_account(creator).id == itr->creator) ;
+
+        return itr->id;
+    }
+    
+    void clean_database_fixture::vote_proposal(const std::string& voter, const std::vector<int64_t>& id_proposals, bool approve, const fc::ecc::private_key& key)
+    {
+        lua_map params;
+        for (size_t i=0; i<id_proposals.size(); i++)
+            params[lua_key(lua_int(i+1))] = lua_types(lua_int(id_proposals[i]));
+        
+        call_contract_function_operation cop;
+        cop.caller = voter;
+        cop.contract_name = "contract.tps.basic";
+        cop.function_name = "update_proposal_votes";
+        cop.value_list = {
+            lua_table(params),
+            lua_bool(approve)
+        };
+
+        signed_transaction tx;
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        tx.operations.push_back( cop );
+        sign( tx, key );
+        db->push_transaction( tx, 0 );
+    }
+    
+    uint64_t clean_database_fixture::get_nr_blocks_until_maintenance_block()
+    {
+        auto block_time = db->head_block_time();
+        
+        auto next_maintenance_time = db->get_dynamic_global_properties().next_maintenance_time;
+        auto ret = ( next_maintenance_time - block_time ).to_seconds() / TAIYI_BLOCK_INTERVAL;
+        
+        FC_ASSERT( next_maintenance_time >= block_time );
+        
+        return ret;
+    }
+        
+    void clean_database_fixture::generate_xinsu(const std::vector<account_name_type>& accounts)
+    {
+        auto end_date = db->head_block_time() + fc::days( 2 );
+                    
+        static uint32_t cnt = 0;
+        auto subject = string("granting_xinsu_proposal#") + std::to_string(cnt);
+        
+        std::vector<int64_t> proposal_ids;
+        lua_map params;
+        for (size_t i=0; i<accounts.size(); i++) {
+            params[lua_key(lua_int(1))] = lua_string(accounts[i]);
+            int64_t id_proposal = create_proposal(TAIYI_INIT_SIMING_NAME, "contract.xinsu.basic", "grant_xinsu", params, subject, end_date, init_account_priv_key);
+            proposal_ids.push_back(id_proposal);
+            if(i % 100 == 0)
+                generate_blocks( 1 );
+        }
+        generate_blocks( 1 );
+        
+        //简单避免一下一次性提交大量投票的情况
+        for (size_t i=0; i<proposal_ids.size(); i++) {
+            vote_proposal(TAIYI_INIT_SIMING_NAME, {proposal_ids[i]}, true/*approve*/, init_account_priv_key );
+            if(i % 100 == 0)
+                generate_blocks( 1 );
+        }
+        generate_blocks( 1 );
+
+        auto next_block = get_nr_blocks_until_maintenance_block();
+        generate_blocks(next_block);
+
+        for (size_t i=0; i<accounts.size(); i++) {
+            FC_ASSERT(db->is_xinsu(db->get_account(accounts[i])) == true );
+        }
     }
 
     live_database_fixture::live_database_fixture()
@@ -214,7 +370,6 @@ namespace taiyi { namespace chain {
             return;
         }
         FC_CAPTURE_AND_LOG( () )
-        exit(1);
     }
     
     fc::ecc::private_key database_fixture::generate_private_key(string seed)
@@ -514,6 +669,58 @@ namespace taiyi { namespace chain {
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         tx.sign( key, db->get_chain_id(), fc::ecc::bip_0062 );
         TAIYI_REQUIRE_THROW( db->push_transaction( tx, database::skip_transaction_dupe_check ), fc::assert_exception );
+    }
+    
+    tps_database_fixture::tps_database_fixture() : clean_database_fixture()
+    {
+    }
+    
+    bool tps_database_fixture::exist_proposal( int64_t id )
+    {
+        const auto& proposal_idx = db->get_index< proposal_index >().indices(). template get< by_id >();
+        return proposal_idx.find( id ) != proposal_idx.end();
+    }
+    
+    const proposal_object* tps_database_fixture::find_proposal( int64_t id )
+    {
+        const auto& proposal_idx = db->get_index< proposal_index >().indices(). template get< by_id >();
+        auto found = proposal_idx.find( id );
+        
+        if( found != proposal_idx.end() )
+            return &(*found);
+        else
+            return nullptr;
+    }
+
+    void tps_database_fixture::remove_proposal(const account_name_type& deleter, const std::vector<int64_t>& proposal_id, const fc::ecc::private_key& key)
+    {
+        lua_map params;
+        for (size_t i=0; i<proposal_id.size(); i++)
+            params[lua_key(lua_int(i+1))] = lua_types(lua_int(proposal_id[i]));
+        
+        call_contract_function_operation cop;
+        cop.caller = deleter;
+        cop.contract_name = "contract.tps.basic";
+        cop.function_name = "remove_proposals";
+        cop.value_list = {
+            lua_table(params)
+        };
+
+        signed_transaction trx;
+        trx.operations.push_back( cop );
+        trx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( trx, key );
+        db->push_transaction( trx, 0 );
+        trx.signatures.clear();
+        trx.operations.clear();
+    }
+
+    bool tps_database_fixture::find_vote_for_proposal(const std::string& user, int64_t id)
+    {
+        const auto& proposal_vote_idx = db->get_index< proposal_vote_index >().indices(). template get< by_voter_proposal >();
+        const auto& account = db->get_account(user);
+        auto found_vote = proposal_vote_idx.find( boost::make_tuple(account.id, id) );
+        return found_vote != proposal_vote_idx.end() ;
     }
 
     json_rpc_database_fixture::json_rpc_database_fixture()

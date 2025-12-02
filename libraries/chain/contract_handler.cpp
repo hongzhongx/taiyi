@@ -172,6 +172,11 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    string contract_handler::zuowangdao_account_name()
+    {
+        return TAIYI_TREASURY_ACCOUNT;
+    }
+    //=============================================================================
     memo_data contract_handler::make_memo(const string& receiver_account_name, const string& key, const string& value, uint64_t ss, bool enable_logger)
     {
         auto &receiver = db.get_account(receiver_account_name);
@@ -594,7 +599,7 @@ namespace taiyi { namespace chain {
             db.add_contract_handler_exe_point(1);
             
             validate_account_name( to);
-            const auto& to_account = db.find<account_object, by_name>(to);
+            const auto* to_account = db.find<account_object, by_name>(to);
             FC_ASSERT(to_account != nullptr, "account named ${n} is not exist", ("n", to));
             transfer_nfa_by_contract(from, to_account->id, nfa_id, result, enable_logger);
         }
@@ -1801,6 +1806,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to create zone");
+
             db.add_contract_handler_exe_point(2);
 
             E_ZONE_TYPE ztype = get_zone_type_from_string(type_name);
@@ -2081,6 +2088,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to create actor talent rule");
+
             db.add_contract_handler_exe_point(2);
 
             const auto& creator = caller;
@@ -2539,6 +2548,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to create contract");
+
             db.add_contract_handler_exe_point(5);
 
             const auto& creator = caller;
@@ -2559,11 +2570,17 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
-    int64_t contract_handler::create_proposal(const string& contract_name, const string& function_name, const lua_map& params, const string& subject)
+    int64_t contract_handler::create_proposal(const string& contract_name, const string& function_name, const lua_map& params, const string& subject, const uint32_t end_time)
     {
         try
         {
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to create proposal");
+
             db.add_contract_handler_exe_point(10);
+            
+            FC_ASSERT(subject != "", "Subject is empty");
+            FC_ASSERT(subject.size() <= TAIYI_PROPOSAL_SUBJECT_MAX_LENGTH, "Subject is too long");
+            FC_ASSERT(fc::is_utf8( subject ), "Subject is not valid UTF8" );
 
             const auto* contract = db.find<contract_object, by_name>(contract_name);
             FC_ASSERT(contract != nullptr, "contract named \"${c}\" is not exist", ("c", contract_name));
@@ -2583,10 +2600,8 @@ namespace taiyi { namespace chain {
             if(!abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(), "input parameter values count is ${n}, but ${f}`s parameter list is ${p}...", ("n", value_list.size())("f", function_name)("p", abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "parameter value list is greater than 20 limit");
-
-            time_point_sec end_date = db.head_block_time() + fc::seconds(TAIYI_PROPOSAL_MAINTENANCE_CLEANUP * 2);
             
-            operation vop = create_proposal_operation(caller.name, contract_name, function_name, value_list, end_date, subject);
+            operation vop = create_proposal_operation(caller.name, contract_name, function_name, value_list, time_point_sec(end_time), subject);
             db.pre_push_virtual_operation( vop );
 
             const auto& proposal = db.create< proposal_object >( [&]( proposal_object& obj ) {
@@ -2596,7 +2611,7 @@ namespace taiyi { namespace chain {
                 obj.function_name = function_name;
                 obj.value_list = value_list;
                 
-                obj.end_date = end_date;
+                obj.end_date = time_point_sec(end_time);
                 obj.subject = subject;
             });
             
@@ -2614,11 +2629,14 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            db.add_contract_handler_exe_point(1);
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to vote proposals");
+
+            db.add_contract_handler_exe_point(1 + proposal_ids.size());
             
             const account_object& voter = caller;
             
             FC_ASSERT(proposal_ids.size() > 0, "input proposal ids is empty");
+            FC_ASSERT(proposal_ids.size() <= TAIYI_PROPOSAL_MAX_IDS_NUMBER, "input proposal ids is too much");
             flat_set_ex<int64_t> pids;
             for(size_t i=1; i<=proposal_ids.size(); i++) {
                 auto p = proposal_ids.find(lua_key(lua_int(i)));
@@ -2670,9 +2688,12 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            db.add_contract_handler_exe_point(1);
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to remove proposals");
+            
+            db.add_contract_handler_exe_point(1 + proposal_ids.size() * 2);
             
             FC_ASSERT(proposal_ids.size() > 0, "input proposal ids is empty");
+            FC_ASSERT(proposal_ids.size() <= TAIYI_PROPOSAL_MAX_IDS_NUMBER, "input proposal ids is too much");
             flat_set_ex<int64_t> pids;
             for(size_t i=1; i<=proposal_ids.size(); i++) {
                 auto p = proposal_ids.find(lua_key(lua_int(i)));
@@ -2711,6 +2732,74 @@ namespace taiyi { namespace chain {
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
+    }
+    //=========================================================================
+    void contract_handler::grant_xinsu(const string& receiver_account)
+    {
+        try
+        {
+            FC_ASSERT(caller.name == TAIYI_TREASURY_ACCOUNT, "you have no authority to call this function");
+            
+            db.add_contract_handler_exe_point(2);
+
+            //check receiver account is valid
+            validate_account_name(receiver_account);
+            const auto* receiver = db.find<account_object, by_name>(receiver_account);
+            FC_ASSERT(receiver != nullptr, "account named ${n} is not exist", ("n", receiver_account));
+            FC_ASSERT(db.is_xinsu(*receiver) == false, "account is already xinsu");
+            
+            //create an new xinsu marker nfa to receiver
+            const auto& nfa_symbol = db.get<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_XINSU_MARK);
+            const auto& creator = db.get_account( TAIYI_DANUO_ACCOUNT );
+            LuaContext context;
+            const auto& xinsu_mark = db.create_nfa(creator, nfa_symbol, true, context);
+            db.modify(xinsu_mark, [&](nfa_object &obj) {
+                obj.owner_account = receiver->id;
+            });
+            
+            //count xinsu
+            db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
+                obj.xinsu_count++;
+            });
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=========================================================================
+    void contract_handler::revoke_xinsu(const string& account_name)
+    {
+        FC_ASSERT(caller.name == TAIYI_TREASURY_ACCOUNT, "you have no authority to call this function");
+        
+        db.add_contract_handler_exe_point(2);
+
+        //check receiver account is valid
+        validate_account_name(account_name);
+        const auto* account = db.find<account_object, by_name>(account_name);
+        FC_ASSERT(account != nullptr, "account named ${n} is not exist", ("n", account_name));
+        FC_ASSERT(db.is_xinsu(*account) == true, "account is not xinsu yet");
+
+        //change all xinsu marker nfa's owner to danuo
+        const auto& nfaidx = db.get_index<nfa_index>().indices().get<by_owner>();
+        auto found = nfaidx.lower_bound(account->id);
+        vector<nfa_id_type> found_nfas;
+        while(found != nfaidx.end() && found->owner_account == account->id) {
+            found_nfas.push_back(found->id);
+            found++;
+        }
+        
+        const auto& danuo = db.get_account( TAIYI_DANUO_ACCOUNT );
+        std::for_each(found_nfas.begin(), found_nfas.end(), [&](auto& id) {
+            db.modify(db.get<nfa_object, by_id>(id), [&](auto& obj) {
+                obj.owner_account = danuo.id;
+            });
+        });
+        
+        //count xinsu
+        db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
+            obj.xinsu_count -= found_nfas.size();
+        });
     }
 
 } } // namespace taiyi::chain

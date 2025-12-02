@@ -419,7 +419,7 @@ namespace taiyi { namespace chain {
         void initialize_VM_baseENV(LuaContext& context);
 
         void create_basic_contract_objects();
-        size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, long long& vm_drops);
+        size_t create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, long long& vm_drops, bool released_after_created = false);
         lua_map prepare_account_contract_data(const account_object& account, const contract_object& contract);
         
         void add_contract_handler_exe_point(int64_t p) { _contract_handler_exe_point += p; }
@@ -432,11 +432,15 @@ namespace taiyi { namespace chain {
 
         // nfa
         void create_basic_nfa_symbol_objects();
+        void create_basic_nfa_objects();
         size_t create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi);
         void modify_nfa_children_owner(const nfa_object& nfa, const account_object& new_owner, std::set<nfa_id_type>& recursion_loop_check);
         int get_nfa_five_phase(const nfa_object& nfa) const;
         bool is_nfa_material_equivalent_qi_insufficient(const nfa_object& nfa) const;
         void consume_nfa_material_random(const nfa_object& nfa, const uint32_t& seed);
+        
+        // xinsu
+        bool is_xinsu(const account_object& account) const;
 
     protected:
         //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead

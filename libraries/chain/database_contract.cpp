@@ -98,6 +98,27 @@
     end                                     \
 "
 
+#define CONTRACT_NFA_XINSU_MARK "           \
+    short = { consequence = false }         \
+    long = { consequence = false }          \
+    function init_data()                    \
+        return {                            \
+            name = '心素标记',                \
+            unit = '个'                      \
+        }                                   \
+    end                                     \
+    function eval_short()                   \
+        return { '心素标记' }                 \
+    end                                     \
+    function eval_long()                    \
+        return { '具有心素体质' }             \
+    end                                     \
+"
+
+#define CONTRACT_BLACKLIST "                \
+    black_list = {}                         \
+"
+
 namespace taiyi { namespace chain {
 
     void database::initialize_VM_baseENV(LuaContext& context)
@@ -113,7 +134,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    size_t database::create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, long long& vm_drops)
+    size_t database::create_contract_objects(const account_object& owner, const string& contract_name, const string& contract_data, long long& vm_drops, bool released_after_created)
     {
         const contract_object& contract = create<contract_object>([&](contract_object &c) {
             c.owner = owner.id;
@@ -138,6 +159,7 @@ namespace taiyi { namespace chain {
         modify(contract, [&](contract_object& c) {
             c.lua_code_b_id = code_bin_object.id;
             c.contract_ABI = aco.v;
+            c.is_release = released_after_created;
         });
         
         return TAIYI_CONTRACT_OBJ_STATE_BYTES + fc::raw::pack_size(contract.contract_ABI) + TAIYI_CONTRACT_BIN_OBJ_STATE_BYTES + fc::raw::pack_size(code_bin_object.lua_code_b);
@@ -147,10 +169,12 @@ namespace taiyi { namespace chain {
     {
         const auto& owner = get_account( TAIYI_DANUO_ACCOUNT );
         long long vm_drops = 1000000;
-        create_contract_objects(owner, "contract.baseENV", CONTRACT_BASE_ENV, vm_drops);
+        create_contract_objects(owner, "contract.baseENV", CONTRACT_BASE_ENV, vm_drops, true);
 
-        create_contract_objects(owner, "contract.actor.default", CONTRACT_BASE_ACTOR, vm_drops);
-        create_contract_objects(owner, "contract.zone.default", CONTRACT_BASE_ZONE, vm_drops);
+        create_contract_objects(owner, "contract.actor.default", CONTRACT_BASE_ACTOR, vm_drops, true);
+        create_contract_objects(owner, "contract.zone.default", CONTRACT_BASE_ZONE, vm_drops, true);
+        create_contract_objects(owner, "contract.nfa.xinsumark", CONTRACT_NFA_XINSU_MARK, vm_drops, true);
+        create_contract_objects(owner, TAIYI_BLACKLIST_CONTRACT_NAME, CONTRACT_BLACKLIST, vm_drops, false);
     }
     //=========================================================================
     lua_map database::prepare_account_contract_data(const account_object& account, const contract_object& contract)

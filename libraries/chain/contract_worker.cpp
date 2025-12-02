@@ -305,10 +305,9 @@ namespace taiyi { namespace chain {
             FC_ASSERT(def_itr->second.get<lua_bool>().v == false, "Can not eval action ${a} in nfa with consequence history. should signing it in transaction.", ("a", action));
         
         //evaluate contract authority
-        const auto& caller = db.get<account_object, by_id>(caller_nfa.owner_account);
-        if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
-            FC_ASSERT(contract.can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract.name));
+        FC_ASSERT(contract.can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract.name));
                             
+        const auto& caller = db.get<account_object, by_id>(caller_nfa.owner_account);
         string function_name = "eval_" + action;
         lua_table result_table = do_nfa_contract_function(caller, caller_nfa, function_name, value_list, contract, vm_drops, reset_vm_memused, context, db, true);
         
@@ -340,8 +339,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT(def_itr->second.get<lua_bool>().v == true, "Can not perform action ${a} in nfa without consequence history. should eval it in api.", ("a", action));
 
         //evaluate contract authority
-        if(caller.name != TAIYI_COMMITTEE_ACCOUNT)
-            FC_ASSERT(contract.can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract.name));
+        FC_ASSERT(contract.can_do(db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", contract.name));
                             
         string function_name = "do_" + action;
         lua_table result_table = do_nfa_contract_function(caller, nfa, function_name, value_list, contract, vm_drops, reset_vm_memused, context, db, false);
