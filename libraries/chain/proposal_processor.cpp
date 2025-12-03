@@ -87,7 +87,8 @@ namespace taiyi { namespace chain {
     void proposal_processor::filter_by_votes(t_proposals& proposals)
     {
         const auto& props = db.get_dynamic_global_properties();
-        uint32_t votes_threshold = std::min<uint32_t>(props.xinsu_count, 5);
+        const auto& wso = db.get_siming_schedule_object();
+        uint32_t votes_threshold = std::min<uint32_t>(props.xinsu_count, wso.median_props.proposal_adopted_votes_threshold);
         
         proposals.erase(std::remove_if(proposals.begin(), proposals.end(), [&](const proposal_object& p) {
             return p.total_votes < votes_threshold;
@@ -105,9 +106,9 @@ namespace taiyi { namespace chain {
     {
         auto processing = [this](const proposal_object& _item) -> bool {
 
-            const auto& caller = db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT);
+            const auto& caller = db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT);
             if(caller.qi.amount.value < 100) {
-                wlog("account \"${a}\" have not enough qi to execute proposal #${p}", ("a", TAIYI_TREASURY_ACCOUNT)("p", _item.id));
+                wlog("account \"${a}\" have not enough qi to execute proposal #${p}", ("a", TAIYI_DAO_ACCOUNT)("p", _item.id));
                 return false; //真气不够，未执行提案
             }
             
@@ -156,7 +157,7 @@ namespace taiyi { namespace chain {
                 db.reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
             }
             else {
-                wlog("account \"${a}\" does not have enough qi to call contract of proposal #${p}.", ("a", TAIYI_TREASURY_ACCOUNT)("p", _item.id));
+                wlog("account \"${a}\" does not have enough qi to call contract of proposal #${p}.", ("a", TAIYI_DAO_ACCOUNT)("p", _item.id));
                 if(caller.qi.amount > 0)
                     db.reward_feigang(contract_owner, caller, caller.qi); //真气不够也要消耗完
             }
@@ -164,10 +165,10 @@ namespace taiyi { namespace chain {
             //reward to treasury
             used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
             if(caller.qi.amount.value >= used_qi) {
-                db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
+                db.reward_feigang(db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
             }
             else {
-                wlog("account \"${a}\" does not have enough qi to call contract of proposal #${p}.", ("a", TAIYI_TREASURY_ACCOUNT)("p", _item.id));
+                wlog("account \"${a}\" does not have enough qi to call contract of proposal #${p}.", ("a", TAIYI_DAO_ACCOUNT)("p", _item.id));
                 if(caller.qi.amount > 0)
                     db.reward_feigang(contract_owner, caller, caller.qi); //真气不够也要消耗完
             }

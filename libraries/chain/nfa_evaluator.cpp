@@ -62,7 +62,7 @@ namespace taiyi { namespace chain {
         //reward to treasury
         used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
         FC_ASSERT( caller.qi.amount.value >= used_qi, "#t&&y#没有足够的真气操作实体#a&&i#" );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
 
         return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }

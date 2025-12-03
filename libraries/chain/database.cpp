@@ -120,6 +120,8 @@ namespace taiyi { namespace chain {
             auto last_block_num = _block_log.head()->block_num();
             args.benchmark.second(last_block_num, get_abstract_index_cntr());
         }
+        
+        _proposal_remove_threshold = args.proposal_remove_threshold;
                 
     } FC_CAPTURE_LOG_AND_RETHROW( (args.data_dir)(args.state_storage_dir) ) }
 
@@ -1388,11 +1390,11 @@ namespace taiyi { namespace chain {
         });
         
         create< account_object >( [&]( account_object& a ) {
-            a.name = TAIYI_TREASURY_ACCOUNT;
-            a.recovery_account = TAIYI_TREASURY_ACCOUNT;
+            a.name = TAIYI_DAO_ACCOUNT;
+            a.recovery_account = TAIYI_DAO_ACCOUNT;
         } );
         create< account_authority_object >( [&]( account_authority_object& auth ) {
-            auth.account = TAIYI_TREASURY_ACCOUNT;
+            auth.account = TAIYI_DAO_ACCOUNT;
             auth.owner.weight_threshold = 1;
             auth.active.weight_threshold = 1;
             auth.posting.weight_threshold = 1;

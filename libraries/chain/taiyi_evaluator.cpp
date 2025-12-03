@@ -68,6 +68,7 @@ namespace taiyi { namespace chain {
     {
         dest.account_creation_fee = src.account_creation_fee.to_asset< force_canon >();
         dest.maximum_block_size = src.maximum_block_size;
+        dest.proposal_adopted_votes_threshold = src.proposal_adopted_votes_threshold;
     }
 
     operation_result siming_update_evaluator::do_apply( const siming_update_operation& o )
@@ -101,7 +102,7 @@ namespace taiyi { namespace chain {
             }
             //pay to treasury
             FC_ASSERT( owner.qi.amount.value >= need_fee.amount.value, "Owner account ${a} does not have enough qi for siming registration, need ${n}, have ${h}", ("a", o.owner)("n", need_fee)("h", owner.qi));
-            _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), owner, need_fee);
+            _db.reward_feigang(_db.get_account(TAIYI_DAO_ACCOUNT), owner, need_fee);
 
             _db.create< siming_object >( [&]( siming_object& w ) {
                 w.owner             = o.owner;
@@ -121,6 +122,7 @@ namespace taiyi { namespace chain {
         uint32_t max_block_changed              : 1;
         uint32_t key_changed                    : 1;
         uint32_t url_changed                    : 1;
+        uint32_t proposal_adopted_votes_threshold_changed : 1;
     };
     
     int64_t account_object::get_effective_qi() const
@@ -170,6 +172,13 @@ namespace taiyi { namespace chain {
         {
             fc::raw::unpack_from_vector( itr->second, props.maximum_block_size );
         }
+        
+        itr = o.props.find( "proposal_adopted_votes_threshold" );
+        flags.proposal_adopted_votes_threshold_changed = itr != o.props.end();
+        if( flags.proposal_adopted_votes_threshold_changed )
+        {
+            fc::raw::unpack_from_vector( itr->second, props.proposal_adopted_votes_threshold );
+        }
                 
         itr = o.props.find( "new_signing_key" );
         flags.key_changed = itr != o.props.end();
@@ -197,6 +206,9 @@ namespace taiyi { namespace chain {
             
             if( flags.url_changed )
                 w.url = url;
+            
+            if( flags.proposal_adopted_votes_threshold_changed )
+                w.props.proposal_adopted_votes_threshold = props.proposal_adopted_votes_threshold;
         });
         
         return void_result();
@@ -327,14 +339,14 @@ namespace taiyi { namespace chain {
 
     operation_result transfer_evaluator::do_apply( const transfer_operation& o )
     {
-        FC_ASSERT( o.amount.symbol == YANG_SYMBOL || o.to != TAIYI_TREASURY_ACCOUNT, "Can only transfer YANG to ${s}", ("s", TAIYI_TREASURY_ACCOUNT) );
+        FC_ASSERT( o.amount.symbol == YANG_SYMBOL || o.to != TAIYI_DAO_ACCOUNT, "Can only transfer YANG to ${s}", ("s", TAIYI_DAO_ACCOUNT) );
         
         //reward to treasury
         int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
         int64_t need_qi = used_qi + (o.amount.symbol == QI_SYMBOL ? o.amount.amount.value : 0);
         const auto& from_account = _db.get_account(o.from);
         FC_ASSERT( from_account.qi.amount.value >= need_qi, "From account does not have enough qi to operation." );
-        _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get_account(TAIYI_DAO_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
 
         _db.adjust_balance( o.from, -o.amount );
         _db.adjust_balance( o.to, o.amount );
@@ -350,7 +362,7 @@ namespace taiyi { namespace chain {
         //reward to treasury
         int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( from_account.qi.amount.value >= used_qi, "From account does not have enough qi to operation." );
-        _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get_account(TAIYI_DAO_ACCOUNT), from_account, asset(used_qi, QI_SYMBOL));
 
         _db.adjust_balance( from_account, -o.amount );
         _db.create_qi( to_account, o.amount );
@@ -367,7 +379,7 @@ namespace taiyi { namespace chain {
         //reward to treasury
         int64_t used_qi = 10 * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( account.qi.amount.value >= used_qi, "Account does not have enough qi to operation." );
-        _db.reward_feigang(_db.get_account(TAIYI_TREASURY_ACCOUNT), account, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get_account(TAIYI_DAO_ACCOUNT), account, asset(used_qi, QI_SYMBOL));
 
         FC_ASSERT( account.qi - account.delegated_qi >= o.qi, "Account does not have sufficient Qi for withdraw." );
         
@@ -413,7 +425,7 @@ namespace taiyi { namespace chain {
         const auto& wd_idx = _db.get_index< withdraw_qi_route_index >().indices().get< by_withdraw_route >();
         auto itr = wd_idx.find( boost::make_tuple( from_account.name, to_account.name ) );
         
-        FC_ASSERT( o.to_account != TAIYI_TREASURY_ACCOUNT, "Cannot withdraw qi to ${s}", ("s", TAIYI_TREASURY_ACCOUNT) );
+        FC_ASSERT( o.to_account != TAIYI_DAO_ACCOUNT, "Cannot withdraw qi to ${s}", ("s", TAIYI_DAO_ACCOUNT) );
         
         if( itr == wd_idx.end() )
         {

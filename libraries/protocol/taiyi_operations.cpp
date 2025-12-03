@@ -113,6 +113,14 @@ namespace taiyi { namespace protocol {
             FC_ASSERT( maximum_block_size >= TAIYI_MIN_BLOCK_SIZE_LIMIT, "maximum_block_size smaller than minimum max block size" );
         }
         
+        itr = props.find( "proposal_adopted_votes_threshold" );
+        if( itr != props.end() )
+        {
+            uint32_t proposal_adopted_votes_threshold;
+            fc::raw::unpack_from_vector( itr->second, proposal_adopted_votes_threshold );
+            FC_ASSERT( proposal_adopted_votes_threshold >= 1, "proposal_adopted_votes_threshold smaller than 1" );
+        }
+        
         itr = props.find( "new_signing_key" );
         if( itr != props.end() )
         {

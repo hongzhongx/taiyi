@@ -174,7 +174,7 @@ namespace taiyi { namespace chain {
     //=============================================================================
     string contract_handler::zuowangdao_account_name()
     {
-        return TAIYI_TREASURY_ACCOUNT;
+        return TAIYI_DAO_ACCOUNT;
     }
     //=============================================================================
     memo_data contract_handler::make_memo(const string& receiver_account_name, const string& key, const string& value, uint64_t ss, bool enable_logger)
@@ -2337,7 +2337,7 @@ namespace taiyi { namespace chain {
             if( take_qi > actor_nfa.qi.amount.value )
                 return FORMAT_MESSAGE("需要气力${p}（${t}天），但气力只剩余${c}了", ("p", take_qi)("t", take_days)("c", actor_nfa.qi.amount.value));
             //reward take_qi to treasury
-            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
 
             //finish movement
             auto now = db.head_block_time();
@@ -2393,7 +2393,7 @@ namespace taiyi { namespace chain {
             if( take_qi > actor_nfa.qi.amount.value )
                 return FORMAT_MESSAGE("需要气力${p}，但气力只剩余${c}了", ("p", take_qi)("c", actor_nfa.qi.amount.value));
             //reward take_qi to treasury
-            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), actor_nfa, asset(take_qi, QI_SYMBOL));
 
             //以目的地视角回调目的地函数：on_actor_exploit
             lua_map param;
@@ -2562,7 +2562,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT( creator.qi.amount.value >= used_qi, "神识没有足够的真气创建天道合约，需要真气${n}", ("n", used_qi) );
             
             //reward to treasury
-            db.reward_feigang(db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+            db.reward_feigang(db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
         }
         catch (const fc::exception& e)
         {
@@ -2738,7 +2738,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(caller.name == TAIYI_TREASURY_ACCOUNT, "you have no authority to call this function");
+            FC_ASSERT(caller.name == TAIYI_DAO_ACCOUNT, "you have no authority to call this function");
             
             db.add_contract_handler_exe_point(2);
 
@@ -2770,7 +2770,7 @@ namespace taiyi { namespace chain {
     //=========================================================================
     void contract_handler::revoke_xinsu(const string& account_name)
     {
-        FC_ASSERT(caller.name == TAIYI_TREASURY_ACCOUNT, "you have no authority to call this function");
+        FC_ASSERT(caller.name == TAIYI_DAO_ACCOUNT, "you have no authority to call this function");
         
         db.add_contract_handler_exe_point(2);
 

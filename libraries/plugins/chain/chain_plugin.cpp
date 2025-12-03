@@ -74,6 +74,7 @@ namespace taiyi { namespace plugins { namespace chain {
             void stop_write_processing();
             void write_default_database_config( bfs::path& p );
             
+            int16_t                          proposal_remove_threshold = -1;
             uint32_t                         chainbase_flags = 0;
             bfs::path                        state_storage_dir;
             bool                             replay = false;
@@ -337,6 +338,8 @@ namespace taiyi { namespace plugins { namespace chain {
                 my->state_storage_dir = ssd;
         }
         
+        my->proposal_remove_threshold = options.at( "proposal-remove-threshold" ).as< uint16_t >();
+
         my->chainbase_flags |= options.at( "force-open" ).as< bool >() ? chainbase::skip_env_check : chainbase::skip_nothing;
         
         my->replay              = options.at( "replay-blockchain").as<bool>();
@@ -455,6 +458,7 @@ namespace taiyi { namespace plugins { namespace chain {
         db_open_args.data_dir = app().data_dir() / "blockchain";
         db_open_args.state_storage_dir = my->state_storage_dir;
         db_open_args.initial_supply = TAIYI_YANG_INIT_SUPPLY;
+        db_open_args.proposal_remove_threshold = my->proposal_remove_threshold;
         db_open_args.initial_qi_supply = 0;
         db_open_args.chainbase_flags = my->chainbase_flags;
         db_open_args.do_validate_invariants = my->validate_invariants;

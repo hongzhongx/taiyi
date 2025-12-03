@@ -139,7 +139,7 @@ namespace taiyi { namespace chain {
         });
         
         //传递到财库
-        const auto& treasury_account = get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT);
+        const auto& treasury_account = get<account_object, by_name>(TAIYI_DAO_ACCOUNT);
         if(consumed_gold.amount > 0) {
             operation vop = nfa_deposit_withdraw_operation(nfa.id, treasury_account.name, asset( 0, YANG_SYMBOL ), consumed_gold);
             pre_push_virtual_operation( vop );
@@ -275,11 +275,11 @@ namespace taiyi { namespace chain {
             used_qi = (TAIYI_NFA_OBJ_STATE_BYTES + TAIYI_NFA_MATERIAL_STATE_BYTES + fc::raw::pack_size(result_table.v)) * TAIYI_USEMANA_STATE_BYTES_SCALE + (100 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
             if(caller_nfa) {
                 FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
-                reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), *caller_nfa, asset(used_qi, QI_SYMBOL));
+                reward_feigang(get<account_object, by_name>(TAIYI_DAO_ACCOUNT), *caller_nfa, asset(used_qi, QI_SYMBOL));
             }
             else {
                 FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以创建新实体" );
-                reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
+                reward_feigang(get<account_object, by_name>(TAIYI_DAO_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
             }
         }
         else {
@@ -415,7 +415,7 @@ namespace taiyi { namespace chain {
             
             //reward to treasury
             if( (exe_qi + used_qi_for_treasury) > 0)
-                reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
+                reward_feigang(get<account_object, by_name>(TAIYI_DAO_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
 
             //执行错误不仅要扣费，还会将NFA重置为关闭心跳状态
             if(beat_fail)  {

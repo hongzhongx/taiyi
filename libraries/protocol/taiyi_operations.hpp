@@ -133,6 +133,13 @@ namespace taiyi { namespace protocol {
          *  to tune rate limiting and capacity
          */
         uint32_t          maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT * 2;
+        
+        /**
+         *  The minimum number of votes required for the proposal to be adopted. If the total amount
+         *  of xinsu is lower than this value, then the total amount of xinsu shall be regarded as the
+         *  minimum requirement.
+         */
+        uint32_t          proposal_adopted_votes_threshold = 1;
 
         template< bool force_canon >
         void validate()const
@@ -143,6 +150,7 @@ namespace taiyi { namespace protocol {
             }
             FC_ASSERT( account_creation_fee.amount >= TAIYI_MIN_ACCOUNT_CREATION_FEE);
             FC_ASSERT( maximum_block_size >= TAIYI_MIN_BLOCK_SIZE_LIMIT);
+            FC_ASSERT( proposal_adopted_votes_threshold >= 1 );
         }
     };
 
@@ -470,7 +478,7 @@ namespace taiyi { namespace protocol {
 
 } } // taiyi::protocol
 
-FC_REFLECT( taiyi::protocol::legacy_chain_properties, (account_creation_fee)(maximum_block_size))
+FC_REFLECT( taiyi::protocol::legacy_chain_properties, (account_creation_fee)(maximum_block_size)(proposal_adopted_votes_threshold))
 FC_REFLECT( taiyi::protocol::account_create_operation, (fee)(creator)(new_account_name)(owner)(active)(posting)(memo_key)(json_metadata) )
 FC_REFLECT( taiyi::protocol::account_update_operation, (account)(owner)(active)(posting)(memo_key)(json_metadata) )
 FC_REFLECT( taiyi::protocol::transfer_operation, (from)(to)(amount)(memo) )

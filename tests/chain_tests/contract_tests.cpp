@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE( create_contract_apply )
     BOOST_TEST_MESSAGE( "--- Test failure DAO have not enough qi to proposal new xinsu" );
     BOOST_REQUIRE_THROW(generate_xinsu({"alice"}), fc::exception );
 
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice"});
     
     BOOST_TEST_MESSAGE( "--- Test failure name invalid" );
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE( revise_contract_apply )
     BOOST_TEST_MESSAGE( "Testing: revise_contract_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice"});
 
     signed_transaction tx;
@@ -669,7 +669,7 @@ BOOST_AUTO_TEST_CASE( release_contract_apply )
     BOOST_TEST_MESSAGE( "Testing: release_contract_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice"});
 
     signed_transaction tx;
@@ -741,7 +741,7 @@ BOOST_AUTO_TEST_CASE( call_contract_function_apply )
     BOOST_TEST_MESSAGE( "Testing: call_contract_function_apply" );
 
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice", "bob"});
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();

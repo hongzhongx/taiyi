@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice", "bob"});
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE( change_nfa_symbol_authority_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
@@ -682,7 +682,7 @@ BOOST_AUTO_TEST_CASE( action_drops )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE( heart_beat )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
@@ -1032,7 +1032,7 @@ BOOST_AUTO_TEST_CASE( inter_nfa_action_drops )
 
     signed_transaction tx;
     ACTORS( (alice)(bob)(charlie) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );

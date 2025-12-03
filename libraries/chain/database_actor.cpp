@@ -380,7 +380,7 @@ namespace taiyi { namespace chain {
 
                 //reward to treasury
                 if( (exe_qi + used_qi_for_treasury) > 0)
-                    reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
+                    reward_feigang(get<account_object, by_name>(TAIYI_DAO_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
 
                 if(debt_qi > 0) {
                     modify( nfa, [&]( nfa_object& obj ) {
@@ -502,7 +502,7 @@ namespace taiyi { namespace chain {
 
             //reward to treasury
             if( (exe_qi + used_qi_for_treasury) > 0)
-                reward_feigang(get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
+                reward_feigang(get<account_object, by_name>(TAIYI_DAO_ACCOUNT), nfa, asset(exe_qi + used_qi_for_treasury, QI_SYMBOL));
 
             if(debt_qi > 0) {
                 modify( nfa, [&]( nfa_object& obj ) {

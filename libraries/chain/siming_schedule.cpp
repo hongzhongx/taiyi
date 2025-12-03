@@ -46,10 +46,17 @@ namespace taiyi { namespace chain {
             return a->props.maximum_block_size < b->props.maximum_block_size;
         } );
         uint32_t median_maximum_block_size = active[active.size()/2]->props.maximum_block_size;
+        
+        // sort them by proposal_adopted_votes_threshold
+        std::sort( active.begin(), active.end(), [&]( const siming_object* a, const siming_object* b ) {
+            return a->props.proposal_adopted_votes_threshold < b->props.proposal_adopted_votes_threshold;
+        } );
+        uint32_t median_proposal_adopted_votes_threshold = active[active.size()/2]->props.proposal_adopted_votes_threshold;
                         
         db.modify( wso, [&]( siming_schedule_object& _wso ) {
             _wso.median_props.account_creation_fee       = median_account_creation_fee;
             _wso.median_props.maximum_block_size         = median_maximum_block_size;
+            _wso.median_props.proposal_adopted_votes_threshold = median_proposal_adopted_votes_threshold;
         } );
         
         db.modify( db.get_dynamic_global_properties(), [&]( dynamic_global_property_object& _dgpo ) {

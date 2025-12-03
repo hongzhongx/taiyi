@@ -20,6 +20,9 @@ struct siming_properties
     fc::optional< public_key_type >     key;
     fc::optional< public_key_type >     new_signing_key;
     fc::optional< std::string >         url;
+    
+    // Proposal system properties
+    fc::optional< uint32_t >            proposal_adopted_votes_threshold;
 };
 
 FC_REFLECT( siming_properties,
@@ -29,6 +32,8 @@ FC_REFLECT( siming_properties,
            (key)
            (new_signing_key)
            (url)
+           
+           (proposal_adopted_votes_threshold)
            );
 
 class serialize_member_visitor

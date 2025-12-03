@@ -647,7 +647,7 @@ BOOST_AUTO_TEST_CASE( transfer_apply )
         
         BOOST_TEST_MESSAGE( "--- Test failure transfering QI to zuowang.dao" );
         op.from = "bob";
-        op.to = TAIYI_TREASURY_ACCOUNT;
+        op.to = TAIYI_DAO_ACCOUNT;
         op.amount = ASSET( "1.000000 QI" );
         tx.signatures.clear();
         tx.operations.clear();
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE( transfer_apply )
         TAIYI_REQUIRE_THROW( db->push_transaction( tx ), fc::exception );
         
         BOOST_REQUIRE( db->get_account( "bob" ).balance == ASSET( "11.000 YANG" ) );
-        BOOST_REQUIRE( db->get_account( TAIYI_TREASURY_ACCOUNT ).balance == ASSET( "0.000 YANG" ) );
+        BOOST_REQUIRE( db->get_account( TAIYI_DAO_ACCOUNT ).balance == ASSET( "0.000 YANG" ) );
         validate_database();
     }
     FC_LOG_AND_RETHROW()
@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         
         transfer_to_qi_operation op;
         op.from = "alice";
-        op.to = TAIYI_TREASURY_ACCOUNT;
+        op.to = TAIYI_DAO_ACCOUNT;
         op.amount = ASSET( "7.500 YANG" );
         
         signed_transaction tx;
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE( transfer_to_qi_apply )
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
         sign( tx, alice_private_key );
         db->push_transaction( tx, 0 );
-        const auto& dao_account = db->get_account(TAIYI_TREASURY_ACCOUNT);
+        const auto& dao_account = db->get_account(TAIYI_DAO_ACCOUNT);
         BOOST_REQUIRE( dao_account.qi.amount.value == ASSET( "7.500000 QI" ).amount.value );
 
         op.to = "";
@@ -1073,6 +1073,7 @@ BOOST_AUTO_TEST_CASE( siming_update_apply )
         op.block_signing_key = signing_key.get_public_key();
         op.props.account_creation_fee = legacy_taiyi_asset::from_asset( asset(TAIYI_MIN_ACCOUNT_CREATION_FEE + 10, YANG_SYMBOL) );
         op.props.maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT + 100;
+        op.props.proposal_adopted_votes_threshold = 10;
         
         signed_transaction tx;
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
@@ -1089,6 +1090,7 @@ BOOST_AUTO_TEST_CASE( siming_update_apply )
         BOOST_REQUIRE( alice_siming.signing_key == op.block_signing_key );
         BOOST_REQUIRE( alice_siming.props.account_creation_fee == op.props.account_creation_fee.to_asset<true>() );
         BOOST_REQUIRE( alice_siming.props.maximum_block_size == op.props.maximum_block_size );
+        BOOST_REQUIRE( alice_siming.props.proposal_adopted_votes_threshold == op.props.proposal_adopted_votes_threshold );
         BOOST_REQUIRE( alice_siming.total_missed == 0 );
         BOOST_REQUIRE( alice_siming.last_aslot == 0 );
         BOOST_REQUIRE( alice_siming.last_confirmed_block_num == 0 );
@@ -1115,6 +1117,7 @@ BOOST_AUTO_TEST_CASE( siming_update_apply )
         BOOST_REQUIRE( alice_siming.signing_key == op.block_signing_key );
         BOOST_REQUIRE( alice_siming.props.account_creation_fee == op.props.account_creation_fee.to_asset<true>() );
         BOOST_REQUIRE( alice_siming.props.maximum_block_size == op.props.maximum_block_size );
+        BOOST_REQUIRE( alice_siming.props.proposal_adopted_votes_threshold == op.props.proposal_adopted_votes_threshold );
         BOOST_REQUIRE( alice_siming.total_missed == 0 );
         BOOST_REQUIRE( alice_siming.last_aslot == 0 );
         BOOST_REQUIRE( alice_siming.last_confirmed_block_num == 0 );
@@ -2694,6 +2697,7 @@ BOOST_AUTO_TEST_CASE( siming_set_properties_validate )
         op.block_signing_key = signing_key.get_public_key();
         op.props.account_creation_fee = legacy_taiyi_asset::from_asset( asset(TAIYI_MIN_ACCOUNT_CREATION_FEE + 10, YANG_SYMBOL) );
         op.props.maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT + 100;
+        op.props.proposal_adopted_votes_threshold = 1;
         
         signed_transaction tx;
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
@@ -2720,8 +2724,13 @@ BOOST_AUTO_TEST_CASE( siming_set_properties_validate )
         prop_op.props[ "maximum_block_size" ] = fc::raw::pack_to_vector( TAIYI_MIN_BLOCK_SIZE_LIMIT - 1 );
         TAIYI_REQUIRE_THROW( prop_op.validate(), fc::assert_exception );
         
-        BOOST_TEST_MESSAGE( "--- failure when setting new url with length of zero" );
+        BOOST_TEST_MESSAGE( "--- failure when setting proposal_adopted_votes_threshold below 1" );
         prop_op.props.erase( "maximum_block_size" );
+        prop_op.props[ "proposal_adopted_votes_threshold" ] = fc::raw::pack_to_vector( 0 );
+        TAIYI_REQUIRE_THROW( prop_op.validate(), fc::assert_exception );
+        
+        BOOST_TEST_MESSAGE( "--- failure when setting new url with length of zero" );
+        prop_op.props.erase( "proposal_adopted_votes_threshold" );
         prop_op.props[ "url" ] = fc::raw::pack_to_vector( "" );
         TAIYI_REQUIRE_THROW( prop_op.validate(), fc::assert_exception );
         
@@ -2799,6 +2808,7 @@ BOOST_AUTO_TEST_CASE( siming_set_properties_apply )
         op.block_signing_key = signing_key.get_public_key();
         op.props.account_creation_fee = legacy_taiyi_asset::from_asset( asset(TAIYI_MIN_ACCOUNT_CREATION_FEE + 10, YANG_SYMBOL) );
         op.props.maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT + 100;
+        op.props.proposal_adopted_votes_threshold = 1;
         
         signed_transaction tx;
         tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
@@ -2829,11 +2839,20 @@ BOOST_AUTO_TEST_CASE( siming_set_properties_apply )
         db->push_transaction( tx, 0 );
         BOOST_REQUIRE( alice_siming.props.maximum_block_size == TAIYI_MIN_BLOCK_SIZE_LIMIT + 1 );
         
+        // Setting proposal_adopted_votes_threshold
+        prop_op.props.erase( "maximum_block_size" );
+        prop_op.props[ "proposal_adopted_votes_threshold" ] = fc::raw::pack_to_vector( 10 );
+        tx.clear();
+        tx.operations.push_back( prop_op );
+        sign( tx, signing_key );
+        db->push_transaction( tx, 0 );
+        BOOST_REQUIRE( alice_siming.props.proposal_adopted_votes_threshold == 10 );
+        
         // Setting new signing_key
         private_key_type old_signing_key = signing_key;
         signing_key = generate_private_key( "new_key" );
         public_key_type alice_pub = signing_key.get_public_key();
-        prop_op.props.erase( "maximum_block_size" );
+        prop_op.props.erase( "proposal_adopted_votes_threshold" );
         prop_op.props[ "new_signing_key" ] = fc::raw::pack_to_vector( alice_pub );
         tx.clear();
         tx.operations.push_back( prop_op );

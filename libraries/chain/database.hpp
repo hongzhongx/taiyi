@@ -105,6 +105,7 @@ namespace taiyi { namespace chain {
             fc::path data_dir;
             fc::path state_storage_dir;
             uint64_t initial_supply = TAIYI_YANG_INIT_SUPPLY;
+            int16_t  proposal_remove_threshold = -1;
             uint64_t initial_qi_supply = 0;
             uint32_t chainbase_flags = 0;
             bool do_validate_invariants = false;

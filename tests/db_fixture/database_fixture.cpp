@@ -395,6 +395,7 @@ namespace taiyi { namespace chain {
             args.initial_supply = INITIAL_TEST_SUPPLY;
             args.initial_qi_supply = INITIAL_TEST_QI_SUPPLY;
             args.database_cfg = taiyi::utilities::default_database_configuration();
+            args.proposal_remove_threshold = 20;
             db->open(args);
         }
         else

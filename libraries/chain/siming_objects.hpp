@@ -35,7 +35,14 @@ namespace taiyi { namespace chain {
          *  This simings vote for the maximum_block_size which is used by the network
          *  to tune rate limiting and capacity
          */
-        uint32_t maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT * 2;        
+        uint32_t maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT * 2;
+        
+        /**
+         *  The minimum number of votes required for the proposal to be adopted. If the total amount
+         *  of xinsu is lower than this value, then the total amount of xinsu shall be regarded as the
+         *  minimum requirement.
+         */
+        uint32_t proposal_adopted_votes_threshold = 1;
     };
 
     /**
@@ -239,7 +246,7 @@ namespace mira {
 
 FC_REFLECT_ENUM( taiyi::chain::siming_object::siming_schedule_type, (elected)(timeshare)(miner)(none) )
 
-FC_REFLECT( taiyi::chain::chain_properties, (account_creation_fee)(maximum_block_size) )
+FC_REFLECT( taiyi::chain::chain_properties, (account_creation_fee)(maximum_block_size)(proposal_adopted_votes_threshold) )
 
 FC_REFLECT( taiyi::chain::siming_object, (id)(owner)(created)(url)(adores)(schedule)(virtual_last_update)(virtual_position)(virtual_scheduled_time)(total_missed)(last_aslot)(last_confirmed_block_num)(signing_key)(props)(running_version)(hardfork_version_vote)(hardfork_time_vote) )
 CHAINBASE_SET_INDEX_TYPE( taiyi::chain::siming_object, taiyi::chain::siming_index )

@@ -146,8 +146,8 @@
 #define TAIYI_TEMP_ACCOUNT                      "temp"
 /// Represents the canonical account for specifying you will adore for directly (as opposed to a proxy)
 #define TAIYI_PROXY_TO_SELF_ACCOUNT             ""
-/// Represents the account with NO authority who holds resources for payouts according to given proposals
-#define TAIYI_TREASURY_ACCOUNT                  "zuowang.dao"
+/// Represents the account with NO authority who holds resources for DAO, can be operated through proposals
+#define TAIYI_DAO_ACCOUNT                       "zuowang.dao"
 /// Represents the account with NO authority who can operate tiandao
 #define TAIYI_DANUO_ACCOUNT                     "taiyi.danuo"
 ///@}

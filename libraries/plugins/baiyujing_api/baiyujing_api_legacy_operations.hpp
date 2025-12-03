@@ -66,7 +66,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     struct api_chain_properties
     {
         api_chain_properties() {}
-        api_chain_properties( const chain::chain_properties& c ) : account_creation_fee( legacy_asset::from_asset( c.account_creation_fee ) ), maximum_block_size( c.maximum_block_size )
+        api_chain_properties( const chain::chain_properties& c ) : account_creation_fee( legacy_asset::from_asset( c.account_creation_fee ) ), maximum_block_size( c.maximum_block_size ), proposal_adopted_votes_threshold( c.proposal_adopted_votes_threshold )
         {}
 
         operator legacy_chain_properties() const
@@ -74,11 +74,13 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             legacy_chain_properties props;
             props.account_creation_fee = legacy_taiyi_asset::from_asset( asset( account_creation_fee ) );
             props.maximum_block_size = maximum_block_size;
+            props.proposal_adopted_votes_threshold = proposal_adopted_votes_threshold;
             return props;
         }
 
         legacy_asset   account_creation_fee = legacy_asset::from_asset( asset(TAIYI_MIN_ACCOUNT_CREATION_FEE, YANG_SYMBOL) );
         uint32_t       maximum_block_size = TAIYI_MIN_BLOCK_SIZE_LIMIT * 2;
+        uint32_t       proposal_adopted_votes_threshold = 1;
     };
 
     struct legacy_account_create_operation
@@ -178,6 +180,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         {
             props.account_creation_fee = legacy_asset::from_asset( op.props.account_creation_fee.to_asset< false >() );
             props.maximum_block_size = op.props.maximum_block_size;
+            props.proposal_adopted_votes_threshold = op.props.proposal_adopted_votes_threshold;
         }
 
         operator siming_update_operation()const
@@ -188,6 +191,7 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
             op.block_signing_key = block_signing_key;
             op.props.account_creation_fee = legacy_taiyi_asset::from_asset( asset( props.account_creation_fee ) );
             op.props.maximum_block_size = props.maximum_block_size;
+            op.props.proposal_adopted_votes_threshold = props.proposal_adopted_votes_threshold;
             return op;
         }
 
@@ -755,7 +759,7 @@ namespace fc {
 
 } //fc
 
-FC_REFLECT( taiyi::plugins::baiyujing_api::api_chain_properties, (account_creation_fee)(maximum_block_size) )
+FC_REFLECT( taiyi::plugins::baiyujing_api::api_chain_properties, (account_creation_fee)(maximum_block_size)(proposal_adopted_votes_threshold) )
 
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_account_create_operation, (fee)(creator)(new_account_name)(owner)(active)(posting)(memo_key)(json_metadata) )
 FC_REFLECT( taiyi::plugins::baiyujing_api::legacy_transfer_operation, (from)(to)(amount)(memo) )

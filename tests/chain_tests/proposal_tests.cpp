@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( generating_proposal )
     BOOST_TEST_MESSAGE( "Testing: generating proposal" );
     
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     generate_block();
     
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE( generating_xinsu )
     BOOST_TEST_MESSAGE( "Testing: generating xinsu" );
     
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     
     //=====================preparing=====================
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance)
     BOOST_TEST_MESSAGE( "Testing: removing inactive proposals" );
     
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE( proposal_object_apply )
     BOOST_TEST_MESSAGE( "Testing: create_proposal_operation" );
     
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE( proposal_vote_object_apply )
     BOOST_TEST_MESSAGE( "Testing: proposal_vote_object_operation" );
     
     ACTORS( (alice)(bob)(carol)(dan) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE( proposal_vote_object_01_apply )
     BOOST_TEST_MESSAGE( "Testing: proposal_vote_object_operation" );
     
     ACTORS( (alice)(bob)(carol)(dan) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -821,7 +821,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_000 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: opration arguments validation - all args are ok" );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -841,7 +841,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_001 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: opration arguments validation - invalid creator" );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -859,7 +859,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_002 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: opration arguments validation - invalid contarct_name" );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_003 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: opration arguments validation - invalid contract function name" );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -895,7 +895,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_004 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: opration arguments validation - invalid contract parameters" );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -914,7 +914,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_005 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: opration arguments validation - invalid subject(empty)" );
     
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -933,7 +933,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_006 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: opration arguments validation - invalid subject(too long)" );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -952,7 +952,7 @@ BOOST_AUTO_TEST_CASE( create_proposal_007 )
     BOOST_TEST_MESSAGE( "Testing: create proposal: authorization test(not xinsu)" );
     
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -969,7 +969,7 @@ BOOST_AUTO_TEST_CASE( update_proposal_votes_000 )
     BOOST_TEST_MESSAGE( "Testing: update proposal votes: opration arguments validation - all ok (approve true)" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE( update_proposal_votes_001 )
     BOOST_TEST_MESSAGE( "Testing: update proposal votes: opration arguments validation - all ok (approve false)" );
     
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1015,7 +1015,7 @@ BOOST_AUTO_TEST_CASE( update_proposal_votes_002 )
     BOOST_TEST_MESSAGE( "Testing: update proposal votes: opration arguments validation - all ok (empty array)" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1038,7 +1038,7 @@ BOOST_AUTO_TEST_CASE( update_proposal_votes_003 )
     BOOST_TEST_MESSAGE( "Testing: update proposal votes: opration arguments validation - all ok (array with negative digits)" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1056,7 +1056,7 @@ BOOST_AUTO_TEST_CASE( update_proposal_votes_004 )
     BOOST_TEST_MESSAGE( "Testing: update proposal votes: opration arguments validation - invalid voter" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1079,7 +1079,7 @@ BOOST_AUTO_TEST_CASE( update_proposal_votes_005 )
     BOOST_TEST_MESSAGE( "Testing: update proposal votes: opration arguments validation - invalid id array (array with greater number of digits than allowed)" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1101,7 +1101,7 @@ BOOST_AUTO_TEST_CASE( update_proposal_votes_006 )
     BOOST_TEST_MESSAGE( "Testing: update proposal votes: authorization test(not xinsu)" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1124,7 +1124,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_000 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - proposal removal (only one)." );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -1156,7 +1156,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_001 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - proposal removal (one from many)." );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -1210,7 +1210,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_002 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - proposal removal (n from many in two steps)." );
     
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -1260,7 +1260,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_003 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - proper proposal deletion check (one at time)." );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -1310,7 +1310,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_004 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - proper proposal deletion check (two at one time)." );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -1378,7 +1378,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_005 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - proposal with votes removal (only one)." );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1416,7 +1416,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_006 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - remove proposal with votes and one voteless at same time." );
 
     ACTORS( (alice)(bob) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     generate_block();
@@ -1455,7 +1455,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_007 )
 { try {
     BOOST_TEST_MESSAGE( "Testing: remove proposal: basic verification operation - remove proposals with votes at same time." );
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1499,7 +1499,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_008 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: opration arguments validation - all ok" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
 
     vector<int64_t> proposals = { 0 };
@@ -1513,7 +1513,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_009 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: opration arguments validation - invalid deleter" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1535,7 +1535,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_010 )
     BOOST_TEST_MESSAGE( "Testing: remove proposal: opration arguments validation - invalid array(empty array)" );
 
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1555,7 +1555,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_011 )
 { try {
     BOOST_TEST_MESSAGE( "Testing: remove proposal: opration arguments validation - invalid array(array with greater number of digits than allowed)" );
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1579,7 +1579,7 @@ BOOST_AUTO_TEST_CASE( remove_proposal_012 )
 { try {
     BOOST_TEST_MESSAGE( "Testing: remove proposal: authorization test" );
     ACTORS( (alice)(bob)(carol) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
     vest( TAIYI_INIT_SIMING_NAME, "carol", ASSET( "1000.000 YANG" ) );
@@ -1604,7 +1604,7 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance_01 )
     BOOST_TEST_MESSAGE( "Testing: removing of old proposals using threshold" );
     
     ACTORS( (a00)(a01)(a02)(a03)(a04) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     generate_xinsu({"a00", "a01", "a02", "a03", "a04"}); //此处已经产生了5个提案
     create_contract(TAIYI_INIT_SIMING_NAME, "contract.proposal.test", s_code_proposal_test);
@@ -1660,7 +1660,6 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance_01 )
     
     generate_blocks( start_time + ( start_time_shift + end_time_shift - block_interval ) );
     
-    db->set_proposal_remove_threshold(20);
     auto threshold = db->get_proposal_remove_threshold();
     auto nr_stages = current_active_proposals / threshold;
     
@@ -1684,7 +1683,7 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance_02 )
     BOOST_TEST_MESSAGE( "Testing: removing of old proposals + votes using threshold" );
     
     ACTORS( (a00)(a01)(a02)(a03)(a04) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     generate_xinsu({"a00", "a01", "a02", "a03", "a04"}); //此处已经产生了5个提案
     create_contract(TAIYI_INIT_SIMING_NAME, "contract.proposal.test", s_code_proposal_test);
@@ -1757,7 +1756,6 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance_02 )
     
     generate_blocks( start_time + ( start_time_shift + end_time_shift - block_interval ) );
     
-    db->set_proposal_remove_threshold(2);
     auto threshold = db->get_proposal_remove_threshold();
     auto current_active_anything = current_active_proposals + current_active_votes;
     auto nr_stages = current_active_anything / threshold;
@@ -1783,7 +1781,7 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold )
     BOOST_TEST_MESSAGE( "Testing: removing of old proposals + votes using threshold" );
     
     ACTORS( (a00)(a01)(a02)(a03)(a04) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     generate_xinsu({"a00", "a01", "a02", "a03", "a04"}); //此处已经产生了5个提案
     create_contract(TAIYI_INIT_SIMING_NAME, "contract.proposal.test", s_code_proposal_test);
@@ -1844,7 +1842,6 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold )
     auto current_active_votes = current_active_proposals * static_cast< int16_t > ( inits.size() );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == current_active_votes );
     
-    db->set_proposal_remove_threshold(20);
     auto threshold = db->get_proposal_remove_threshold();
     BOOST_REQUIRE( threshold == 20 );
     
@@ -1876,7 +1873,7 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_01 )
     BOOST_TEST_MESSAGE( "Testing: removing of old proposals/votes using threshold " );
     
     ACTORS( (a00)(a01)(a02)(a03)(a04)(a05) )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     generate_xinsu({"a00", "a01", "a02", "a03", "a04", "a05"}); //此处已经产生了5个提案
     create_contract(TAIYI_INIT_SIMING_NAME, "contract.proposal.test", s_code_proposal_test);
@@ -1944,7 +1941,6 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_01 )
     auto current_active_votes = current_active_proposals * static_cast< int16_t > ( inits.size() );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == current_active_votes );
     
-    db->set_proposal_remove_threshold(20);
     auto threshold = db->get_proposal_remove_threshold();
     BOOST_REQUIRE( threshold == 20 );
     
@@ -2115,7 +2111,7 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_02 )
            (a30)(a31)(a32)(a33)(a34)(a35)(a36)(a37)(a38)(a39)
            (a40)(a41)(a42)(a43)(a44)(a45)(a46)(a47)(a48)(a49)
            )
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     generate_xinsu({
         "a00","a01","a02","a03","a04","a05","a06","a07","a08","a09",
@@ -2187,7 +2183,6 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_02 )
     auto current_active_votes = current_active_proposals * static_cast< int16_t > ( inits.size() );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == current_active_votes );
     
-    db->set_proposal_remove_threshold(20);
     auto threshold = db->get_proposal_remove_threshold();
     BOOST_REQUIRE( threshold == 20 );
     
@@ -2523,8 +2518,8 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_03 )
     BOOST_TEST_MESSAGE( "Testing: removing of all proposals/votes in one block using threshold = -1" );
     
     std::vector< initial_data > inits = generate_accounts( this, 200 );
-    FUND( TAIYI_TREASURY_ACCOUNT, ASSET( "5000000.000 YANG" ) );
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    FUND( TAIYI_DAO_ACCOUNT, ASSET( "5000000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     std::vector< account_name_type > xinsu_accounts;
     std::for_each(inits.begin(), inits.end(), [&](const initial_data& init){
@@ -2628,8 +2623,8 @@ BOOST_AUTO_TEST_CASE( executing_proposals )
     BOOST_TEST_MESSAGE( "Testing: ececuting a lot of proposals" );
     
     std::vector< initial_data > inits = generate_accounts( this, 1000 );
-    FUND( TAIYI_TREASURY_ACCOUNT, ASSET( "5000000.000 YANG" ) );
-    vest( TAIYI_INIT_SIMING_NAME, TAIYI_TREASURY_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    FUND( TAIYI_DAO_ACCOUNT, ASSET( "5000000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
     generate_block();
     std::vector< account_name_type > xinsu_accounts;
     std::for_each(inits.begin(), inits.end(), [&](const initial_data& init) {

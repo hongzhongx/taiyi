@@ -53,7 +53,7 @@ namespace taiyi { namespace chain {
         //reward to treasury
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + (100 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( creator.qi.amount.value >= used_qi, "Creator account does not have enough qi to create contract. need ${n}", ("n", used_qi) );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), creator, asset(used_qi, QI_SYMBOL));
         
         return void_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -100,7 +100,7 @@ namespace taiyi { namespace chain {
         size_t new_state_size = fc::raw::pack_size(contract->contract_ABI) + fc::raw::pack_size(code_bin_object.lua_code_b);
         int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE + new_state_size * TAIYI_USEMANA_STATE_BYTES_SCALE + (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE;
         FC_ASSERT( reviser->qi.amount.value >= used_qi, "reviser account does not have enough qi to revise contract." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), *reviser, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), *reviser, asset(used_qi, QI_SYMBOL));
         
         return logger_result(previous_version);
     } FC_CAPTURE_AND_RETHROW( (o) ) }
@@ -159,7 +159,7 @@ namespace taiyi { namespace chain {
         //reward to treasury
         used_qi = (50 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
         FC_ASSERT( caller->qi.amount.value >= used_qi, "Caller account does not have enough qi to call contract." );
-        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_TREASURY_ACCOUNT), *caller, asset(used_qi, QI_SYMBOL));
+        _db.reward_feigang(_db.get<account_object, by_name>(TAIYI_DAO_ACCOUNT), *caller, asset(used_qi, QI_SYMBOL));
 
         return worker.get_result();
     } FC_CAPTURE_AND_RETHROW( (o) ) }

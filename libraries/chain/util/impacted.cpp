@@ -295,7 +295,7 @@ namespace taiyi { namespace chain {
         
         void operator()(const proposal_execute_operation& op)
         {
-            _impacted.insert( TAIYI_TREASURY_ACCOUNT );
+            _impacted.insert( TAIYI_DAO_ACCOUNT );
         }
         
         void operator()( const create_proposal_operation& op )
