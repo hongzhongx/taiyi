@@ -303,12 +303,14 @@ namespace taiyi { namespace plugins { namespace chain {
     void chain_plugin::set_program_options(options_description& cli, options_description& cfg)
     {
         cfg.add_options()
+            ("proposal-remove-threshold", bpo::value<uint16_t>()->default_value( 200 ), "Maximum numbers of proposals/votes which can be removed in the same cycle")
             ("state-storage-dir", bpo::value<bfs::path>()->default_value("blockchain"), "the location of the chain state memory or database files (absolute path or relative to application data dir)")
             ("checkpoint,c", bpo::value<vector<string>>()->composing(), "Pairs of [BLOCK_NUM,BLOCK_ID] that should be enforced as checkpoints.")
             ("flush-state-interval", bpo::value<uint32_t>(), "flush state changes to disk every N blocks")
             ("memory-replay-indices", bpo::value<vector<string>>()->multitoken()->composing(), "Specify which indices should be in memory during replay")
             ;
         cli.add_options()
+            ("proposal-remove-threshold", bpo::value<uint16_t>()->default_value( 200 ), "Maximum numbers of proposals/votes which can be removed in the same cycle")
             ("replay-blockchain", bpo::bool_switch()->default_value(false), "clear chain database and replay all blocks" )
             ("force-open", bpo::bool_switch()->default_value(false), "force open the database, skipping the environment check" )
             ("resync-blockchain", bpo::bool_switch()->default_value(false), "clear chain database and block log" )
