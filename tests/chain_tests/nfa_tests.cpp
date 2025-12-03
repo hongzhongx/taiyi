@@ -33,8 +33,8 @@ using std::string;
 BOOST_FIXTURE_TEST_SUITE( nfa_tests, clean_database_fixture )
 
 const string s_code_nfa_basic = " \
-    function create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi) \
-        contract_helper:create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi) \
+    function create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi, is_sbt) \
+        contract_helper:create_nfa_symbol(symbol, describe, contract, max_count, min_equivalent_qi, is_sbt) \
     end                           \
     function change_nfa_symbol_authority(symbol, authority_account) \
         contract_helper:change_nfa_symbol_authority(symbol, authority_account) \
@@ -97,7 +97,8 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
         lua_string("test"),
         lua_string("contract.nfa.fail"),
         lua_int(100),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
 
     tx.operations.clear();
@@ -186,7 +187,8 @@ BOOST_AUTO_TEST_CASE( create_nfa_apply )
         lua_string("test"),
         lua_string("contract.nfa.base"),
         lua_int(10),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
         
     tx.operations.clear();
@@ -300,7 +302,8 @@ BOOST_AUTO_TEST_CASE( change_nfa_symbol_authority_apply )
         lua_string("test"),
         lua_string("contract.nfa.base"),
         lua_int(10),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
         
     tx.operations.clear();
@@ -432,7 +435,8 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
         lua_string("test"),
         lua_string("contract.nfa.base"),
         lua_int(100),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
         
     tx.operations.clear();
@@ -518,6 +522,117 @@ BOOST_AUTO_TEST_CASE( transfer_nfa_apply )
 
 } FC_LOG_AND_RETHROW() }
 
+BOOST_AUTO_TEST_CASE( transfer_sbt_nfa )
+{ try {
+    
+    BOOST_TEST_MESSAGE( "Testing: transfer_sbt_nfa" );
+
+    string nfa_init_lua = "function init_data() return {} end";
+
+    signed_transaction tx;
+    ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
+    generate_block();
+        
+    create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
+    op.owner = "bob";
+    op.name = "contract.nfa.base";
+    op.data = nfa_init_lua;
+    tx.operations.push_back( op );
+    
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, bob_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+    
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test"),
+        lua_string("contract.nfa.base"),
+        lua_int(100),
+        lua_int(0),
+        lua_bool(true)
+    };
+        
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( cop );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.test")
+    };
+
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( cop );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    validate_database();
+    
+    generate_block();
+
+    const auto& to1 = db->get<transaction_object, by_trx_id>(tx.id());
+    BOOST_REQUIRE( to1.operation_results.size() == 1 );
+    contract_result result = to1.operation_results[0].get<contract_result>();
+    BOOST_REQUIRE( result.contract_affecteds.size() == 2 );
+    nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
+    
+    BOOST_REQUIRE( affected.affected_account == "alice" );
+    BOOST_REQUIRE( affected.affected_item == 3 );
+    BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
+
+    const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
+    const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
+    const auto& ida = db->get<account_object, by_name>("alice").id;
+    BOOST_REQUIRE( nfa.creator_account == ida );
+    BOOST_REQUIRE( nfa.owner_account == ida );
+    BOOST_REQUIRE( nfa.symbol_id == nfa_symbol.id );
+    
+    BOOST_TEST_MESSAGE( "--- failure when transfer sbt nfa" );
+
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "transfer_nfa_to_account";
+    cop.value_list = {
+        lua_string("charlie"),
+        lua_int(nfa.id)
+    };
+            
+    tx.operations.clear();
+    tx.signatures.clear();
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    tx.operations.push_back( cop );
+    sign( tx, alice_private_key );
+    TAIYI_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception);
+
+} FC_LOG_AND_RETHROW() }
+
 BOOST_AUTO_TEST_CASE( action_nfa_apply )
 { try {
     
@@ -568,7 +683,8 @@ BOOST_AUTO_TEST_CASE( action_nfa_apply )
         lua_string("test"),
         lua_string("contract.nfa.base"),
         lua_int(100),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
         
     tx.operations.clear();
@@ -719,7 +835,8 @@ BOOST_AUTO_TEST_CASE( action_drops )
         lua_string("test"),
         lua_string("contract.nfa.base"),
         lua_int(3),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
                 
     tx.operations.clear();
@@ -866,7 +983,8 @@ BOOST_AUTO_TEST_CASE( heart_beat )
         lua_string("test"),
         lua_string("contract.nfa.base"),
         lua_int(3),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
                 
     tx.operations.clear();
@@ -1077,7 +1195,8 @@ BOOST_AUTO_TEST_CASE( inter_nfa_action_drops )
         lua_string("test"),
         lua_string("contract.nfa.caller"),
         lua_int(3),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
     tx.operations.push_back( cop );
 
@@ -1089,7 +1208,8 @@ BOOST_AUTO_TEST_CASE( inter_nfa_action_drops )
         lua_string("test"),
         lua_string("contract.nfa.called"),
         lua_int(3),
-        lua_int(0)
+        lua_int(0),
+        lua_bool(false)
     };
     tx.operations.push_back( cop );
 

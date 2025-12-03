@@ -231,7 +231,7 @@ namespace taiyi { namespace plugins { namespace database_api {
     
     struct api_nfa_symbol_object
     {
-        api_nfa_symbol_object( const nfa_symbol_object& o, const database& db ) : id(o.id), symbol(o.symbol), describe(o.describe), count(o.count), max_count(o.max_count), min_equivalent_qi(o.min_equivalent_qi)
+        api_nfa_symbol_object( const nfa_symbol_object& o, const database& db ) : id(o.id), symbol(o.symbol), describe(o.describe), count(o.count), max_count(o.max_count), min_equivalent_qi(o.min_equivalent_qi), is_sbt(o.is_sbt)
         {
             creator_account = db.get<account_object, by_id>(o.creator_account).name;
             authority_account = db.get<account_object, by_id>(o.authority_account).name;
@@ -250,6 +250,7 @@ namespace taiyi { namespace plugins { namespace database_api {
         uint64_t                    count;
         uint64_t                    max_count;
         uint64_t                    min_equivalent_qi;  //最低等效真气。材质总等效真气如果低于这个值被视为损坏
+        bool                        is_sbt;
     };
     
     struct api_nfa_object
@@ -474,7 +475,7 @@ FC_REFLECT_DERIVED( taiyi::plugins::database_api::api_signed_block_object, (taiy
 
 FC_REFLECT( taiyi::plugins::database_api::api_hardfork_property_object, (id)(processed_hardforks)(last_hardfork)(current_hardfork_version)(next_hardfork)(next_hardfork_time) )
 
-FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator_account)(authority_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
+FC_REFLECT(taiyi::plugins::database_api::api_nfa_symbol_object, (id)(id)(creator_account)(authority_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi)(is_sbt))
 
 FC_REFLECT(taiyi::plugins::database_api::api_nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol)(parent)(children)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_block)(gold)(food)(wood)(fabric)(herb)(material_gold)(material_food)(material_wood)(material_fabric)(material_herb)(five_phase))
 

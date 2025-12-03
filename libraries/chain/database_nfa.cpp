@@ -188,12 +188,12 @@ namespace taiyi { namespace chain {
     void database::create_basic_nfa_symbol_objects()
     {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
-        create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_XINSU_MARK, "心素标记", "contract.nfa.xinsumark", 10000, 0);
-        create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR, "默认的角色", "contract.actor.default", 1000000000, 1000000);
-        create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE, "默认的区域", "contract.zone.default", 1000000000, 10000000);
+        create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_XINSU_MARK, "心素标记", "contract.nfa.xinsumark", 10000, 0, true);
+        create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR, "默认的角色", "contract.actor.default", 1000000000, 1000000, false);
+        create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE, "默认的区域", "contract.zone.default", 1000000000, 10000000, false);
     }
     //=========================================================================
-    size_t database::create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi)
+    size_t database::create_nfa_symbol_object(const account_object& creator, const string& symbol, const string& describe, const string& default_contract, const uint64_t& max_count, const uint64_t& min_equivalent_qi, const bool& is_sbt)
     {
         const auto* nfa_symbol = find<nfa_symbol_object, by_symbol>(symbol);
         FC_ASSERT(nfa_symbol == nullptr, "NFA symbol named \"${n}\" is already exist.", ("n", symbol));
@@ -212,6 +212,7 @@ namespace taiyi { namespace chain {
             obj.count = 0;
             obj.max_count = max_count;
             obj.min_equivalent_qi = min_equivalent_qi;
+            obj.is_sbt = is_sbt;
         });
         
         return TAIYI_NFA_SYMBOL_OBJ_STATE_BYTES; //fix size to avoid fc::raw::pack_size(nfa_symbol_obj) changing in future structure defination;

@@ -33,6 +33,7 @@ namespace taiyi { namespace chain {
         uint64_t                    count = 0;
         uint64_t                    max_count = 0;
         uint64_t                    min_equivalent_qi = 0;  //最低等效真气。材质总等效真气如果低于这个值被视为损坏
+        bool                        is_sbt = false; //是否是灵魂绑定的 Soulbound Token (SBT) 
     };
 
     struct by_symbol;
@@ -182,7 +183,7 @@ namespace mira {
 
 } // mira
 
-FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi))
+FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi)(is_sbt))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
 FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_block))

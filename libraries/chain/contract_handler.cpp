@@ -472,6 +472,9 @@ namespace taiyi { namespace chain {
             const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
             FC_ASSERT(nfa != nullptr, "NFA with id ${i} not found", ("i", nfa_id));
 
+            const auto& symbol = db.get<nfa_symbol_object, by_id>(nfa->symbol_id);
+            FC_ASSERT(symbol.is_sbt == false, "SBT NFA #${n} can not be transfered between accounts", ("n", nfa_id));
+
             const auto* parent_nfa = db.find<nfa_object, by_id>(nfa->parent);
             FC_ASSERT(parent_nfa == nullptr, "Can not transfer child NFA, only can transfer root NFA");
             
@@ -630,7 +633,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_handler::create_nfa_symbol(const string& symbol, const string& describe, const string& default_contract, uint64_t max_count, uint64_t min_equivalent_qi)
+    void contract_handler::create_nfa_symbol(const string& symbol, const string& describe, const string& default_contract, uint64_t max_count, uint64_t min_equivalent_qi, bool is_sbt)
     {
         try
         {
@@ -647,10 +650,10 @@ namespace taiyi { namespace chain {
             FC_ASSERT(is_valid_contract_name(default_contract), "contract name ${n} is invalid", ("n", default_contract));
             
             const auto& creator = caller;
-            operation vop = nfa_symbol_create_operation( creator.name, symbol, describe, default_contract, max_count, min_equivalent_qi );
+            operation vop = nfa_symbol_create_operation( creator.name, symbol, describe, default_contract, max_count, min_equivalent_qi, is_sbt );
             db.pre_push_virtual_operation( vop );
 
-            size_t new_state_size = db.create_nfa_symbol_object(creator, symbol, describe, default_contract, max_count, min_equivalent_qi);
+            size_t new_state_size = db.create_nfa_symbol_object(creator, symbol, describe, default_contract, max_count, min_equivalent_qi, is_sbt);
             
             db.post_push_virtual_operation( vop );
             
