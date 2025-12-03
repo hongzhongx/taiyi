@@ -12,8 +12,8 @@
 #include <chain/zone_objects.hpp>
 #include <chain/actor_objects.hpp>
 #include <chain/cultivation_objects.hpp>
-#include <chain/tps_objects.hpp>
-#include <chain/tps_helper.hpp>
+#include <chain/proposal_objects.hpp>
+#include <chain/proposal_helper.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -2704,13 +2704,13 @@ namespace taiyi { namespace chain {
             operation vop = remove_proposal_operation(caller.name, pids);
             db.pre_push_virtual_operation( vop );
 
-            tps_helper::remove_proposals(db, pids, caller.id );
+            proposal_helper::remove_proposals(db, pids, caller.id );
 
             /*
-                Because of performance removing proposals are restricted due to the `tps_remove_threshold` threshold.
+                Because of performance removing proposals are restricted due to the `proposal_remove_threshold` threshold.
                 Therefore all proposals are marked with flag `removed` and `end_date` is moved beyond 'head_time + TAIYI_PROPOSAL_MAINTENANCE_CLEANUP`
-                flag `removed` - it's information for 'tps_api' plugin
-                moving `end_date` - triggers the algorithm in `tps_processor::remove_proposals`
+                flag `removed` - it's information for api plugins
+                moving `end_date` - triggers the algorithm in `proposal_processor::remove_proposals`
             */
             const auto& pidx = db.get_index<proposal_index>().indices().get<by_id >();
             auto head_time = db.head_block_time();

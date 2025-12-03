@@ -7,7 +7,7 @@
 #include <chain/taiyi_fwd.hpp>
 #include <chain/taiyi_objects.hpp>
 #include <chain/account_object.hpp>
-#include <chain/tps_objects.hpp>
+#include <chain/proposal_objects.hpp>
 
 #include <plugins/account_history/account_history_objects.hpp>
 #include <plugins/account_history/account_history_plugin.hpp>
@@ -40,7 +40,7 @@ namespace taiyi { namespace chain {
     using std::cout;
     using std::cerr;
     
-    const string s_code_tps_basic = "   \
+    const string s_code_proposal_basic = "   \
         function create_proposal(contract_name, function_name, params, subject, end_time) \
             return contract_helper:create_proposal(contract_name, function_name, params, subject, end_time) \
         end                             \
@@ -116,8 +116,8 @@ namespace taiyi { namespace chain {
             create_contract_operation op;
             
             op.owner = TAIYI_INIT_SIMING_NAME;
-            op.name = "contract.tps.basic";
-            op.data = s_code_tps_basic;
+            op.name = "contract.proposal.basic";
+            op.data = s_code_proposal_basic;
             tx.operations.push_back( op );
             
             op.owner = TAIYI_INIT_SIMING_NAME;
@@ -225,7 +225,7 @@ namespace taiyi { namespace chain {
 
         call_contract_function_operation cop;
         cop.caller = creator;
-        cop.contract_name = "contract.tps.basic";
+        cop.contract_name = "contract.proposal.basic";
         cop.function_name = "create_proposal";
         cop.value_list = {
             lua_string(contract_name),
@@ -259,7 +259,7 @@ namespace taiyi { namespace chain {
         
         call_contract_function_operation cop;
         cop.caller = voter;
-        cop.contract_name = "contract.tps.basic";
+        cop.contract_name = "contract.proposal.basic";
         cop.function_name = "update_proposal_votes";
         cop.value_list = {
             lua_table(params),
@@ -671,17 +671,17 @@ namespace taiyi { namespace chain {
         TAIYI_REQUIRE_THROW( db->push_transaction( tx, database::skip_transaction_dupe_check ), fc::assert_exception );
     }
     
-    tps_database_fixture::tps_database_fixture() : clean_database_fixture()
+    proposal_database_fixture::proposal_database_fixture() : clean_database_fixture()
     {
     }
     
-    bool tps_database_fixture::exist_proposal( int64_t id )
+    bool proposal_database_fixture::exist_proposal( int64_t id )
     {
         const auto& proposal_idx = db->get_index< proposal_index >().indices(). template get< by_id >();
         return proposal_idx.find( id ) != proposal_idx.end();
     }
     
-    const proposal_object* tps_database_fixture::find_proposal( int64_t id )
+    const proposal_object* proposal_database_fixture::find_proposal( int64_t id )
     {
         const auto& proposal_idx = db->get_index< proposal_index >().indices(). template get< by_id >();
         auto found = proposal_idx.find( id );
@@ -692,7 +692,7 @@ namespace taiyi { namespace chain {
             return nullptr;
     }
 
-    void tps_database_fixture::remove_proposal(const account_name_type& deleter, const std::vector<int64_t>& proposal_id, const fc::ecc::private_key& key)
+    void proposal_database_fixture::remove_proposal(const account_name_type& deleter, const std::vector<int64_t>& proposal_id, const fc::ecc::private_key& key)
     {
         lua_map params;
         for (size_t i=0; i<proposal_id.size(); i++)
@@ -700,7 +700,7 @@ namespace taiyi { namespace chain {
         
         call_contract_function_operation cop;
         cop.caller = deleter;
-        cop.contract_name = "contract.tps.basic";
+        cop.contract_name = "contract.proposal.basic";
         cop.function_name = "remove_proposals";
         cop.value_list = {
             lua_table(params)
@@ -715,7 +715,7 @@ namespace taiyi { namespace chain {
         trx.operations.clear();
     }
 
-    bool tps_database_fixture::find_vote_for_proposal(const std::string& user, int64_t id)
+    bool proposal_database_fixture::find_vote_for_proposal(const std::string& user, int64_t id)
     {
         const auto& proposal_vote_idx = db->get_index< proposal_vote_index >().indices(). template get< by_voter_proposal >();
         const auto& account = db->get_account(user);

@@ -1,10 +1,10 @@
 #include <chain/taiyi_fwd.hpp>
 
-#include <chain/tps_helper.hpp>
+#include <chain/proposal_helper.hpp>
 
 namespace taiyi { namespace chain {
     
-    void tps_helper::remove_proposals(database& db, const flat_set<int64_t>& proposal_ids, const account_id_type& proposal_owner)
+    void proposal_helper::remove_proposals(database& db, const flat_set<int64_t>& proposal_ids, const account_id_type& proposal_owner)
     {
         if(proposal_ids.empty())
             return;
@@ -15,7 +15,7 @@ namespace taiyi { namespace chain {
         auto& votesIndex = db.get_mutable_index<proposal_vote_index>();
         auto& byVoterIdx = votesIndex.indices().get<by_proposal_voter>();
         
-        tps_removing_reducer obj_perf( db.get_tps_remove_threshold() );
+        proposal_removing_reducer obj_perf( db.get_proposal_remove_threshold() );
         
         for(auto id : proposal_ids)
         {

@@ -1,16 +1,16 @@
 #pragma once
 
-#include <chain/tps_objects.hpp>
+#include <chain/proposal_objects.hpp>
 #include <chain/notifications.hpp>
 #include <chain/database.hpp>
 #include <chain/index.hpp>
 #include <chain/account_object.hpp>
 
-#include <chain/tps_helper.hpp>
+#include <chain/proposal_helper.hpp>
 
 namespace taiyi { namespace chain {
     
-    class tps_processor
+    class proposal_processor
     {
     public:
         
@@ -41,7 +41,7 @@ namespace taiyi { namespace chain {
         void process_proposals( const block_notification& note );
         
     public:
-        tps_processor(chain::database& _db) : db(_db){}
+        proposal_processor(chain::database& _db) : db(_db){}
         
         const static std::string& get_removing_name();
         const static std::string& get_calculating_name();

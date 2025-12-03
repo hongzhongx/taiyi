@@ -44,8 +44,8 @@ add_library( taiyi_chain
 
              database_cultivation.cpp
 
-             tps_processor.cpp
-             tps_helper.cpp
+             proposal_processor.cpp
+             proposal_helper.cpp
 
              util/impacted.cpp
              util/advanced_benchmark_dumper.cpp

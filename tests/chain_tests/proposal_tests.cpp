@@ -9,8 +9,8 @@
 #include <chain/database_exceptions.hpp>
 
 #include <chain/taiyi_objects.hpp>
-#include <chain/tps_objects.hpp>
-#include <chain/tps_processor.hpp>
+#include <chain/proposal_objects.hpp>
+#include <chain/proposal_processor.hpp>
 
 #include <chain/lua_context.hpp>
 
@@ -97,7 +97,7 @@ const string s_code_proposal_test = " \
     end                             \
 ";
 
-BOOST_FIXTURE_TEST_SUITE( proposal_tests, tps_database_fixture )
+BOOST_FIXTURE_TEST_SUITE( proposal_tests, proposal_database_fixture )
 
 BOOST_AUTO_TEST_CASE( generating_proposal )
 { try {
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE( proposal_object_apply )
 
     call_contract_function_operation cop;
     cop.caller = creator;
-    cop.contract_name = "contract.tps.basic";
+    cop.contract_name = "contract.proposal.basic";
     cop.function_name = "create_proposal";
     cop.value_list = {
         lua_string(contract_name),
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE( proposal_vote_object_apply )
     auto voter_01_key = carol_private_key;
     
     call_contract_function_operation cop;
-    cop.contract_name = "contract.tps.basic";
+    cop.contract_name = "contract.proposal.basic";
     cop.function_name = "update_proposal_votes";
 
     const auto& proposal_vote_idx = db->get_index< proposal_vote_index >().indices().get< by_voter_proposal >();
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE( proposal_vote_object_01_apply )
     auto voter_01_key = carol_private_key;
     
     call_contract_function_operation cop;
-    cop.contract_name = "contract.tps.basic";
+    cop.contract_name = "contract.proposal.basic";
     cop.function_name = "update_proposal_votes";
 
     const auto& proposal_vote_idx = db->get_index< proposal_vote_index >().indices().get< by_voter_proposal >();
@@ -1660,8 +1660,8 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance_01 )
     
     generate_blocks( start_time + ( start_time_shift + end_time_shift - block_interval ) );
     
-    db->set_tps_remove_threshold(20);
-    auto threshold = db->get_tps_remove_threshold();
+    db->set_proposal_remove_threshold(20);
+    auto threshold = db->get_proposal_remove_threshold();
     auto nr_stages = current_active_proposals / threshold;
     
     for( auto i = 0; i < nr_stages; ++i )
@@ -1757,8 +1757,8 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance_02 )
     
     generate_blocks( start_time + ( start_time_shift + end_time_shift - block_interval ) );
     
-    db->set_tps_remove_threshold(2);
-    auto threshold = db->get_tps_remove_threshold();
+    db->set_proposal_remove_threshold(2);
+    auto threshold = db->get_proposal_remove_threshold();
     auto current_active_anything = current_active_proposals + current_active_votes;
     auto nr_stages = current_active_anything / threshold;
     
@@ -1844,8 +1844,8 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold )
     auto current_active_votes = current_active_proposals * static_cast< int16_t > ( inits.size() );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == current_active_votes );
     
-    db->set_tps_remove_threshold(20);
-    auto threshold = db->get_tps_remove_threshold();
+    db->set_proposal_remove_threshold(20);
+    auto threshold = db->get_proposal_remove_threshold();
     BOOST_REQUIRE( threshold == 20 );
     
     vector< int64_t > _proposals_id( proposals_id.begin(), proposals_id.end() );
@@ -1944,8 +1944,8 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_01 )
     auto current_active_votes = current_active_proposals * static_cast< int16_t > ( inits.size() );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == current_active_votes );
     
-    db->set_tps_remove_threshold(20);
-    auto threshold = db->get_tps_remove_threshold();
+    db->set_proposal_remove_threshold(20);
+    auto threshold = db->get_proposal_remove_threshold();
     BOOST_REQUIRE( threshold == 20 );
     
     /*
@@ -2187,8 +2187,8 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_02 )
     auto current_active_votes = current_active_proposals * static_cast< int16_t > ( inits.size() );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == current_active_votes );
     
-    db->set_tps_remove_threshold(20);
-    auto threshold = db->get_tps_remove_threshold();
+    db->set_proposal_remove_threshold(20);
+    auto threshold = db->get_proposal_remove_threshold();
     BOOST_REQUIRE( threshold == 20 );
     
     /*
@@ -2424,7 +2424,7 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_02 )
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE( proposal_tests_performance, tps_database_fixture_performance )
+BOOST_FIXTURE_TEST_SUITE( proposal_tests_performance, proposal_database_fixture_performance )
 
 int32_t get_time( database& db, const std::string& name )
 {
@@ -2441,7 +2441,7 @@ int32_t get_time( database& db, const std::string& name )
      {
      "total_time": 1421,
      "items": [{
-     "op_name": "tps_processor",
+     "op_name": "proposal_processor",
      "time": 80
      },...
      */
@@ -2598,7 +2598,7 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_03 )
     auto current_active_votes = current_active_proposals * static_cast< int16_t > ( inits.size() );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == current_active_votes );
     
-    auto threshold = db->get_tps_remove_threshold();
+    auto threshold = db->get_proposal_remove_threshold();
     BOOST_REQUIRE( threshold == -1 );
     
     generate_blocks( start_time + fc::seconds( TAIYI_PROPOSAL_MAINTENANCE_CLEANUP ) );
@@ -2611,7 +2611,7 @@ BOOST_AUTO_TEST_CASE( proposals_removing_with_threshold_03 )
     BOOST_REQUIRE( calc_proposals( proposal_idx, proposals_id ) == 0 );
     BOOST_REQUIRE( calc_votes( proposal_vote_idx, proposals_id ) == 0 );
     
-    int32_t benchmark_time = get_time( *db, tps_processor::get_removing_name() );
+    int32_t benchmark_time = get_time( *db, proposal_processor::get_removing_name() );
     idump( (benchmark_time) );
     BOOST_REQUIRE( benchmark_time == -1 || benchmark_time < 400 );
     

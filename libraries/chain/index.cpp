@@ -6,7 +6,7 @@
 #include <chain/account_object.hpp>
 #include <chain/transaction_object.hpp>
 #include <chain/siming_objects.hpp>
-#include <chain/tps_objects.hpp>
+#include <chain/proposal_objects.hpp>
 
 namespace taiyi { namespace chain {
 

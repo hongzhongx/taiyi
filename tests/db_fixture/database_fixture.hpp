@@ -265,10 +265,10 @@ namespace taiyi { namespace chain {
         fc::path _chain_dir;
     };
     
-    struct tps_database_fixture : public clean_database_fixture
+    struct proposal_database_fixture : public clean_database_fixture
     {
-        tps_database_fixture();
-        virtual ~tps_database_fixture() {}
+        proposal_database_fixture();
+        virtual ~proposal_database_fixture() {}
         
         bool exist_proposal(int64_t id);
         const proposal_object* find_proposal(int64_t id);
@@ -276,12 +276,12 @@ namespace taiyi { namespace chain {
         bool find_vote_for_proposal(const std::string& user, int64_t id);
     };
     
-    struct tps_database_fixture_performance : public tps_database_fixture
+    struct proposal_database_fixture_performance : public proposal_database_fixture
     {
-        tps_database_fixture_performance() : tps_database_fixture()
+        proposal_database_fixture_performance() : proposal_database_fixture()
         {
             db->get_benchmark_dumper().set_enabled( true );
-            db->set_tps_remove_threshold( -1 );
+            db->set_proposal_remove_threshold( -1 );
         }
     };
     

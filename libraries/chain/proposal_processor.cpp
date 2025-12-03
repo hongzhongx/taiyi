@@ -7,7 +7,7 @@
 
 #include <chain/lua_context.hpp>
 #include <chain/contract_worker.hpp>
-#include <chain/tps_processor.hpp>
+#include <chain/proposal_processor.hpp>
 
 #include <lua.hpp>
 
@@ -15,15 +15,15 @@
 
 namespace taiyi { namespace chain {
         
-    const std::string tps_processor::removing_name = "tps_processor_remove";
-    const std::string tps_processor::calculating_name = "tps_processor_calculate";
+    const std::string proposal_processor::removing_name = "proposal_processor_remove";
+    const std::string proposal_processor::calculating_name = "proposal_processor_calculate";
     
-    bool tps_processor::is_maintenance_period(const time_point_sec& head_time) const
+    bool proposal_processor::is_maintenance_period(const time_point_sec& head_time) const
     {
         return db.get_dynamic_global_properties().next_maintenance_time <= head_time;
     }
     //=========================================================================
-    void tps_processor::remove_proposals(const time_point_sec& head_time)
+    void proposal_processor::remove_proposals(const time_point_sec& head_time)
     {
         auto& proposalIndex = db.get_mutable_index< proposal_index >();
         auto& byEndDateIdx = proposalIndex.indices().get< by_end_date >();
@@ -34,17 +34,17 @@ namespace taiyi { namespace chain {
         auto found = byEndDateIdx.upper_bound( head_time );
         auto itr = byEndDateIdx.begin();
         
-        tps_removing_reducer obj_perf( db.get_tps_remove_threshold() );
+        proposal_removing_reducer obj_perf( db.get_proposal_remove_threshold() );
         
         while( itr != found )
         {
-            itr = tps_helper::remove_proposal<by_end_date>(itr, proposalIndex, votesIndex, byVoterIdx, obj_perf);
+            itr = proposal_helper::remove_proposal<by_end_date>(itr, proposalIndex, votesIndex, byVoterIdx, obj_perf);
             if(obj_perf.done)
                 break;
         }
     }
     //=========================================================================
-    void tps_processor::find_active_proposals(const time_point_sec& head_time, t_proposals& proposals)
+    void proposal_processor::find_active_proposals(const time_point_sec& head_time, t_proposals& proposals)
     {
         const auto& pidx = db.get_index<proposal_index>().indices().get< by_end_date >();
         std::for_each(pidx.lower_bound(head_time), pidx.end(), [&](auto& proposal) {
@@ -53,7 +53,7 @@ namespace taiyi { namespace chain {
         });
     }
     //=========================================================================
-    uint64_t tps_processor::calculate_votes(const proposal_id_type& id)
+    uint64_t proposal_processor::calculate_votes(const proposal_id_type& id)
     {
         uint64_t ret = 0;
         
@@ -71,7 +71,7 @@ namespace taiyi { namespace chain {
         return ret;
     }
     //=========================================================================
-    void tps_processor::calculate_votes(const t_proposals& proposals)
+    void proposal_processor::calculate_votes(const t_proposals& proposals)
     {
         for( auto& item : proposals )
         {
@@ -84,7 +84,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
-    void tps_processor::filter_by_votes(t_proposals& proposals)
+    void proposal_processor::filter_by_votes(t_proposals& proposals)
     {
         const auto& props = db.get_dynamic_global_properties();
         uint32_t votes_threshold = std::min<uint32_t>(props.xinsu_count, 5);
@@ -94,14 +94,14 @@ namespace taiyi { namespace chain {
         }), proposals.end());
     }
     //=========================================================================
-    void tps_processor::update_settings(const time_point_sec& head_time)
+    void proposal_processor::update_settings(const time_point_sec& head_time)
     {
         db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& _dgpo) {
             _dgpo.next_maintenance_time = head_time + fc::seconds( TAIYI_PROPOSAL_MAINTENANCE_PERIOD );
         });
     }
     //=========================================================================
-    void tps_processor::execute_proposals(const time_point_sec& head_time, const t_proposals& proposals)
+    void proposal_processor::execute_proposals(const time_point_sec& head_time, const t_proposals& proposals)
     {
         auto processing = [this](const proposal_object& _item) -> bool {
 
@@ -185,10 +185,10 @@ namespace taiyi { namespace chain {
             
             if( processing(_item) ) {
                 /*
-                 Because of performance removing proposals are restricted due to the `tps_remove_threshold` threshold.
+                 Because of performance removing proposals are restricted due to the `proposal_remove_threshold` threshold.
                  Therefore all proposals are marked with flag `removed` and `end_date` is moved beyond 'head_time + TAIYI_PROPOSAL_MAINTENANCE_CLEANUP`
-                 flag `removed` - it's information for 'tps_api' plugin
-                 moving `end_date` - triggers the algorithm in `tps_processor::remove_proposals`
+                 flag `removed` - it's information for api plugins
+                 moving `end_date` - triggers the algorithm in `proposal_processor::remove_proposals`
                  */
                 db.modify(_item, [&](proposal_object& obj) {
                     obj.removed = true;
@@ -198,7 +198,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=========================================================================
-    void tps_processor::remove_old_proposals(const block_notification& note)
+    void proposal_processor::remove_old_proposals(const block_notification& note)
     {
         auto head_time = note.block.timestamp;
         
@@ -208,10 +208,10 @@ namespace taiyi { namespace chain {
         remove_proposals(head_time);
         
         if(db.get_benchmark_dumper().is_enabled())
-            db.get_benchmark_dumper().end(tps_processor::removing_name);
+            db.get_benchmark_dumper().end(proposal_processor::removing_name);
     }
     //=========================================================================
-    void tps_processor::process_proposals(const block_notification& note)
+    void proposal_processor::process_proposals(const block_notification& note)
     {
         auto head_time = note.block.timestamp;
         
@@ -229,7 +229,7 @@ namespace taiyi { namespace chain {
         if(active_proposals.empty())
         {
             if(db.get_benchmark_dumper().is_enabled())
-                db.get_benchmark_dumper().end(tps_processor::calculating_name);
+                db.get_benchmark_dumper().end(proposal_processor::calculating_name);
             
             //Set `new maintenance time`
             update_settings(head_time);
@@ -249,20 +249,20 @@ namespace taiyi { namespace chain {
         update_settings(head_time);
         
         if(db.get_benchmark_dumper().is_enabled())
-            db.get_benchmark_dumper().end(tps_processor::calculating_name);
+            db.get_benchmark_dumper().end(proposal_processor::calculating_name);
     }
     //=========================================================================
-    const std::string& tps_processor::get_removing_name()
+    const std::string& proposal_processor::get_removing_name()
     {
         return removing_name;
     }
     //=========================================================================
-    const std::string& tps_processor::get_calculating_name()
+    const std::string& proposal_processor::get_calculating_name()
     {
         return calculating_name;
     }
     //=========================================================================
-    void tps_processor::run(const block_notification& note)
+    void proposal_processor::run(const block_notification& note)
     {
         remove_old_proposals(note);
         process_proposals(note);

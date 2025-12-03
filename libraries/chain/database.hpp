@@ -506,8 +506,8 @@ namespace taiyi { namespace chain {
         const signed_transaction* get_current_trx_ptr() const { return _current_trx; }
         uint16_t get_current_op_in_trx() const { return _current_op_in_trx; }
 
-        int16_t get_tps_remove_threshold() const { return _tps_remove_threshold; }
-        void set_tps_remove_threshold( int16_t val ) { _tps_remove_threshold = val; }
+        int16_t get_proposal_remove_threshold() const { return _proposal_remove_threshold; }
+        void set_proposal_remove_threshold( int16_t val ) { _proposal_remove_threshold = val; }
 
         util::advanced_benchmark_dumper& get_benchmark_dumper() { return _benchmark_dumper; }
 
@@ -541,7 +541,7 @@ namespace taiyi { namespace chain {
         uint32_t                      _flush_blocks = 0;
         uint32_t                      _next_flush_block = 0;
         
-        int16_t                       _tps_remove_threshold = -1;
+        int16_t                       _proposal_remove_threshold = -1;
 
         flat_map< custom_id_type, std::shared_ptr< custom_operation_interpreter > >   _custom_operation_interpreters;
 

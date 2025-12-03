@@ -19,7 +19,7 @@
 #include <chain/nfa_objects.hpp>
 #include <chain/siming_objects.hpp>
 #include <chain/siming_schedule.hpp>
-#include <chain/tps_processor.hpp>
+#include <chain/proposal_processor.hpp>
 
 #include <chain/util/uint256.hpp>
 
@@ -2763,8 +2763,8 @@ namespace taiyi { namespace chain {
     
     void database::process_proposals(const block_notification& note)
     {
-        tps_processor tps(*this);
-        tps.run(note);
+        proposal_processor ps(*this);
+        ps.run(note);
     }
         
 } } //taiyi::chain

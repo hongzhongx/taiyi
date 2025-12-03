@@ -9,6 +9,7 @@
 namespace taiyi { namespace chain {
     
     using protocol::asset;
+    using protocol::lua_types;
 
     class proposal_object : public object< proposal_object_type, proposal_object >
     {
@@ -29,7 +30,7 @@ namespace taiyi { namespace chain {
 
         std::string             contract_name;  // 执行函数的合约名
         std::string             function_name;  // 执行的目标函数名
-        std::vector<protocol::lua_types>  value_list;     // 执行函数的参数列表
+        std::vector<lua_types>  value_list;     // 执行函数的参数列表
         
         time_point_sec          end_date;       // end_date (when the proposal expires and can no longer valid)
         std::string             subject;        // subject (a very brief description or title for the proposal)
