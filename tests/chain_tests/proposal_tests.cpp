@@ -183,27 +183,23 @@ BOOST_AUTO_TEST_CASE( generating_xinsu )
 
     auto creator = TAIYI_INIT_SIMING_NAME;
     auto receiver = "bob";
+    auto voter = TAIYI_INIT_SIMING_NAME;
     
-    auto end_date = db->head_block_time() + fc::days( 2 );
-        
-    auto voter_01 = TAIYI_INIT_SIMING_NAME;
-    //=====================preparing=====================
-    
-    //Needed basic operations
-    lua_map params;
-    params[lua_key(lua_int(1))] = lua_string(receiver);
-    int64_t id_proposal_00 = create_proposal( creator, "contract.xinsu.sample", "grant_xinsu", params, "subject1", end_date, init_account_priv_key );
-    generate_blocks( 1 );
-    
-    vote_proposal( voter_01, { id_proposal_00 }, true/*approve*/, init_account_priv_key );
-    generate_blocks( 1 );
-            
-    const account_object& _receiver = db->get_account(receiver);
-    const proposal_object* _proposal = db->find<proposal_object, by_id>(id_proposal_00);
-    BOOST_REQUIRE( _proposal != nullptr );
-
     {
         BOOST_TEST_MESSAGE( "---Granting---" );
+
+        auto end_date = db->head_block_time() + fc::days( 2 );
+        lua_map params;
+        params[lua_key(lua_int(1))] = lua_string(receiver);
+        int64_t id_proposal = create_proposal( creator, "contract.xinsu.sample", "grant_xinsu", params, "subject1", end_date, init_account_priv_key );
+        generate_blocks( 1 );
+    
+        vote_proposal( voter, { id_proposal }, true/*approve*/, init_account_priv_key );
+        generate_blocks( 1 );
+            
+        const account_object& _receiver = db->get_account(receiver);
+        const proposal_object* _proposal = db->find<proposal_object, by_id>(id_proposal);
+        BOOST_REQUIRE( _proposal != nullptr );
                 
         auto next_block = get_nr_blocks_until_maintenance_block();
         generate_blocks( next_block - 1 );
@@ -211,7 +207,30 @@ BOOST_AUTO_TEST_CASE( generating_xinsu )
 
         BOOST_REQUIRE( db->is_xinsu(_receiver) == true );
     }
+
+    {
+        BOOST_TEST_MESSAGE( "---Revoking---" );
+
+        auto end_date = db->head_block_time() + fc::days( 2 );
+        lua_map params;
+        params[lua_key(lua_int(1))] = lua_string(receiver);
+        int64_t id_proposal = create_proposal( creator, "contract.xinsu.sample", "revoke_xinsu", params, "subject2", end_date, init_account_priv_key );
+        generate_blocks( 1 );
     
+        vote_proposal( voter, { id_proposal }, true/*approve*/, init_account_priv_key );
+        generate_blocks( 1 );
+            
+        const account_object& _receiver = db->get_account(receiver);
+        const proposal_object* _proposal = db->find<proposal_object, by_id>(id_proposal);
+        BOOST_REQUIRE( _proposal != nullptr );
+                
+        auto next_block = get_nr_blocks_until_maintenance_block();
+        generate_blocks( next_block - 1 );
+        generate_blocks( 1 );
+
+        BOOST_REQUIRE( db->is_xinsu(_receiver) == false );
+    }
+
     validate_database();
     
 } FC_LOG_AND_RETHROW() }
