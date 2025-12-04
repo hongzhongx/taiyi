@@ -439,6 +439,7 @@ namespace taiyi { namespace chain {
         int get_nfa_five_phase(const nfa_object& nfa) const;
         bool is_nfa_material_equivalent_qi_insufficient(const nfa_object& nfa) const;
         void consume_nfa_material_random(const nfa_object& nfa, const uint32_t& seed);
+        bool has_nfa_with_symbol(const account_object& account, const nfa_symbol_id_type& symbol_id) const;
         
         // xinsu
         bool is_xinsu(const account_object& account) const;
@@ -623,6 +624,11 @@ namespace taiyi { namespace chain {
           * 用于在执行合约时临时判断合约执行发起actor所在的zone
          */
         zone_id_type _contract_run_zone = zone_id_type::max();
+        
+        /**
+          * 用于快速访问心素符号的缓存变量
+         */
+        nfa_symbol_id_type _xinsu_mark_nfa_symbol_id = nfa_symbol_id_type::max();
     };
 
     struct reindex_notification

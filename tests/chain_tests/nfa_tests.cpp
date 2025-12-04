@@ -39,6 +39,9 @@ const string s_code_nfa_basic = " \
     function change_nfa_symbol_authority(symbol, authority_account) \
         contract_helper:change_nfa_symbol_authority(symbol, authority_account) \
     end                           \
+    function change_nfa_symbol_authority_nfa_symbol(symbol, authority_symbol_name) \
+        contract_helper:change_nfa_symbol_authority_nfa_symbol(symbol, authority_symbol_name) \
+    end                           \
     function create_nfa_to_me(symbol) \
         contract_helper:create_nfa_to_account(contract_base_info.caller, symbol, {}) \
     end                           \
@@ -82,6 +85,8 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, bob_private_key );
     db->push_transaction( tx, 0 );
+    tx.operations.clear();
+    tx.signatures.clear();
     validate_database();
     
     generate_block();
@@ -101,38 +106,38 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
         lua_bool(false)
     };
 
-    tx.operations.clear();
-    tx.signatures.clear();
     tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cop );
     sign( tx, alice_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+    tx.operations.clear();
+    tx.signatures.clear();
 
     BOOST_TEST_MESSAGE( "--- Test failure when invalid symbol" );
 
     cop.value_list[0] = lua_string("nft.test");
     cop.value_list[2] = lua_string("contract.nfa.good");
-        
-    tx.operations.clear();
-    tx.signatures.clear();
-    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cop );
+
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, alice_private_key );
     BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+    tx.operations.clear();
+    tx.signatures.clear();
 
     BOOST_TEST_MESSAGE( "--- Test create nfa symbol" );
 
     const auto& contract_base = db->get<contract_object, by_name>("contract.nfa.good");
 
     cop.value_list[0] = lua_string("nfa.test");
-        
-    tx.operations.clear();
-    tx.signatures.clear();
-    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     tx.operations.push_back( cop );
+
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
     sign( tx, alice_private_key );
     db->push_transaction( tx, 0 );
-    
+    tx.operations.clear();
+    tx.signatures.clear();
+
     const auto& nfa_symbol = db->get<nfa_symbol_object, by_symbol>("nfa.test");
     const auto& aac = db->get<account_object, by_name>("alice");
     BOOST_REQUIRE( nfa_symbol.creator_account == aac.id );
@@ -140,7 +145,18 @@ BOOST_AUTO_TEST_CASE( create_nfa_symbol_apply )
     BOOST_REQUIRE( nfa_symbol.symbol == "nfa.test" );
     BOOST_REQUIRE( nfa_symbol.describe == "test" );
     BOOST_REQUIRE( nfa_symbol.default_contract == contract_base.id );
+    
+    BOOST_TEST_MESSAGE( "--- Test failure when create symbol with same contract" );
 
+    cop.value_list[0] = lua_string("nfa.test2");
+    tx.operations.push_back( cop );
+
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    BOOST_REQUIRE_THROW(db->push_transaction( tx, 0 ), fc::exception );
+    tx.operations.clear();
+    tx.signatures.clear();
+    
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( create_nfa_apply )
@@ -389,6 +405,212 @@ BOOST_AUTO_TEST_CASE( change_nfa_symbol_authority_apply )
     BOOST_REQUIRE( nfa.owner_account == charlie_obj->id );
     BOOST_REQUIRE( nfa.symbol_id == symbol_obj->id );
 
+} FC_LOG_AND_RETHROW() }
+
+BOOST_AUTO_TEST_CASE( change_nfa_symbol_authority_nfa_symbol_apply )
+{ try {
+    
+    BOOST_TEST_MESSAGE( "Testing: change_nfa_symbol_authority_nfa_symbol_apply" );
+
+    string nfa_init_lua = "function init_data() return {} end";
+
+    signed_transaction tx;
+    ACTORS( (alice)(bob)(charlie) )
+    vest( TAIYI_INIT_SIMING_NAME, TAIYI_DAO_ACCOUNT, ASSET( "1000.000 YANG" ) ); //执行提案需要真气
+    generate_xinsu({"alice","bob"}); //已经创建了2个心素令牌nfa
+    vest( TAIYI_INIT_SIMING_NAME, "alice", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "bob", ASSET( "1000.000 YANG" ) );
+    vest( TAIYI_INIT_SIMING_NAME, "charlie", ASSET( "1000.000 YANG" ) );
+    generate_block();
+        
+    create_contract_operation op;
+
+    op.owner = "bob";
+    op.name = "contract.nfa.basic";
+    op.data = s_code_nfa_basic;
+    tx.operations.push_back( op );
+
+    op.owner = "bob";
+    op.name = "contract.nfa.base";
+    op.data = nfa_init_lua;
+    tx.operations.push_back( op );
+    
+    op.name = "contract.nfa.base2";
+    tx.operations.push_back( op );
+
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, bob_private_key );
+    db->push_transaction( tx, 0 );
+    tx.operations.clear();
+    tx.signatures.clear();
+    validate_database();
+    
+    generate_block();
+    
+    call_contract_function_operation cop;
+    cop.caller = "alice";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_symbol";
+    cop.value_list = {
+        lua_string("nfa.test"),
+        lua_string("test desc"),
+        lua_string("contract.nfa.base"),
+        lua_int(10),
+        lua_int(0),
+        lua_bool(false)
+    };
+    tx.operations.push_back( cop );
+
+    cop.value_list[0] = lua_string("nfa.authority");
+    cop.value_list[2] = lua_string("contract.nfa.base2"); //合约不能是同一个
+    tx.operations.push_back( cop );
+    
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, alice_private_key );
+    db->push_transaction( tx, 0 );
+    tx.operations.clear();
+    tx.signatures.clear();
+    validate_database();
+    
+    generate_block();
+
+    BOOST_TEST_MESSAGE( "--- Test failure create nfa from account without authority" );
+
+    cop.caller = "charlie";
+    cop.contract_name = "contract.nfa.basic";
+    cop.function_name = "create_nfa_to_me";
+    cop.value_list = {
+        lua_string("nfa.test")
+    };
+    tx.operations.push_back( cop );
+    
+    tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+    sign( tx, charlie_private_key );
+    BOOST_REQUIRE_THROW( db->push_transaction( tx, 0 ), fc::exception );
+    tx.operations.clear();
+    tx.signatures.clear();
+
+    //第一步，让charlie给自己做一个凭证nfa
+    {
+        BOOST_TEST_MESSAGE( "--- Test change nfa symbol authority" );
+        
+        cop.caller = "alice";
+        cop.contract_name = "contract.nfa.basic";
+        cop.function_name = "change_nfa_symbol_authority";
+        cop.value_list = {
+            lua_string("nfa.authority"),
+            lua_string("charlie")
+        };
+        tx.operations.push_back( cop );
+        
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, alice_private_key );
+        db->push_transaction( tx, 0 );
+        tx.operations.clear();
+        tx.signatures.clear();
+        validate_database();
+        
+        generate_block();
+        
+        const auto* symbol_obj = db->find<nfa_symbol_object, by_symbol>("nfa.authority");
+        const auto* charlie_obj = db->find<account_object, by_name>("charlie");
+        BOOST_REQUIRE( symbol_obj->authority_account == charlie_obj->id );
+        
+        BOOST_TEST_MESSAGE( "--- Test create nfa" );
+        
+        cop.caller = "charlie";
+        cop.contract_name = "contract.nfa.basic";
+        cop.function_name = "create_nfa_to_me";
+        cop.value_list = {
+            lua_string("nfa.authority")
+        };
+        tx.operations.push_back( cop );
+        
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, charlie_private_key );
+        db->push_transaction( tx, 0 );
+        
+        const auto& to = db->get<transaction_object, by_trx_id>(tx.id());
+        BOOST_REQUIRE( to.operation_results.size() == 1 );
+        contract_result result = to.operation_results[0].get<contract_result>();
+        BOOST_REQUIRE( result.contract_affecteds.size() == 2 );
+        nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
+        
+        BOOST_REQUIRE( affected.affected_account == "charlie" );
+        BOOST_REQUIRE( affected.affected_item == 3 );
+        BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
+        
+        const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
+        symbol_obj = db->find<nfa_symbol_object, by_symbol>("nfa.authority");
+        charlie_obj = db->find<account_object, by_name>("charlie");
+        BOOST_REQUIRE( nfa.creator_account == charlie_obj->id );
+        BOOST_REQUIRE( nfa.owner_account == charlie_obj->id );
+        BOOST_REQUIRE( nfa.symbol_id == symbol_obj->id );
+
+        tx.operations.clear();
+        tx.signatures.clear();
+    }
+    
+    //第二步，alice授权凭证nfa持有者可以创建测试nfa
+    {
+        BOOST_TEST_MESSAGE( "--- Test change nfa symbol authority nfa symbol" );
+        
+        cop.caller = "alice";
+        cop.contract_name = "contract.nfa.basic";
+        cop.function_name = "change_nfa_symbol_authority_nfa_symbol";
+        cop.value_list = {
+            lua_string("nfa.test"),
+            lua_string("nfa.authority")
+        };
+        tx.operations.push_back( cop );
+        
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, alice_private_key );
+        db->push_transaction( tx, 0 );
+        tx.operations.clear();
+        tx.signatures.clear();
+        validate_database();
+        
+        generate_block();
+        
+        const auto* symbol_obj = db->find<nfa_symbol_object, by_symbol>("nfa.test");
+        const auto* authority_symbol_obj = db->find<nfa_symbol_object, by_symbol>("nfa.authority");
+        BOOST_REQUIRE( symbol_obj->authority_nfa_symbol == authority_symbol_obj->id );
+        
+        BOOST_TEST_MESSAGE( "--- Test create nfa" );
+        
+        cop.caller = "charlie";
+        cop.contract_name = "contract.nfa.basic";
+        cop.function_name = "create_nfa_to_me";
+        cop.value_list = {
+            lua_string("nfa.test")
+        };
+        tx.operations.push_back( cop );
+        
+        tx.set_expiration( db->head_block_time() + TAIYI_MAX_TIME_UNTIL_EXPIRATION );
+        sign( tx, charlie_private_key );
+        db->push_transaction( tx, 0 );
+        
+        const auto& to = db->get<transaction_object, by_trx_id>(tx.id());
+        BOOST_REQUIRE( to.operation_results.size() == 1 );
+        contract_result result = to.operation_results[0].get<contract_result>();
+        BOOST_REQUIRE( result.contract_affecteds.size() == 2 );
+        nfa_affected affected = result.contract_affecteds[0].get<nfa_affected>();
+        
+        BOOST_REQUIRE( affected.affected_account == "charlie" );
+        BOOST_REQUIRE( affected.affected_item == 4 );
+        BOOST_REQUIRE( affected.action == nfa_affected_type::create_for );
+        
+        const auto& nfa = db->get<nfa_object, by_id>(affected.affected_item);
+        symbol_obj = db->find<nfa_symbol_object, by_symbol>("nfa.test");
+        const auto& charlie_obj = db->find<account_object, by_name>("charlie");
+        BOOST_REQUIRE( nfa.creator_account == charlie_obj->id );
+        BOOST_REQUIRE( nfa.owner_account == charlie_obj->id );
+        BOOST_REQUIRE( nfa.symbol_id == symbol_obj->id );
+
+        tx.operations.clear();
+        tx.signatures.clear();
+    }
 } FC_LOG_AND_RETHROW() }
 
 BOOST_AUTO_TEST_CASE( transfer_nfa_apply )

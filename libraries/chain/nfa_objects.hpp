@@ -25,8 +25,11 @@ namespace taiyi { namespace chain {
         
         id_type                     id;
 
-        account_id_type             creator_account;
-        account_id_type             authority_account;
+        account_id_type             creator_account = account_id_type::max();
+
+        account_id_type             authority_account = account_id_type::max(); //直接有权限创建本类NFA的账号
+        id_type                     authority_nfa_symbol = id_type::max();      //持有特定类型NFA的账号有权创建本类NFA
+        
         string                      symbol;
         string                      describe;
         contract_id_type            default_contract = contract_id_type::max();
@@ -90,6 +93,7 @@ namespace taiyi { namespace chain {
 
     struct by_symbol;
     struct by_owner;
+    struct by_owner_symbol;
     struct by_creator;
     struct by_parent;
     struct by_tick_time;
@@ -107,6 +111,13 @@ namespace taiyi { namespace chain {
             ordered_unique< tag< by_owner >,
                 composite_key< nfa_object,
                     member< nfa_object, account_id_type, &nfa_object::owner_account >,
+                    member< nfa_object, nfa_id_type, &nfa_object::id >
+                >
+            >,
+            ordered_unique< tag< by_owner_symbol >,
+                composite_key< nfa_object,
+                    member< nfa_object, account_id_type, &nfa_object::owner_account >,
+                    member< nfa_object, nfa_symbol_id_type, &nfa_object::symbol_id >,
                     member< nfa_object, nfa_id_type, &nfa_object::id >
                 >
             >,
@@ -183,7 +194,7 @@ namespace mira {
 
 } // mira
 
-FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator_account)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi)(is_sbt))
+FC_REFLECT(taiyi::chain::nfa_symbol_object, (id)(creator_account)(authority_account)(authority_nfa_symbol)(symbol)(describe)(default_contract)(count)(max_count)(min_equivalent_qi)(is_sbt))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::nfa_symbol_object, taiyi::chain::nfa_symbol_index)
 
 FC_REFLECT(taiyi::chain::nfa_object, (id)(creator_account)(owner_account)(active_account)(symbol_id)(parent)(main_contract)(contract_data)(qi)(debt_value)(debt_contract)(cultivation_value)(created_time)(next_tick_block))

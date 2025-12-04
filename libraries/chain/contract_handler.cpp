@@ -681,11 +681,43 @@ namespace taiyi { namespace chain {
             const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
 
-            operation vop = nfa_symbol_authority_change_operation( caller.name, symbol, authority_account );
+            operation vop = nfa_symbol_authority_change_operation( caller.name, symbol, authority_account, nfa_symbol->authority_nfa_symbol == nfa_symbol_id_type::max() ? "" : db.get<nfa_symbol_object, by_id>(nfa_symbol->authority_nfa_symbol).symbol );
             db.pre_push_virtual_operation( vop );
 
             db.modify(*nfa_symbol, [&](nfa_symbol_object& obj) {
                 obj.authority_account = to_account->id;
+            });
+            
+            db.post_push_virtual_operation( vop );
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(this->context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::change_nfa_symbol_authority_nfa_symbol(const string& symbol, const string& authority_symbol_name)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(1);
+                                
+            FC_ASSERT(memcmp(symbol.data(), "nfa.", 4) == 0, "symbol name is not start with \"nfa.\"");
+            FC_ASSERT(is_valid_nfa_symbol(symbol), "symbol ${q} is invalid", ("n", symbol));
+            
+            const auto* nfa_symbol = db.find<nfa_symbol_object, by_symbol>(symbol);
+            FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
+
+            FC_ASSERT(is_valid_nfa_symbol(authority_symbol_name), "authority nfa symbol ${q} is invalid", ("n", authority_symbol_name));
+            const auto* authority_nfa_symbol = db.find<nfa_symbol_object, by_symbol>(authority_symbol_name);
+            FC_ASSERT(authority_nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist", ("n", authority_symbol_name));
+
+
+            operation vop = nfa_symbol_authority_change_operation( caller.name, symbol, nfa_symbol->authority_account == account_id_type::max() ? "" : db.get<account_object, by_id>(nfa_symbol->authority_account).name, authority_nfa_symbol->symbol );
+            db.pre_push_virtual_operation( vop );
+
+            db.modify(*nfa_symbol, [&](nfa_symbol_object& obj) {
+                obj.authority_nfa_symbol = authority_nfa_symbol->id;
             });
             
             db.post_push_virtual_operation( vop );
@@ -712,7 +744,11 @@ namespace taiyi { namespace chain {
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
 
             //检查创建者权限
-            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            if (nfa_symbol->authority_account == caller.id)
+                ; //pass
+            else {
+                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            }
 
             operation vop = nfa_create_operation(caller.name, symbol);
             db.pre_push_virtual_operation( vop );
@@ -769,7 +805,11 @@ namespace taiyi { namespace chain {
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
 
             //检查创建者权限
-            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            if (nfa_symbol->authority_account == caller.id)
+                ; //pass
+            else {
+                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            }
 
             operation vop = nfa_create_operation(caller.name, symbol);
             db.pre_push_virtual_operation( vop );
@@ -1829,7 +1869,11 @@ namespace taiyi { namespace chain {
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE));
 
             //检查创建者权限
-            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            if (nfa_symbol->authority_account == caller.id)
+                ; //pass
+            else {
+                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            }
 
             const auto& creator = caller;
             const auto& nfa = db.create_nfa(creator, *nfa_symbol, false, context);
@@ -2156,7 +2200,11 @@ namespace taiyi { namespace chain {
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR));
 
             //检查创建者权限
-            FC_ASSERT(nfa_symbol->authority_account == caller.id, "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            if (nfa_symbol->authority_account == caller.id)
+                ; //pass
+            else {
+                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+            }
 
             const auto& creator = caller;
             const auto& nfa = db.create_nfa(creator, *nfa_symbol, false, context);

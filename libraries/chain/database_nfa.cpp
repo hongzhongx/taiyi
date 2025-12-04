@@ -189,6 +189,8 @@ namespace taiyi { namespace chain {
     {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_XINSU_MARK, "心素标记", "contract.nfa.xinsumark", 10000, 0, true);
+        _xinsu_mark_nfa_symbol_id = get<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_XINSU_MARK).id;
+        
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR, "默认的角色", "contract.actor.default", 1000000000, 1000000, false);
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE, "默认的区域", "contract.zone.default", 1000000000, 10000000, false);
     }
@@ -206,6 +208,7 @@ namespace taiyi { namespace chain {
         /*const auto& nfa_symbol_obj = */create<nfa_symbol_object>([&](nfa_symbol_object& obj) {
             obj.creator_account = creator.id;
             obj.authority_account = creator.id;
+            obj.authority_nfa_symbol = nfa_symbol_id_type::max();
             obj.symbol = symbol;
             obj.describe = describe;
             obj.default_contract = contract->id;
@@ -592,14 +595,19 @@ namespace taiyi { namespace chain {
         return maxones[p];
     }
     //=========================================================================
-    bool database::is_xinsu(const account_object& account) const
+    bool database::has_nfa_with_symbol(const account_object& account, const nfa_symbol_id_type& symbol_id) const
     {
-        const auto& nfaidx = get_index<nfa_index>().indices().get<by_owner>();
-        auto found = nfaidx.lower_bound(account.id);
-        if(found != nfaidx.end() && found->owner_account == account.id)
+        const auto& nfa_idx = get_index<nfa_index>().indices().get<by_owner_symbol>();
+        auto found = nfa_idx.lower_bound( boost::make_tuple(account.id, symbol_id, 0) );
+        if (found != nfa_idx.end() && found->owner_account == account.id && found->symbol_id == symbol_id)
             return true;
         else
             return false;
+    }
+    //=========================================================================
+    bool database::is_xinsu(const account_object& account) const
+    {
+        return has_nfa_with_symbol(account, _xinsu_mark_nfa_symbol_id);
     }
 
 } } //taiyi::chain
