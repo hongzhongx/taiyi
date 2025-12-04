@@ -61,6 +61,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef narrate_log_operation                   legacy_narrate_log_operation;
     typedef actor_talk_operation                    legacy_actor_talk_operation;
     typedef zone_create_operation                   legacy_zone_create_operation;
+    typedef zone_type_change_operation              legacy_zone_type_change_operation;
+    typedef zone_connect_operation                  legacy_zone_connect_operation;
     typedef shutdown_siming_operation               legacy_shutdown_siming_operation;
 
     struct api_chain_properties
@@ -475,6 +477,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_actor_talk_operation,
         
         legacy_zone_create_operation,
+        legacy_zone_type_change_operation,
+        legacy_zone_connect_operation,
     
         legacy_shutdown_siming_operation
 
@@ -522,6 +526,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const narrate_log_operation& op )const                     { l_op = op; return true; }
         bool operator()( const actor_talk_operation& op )const                      { l_op = op; return true; }
         bool operator()( const zone_create_operation& op )const                     { l_op = op; return true; }
+        bool operator()( const zone_type_change_operation& op )const                { l_op = op; return true; }
+        bool operator()( const zone_connect_operation& op )const                    { l_op = op; return true; }
         bool operator()( const shutdown_siming_operation& op )const                 { l_op = op; return true; }
 
         bool operator()( const transfer_operation& op )const

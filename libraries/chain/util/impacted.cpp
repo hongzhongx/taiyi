@@ -293,6 +293,22 @@ namespace taiyi { namespace chain {
             _impacted_nfas.insert( op.nfa );
         }
         
+        void operator()( const zone_type_change_operation& op )
+        {
+            _impacted.insert( op.creator );
+
+            _impacted_nfas.insert( op.nfa );
+        }
+        
+        void operator()( const zone_connect_operation& op )
+        {
+            _impacted.insert( op.account );
+
+            //由于区域连接操作必须由区域的拥有者执行，因此只通知一次拥有者账号即可
+            //_impacted_nfas.insert( op.zone1_nfa );
+            //_impacted_nfas.insert( op.zone2_nfa );
+        }
+        
         void operator()(const proposal_execute_operation& op)
         {
             _impacted.insert( TAIYI_DAO_ACCOUNT );

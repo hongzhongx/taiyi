@@ -1908,6 +1908,52 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    void contract_handler::change_zone_type(const string& name, const string& type_name)
+    {
+        try
+        {
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to create zone");
+
+            db.add_contract_handler_exe_point(2);
+
+            E_ZONE_TYPE ztype = get_zone_type_from_string(type_name);
+            FC_ASSERT(ztype != _ZONE_INVALID_TYPE, "\"${s}\" is invalid zone type", ("s", type_name));
+
+            FC_ASSERT( name.size() > 0, "Name is empty" );
+            FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT, "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
+            FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );
+            
+            //check zone existence
+            auto zone = db.find< zone_object, by_name >( name );
+            FC_ASSERT( zone != nullptr, "Zone named \"${a}\" is not exist", ("a", name) );
+            const auto& zone_nfa = db.get<nfa_object, by_id>(zone->nfa_id);
+
+            const auto& creator = caller;
+            FC_ASSERT( zone_nfa.owner_account == creator.id, "you are not the owner of zone \"${z}\"", ("z", name) );
+            
+            operation vop = zone_type_change_operation(caller.name, name, zone_nfa.id, type_name);
+            db.pre_push_virtual_operation( vop );
+
+            db.modify(*zone, [&](zone_object& obj) {
+                obj.type = ztype;
+            });
+            
+            db.post_push_virtual_operation( vop );
+
+            protocol::nfa_affected affected;
+            affected.affected_account = creator.name;
+            affected.affected_item = zone_nfa.id;
+            affected.action = nfa_affected_type::modified;
+            result.contract_affecteds.push_back(affected);
+                        
+            db.add_contract_handler_exe_point(10);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     bool contract_handler::is_contract_allowed_by_zone(const string& zone_name, const string& contract_name)
     {
         try
@@ -2119,11 +2165,16 @@ namespace taiyi { namespace chain {
 
             db.add_contract_handler_exe_point(5);
 
+            operation vop = zone_connect_operation(caller.name, from_zone->name, from_zone_nfa_id, to_zone->name, to_zone_nfa_id);
+            db.pre_push_virtual_operation( vop );
+
             //create connection
             db.create< zone_connect_object >( [&]( zone_connect_object& o ) {
                 o.from = from_zone->id;
                 o.to = to_zone->id;
             });
+            
+            db.post_push_virtual_operation( vop );
         }
         catch (const fc::exception& e)
         {

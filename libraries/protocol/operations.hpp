@@ -80,15 +80,17 @@ namespace taiyi { namespace protocol {
         actor_talk_operation,               //46
     
         zone_create_operation,              //47
+        zone_type_change_operation,         //48
+        zone_connect_operation,             //49
+
+        narrate_log_operation,              //50
     
-        narrate_log_operation,              //48
+        shutdown_siming_operation,          //51
     
-        shutdown_siming_operation,          //49
-    
-        create_proposal_operation,          //50
-        update_proposal_votes_operation,    //51
-        remove_proposal_operation,          //52
-        proposal_execute_operation          //53
+        create_proposal_operation,          //52
+        update_proposal_votes_operation,    //53
+        remove_proposal_operation,          //54
+        proposal_execute_operation          //55
     
     > operation;
 

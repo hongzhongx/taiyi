@@ -286,6 +286,7 @@ namespace taiyi { namespace chain {
 
         //Zone
         int64_t create_zone(const string& name, const string& type_name);
+        void change_zone_type(const string& name, const string& type_name);
         bool is_zone_valid(int64_t nfa_id);
         bool is_zone_valid_by_name(const string& name);
         contract_zone_base_info get_zone_info(int64_t nfa_id);

@@ -354,6 +354,29 @@ namespace taiyi { namespace protocol {
         int64_t           nfa;
     };
     
+    struct zone_type_change_operation : public virtual_operation
+    {
+        zone_type_change_operation() {}
+        zone_type_change_operation(const account_name_type& creator_, const string& name_, const int64_t& nfa_, const string& type_) : creator(creator_), name(name_), nfa(nfa_), type(type_) {}
+        
+        account_name_type creator;
+        string            name;
+        int64_t           nfa;
+        string            type;
+    };
+    
+    struct zone_connect_operation : public virtual_operation
+    {
+        zone_connect_operation() {}
+        zone_connect_operation(const account_name_type& account_, const string& zone1_, const int64_t& zone1_nfa_, const string& zone2_, const int64_t& zone2_nfa_) : account(account_), zone1(zone1_), zone1_nfa(zone1_nfa_), zone2(zone2_), zone2_nfa(zone2_nfa_) {}
+        
+        account_name_type account;
+        string            zone1;
+        int64_t           zone1_nfa;
+        string            zone2;
+        int64_t           zone2_nfa;
+    };
+    
     struct proposal_execute_operation : public virtual_operation
     {
         proposal_execute_operation() = default;
@@ -435,6 +458,9 @@ FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(mo
 FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(days)(tod)(times)(log) )
 FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_days)(v_tod)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content)(favor_delta_actor)(favor_delta_target) )
 FC_REFLECT( taiyi::protocol::zone_create_operation, (creator)(name)(nfa) )
+FC_REFLECT( taiyi::protocol::zone_type_change_operation, (creator)(name)(nfa)(type) )
+FC_REFLECT( taiyi::protocol::zone_connect_operation, (account)(zone1)(zone1_nfa)(zone2)(zone2_nfa) )
+
 FC_REFLECT( taiyi::protocol::proposal_execute_operation, (contract_name)(function_name)(value_list)(subject) )
 FC_REFLECT( taiyi::protocol::create_proposal_operation, (creator)(contract_name)(function_name)(value_list)(end_date)(subject) )
 FC_REFLECT( taiyi::protocol::update_proposal_votes_operation, (voter)(proposal_ids)(approve) )
