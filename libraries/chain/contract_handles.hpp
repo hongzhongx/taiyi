@@ -171,7 +171,9 @@ namespace taiyi { namespace chain {
         void destroy();
         lua_map eval_action(const string& action, const lua_map& params);
         lua_map do_action(const string& action, const lua_map& params);
-        
+        int64_t create_nfa_to_actor(int64_t to_actor_nfa_id, string symbol, lua_map data);
+        int64_t create_nfa_to_account(const string& to_account_name, string symbol, lua_map data);
+
         //Actor
         void modify_actor_attributes(const lua_map& values);
         void talk_to_actor(const string& target_actor_name, const string& something);
@@ -283,10 +285,12 @@ namespace taiyi { namespace chain {
         lua_map eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         lua_map do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params);
         void change_nfa_contract(int64_t nfa_id, const string& contract_name);
+        void change_nfa_active_operator(int64_t nfa_id, const string& account_name);
 
         //Zone
         int64_t create_zone(const string& name, const string& type_name);
-        void change_zone_type(const string& name, const string& type_name);
+        void change_zone_type(int64_t nfa_id, const string& type_name);
+        string refine_zone(int64_t nfa_id);
         bool is_zone_valid(int64_t nfa_id);
         bool is_zone_valid_by_name(const string& name);
         contract_zone_base_info get_zone_info(int64_t nfa_id);
@@ -328,6 +332,8 @@ namespace taiyi { namespace chain {
         void read_table_data(lua_map& out_data, const lua_map& keys, const lua_map& target_table, vector<lua_types>& stacks);
         lua_map call_nfa_function(int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist = true);
         lua_map call_nfa_function_with_caller(const account_object& caller, int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist = true);
+        int64_t create_nfa_to_actor_with_caller(const account_object& caller, int64_t to_actor_nfa_id, string symbol, lua_map data);
+        int64_t create_nfa_to_account_with_caller(const account_object& caller, const string& to_account_name, string symbol, lua_map data);
     };
     
     asset_symbol_type s_get_symbol_type_from_string(const string name);

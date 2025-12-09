@@ -46,8 +46,8 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
-            
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
+
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 if(obj.next_tick_block == std::numeric_limits<uint32_t>::max())
                     obj.next_tick_block = 0;
@@ -63,7 +63,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
 
             _db.modify(_caller, [&]( nfa_object& obj ) {
                 obj.next_tick_block = std::numeric_limits<uint32_t>::max();
@@ -118,7 +118,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(2);
             
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             FC_ASSERT(amount > 0, "convert qi is zero");
 
             asset qi(amount, QI_SYMBOL);
@@ -198,7 +198,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(2);
             
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             FC_ASSERT(amount > 0, "convert resource is zero");
             
             asset_symbol_type symbol = s_get_symbol_type_from_string(resource_symbol_name);
@@ -276,7 +276,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(1);
 
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
 
             const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
             FC_ASSERT(child_nfa.owner_account == _caller_account.id || child_nfa.active_account == _caller_account.id, "caller account not the input nfa's owner or active operator");
@@ -298,7 +298,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(1);
 
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
 
             const auto& parent_nfa = _db.get<nfa_object, by_id>(parent_nfa_id);
@@ -320,7 +320,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(1);
 
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             
             const auto& child_nfa = _db.get<nfa_object, by_id>(nfa_id);
             FC_ASSERT(child_nfa.owner_account == _ch.contract.owner || child_nfa.active_account == _ch.contract.owner, "contract owner not the input nfa's owner or active operator");
@@ -342,7 +342,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(1);
             
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller already have parent");
 
             const auto& parent_nfa = _db.get<nfa_object, by_id>(parent_nfa_id);
@@ -364,7 +364,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(1);
             
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             FC_ASSERT(_caller.parent != nfa_id_type::max(), "caller have no parent");
 
             const auto& parent_nfa = _db.get<nfa_object, by_id>(_caller.parent);
@@ -405,7 +405,7 @@ namespace taiyi { namespace chain {
             
             FC_ASSERT(from != to, "It's no use transferring resource to yourself");
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
-            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
             try
             {
@@ -460,7 +460,7 @@ namespace taiyi { namespace chain {
             _db.add_contract_handler_exe_point(2);
             
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
-            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             const account_object &to_account = _db.get<account_object, by_id>(to);
             try
             {
@@ -572,7 +572,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             
             _ch.write_nfa_contract_data(_caller.id, data, write_list);
         }
@@ -594,7 +594,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(1);
             
-            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account not the owner");
+            FC_ASSERT(_caller.owner_account == _caller_account.id, "caller account (${a}) not the owner", ("a", _caller_account.name));
             FC_ASSERT(_caller.parent == nfa_id_type::max(), "caller with parent can not be destroyed");
             
             const auto& nfa_by_parent_idx = _db.get_index< nfa_index >().indices().get< chain::by_parent >();
@@ -619,7 +619,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(2);
             
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
 
             auto now = _db.head_block_time();
 
@@ -751,7 +751,7 @@ namespace taiyi { namespace chain {
         {
             _db.add_contract_handler_exe_point(2);
             
-            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
 
             auto now = _db.head_block_time();
             
@@ -876,9 +876,9 @@ namespace taiyi { namespace chain {
             FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
 
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
-            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account is not the owner or active operator of nfa #${i}", ("i", from));
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account (${a}) is not the owner or active operator of nfa #${i}", ("a", _caller_account.name)("i", from));
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
-            FC_ASSERT(to_nfa.owner_account == _caller_account.id || to_nfa.active_account == _caller_account.id, "caller account is not the owner or active operator of nfa #${i}", ("i", to));
+            FC_ASSERT(to_nfa.owner_account == _caller_account.id || to_nfa.active_account == _caller_account.id, "caller account (${a}) is not the owner or active operator of nfa #${i}", ("a", _caller_account.name)("i", to));
             try
             {
                 FC_ASSERT(_db.get_nfa_balance(from_nfa, token.symbol).amount >= token.amount, "Insufficient Balance: ${balance}, unable to inject material '${token}' from nfa #${a} to nfa #${t}", ("a", from_nfa.id)("t", to_nfa.id)("token", token)("balance", _db.get_nfa_balance(from_nfa, token.symbol)));
@@ -955,7 +955,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(token.amount >= share_type(0), "resource amount must big than zero");
 
             const nfa_object &from_nfa = _db.get<nfa_object, by_id>(from);
-            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account not the owner or active operator");
+            FC_ASSERT(from_nfa.owner_account == _caller_account.id || from_nfa.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
             const nfa_object &to_nfa = _db.get<nfa_object, by_id>(to);
 
             const auto& material = _db.get<nfa_material_object, by_nfa_id>(from_nfa.id);
@@ -1024,6 +1024,7 @@ namespace taiyi { namespace chain {
     //=========================================================================
     lua_map contract_nfa_handler::eval_action(const string& action, const lua_map& params)
     {
+        string current_contract_name = "";
         try
         {
             _db.add_contract_handler_exe_point(2);
@@ -1060,31 +1061,33 @@ namespace taiyi { namespace chain {
             
             _db.add_contract_handler_exe_point(2);
             
-            auto current_contract_name = _context.readVariable<string>("current_contract");
+            current_contract_name = _context.readVariable<string>("current_contract");
             auto current_cbi = _context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
             auto current_ch = _context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = _db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = contract;
-            const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
-            const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
-            
-            contract_base_info cbi(_db, _context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, _context,  current_ch->is_in_eval);
+            const auto& contract_owner = _db.get<account_object, by_id>(contract.owner).name;
+            const auto& contract_code = _db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+            FC_ASSERT(contract_code.lua_code_b.size()>0);
+
+            contract_base_info cbi(_db, _context, contract_owner, contract.name, current_cbi->caller, string(contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(_db, current_ch->caller, &_caller, contract, current_ch->result, _context,  current_ch->is_in_eval);
             contract_nfa_handler cnh(current_ch->caller, _caller, _context, _db, ch);
             
-            const auto& name = nfa_contract.name;
-            _context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            FC_ASSERT(nfa_contract_code.lua_code_b.size()>0);
-            _context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
-            
-            _context.writeVariable("current_contract", name);
-            _context.writeVariable(name, "_G", "protected");
-
-            _context.writeVariable(name, "contract_helper", &ch);
-            _context.writeVariable(name, "contract_base_info", &cbi);
-            _context.writeVariable(name, "nfa_helper", &cnh);
+            bool new_sandbox = false;
+            const auto& name = contract.name;
+            if(name != current_contract_name) {
+                if(!_context.get_sandbox(name)) {
+                    new_sandbox = true;
+                    _context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
+                    _context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+                    _context.writeVariable(name, "_G", "protected");
+                    _context.writeVariable(name, "contract_helper", &ch);
+                    _context.writeVariable(name, "contract_base_info", &cbi);
+                    _context.writeVariable(name, "nfa_helper", &cnh);
+                }
+                _context.writeVariable("current_contract", name);
+            }
 
             _context.get_function(name, function_name);
             //push function actual parameters
@@ -1106,7 +1109,13 @@ namespace taiyi { namespace chain {
                 error_message = lua_string(" Unexpected errors ");
             }
             lua_pop(_context.mState, -1);
-            _context.close_sandbox(name);
+            
+            if(name != current_contract_name) {
+                if(new_sandbox)
+                    _context.close_sandbox(name);
+                _context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
+            }
+            
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
@@ -1122,6 +1131,8 @@ namespace taiyi { namespace chain {
         }
         catch(const fc::exception& e)
         {
+            if(current_contract_name != "")
+                _context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
     }
@@ -1129,7 +1140,7 @@ namespace taiyi { namespace chain {
     lua_map contract_nfa_handler::do_action(const string& action, const lua_map& params)
     {
         zone_id_type pre_contract_run_zone = _db.get_contract_run_zone();
-
+        string current_contract_name = "";
         try
         {
             _db.add_contract_handler_exe_point(2);
@@ -1144,7 +1155,7 @@ namespace taiyi { namespace chain {
             }
 
             //check material valid
-            FC_ASSERT(_db.is_nfa_material_equivalent_qi_insufficient(_caller), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");
+            FC_ASSERT(_db.is_nfa_material_equivalent_qi_insufficient(_caller), "NFA #${i} material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)", ("i", _caller.id));
             _db.consume_nfa_material_random(_caller, _db.head_block_id()._hash[4] + 14071);
 
             //check existence and consequence type
@@ -1181,31 +1192,34 @@ namespace taiyi { namespace chain {
             
             _db.add_contract_handler_exe_point(2);
             
-            auto current_contract_name = _context.readVariable<string>("current_contract");
+            current_contract_name = _context.readVariable<string>("current_contract");
             auto current_cbi = _context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
             auto current_ch = _context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = _db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = contract;
-            const auto& nfa_contract_owner = _db.get<account_object, by_id>(nfa_contract.owner).name;
-            const auto& nfa_contract_code = _db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
-            
-            contract_base_info cbi(_db, _context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(_db, current_ch->caller, &_caller, nfa_contract, current_ch->result, _context, false);
+            const auto& contract_owner = _db.get<account_object, by_id>(contract.owner).name;
+            const auto& contract_code = _db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+            FC_ASSERT(contract_code.lua_code_b.size()>0);
+
+            contract_base_info cbi(_db, _context, contract_owner, contract.name, current_cbi->caller, string(contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(_db, current_ch->caller, &_caller, contract, current_ch->result, _context, false);
             contract_nfa_handler cnh(current_ch->caller, _caller, _context, _db, ch);
             
-            const auto& name = nfa_contract.name;
-            _context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            FC_ASSERT(nfa_contract_code.lua_code_b.size()>0);
-            _context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
-            
-            _context.writeVariable("current_contract", name);
-            _context.writeVariable(name, "_G", "protected");
-
-            _context.writeVariable(name, "contract_helper", &ch);
-            _context.writeVariable(name, "contract_base_info", &cbi);
-            _context.writeVariable(name, "nfa_helper", &cnh);
+            //sandbox
+            bool new_sandbox = false;
+            const auto& name = contract.name;
+            if(name != current_contract_name) {
+                if(!_context.get_sandbox(name)) {
+                    new_sandbox = true;
+                    _context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
+                    _context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+                    _context.writeVariable(name, "_G", "protected");
+                    _context.writeVariable(name, "contract_helper", &ch);
+                    _context.writeVariable(name, "contract_base_info", &cbi);
+                    _context.writeVariable(name, "nfa_helper", &cnh);
+                }
+                _context.writeVariable("current_contract", name);
+            }
 
             _context.get_function(name, function_name);
             //push function actual parameters
@@ -1227,7 +1241,13 @@ namespace taiyi { namespace chain {
                 error_message = lua_string(" Unexpected errors ");
             }
             lua_pop(_context.mState, -1);
-            _context.close_sandbox(name);
+            
+            if(name != current_contract_name) {
+                if(new_sandbox)
+                    _context.close_sandbox(name);
+                _context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
+            }
+            
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
@@ -1246,11 +1266,24 @@ namespace taiyi { namespace chain {
         catch (const fc::exception& e)
         {
             _db.set_contract_run_zone(pre_contract_run_zone);
-
+            if(current_contract_name != "")
+                _context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
             LUA_C_ERR_THROW(_context.mState, e.to_string());
         }
         
         _db.set_contract_run_zone(pre_contract_run_zone);
+    }
+    //=========================================================================
+    int64_t contract_nfa_handler::create_nfa_to_actor(int64_t to_actor_nfa_id, string symbol, lua_map data)
+    {
+        const auto& nfa_owner = _db.get<account_object, by_id>(_caller.owner_account);
+        return _ch.create_nfa_to_actor_with_caller(nfa_owner, to_actor_nfa_id, symbol, data);
+    }
+    //=========================================================================
+    int64_t contract_nfa_handler::create_nfa_to_account(const string& to_account_name, string symbol, lua_map data)
+    {
+        const auto& nfa_owner = _db.get<account_object, by_id>(_caller.owner_account);
+        return _ch.create_nfa_to_account_with_caller(nfa_owner, to_account_name, symbol, data);
     }
 
 } } // namespace taiyi::chain

@@ -226,7 +226,6 @@ namespace taiyi { namespace chain {
             FC_ASSERT(contract_id != this->contract.id, "You can't use it to make recursive calls");
             auto value_list = fc::json::from_string(value_list_json).as<vector<lua_types>>();
             contract_result _contract_result = contract_result();
-            auto backup_current_contract_name = context.readVariable<string>("current_contract");
             auto ocr = optional<contract_result>(_contract_result);
             
             call_contract_function_operation op;
@@ -238,8 +237,6 @@ namespace taiyi { namespace chain {
             call_contract_function_evaluator evaluator(db);
             evaluator.apply(op);            
             
-            context.writeVariable("current_contract", backup_current_contract_name);
-
             db.add_contract_handler_exe_point(5);
 
             s_invoking_path.pop_back();
@@ -286,9 +283,8 @@ namespace taiyi { namespace chain {
             nfa_id_type affected_nfa = nfa_id_type::max();
             account_name_type affected_account;
             
-            //不论是不是import导入的合约，顶层合约名的表中一定有nfa_helper
-            lua_getglobal(context.mState, "current_contract");
-            auto current_contract_name = LuaContext::readTopAndPop<string>(context.mState, -1);
+            //不论是不是import导入的合约，顶层合约名的表中如果有nfa_helper，就是nfa的调用
+            auto current_contract_name = context.readVariable<string>("current_contract");
             auto current_cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
             if (current_cnh) {
                 affected_nfa = current_cnh->_caller.id;
@@ -730,6 +726,11 @@ namespace taiyi { namespace chain {
     //=============================================================================
     int64_t contract_handler::create_nfa_to_actor(int64_t to_actor_nfa_id, string symbol, lua_map data)
     {
+        return create_nfa_to_actor_with_caller(caller, to_actor_nfa_id, symbol, data);
+    }
+    //=============================================================================
+    int64_t contract_handler::create_nfa_to_actor_with_caller(const account_object& caller_, int64_t to_actor_nfa_id, string symbol, lua_map data)
+    {
         try
         {
             db.add_contract_handler_exe_point(2);
@@ -744,16 +745,16 @@ namespace taiyi { namespace chain {
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
 
             //检查创建者权限
-            if (nfa_symbol->authority_account == caller.id)
+            if (nfa_symbol->authority_account == caller_.id)
                 ; //pass
             else {
-                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+                FC_ASSERT(db.has_nfa_with_symbol(caller_, nfa_symbol->authority_nfa_symbol), "\"${a}\" have no authority to create nfa from symbol \"${s}\"", ("a", caller_.name)("s", nfa_symbol->symbol));
             }
 
-            operation vop = nfa_create_operation(caller.name, symbol);
+            operation vop = nfa_create_operation(caller_.name, symbol);
             db.pre_push_virtual_operation( vop );
 
-            const nfa_object& nfa = db.create_nfa(caller, *nfa_symbol, false, context);
+            const nfa_object& nfa = db.create_nfa(caller_, *nfa_symbol, false, context);
             db.modify(nfa, [&](nfa_object& obj) {
                 for(const auto& p : data) {
                     if(obj.contract_data.find(p.first) != obj.contract_data.end())
@@ -776,7 +777,7 @@ namespace taiyi { namespace chain {
             affected.action = nfa_affected_type::create_for;
             result.contract_affecteds.push_back(affected);
 
-            affected.affected_account = caller.name;
+            affected.affected_account = caller_.name;
             affected.action = nfa_affected_type::create_by;
             result.contract_affecteds.push_back(affected);
 
@@ -790,6 +791,11 @@ namespace taiyi { namespace chain {
     }
     //=============================================================================
     int64_t contract_handler::create_nfa_to_account(const string& to_account_name, string symbol, lua_map data)
+    {
+        return create_nfa_to_account_with_caller(caller, to_account_name, symbol, data);
+    }
+    //=============================================================================
+    int64_t contract_handler::create_nfa_to_account_with_caller(const account_object& caller_, const string& to_account_name, string symbol, lua_map data)
     {
         try
         {
@@ -805,16 +811,16 @@ namespace taiyi { namespace chain {
             FC_ASSERT(nfa_symbol != nullptr, "NFA symbol named \"${n}\" is not exist.", ("n", symbol));
 
             //检查创建者权限
-            if (nfa_symbol->authority_account == caller.id)
+            if (nfa_symbol->authority_account == caller_.id)
                 ; //pass
             else {
-                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+                FC_ASSERT(db.has_nfa_with_symbol(caller_, nfa_symbol->authority_nfa_symbol), "\"${a}\" have no authority to create nfa from symbol \"${s}\"", ("a", caller_.name)("s", nfa_symbol->symbol));
             }
 
-            operation vop = nfa_create_operation(caller.name, symbol);
+            operation vop = nfa_create_operation(caller_.name, symbol);
             db.pre_push_virtual_operation( vop );
 
-            const nfa_object& nfa = db.create_nfa(caller, *nfa_symbol, false, context);
+            const nfa_object& nfa = db.create_nfa(caller_, *nfa_symbol, false, context);
             db.modify(nfa, [&](nfa_object& obj) {
                 for(const auto& p : data) {
                     if(obj.contract_data.find(p.first) != obj.contract_data.end())
@@ -836,7 +842,7 @@ namespace taiyi { namespace chain {
             affected.action = nfa_affected_type::create_for;
             result.contract_affecteds.push_back(affected);
 
-            affected.affected_account = caller.name;
+            affected.affected_account = caller_.name;
             affected.action = nfa_affected_type::create_by;
             result.contract_affecteds.push_back(affected);
 
@@ -921,6 +927,7 @@ namespace taiyi { namespace chain {
     //=============================================================================
     lua_map contract_handler::eval_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
     {
+        string current_contract_name = "";
         try
         {
             db.add_contract_handler_exe_point(2);
@@ -960,31 +967,34 @@ namespace taiyi { namespace chain {
             
             db.add_contract_handler_exe_point(5);
             
-            auto current_contract_name = context.readVariable<string>("current_contract");
+            current_contract_name = context.readVariable<string>("current_contract");
             auto current_cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
             auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = contract;
-            const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
-            const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
-            
-            contract_base_info cbi(db, context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, 0, nfa_contract, current_ch->result, context, current_ch->is_in_eval);
+            const auto& contract_owner = db.get<account_object, by_id>(contract.owner).name;
+            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+            FC_ASSERT(contract_code.lua_code_b.size()>0);
+
+            contract_base_info cbi(db, context, contract_owner, contract.name, current_cbi->caller, string(contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(db, current_ch->caller, 0, contract, current_ch->result, context, current_ch->is_in_eval);
             contract_nfa_handler cnh(current_ch->caller, *nfa, context, db, ch);
             
-            const auto& name = nfa_contract.name;
-            context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            FC_ASSERT(nfa_contract_code.lua_code_b.size()>0);
-            context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
-            
-            context.writeVariable("current_contract", name);
-            context.writeVariable(name, "_G", "protected");
-
-            context.writeVariable(name, "contract_helper", &ch);
-            context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "nfa_helper", &cnh);
+            //sandbox
+            bool new_sandbox = false;
+            const auto& name = contract.name;
+            if(name != current_contract_name) {
+                if(!context.get_sandbox(name)) {
+                    new_sandbox = true;
+                    context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
+                    context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+                    context.writeVariable(name, "_G", "protected");
+                    context.writeVariable(name, "contract_helper", &ch);
+                    context.writeVariable(name, "contract_base_info", &cbi);
+                    context.writeVariable(name, "nfa_helper", &cnh);
+                }
+                context.writeVariable("current_contract", name);
+            }
 
             context.get_function(name, function_name);
             //push function actual parameters
@@ -1006,7 +1016,13 @@ namespace taiyi { namespace chain {
                 error_message = lua_string(" Unexpected errors ");
             }
             lua_pop(context.mState, -1);
-            context.close_sandbox(name);
+            
+            if(name != current_contract_name) {
+                if(new_sandbox)
+                    context.close_sandbox(name);
+                context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
+            }
+            
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
@@ -1022,6 +1038,8 @@ namespace taiyi { namespace chain {
         }
         catch(const fc::exception& e)
         {
+            if(current_contract_name != "")
+                context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
     }
@@ -1029,7 +1047,7 @@ namespace taiyi { namespace chain {
     lua_map contract_handler::do_nfa_action(int64_t nfa_id, const string& action, const lua_map& params)
     {
         zone_id_type pre_contract_run_zone = db.get_contract_run_zone();
-
+        string current_contract_name = "";
         try
         {
             db.add_contract_handler_exe_point(2);
@@ -1046,7 +1064,7 @@ namespace taiyi { namespace chain {
             }
 
             //check material valid
-            FC_ASSERT(db.is_nfa_material_equivalent_qi_insufficient(*nfa), "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)");
+            FC_ASSERT(db.is_nfa_material_equivalent_qi_insufficient(*nfa), "NFA #${i} material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)", ("i", nfa->id));
             db.consume_nfa_material_random(*nfa, db.head_block_id()._hash[4] + 13997);
 
             //check existence and consequence type
@@ -1084,31 +1102,33 @@ namespace taiyi { namespace chain {
             
             db.add_contract_handler_exe_point(5);
             
-            auto current_contract_name = context.readVariable<string>("current_contract");
+            current_contract_name = context.readVariable<string>("current_contract");
             auto current_cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
             auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = contract;
-            const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
-            const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
-            
-            contract_base_info cbi(db, context, nfa_contract_owner, nfa_contract.name, current_cbi->caller, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, 0, nfa_contract, current_ch->result, context, false);
+            const auto& contract_owner = db.get<account_object, by_id>(contract.owner).name;
+            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+            FC_ASSERT(contract_code.lua_code_b.size()>0);
+
+            contract_base_info cbi(db, context, contract_owner, contract.name, current_cbi->caller, string(contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(db, current_ch->caller, 0, contract, current_ch->result, context, false);
             contract_nfa_handler cnh(current_ch->caller, *nfa, context, db, ch);
             
-            const auto& name = nfa_contract.name;
-            context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            FC_ASSERT(nfa_contract_code.lua_code_b.size()>0);
-            context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
-            
-            context.writeVariable("current_contract", name);
-            context.writeVariable(name, "_G", "protected");
-
-            context.writeVariable(name, "contract_helper", &ch);
-            context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "nfa_helper", &cnh);
+            bool new_sandbox = false;
+            const auto& name = contract.name;
+            if(name != current_contract_name) {
+                if(!context.get_sandbox(name)) {
+                    new_sandbox = true;
+                    context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
+                    context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+                    context.writeVariable(name, "_G", "protected");
+                    context.writeVariable(name, "contract_helper", &ch);
+                    context.writeVariable(name, "contract_base_info", &cbi);
+                    context.writeVariable(name, "nfa_helper", &cnh);
+                }
+                context.writeVariable("current_contract", name);
+            }
 
             context.get_function(name, function_name);
             //push function actual parameters
@@ -1130,7 +1150,13 @@ namespace taiyi { namespace chain {
                 error_message = lua_string(" Unexpected errors ");
             }
             lua_pop(context.mState, -1);
-            context.close_sandbox(name);
+            
+            if(name != current_contract_name) {
+                if(new_sandbox)
+                    context.close_sandbox(name);
+                context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
+            }
+            
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
@@ -1149,17 +1175,17 @@ namespace taiyi { namespace chain {
         catch (const fc::exception& e)
         {
             db.set_contract_run_zone(pre_contract_run_zone);
-
+            if(current_contract_name != "")
+                context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
         
         db.set_contract_run_zone(pre_contract_run_zone);
     }
     //=============================================================================
-    lua_map contract_handler::call_nfa_function_with_caller(const account_object& caller, int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist)
+    lua_map contract_handler::call_nfa_function_with_caller(const account_object& caller_, int64_t nfa_id, const string& function_name, const lua_map& params, bool assert_when_function_not_exist)
     {
-        //TODO: call产生的消耗
-        LuaContext nfa_context;
+        string current_contract_name = "";
         try
         {
             db.add_contract_handler_exe_point(2);
@@ -1192,53 +1218,62 @@ namespace taiyi { namespace chain {
             
             db.add_contract_handler_exe_point(3);
             
-            auto current_contract_name = context.readVariable<string>("current_contract");
+            current_contract_name = context.readVariable<string>("current_contract");
             auto current_cbi = context.readVariable<contract_base_info*>(current_contract_name, "contract_base_info");
             auto current_ch = context.readVariable<contract_handler*>(current_contract_name, "contract_helper");
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             
-            const auto& nfa_contract = contract;
-            const auto& nfa_contract_owner = db.get<account_object, by_id>(nfa_contract.owner).name;
-            const auto& nfa_contract_code = db.get<contract_bin_code_object, by_id>(nfa_contract.lua_code_b_id);
-            
-            contract_base_info cbi(db, nfa_context, nfa_contract_owner, nfa_contract.name, caller.name, string(nfa_contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(db, caller, 0, nfa_contract, current_ch->result, nfa_context, current_ch->is_in_eval);
-            contract_nfa_handler cnh(caller, *nfa, nfa_context, db, ch);
-            
-            const auto& name = nfa_contract.name;
-            nfa_context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            FC_ASSERT(nfa_contract_code.lua_code_b.size()>0);
-            nfa_context.load_script_to_sandbox(name, nfa_contract_code.lua_code_b.data(), nfa_contract_code.lua_code_b.size());
-            
-            nfa_context.writeVariable("current_contract", name);
-            nfa_context.writeVariable(name, "_G", "protected");
+            const auto& contract_owner = db.get<account_object, by_id>(contract.owner).name;
+            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+            FC_ASSERT(contract_code.lua_code_b.size() > 0);
 
-            nfa_context.writeVariable(name, "contract_helper", &ch);
-            nfa_context.writeVariable(name, "contract_base_info", &cbi);
-            nfa_context.writeVariable(name, "nfa_helper", &cnh);
+            contract_base_info cbi(db, context, contract_owner, contract.name, caller_.name, string(contract.creation_date), current_cbi->invoker_contract_name);
+            contract_handler ch(db, caller_, 0, contract, current_ch->result, context, current_ch->is_in_eval);
+            contract_nfa_handler cnh(caller_, *nfa, context, db, ch);
 
-            nfa_context.get_function(name, function_name);
+            //sandbox
+            bool new_sandbox = false;
+            const auto& name = contract.name;
+            if(name != current_contract_name) {
+                if(!context.get_sandbox(name)) {
+                    new_sandbox = true;
+                    context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
+                    context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+                    context.writeVariable(name, "_G", "protected");                    
+                    context.writeVariable(name, "contract_helper", &ch);
+                    context.writeVariable(name, "contract_base_info", &cbi);
+                    context.writeVariable(name, "nfa_helper", &cnh);
+                }
+                context.writeVariable("current_contract", name);
+            }
+            
+            context.get_function(name, function_name);
             //push function actual parameters
             for (vector<lua_types>::iterator itr = value_list.begin(); itr != value_list.end(); itr++)
-                LuaContext::Pusher<lua_types>::push(nfa_context.mState, *itr).release();
+                LuaContext::Pusher<lua_types>::push(context.mState, *itr).release();
             
-            int err = lua_pcall(nfa_context.mState, value_list.size(), 1, 0);
+            int err = lua_pcall(context.mState, value_list.size(), 1, 0);
             lua_types error_message;
             lua_table result_table;
             try
             {
                 if (err)
-                    error_message = *LuaContext::Reader<lua_types>::read(nfa_context.mState, -1);
-                else if(lua_istable(nfa_context.mState, -1))
-                    result_table = *LuaContext::Reader<lua_table>::read(nfa_context.mState, -1);
+                    error_message = *LuaContext::Reader<lua_types>::read(context.mState, -1);
+                else if(lua_istable(context.mState, -1))
+                    result_table = *LuaContext::Reader<lua_table>::read(context.mState, -1);
             }
             catch (...)
             {
                 error_message = lua_string(" Unexpected errors ");
             }
-            lua_pop(nfa_context.mState, -1);
-            nfa_context.close_sandbox(name);
+            lua_pop(context.mState, -1);
+            
+            if(name != current_contract_name) {
+                if(new_sandbox)
+                    context.close_sandbox(name);
+                context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
+            }
+            
             if (err)
                 FC_THROW("Try the contract resolution execution failure, ${message}", ("message", error_message));
             
@@ -1254,6 +1289,8 @@ namespace taiyi { namespace chain {
         }
         catch (const fc::exception& e)
         {
+            if(current_contract_name != "")
+                context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
     }
@@ -1269,8 +1306,9 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            const auto& nfa = db.get<nfa_object, by_id>(nfa_id);
-            FC_ASSERT(nfa.owner_account == caller.id || nfa.active_account == caller.id, "无权操作NFA #${n}", ("n", nfa_id));
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "NFA #${n} is not exist", ("n", nfa_id));
+            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "无权操作NFA #${n}", ("n", nfa_id));
 
             const auto* contract = db.find<contract_object, by_name>(contract_name);
             FC_ASSERT(contract != nullptr, "contract named ${a} is not exist", ("a", contract_name));
@@ -1296,7 +1334,7 @@ namespace taiyi { namespace chain {
             
             db.add_contract_handler_exe_point(5 + fc::raw::pack_size(result_table) / 5);
 
-            db.modify(nfa, [&](nfa_object& obj) {
+            db.modify(*nfa, [&](nfa_object& obj) {
                 //仅仅改变主合约，不改变nfa的symbol
                 obj.main_contract = contract->id;
                 //仅仅增加数据中没有的字段
@@ -1305,6 +1343,41 @@ namespace taiyi { namespace chain {
                         obj.contract_data[p.first] = p.second;
                 }
             });
+            
+            protocol::nfa_affected affected;
+            affected.affected_account = caller.name;
+            affected.affected_item = nfa->id;
+            affected.action = nfa_affected_type::modified;
+            result.contract_affecteds.push_back(affected);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_handler::change_nfa_active_operator(int64_t nfa_id, const string& account_name)
+    {
+        try
+        {
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "NFA #${n} is not exist", ("n", nfa_id));
+            FC_ASSERT(nfa->owner_account == caller.id, "无权改变NFA #${n}的操作权限", ("n", nfa_id));
+
+            const auto* account = db.find<account_object, by_name>(account_name);
+            FC_ASSERT(account != nullptr, "account named ${a} is not exist", ("a", account_name));
+            
+            db.add_contract_handler_exe_point(5);
+            
+            db.modify(*nfa, [&](nfa_object& obj) {
+                obj.active_account = account->id;
+            });
+            
+            protocol::nfa_affected affected;
+            affected.affected_account = caller.name;
+            affected.affected_item = nfa->id;
+            affected.action = nfa_affected_type::modified;
+            result.contract_affecteds.push_back(affected);
         }
         catch (const fc::exception& e)
         {
@@ -1872,7 +1945,7 @@ namespace taiyi { namespace chain {
             if (nfa_symbol->authority_account == caller.id)
                 ; //pass
             else {
-                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" have no authority to create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
             }
 
             const auto& creator = caller;
@@ -1908,7 +1981,7 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
-    void contract_handler::change_zone_type(const string& name, const string& type_name)
+    void contract_handler::change_zone_type(int64_t nfa_id, const string& type_name)
     {
         try
         {
@@ -1918,20 +1991,18 @@ namespace taiyi { namespace chain {
 
             E_ZONE_TYPE ztype = get_zone_type_from_string(type_name);
             FC_ASSERT(ztype != _ZONE_INVALID_TYPE, "\"${s}\" is invalid zone type", ("s", type_name));
-
-            FC_ASSERT( name.size() > 0, "Name is empty" );
-            FC_ASSERT( name.size() < TAIYI_ZONE_NAME_LIMIT, "Name size limit exceeded. Max: ${max} Current: ${n}", ("max", TAIYI_ZONE_NAME_LIMIT - 1)("n", name.size()) );
-            FC_ASSERT( fc::is_utf8( name ), "Name not formatted in UTF8" );
             
             //check zone existence
-            auto zone = db.find< zone_object, by_name >( name );
-            FC_ASSERT( zone != nullptr, "Zone named \"${a}\" is not exist", ("a", name) );
-            const auto& zone_nfa = db.get<nfa_object, by_id>(zone->nfa_id);
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "NFA #${n} is not exist", ("n", nfa_id));
+            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", nfa_id));
+            
+            const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
+            FC_ASSERT(zone != nullptr, "nfa #${z} is not a zone", ("z", nfa_id));
 
             const auto& creator = caller;
-            FC_ASSERT( zone_nfa.owner_account == creator.id, "you are not the owner of zone \"${z}\"", ("z", name) );
             
-            operation vop = zone_type_change_operation(caller.name, name, zone_nfa.id, type_name);
+            operation vop = zone_type_change_operation(caller.name, zone->name, nfa->id, type_name);
             db.pre_push_virtual_operation( vop );
 
             db.modify(*zone, [&](zone_object& obj) {
@@ -1942,11 +2013,65 @@ namespace taiyi { namespace chain {
 
             protocol::nfa_affected affected;
             affected.affected_account = creator.name;
-            affected.affected_item = zone_nfa.id;
+            affected.affected_item = nfa->id;
             affected.action = nfa_affected_type::modified;
             result.contract_affecteds.push_back(affected);
                         
-            db.add_contract_handler_exe_point(10);
+            //随机消耗大量真气（用执行点表示）
+            uint32_t rand_seed = contract_random();
+            int64_t used_exe_point = 100 + rand_seed % 1000;
+            db.add_contract_handler_exe_point(used_exe_point);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    extern E_ZONE_TYPE g_generate_zone_refining_result(const zone_object& zone, const nfa_material_object& zone_materials, uint32_t seed);
+    string contract_handler::refine_zone(int64_t nfa_id)
+    {
+        try
+        {
+            FC_ASSERT(db.is_xinsu(caller), "you have no authority to refine zone");
+
+            db.add_contract_handler_exe_point(2);
+
+            const auto* nfa = db.find<nfa_object, by_id>(nfa_id);
+            FC_ASSERT(nfa != nullptr, "NFA #${n} is not exist", ("n", nfa_id));
+            FC_ASSERT(nfa->owner_account == caller.id || nfa->active_account == caller.id, "caller account not the zone nfa #${z}'s owner or active operator", ("z", nfa_id));
+            
+            const auto* zone = db.find<zone_object, by_nfa_id>(nfa_id);
+            FC_ASSERT(zone != nullptr, "nfa #${z} is not a zone", ("z", nfa_id));
+            
+            uint32_t rand_seed = contract_random();
+            
+            const auto& m = db.get<nfa_material_object, by_nfa_id>(zone->nfa_id);
+            auto new_type = g_generate_zone_refining_result(*zone, m, rand_seed);
+            FC_ASSERT(new_type != _ZONE_INVALID_TYPE, "invalid zone type \"${t}\"", ("t", new_type));
+            
+            operation vop = zone_type_change_operation(caller.name, zone->name, nfa->id, get_zone_type_string(new_type));
+            db.pre_push_virtual_operation( vop );
+
+            if(new_type != zone->type) {
+                db.modify(*zone, [&](zone_object& obj){
+                    obj.type = new_type;
+                });
+            }
+
+            db.post_push_virtual_operation( vop );
+
+            protocol::nfa_affected affected;
+            affected.affected_account = caller.name;
+            affected.affected_item = nfa->id;
+            affected.action = nfa_affected_type::modified;
+            result.contract_affecteds.push_back(affected);
+
+            //随机消耗大量真气（用执行点表示）
+            int64_t used_exe_point = 100 + rand_seed % 1000;
+            db.add_contract_handler_exe_point(used_exe_point);
+
+            return get_zone_type_string(new_type);
         }
         catch (const fc::exception& e)
         {
@@ -2254,7 +2379,7 @@ namespace taiyi { namespace chain {
             if (nfa_symbol->authority_account == caller.id)
                 ; //pass
             else {
-                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" can not create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
+                FC_ASSERT(db.has_nfa_with_symbol(caller, nfa_symbol->authority_nfa_symbol), "\"${a}\" have no authority to create nfa from symbol \"${s}\"", ("a", caller.name)("s", nfa_symbol->symbol));
             }
 
             const auto& creator = caller;
@@ -2719,6 +2844,8 @@ namespace taiyi { namespace chain {
             
             db.post_push_virtual_operation( vop );
             
+            narrate(FORMAT_MESSAGE("\"${a}\"发起了一项提案（#${p}）：“${s}”", ("a", caller.name)("p", proposal.id)("s", subject)), true);
+            
             return proposal.id;
         }
         catch (const fc::exception& e)
@@ -2746,9 +2873,6 @@ namespace taiyi { namespace chain {
                 pids.insert(p->second.get<lua_int>().v);
             }
 
-            operation vop = update_proposal_votes_operation(caller.name, pids, approve);
-            db.pre_push_virtual_operation( vop );
-
             const auto& pidx = db.get_index<proposal_index>().indices().get<by_id>();
             const auto& pvidx = db.get_index<proposal_vote_index>().indices().get<by_voter_proposal>();
 
@@ -2769,15 +2893,19 @@ namespace taiyi { namespace chain {
                             obj.proposal_id = id;
                         });
                     }
+                    narrate(FORMAT_MESSAGE("\"${a}\"支持了第${p}号提案", ("a", caller.name)("p", id)), true);
                 }
                 else
                 {
-                    if(found != pvidx.end())
+                    if(found != pvidx.end()) {
                         db.remove(*found);
+                        narrate(FORMAT_MESSAGE("\"${a}\"不再支持第${p}号提案", ("a", caller.name)("p", id)), true);
+                    }
                 }
             }
             
-            db.post_push_virtual_operation( vop );
+            operation vop = update_proposal_votes_operation(caller.name, pids, approve);
+            db.push_virtual_operation( vop );
         }
         catch (const fc::exception& e)
         {
@@ -2853,7 +2981,6 @@ namespace taiyi { namespace chain {
             //create an new xinsu marker nfa to receiver
             const auto& nfa_symbol = db.get<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_XINSU_MARK);
             const auto& creator = db.get_account( TAIYI_DANUO_ACCOUNT );
-            LuaContext context;
             const auto& xinsu_mark = db.create_nfa(creator, nfa_symbol, true, context);
             db.modify(xinsu_mark, [&](nfa_object &obj) {
                 obj.owner_account = receiver->id;
@@ -2863,6 +2990,8 @@ namespace taiyi { namespace chain {
             db.modify(db.get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
                 obj.xinsu_count++;
             });
+            
+            narrate(FORMAT_MESSAGE("\"${a}\" 被赋予了心素", ("a", receiver_account)), true);
         }
         catch (const fc::exception& e)
         {

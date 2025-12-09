@@ -42,7 +42,7 @@ namespace taiyi { namespace chain {
          *  of xinsu is lower than this value, then the total amount of xinsu shall be regarded as the
          *  minimum requirement.
          */
-        uint32_t proposal_adopted_votes_threshold = 1;
+        uint32_t proposal_adopted_votes_threshold = TAIYI_PROPOSAL_ADOPTED_VOTES_THRESHOLD_INIT;
     };
 
     /**

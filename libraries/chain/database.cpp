@@ -78,6 +78,8 @@ namespace taiyi { namespace chain {
             });
         }
         
+        _xinsu_mark_nfa_symbol_id = get<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_XINSU_MARK).id;
+        
         _benchmark_dumper.set_enabled( args.benchmark_is_enabled );
         
         assert( args.data_dir.is_absolute() );

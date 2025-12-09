@@ -28,6 +28,8 @@ namespace taiyi { namespace chain {
         int pre_drops_enable = lua_enabledrops(context.mState, 1, reset_vm_memused?1:0);
         lua_setdrops(context.mState, vm_drops);
         
+        string current_contract_name = "";
+        
         try {
             const auto &baseENV = db.get<contract_bin_code_object, by_id>(0);
             auto abi_itr = contract.contract_ABI.find(lua_types(lua_string(function_name)));
@@ -36,28 +38,33 @@ namespace taiyi { namespace chain {
                 FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(), "input values count is ${n}, but ${function_name}`s parameter list is ${plist}...", ("n", value_list.size())("function_name", function_name)("plist", abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size()<=20,"value list is greater than 20 limit");
                         
-            string backup_current_contract_name;
             lua_getglobal(context.mState, "current_contract");
             if( !lua_isnil(context.mState, -1) )
-                backup_current_contract_name = string(lua_tostring(context.mState, -1));
+                current_contract_name = string(lua_tostring(context.mState, -1));
             lua_pop(context.mState, 1);
 
             const auto &contract_owner = db.get<account_object, by_id>(contract.owner).name;
+            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+            FC_ASSERT(contract_code.lua_code_b.size() > 0);
+
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), contract.name);
             contract_handler ch(db, caller, 0, contract, result, context, false);
 
+            //sandbox
+            bool new_sandbox = false;
             const auto& name = contract.name;
-            context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
-            FC_ASSERT(contract_code.lua_code_b.size()>0);
-            context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
-            context.writeVariable("current_contract", name);
-            context.writeVariable(name, "_G", "protected");
-            
-            context.writeVariable(name, "contract_helper", &ch);
-            context.writeVariable(name, "nfa_helper", (contract_nfa_handler*)0);
-            context.writeVariable(name, "contract_base_info", &cbi);
+            if(name != current_contract_name) {
+                if(!context.get_sandbox(name)) {
+                    new_sandbox = true;
+                    context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
+                    context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+                    context.writeVariable(name, "_G", "protected");
+                    context.writeVariable(name, "contract_helper", &ch);
+                    context.writeVariable(name, "nfa_helper", (contract_nfa_handler*)0);
+                    context.writeVariable(name, "contract_base_info", &cbi);
+                }
+                context.writeVariable("current_contract", name);
+            }
 
             bool bOK = context.get_function(name, function_name);
             FC_ASSERT(bOK);
@@ -79,11 +86,12 @@ namespace taiyi { namespace chain {
                 error_message = lua_string(" Unexpected errors ");
             }
             lua_pop(context.mState, -1);
-            context.close_sandbox(name);
-                        
-            //restore current_contract
-            if(backup_current_contract_name != "")
-                context.writeVariable("current_contract", backup_current_contract_name);
+
+            if(name != current_contract_name) {
+                if(new_sandbox)
+                    context.close_sandbox(name);
+                context.writeVariable("current_contract", current_contract_name); //恢复当前合约名称
+            }
 
             if (err)
                 FC_THROW("Try the contract resolution execution failure,${message}", ("message", error_message));
@@ -101,12 +109,16 @@ namespace taiyi { namespace chain {
         {
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
+            if(current_contract_name != "")
+                context.writeVariable("current_contract", current_contract_name);
             throw e;
         }
         catch(const fc::exception& e)
         {
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
+            if(current_contract_name != "")
+                context.writeVariable("current_contract", current_contract_name);
             throw e;
         }
         
@@ -322,7 +334,7 @@ namespace taiyi { namespace chain {
     { try {
         //check material valid
         if (!db.is_nfa_material_equivalent_qi_insufficient(nfa))
-            return "NFA material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)";
+            return FORMAT_MESSAGE("NFA #${i} material equivalent qi is insufficient(#t&&y#实体完整性不足#a&&i#)", ("i", nfa.id));
         db.consume_nfa_material_random(nfa, db.head_block_id()._hash[4] + 14489);
 
         //check existence and consequence type
@@ -360,6 +372,8 @@ namespace taiyi { namespace chain {
         
         zone_id_type pre_contract_run_zone = db.get_contract_run_zone();
 
+        string current_contract_name = "";
+
         try
         {
             //设置db的当前运行zone标记
@@ -379,23 +393,33 @@ namespace taiyi { namespace chain {
             if(!abi_itr->second.get<lua_function>().is_var_arg)
                 FC_ASSERT(value_list.size() == abi_itr->second.get<lua_function>().arglist.size(), "#t&&y#行为输入参数数量错误，输入了${n}个参数，但是行为“${f}”的参数列表是${p}#a&&i#", ("n", value_list.size())("f", function_name)("p", abi_itr->second.get<lua_function>().arglist));
             FC_ASSERT(value_list.size() <= 20, "value list is greater than 20 limit");
-            
+
+            lua_getglobal(context.mState, "current_contract");
+            if( !lua_isnil(context.mState, -1) )
+                current_contract_name = string(lua_tostring(context.mState, -1));
+            lua_pop(context.mState, 1);
+
+            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
+            FC_ASSERT(contract_code.lua_code_b.size() > 0);
+
             contract_base_info cbi(db, context, contract_owner, contract.name, caller.name, string(contract.creation_date), contract.name);
             contract_handler ch(db, caller, 0, contract, result, context, eval);
             contract_nfa_handler cnh(caller, nfa, context, db, ch);
 
+            //sandbox
+            bool new_sandbox = false;
             const auto& name = contract.name;
-            context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size()); //sandbox
-            
-            const auto& contract_code = db.get<contract_bin_code_object, by_id>(contract.lua_code_b_id);
-            FC_ASSERT(contract_code.lua_code_b.size()>0);
-            context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
-            context.writeVariable("current_contract", name);
-            context.writeVariable(name, "_G", "protected");
-
-            context.writeVariable(name, "contract_helper", &ch);
-            context.writeVariable(name, "contract_base_info", &cbi);
-            context.writeVariable(name, "nfa_helper", &cnh);
+            if(name != current_contract_name) {
+                if(!context.get_sandbox(name)) {
+                    context.new_sandbox(name, baseENV.lua_code_b.data(), baseENV.lua_code_b.size());
+                    context.load_script_to_sandbox(name, contract_code.lua_code_b.data(), contract_code.lua_code_b.size());
+                    context.writeVariable(name, "_G", "protected");
+                    context.writeVariable(name, "contract_helper", &ch);
+                    context.writeVariable(name, "contract_base_info", &cbi);
+                    context.writeVariable(name, "nfa_helper", &cnh);
+                }
+                context.writeVariable("current_contract", name);
+            }
 
             context.get_function(name, function_name);
             //push function actual parameters
@@ -416,7 +440,12 @@ namespace taiyi { namespace chain {
                 error_message = lua_string("未知错误");
             }
             lua_pop(context.mState, -1);
-            context.close_sandbox(name);
+            
+            if(name != current_contract_name) {
+                if(new_sandbox)
+                    context.close_sandbox(name);
+                context.writeVariable("current_contract", current_contract_name);
+            }
 
             if (err) {
                 if(error_message.which() == lua_types::tag<lua_string>::value) {
@@ -449,16 +478,20 @@ namespace taiyi { namespace chain {
         {
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
-
             db.set_contract_run_zone(pre_contract_run_zone);
+            if(current_contract_name != "")
+                context.writeVariable("current_contract", current_contract_name);
+
             throw e;
         }
         catch(const fc::exception& e)
         {
             vm_drops = lua_getdrops(context.mState);
             lua_enabledrops(context.mState, pre_drops_enable, reset_vm_memused?1:0);
-
             db.set_contract_run_zone(pre_contract_run_zone);
+            if(current_contract_name != "")
+                context.writeVariable("current_contract", current_contract_name);
+
             throw e;
         }
         

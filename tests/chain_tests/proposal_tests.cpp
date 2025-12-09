@@ -1699,6 +1699,8 @@ BOOST_AUTO_TEST_CASE( proposals_maintenance_01 )
 
 BOOST_AUTO_TEST_CASE( proposals_maintenance_02 )
 { try {
+    FC_ASSERT( TAIYI_PROPOSAL_MAINTENANCE_PERIOD == 3600, "如果维护周期太短，例如60秒，这会导致提案提前被执行后失效");
+    
     BOOST_TEST_MESSAGE( "Testing: removing of old proposals + votes using threshold" );
     
     ACTORS( (a00)(a01)(a02)(a03)(a04) )

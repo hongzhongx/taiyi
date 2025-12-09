@@ -179,6 +179,7 @@ namespace taiyi { namespace chain {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
         const auto& first_one = get_account( TAIYI_INIT_SIMING_NAME );
         LuaContext context;
+        lua_setdrops(context.mState, 10000000);
         const auto& xinsu_mark = create_nfa(creator, nfa_symbol, true, context);
         modify(xinsu_mark, [&](nfa_object &obj) {
             obj.owner_account = first_one.id;
@@ -189,8 +190,6 @@ namespace taiyi { namespace chain {
     {
         const auto& creator = get_account( TAIYI_DANUO_ACCOUNT );
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_XINSU_MARK, "心素标记", "contract.nfa.xinsumark", 10000, 0, true);
-        _xinsu_mark_nfa_symbol_id = get<nfa_symbol_object, by_symbol>(TAIYI_NFA_SYMBOL_NAME_XINSU_MARK).id;
-        
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ACTOR, "默认的角色", "contract.actor.default", 1000000000, 1000000, false);
         create_nfa_symbol_object(creator, TAIYI_NFA_SYMBOL_NAME_DEFAULT_ZONE, "默认的区域", "contract.zone.default", 1000000000, 10000000, false);
     }
@@ -248,49 +247,8 @@ namespace taiyi { namespace chain {
         contract_worker worker;
         vector<lua_types> value_list;
         lua_table result_table;
-        long long vm_drops;
-        
-        if(creator.name != TAIYI_DANUO_ACCOUNT) {
-            //qi可能在执行合约中被进一步使用，所以这里记录当前的qi来计算虚拟机的执行消耗
-            long long old_drops = (caller_nfa ? caller_nfa->qi.amount.value : caller.qi.amount.value) / TAIYI_USEMANA_EXECUTION_SCALE;
-            vm_drops = old_drops;
-            int64_t backup_api_exe_point = get_contract_handler_exe_point();
-            clear_contract_handler_exe_point(); //初始化api执行消耗统计
-            result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, contract, vm_drops, reset_vm_memused, context, *this);
-            int64_t api_exe_point = get_contract_handler_exe_point();
-            clear_contract_handler_exe_point(backup_api_exe_point);
-            int64_t used_drops = old_drops - vm_drops;
-            
-            //reward contract owner
-            int64_t used_qi = used_drops * TAIYI_USEMANA_EXECUTION_SCALE;
-            int64_t used_qi_for_treasury = used_qi * TAIYI_CONTRACT_USEMANA_REWARD_TREASURY_PERCENT / TAIYI_100_PERCENT;
-            used_qi -= used_qi_for_treasury;
-            const auto& contract_owner = get<account_object, by_id>(contract.owner);
-            if(caller_nfa) {
-                FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
-                reward_feigang(contract_owner, *caller_nfa, asset(used_qi, QI_SYMBOL));
-            }
-            else {
-                FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以创建新实体" );
-                reward_feigang(contract_owner, caller, asset(used_qi, QI_SYMBOL));
-            }
-            
-            //reward to treasury
-            used_qi = (TAIYI_NFA_OBJ_STATE_BYTES + TAIYI_NFA_MATERIAL_STATE_BYTES + fc::raw::pack_size(result_table.v)) * TAIYI_USEMANA_STATE_BYTES_SCALE + (100 + api_exe_point) * TAIYI_USEMANA_EXECUTION_SCALE + used_qi_for_treasury;
-            if(caller_nfa) {
-                FC_ASSERT( caller_nfa->qi.amount.value >= used_qi, "真气不足以创建新实体" );
-                reward_feigang(get<account_object, by_name>(TAIYI_DAO_ACCOUNT), *caller_nfa, asset(used_qi, QI_SYMBOL));
-            }
-            else {
-                FC_ASSERT( caller.qi.amount.value >= used_qi, "真气不足以创建新实体" );
-                reward_feigang(get<account_object, by_name>(TAIYI_DAO_ACCOUNT), caller, asset(used_qi, QI_SYMBOL));
-            }
-        }
-        else {
-            //特殊NFA无条件创建
-            vm_drops = 10000000;
-            result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, contract, vm_drops, reset_vm_memused, context, *this);
-        }
+        long long vm_drops = lua_getdrops(context.mState);
+        result_table = worker.do_contract_function(caller, TAIYI_NFA_INIT_FUNC_NAME, value_list, contract, vm_drops, reset_vm_memused, context, *this);
         
         //init nfa from result table
         modify(nfa, [&](nfa_object& obj) {
@@ -301,6 +259,10 @@ namespace taiyi { namespace chain {
         create<nfa_material_object>([&](nfa_material_object& obj) {
             obj.nfa = nfa.id;
         });
+        
+        //fix size to avoid fc::raw::pack_size(nfa_symbol_obj) changing in future structure defination
+        size_t new_state_size = TAIYI_NFA_OBJ_STATE_BYTES + TAIYI_NFA_MATERIAL_STATE_BYTES + fc::raw::pack_size(result_table.v);
+        add_contract_handler_exe_point(new_state_size + 100);
         
         return nfa;
     }

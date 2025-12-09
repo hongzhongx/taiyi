@@ -23,6 +23,9 @@
 
 #define TAIYI_DELEGATION_RETURN_PERIOD          (60*60*1) // 1 hour
 
+#define TAIYI_PROPOSAL_MAINTENANCE_PERIOD       60      //1 minute，注意这个值太小，会导致测试用例中一些特殊情况失效
+#define TAIYI_PROPOSAL_ADOPTED_VOTES_THRESHOLD_INIT 1
+
 #else // IS LIVE TAIYI NETWORK
 
 #define TAIYI_BLOCKCHAIN_VERSION                ( version(0, 0, 0) )
@@ -39,6 +42,9 @@
 #define TAIYI_YANG_INIT_SUPPLY                  int64_t(0)
 
 #define TAIYI_DELEGATION_RETURN_PERIOD          (5*60*60*24) // 5 day
+
+#define TAIYI_PROPOSAL_MAINTENANCE_PERIOD       3600    //1 hour
+#define TAIYI_PROPOSAL_ADOPTED_VOTES_THRESHOLD_INIT 3
 
 #endif // END LIVE TAIYI NETWORK
 
@@ -200,7 +206,6 @@
 
 /// TAIYI PROPOSAL SYSTEM support
 
-#define TAIYI_PROPOSAL_MAINTENANCE_PERIOD       3600
 #define TAIYI_PROPOSAL_MAINTENANCE_CLEANUP      (60*60*24*1) /// 1 day
 #define TAIYI_PROPOSAL_SUBJECT_MAX_LENGTH       80
 // Max number of IDs passed at once to the update_proposal_voter_operation or remove_proposal_operation.

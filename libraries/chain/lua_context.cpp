@@ -233,6 +233,7 @@ namespace taiyi { namespace chain {
         registerFunction("change_nfa_contract", &contract_handler::change_nfa_contract);
         registerFunction("create_nfa_to_actor", &contract_handler::create_nfa_to_actor);
         registerFunction("create_nfa_to_account", &contract_handler::create_nfa_to_account);
+        registerFunction("change_nfa_active_operator", &contract_handler::change_nfa_active_operator);
         registerFunction("read_nfa_contract_data", &contract_handler::read_nfa_contract_data);
         registerFunction("write_nfa_contract_data", &contract_handler::write_nfa_contract_data);
         registerFunction("is_nfa_action_exist", &contract_handler::is_nfa_action_exist);
@@ -247,6 +248,7 @@ namespace taiyi { namespace chain {
         registerFunction("get_nfa_location", &contract_handler::get_nfa_location);
         registerFunction("create_zone", &contract_handler::create_zone);
         registerFunction("change_zone_type", &contract_handler::change_zone_type);
+        registerFunction("refine_zone", &contract_handler::refine_zone);
         registerFunction("get_zone_info", &contract_handler::get_zone_info);
         registerFunction("get_zone_info_by_name", &contract_handler::get_zone_info_by_name);
         registerFunction("is_zone_valid", &contract_handler::is_zone_valid);        
@@ -332,6 +334,9 @@ namespace taiyi { namespace chain {
         registerFunction("destroy", &contract_nfa_handler::destroy);
         registerFunction("eval_action", &contract_nfa_handler::eval_action);
         registerFunction("do_action", &contract_nfa_handler::do_action);
+        registerFunction("create_nfa_to_actor", &contract_nfa_handler::create_nfa_to_actor);
+        registerFunction("create_nfa_to_account", &contract_nfa_handler::create_nfa_to_account);
+        
         //nfa handler - actor
         registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
         registerFunction("talk_to_actor", &contract_nfa_handler::talk_to_actor);
