@@ -64,6 +64,10 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     typedef zone_type_change_operation              legacy_zone_type_change_operation;
     typedef zone_connect_operation                  legacy_zone_connect_operation;
     typedef shutdown_siming_operation               legacy_shutdown_siming_operation;
+    typedef create_proposal_operation               legacy_create_proposal_operation;
+    typedef update_proposal_votes_operation         legacy_update_proposal_votes_operation;
+    typedef remove_proposal_operation               legacy_remove_proposal_operation;
+    typedef proposal_execute_operation              legacy_proposal_execute_operation;
 
     struct api_chain_properties
     {
@@ -419,24 +423,29 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
     };
             
     typedef fc::static_variant<
+        legacy_account_create_operation,
+        legacy_account_update_operation,
+    
         legacy_transfer_operation,
         legacy_transfer_to_qi_operation,
         legacy_withdraw_qi_operation,
-        legacy_account_create_operation,
-        legacy_account_update_operation,
+        legacy_set_withdraw_qi_route_operation,
+        legacy_delegate_qi_operation,
+
         legacy_siming_update_operation,
+        legacy_siming_set_properties_operation,
         legacy_account_siming_adore_operation,
         legacy_account_siming_proxy_operation,
+        legacy_decline_adoring_rights_operation,
+
         legacy_custom_operation,
         legacy_custom_json_operation,
-        legacy_set_withdraw_qi_route_operation,
+    
         legacy_request_account_recovery_operation,
         legacy_recover_account_operation,
         legacy_change_recovery_account_operation,
-        legacy_decline_adoring_rights_operation,
+    
         legacy_claim_reward_balance_operation,
-        legacy_delegate_qi_operation,
-        legacy_siming_set_properties_operation,
 
         legacy_create_contract_operation,
         legacy_revise_contract_operation,
@@ -446,8 +455,8 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_action_nfa_operation,
     
         //**** virtual operations below this point
-        legacy_fill_qi_withdraw_operation,
         legacy_hardfork_operation,
+        legacy_fill_qi_withdraw_operation,
         legacy_return_qi_delegation_operation,
         legacy_producer_reward_operation,
 
@@ -473,14 +482,20 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         legacy_actor_talent_trigger_operation,
         legacy_actor_movement_operation,
         legacy_actor_grown_operation,
-        legacy_narrate_log_operation,
         legacy_actor_talk_operation,
-        
+
         legacy_zone_create_operation,
         legacy_zone_type_change_operation,
         legacy_zone_connect_operation,
+
+        legacy_narrate_log_operation,
+
+        legacy_shutdown_siming_operation,
     
-        legacy_shutdown_siming_operation
+        legacy_create_proposal_operation,
+        legacy_update_proposal_votes_operation,
+        legacy_remove_proposal_operation,
+        legacy_proposal_execute_operation
 
     > legacy_operation;
 
@@ -529,6 +544,10 @@ namespace taiyi { namespace plugins { namespace baiyujing_api {
         bool operator()( const zone_type_change_operation& op )const                { l_op = op; return true; }
         bool operator()( const zone_connect_operation& op )const                    { l_op = op; return true; }
         bool operator()( const shutdown_siming_operation& op )const                 { l_op = op; return true; }
+        bool operator()( const create_proposal_operation& op )const                 { l_op = op; return true; }
+        bool operator()( const update_proposal_votes_operation& op )const           { l_op = op; return true; }
+        bool operator()( const remove_proposal_operation& op )const                 { l_op = op; return true; }
+        bool operator()( const proposal_execute_operation& op )const                { l_op = op; return true; }
 
         bool operator()( const transfer_operation& op )const
         {

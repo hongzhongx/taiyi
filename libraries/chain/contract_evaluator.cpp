@@ -133,6 +133,14 @@ namespace taiyi { namespace chain {
         //evaluate contract authority
         FC_ASSERT(contract->can_do(_db), "The current contract \"${n}\" may have been listed in the forbidden call list", ("n", o.contract_name));
                 
+        vector<lua_types> value_list;
+        if( o.extensions.size() > 0 && o.extensions[0].size() > 0) {
+            fc::variant action_args = fc::json::from_string(o.extensions[0]);
+            value_list = protocol::from_variants_to_lua_types(action_args.as<fc::variants>());
+        }
+        else
+            value_list = o.value_list;
+
         contract_worker worker;
         LuaContext context;
         
@@ -142,7 +150,7 @@ namespace taiyi { namespace chain {
         int64_t backup_api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(); //初始化api执行消耗统计
         
-        worker.do_contract_function(*caller, o.function_name, o.value_list, *contract, vm_drops, true,  context, _db);
+        worker.do_contract_function(*caller, o.function_name, value_list, *contract, vm_drops, true,  context, _db);
         
         int64_t api_exe_point = _db.get_contract_handler_exe_point();
         _db.clear_contract_handler_exe_point(backup_api_exe_point);

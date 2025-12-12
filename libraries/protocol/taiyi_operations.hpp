@@ -454,11 +454,11 @@ namespace taiyi { namespace protocol {
 
     struct call_contract_function_operation : public base_operation
     {
-        account_name_type   caller;        // 合约调用者
-        string              contract_name; // 合约名
-        string              function_name; // 目标函数名
-        vector<lua_types>   value_list;    // 参数列表
-        vector<string>      extensions;
+        account_name_type   caller;        /// 合约调用者
+        string              contract_name; /// 合约名
+        string              function_name; /// 目标函数名
+        vector<lua_types>   value_list;    /// 参数列表
+        vector<string>      extensions;    /// 以字符串表示的参数列表，用于不能实现 lua_types 的协议（比如taiyijs项目）
         
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(caller); }
@@ -466,11 +466,11 @@ namespace taiyi { namespace protocol {
 
     struct action_nfa_operation : public base_operation
     {
-        account_name_type   caller;     ///nfa operator account name
-        int64_t             id;         ///nfa id
-        string              action;     ///action name
-        vector<lua_types>   value_list; ///action function parameter value list
-        vector<string>      extensions;
+        account_name_type   caller;     /// nfa operator account name
+        int64_t             id;         /// nfa id
+        string              action;     /// action name
+        vector<lua_types>   value_list; /// action function parameter value list
+        vector<string>      extensions; /// 以字符串表示的函数参数列表，用于不能实现 lua_types 的协议（比如taiyijs项目）
 
         void validate()const;
         void get_required_active_authorities( flat_set<account_name_type>& a )const{ a.insert(caller); }
