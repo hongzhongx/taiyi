@@ -21,6 +21,8 @@
 
 #include <chain/util/uint256.hpp>
 
+#include <tyme/tyme.h>
+
 #include <fc/smart_ref_impl.hpp>
 #include <fc/uint128.hpp>
 
@@ -176,8 +178,10 @@ namespace taiyi { namespace chain {
         bn -= dn * TAIYI_VDAY_BLOCK_NUM;
         uint32_t tod = bn / (TAIYI_VDAY_BLOCK_NUM/4); //time on a day, 0=凌晨；1=上午；2=下午；3=夜晚
         //wlog("${y}年${m}月${d}日tod=${tod}, bn=${bn}", ("y", yn)("m", mn)("d", dn)("tod", tod)("bn", bn));
-        
-        uint32_t tn = mn * 2 + (dn < 15 ? 0 : 1); //solar term number
+                
+        //solar term number，注意虚拟公历中每个月都是30天
+        uint32_t tn = tyme::SolarDay::from_ymd(yn+2, mn+1, dn+1).get_term().get_index();
+        tn = (tn + 21) % 24; //序号0由冬至对齐到春分
         
         const auto& tiandao = get_tiandao_properties();
         FC_ASSERT(tiandao.v_years <= yn, "virtual year number (${tn}) bigger than now (${yn}).", ("tn", tiandao.v_years)("yn", yn));

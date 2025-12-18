@@ -54,7 +54,7 @@ add_library( taiyi_chain
              ${HEADERS}
            )
 
-target_link_libraries( taiyi_chain taiyi_protocol fc chainbase taiyi_schema appbase mira lua
+target_link_libraries( taiyi_chain taiyi_protocol fc chainbase taiyi_schema appbase mira lua tyme
                        ${PATCH_MERGE_LIB} )
 target_include_directories( taiyi_chain
                             PUBLIC
