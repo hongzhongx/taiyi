@@ -76,7 +76,6 @@
 #define TAIYI_VMONTH_BLOCK_NUM                  (TAIYI_VDAY_BLOCK_NUM*30)   // 1 virtual month
 
 #define TAIYI_NFA_TICK_PERIOD_MAX_BLOCK_NUM     (100) // about 5 minutes
-#define TAIYI_ACTOR_TICK_PERIOD_MAX_BLOCK_NUM   (100) // about 5 minutes
 
 #define TAIYI_INIT_SIMING_NAME                  "danuo"
 #define TAIYI_NUM_INIT_SIMINGS                  1

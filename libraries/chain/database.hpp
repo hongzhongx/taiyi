@@ -346,8 +346,6 @@ namespace taiyi { namespace chain {
         void initialize_actor_talent_rule_object(const account_object& creator, actor_talent_rule_object& rule, LuaContext& context);
         void born_actor( const actor_object& act, int gender, int sexuality, const zone_object& zone );
         void born_actor( const actor_object& act, int gender, int sexuality, const string& zone_name );
-        void try_trigger_actor_talents( const actor_object& act, uint16_t age );
-        void try_trigger_actor_contract_grow( const actor_object& act );
         void prepare_actor_relations( const actor_object& actor1, const actor_object& actor2 );
         const actor_object* find_actor_with_parents( const nfa_object& nfa, const uint16_t depth = 3 );
         const zone_object* find_location_with_parents( const nfa_object& nfa, const uint16_t depth = 3 );
@@ -450,7 +448,6 @@ namespace taiyi { namespace chain {
         void notify_changed_objects();
 
         void process_nfa_tick();
-        void process_actor_tick();
 
     private:
         bool _is_producing = false;

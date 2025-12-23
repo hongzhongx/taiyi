@@ -1965,8 +1965,8 @@ namespace taiyi { namespace chain {
             db.pre_push_virtual_operation( vop );
 
             //创建一个新区域
-            /*const auto& new_zone = */db.create< zone_object >( [&]( zone_object& zone ) {
-                db.initialize_zone_object( zone, name, nfa, ztype);
+            /*const auto& new_zone = */db.create< zone_object >( [&]( zone_object& obj ) {
+                db.initialize_zone_object( obj, name, nfa, ztype);
             });
 
             db.post_push_virtual_operation( vop );

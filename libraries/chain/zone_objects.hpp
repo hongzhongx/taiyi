@@ -31,7 +31,6 @@ namespace taiyi { namespace chain {
 
         std::string         name;
         E_ZONE_TYPE         type;
-        uint32_t            last_grow_vmonth = 0;
         
         id_type             ref_prohibited_contract_zone = id_type::max();
     };
@@ -180,7 +179,7 @@ namespace mira {
 
 FC_REFLECT( taiyi::chain::zone_creation_data, (name)(type) )
 
-FC_REFLECT(taiyi::chain::zone_object, (id)(nfa_id)(name)(type)(last_grow_vmonth)(ref_prohibited_contract_zone))
+FC_REFLECT(taiyi::chain::zone_object, (id)(nfa_id)(name)(type)(ref_prohibited_contract_zone))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::zone_object, taiyi::chain::zone_index)
 
 FC_REFLECT(taiyi::chain::cunzhuang_object, (id)(zone)(chief))
