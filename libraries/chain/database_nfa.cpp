@@ -571,5 +571,10 @@ namespace taiyi { namespace chain {
     {
         return has_nfa_with_symbol(account, _xinsu_mark_nfa_symbol_id);
     }
+    //=========================================================================
+    bool database::is_dao_account(const account_object& account) const
+    {
+        return account.id == _dao_account_id;
+    }
 
 } } //taiyi::chain

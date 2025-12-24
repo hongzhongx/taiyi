@@ -441,6 +441,9 @@ namespace taiyi { namespace chain {
         
         // xinsu
         bool is_xinsu(const account_object& account) const;
+        
+        // DAO
+        bool is_dao_account(const account_object& account) const;
 
     protected:
         //Mark pop_undo() as protected -- we do not want outside calling pop_undo(); it should call pop_block() instead
@@ -626,6 +629,11 @@ namespace taiyi { namespace chain {
           * 用于快速访问心素符号的缓存变量
          */
         nfa_symbol_id_type _xinsu_mark_nfa_symbol_id = nfa_symbol_id_type::max();
+
+        /**
+          * 用于快速访问DAO账号ID的缓存变量
+         */
+        account_id_type _dao_account_id = account_id_type::max();
     };
 
     struct reindex_notification

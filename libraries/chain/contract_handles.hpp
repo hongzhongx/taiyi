@@ -175,7 +175,7 @@ namespace taiyi { namespace chain {
         int64_t create_nfa_to_account(const string& to_account_name, string symbol, lua_map data);
 
         //Actor
-        void modify_actor_attributes(const lua_map& values);
+        void modify_actor_attributes(const lua_map& values, const lua_map& max_values);
         void talk_to_actor(const string& target_actor_name, const string& something);
 
         //以下是不直接暴露到合约的辅助函数
