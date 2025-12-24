@@ -245,7 +245,6 @@ namespace taiyi { namespace chain {
         std::string         title;
         std::string         description;
         int                 init_attribute_amount_modifier = 0; //对角色出生时候初始化属性的总点数加成
-        int                 max_triggers = 1;   //最大触发次数
         bool                removed = false;
         
         time_point_sec      last_update;
@@ -472,7 +471,7 @@ CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_core_attributes_object, taiyi::chai
 FC_REFLECT(taiyi::chain::actor_group_object, (id)(actor)(leader))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_group_object, taiyi::chain::actor_group_index)
 
-FC_REFLECT(taiyi::chain::actor_talent_rule_object, (id)(main_contract)(title)(description)(init_attribute_amount_modifier)(max_triggers)(removed)(last_update)(created))
+FC_REFLECT(taiyi::chain::actor_talent_rule_object, (id)(main_contract)(title)(description)(init_attribute_amount_modifier)(removed)(last_update)(created))
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::actor_talent_rule_object, taiyi::chain::actor_talent_rule_index)
 
 FC_REFLECT(taiyi::chain::actor_talents_object, (id)(actor)(talents)(last_update)(created))

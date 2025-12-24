@@ -26,6 +26,10 @@ namespace taiyi { namespace chain {
         }
         
         five_phase = db.get_nfa_five_phase(db.get<nfa_object, by_id>(a.nfa_id));
+        
+        const actor_talents_object& talents_obj = db.get<actor_talents_object, by_actor>(a.id);
+        for(auto itlt = talents_obj.talents.begin(); itlt != talents_obj.talents.end(); itlt++)
+            talents.push_back(itlt->first);
     }
     //=========================================================================
     contract_actor_core_attributes::contract_actor_core_attributes(const actor_object & act, database& db)
@@ -50,6 +54,12 @@ namespace taiyi { namespace chain {
             charm_max = maybe_core_attrs->charm_max;
             mood_max = maybe_core_attrs->mood_max;
         }
+    }
+    //=========================================================================
+    contract_actor_talent_rule_info::contract_actor_talent_rule_info(const actor_talent_rule_object& rule, database& db)
+    : id(rule.id), title(rule.title), description(rule.description), init_attribute_amount_modifier(rule.init_attribute_amount_modifier)
+    {
+        main_contract = db.get<contract_object, by_id>(rule.main_contract).name;
     }
 
 } } // namespace taiyi::chain

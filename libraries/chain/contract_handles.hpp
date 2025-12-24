@@ -114,6 +114,8 @@ namespace taiyi { namespace chain {
         
         string      location;   //current zone name
         string      base;       //从属地名称
+        
+        vector<int64_t> talents;    //天赋id的数组
 
         contract_actor_base_info(const actor_object& act, database& db);
     };
@@ -138,6 +140,18 @@ namespace taiyi { namespace chain {
         int16_t             mood_max        = 0;
 
         contract_actor_core_attributes(const actor_object& act, database& db);
+    };
+    
+    struct contract_actor_talent_rule_info
+    {
+        int64_t             id; //talent id
+        string              main_contract;
+
+        string              title;
+        string              description;
+        int                 init_attribute_amount_modifier; //对角色出生时候初始化属性的总点数加成
+        
+        contract_actor_talent_rule_info(const actor_talent_rule_object& rule, database& db);
     };
 
     //=========================================================================
@@ -175,6 +189,8 @@ namespace taiyi { namespace chain {
         int64_t create_nfa_to_account(const string& to_account_name, string symbol, lua_map data);
 
         //Actor
+        int get_actor_talent_trigger_number(int64_t talent_rule_id);
+        void set_actor_talent_trigger_number(int64_t talent_rule_id, int num);
         void modify_actor_attributes(const lua_map& values, const lua_map& max_values);
         void talk_to_actor(const string& target_actor_name, const string& something);
 

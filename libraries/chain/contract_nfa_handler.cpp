@@ -957,6 +957,50 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    int contract_nfa_handler::get_actor_talent_trigger_number(int64_t talent_rule_id)
+    {
+        try
+        {
+            _db.add_contract_handler_exe_point(1);
+            
+            const actor_object& actor = _db.get< actor_object, by_nfa_id >( _caller.id );
+            const actor_talents_object& talents_obj = _db.get<actor_talents_object, by_actor>(actor.id);
+            auto itlt = talents_obj.talents.find(talent_rule_id);
+            FC_ASSERT(itlt != talents_obj.talents.end(), "${a}身上没有这个天赋（#${i}）", ("a", actor.name)("i", talent_rule_id));
+            
+            return itlt->second;
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::set_actor_talent_trigger_number(int64_t talent_rule_id, int num)
+    {
+        try
+        {
+            _db.add_contract_handler_exe_point(2);
+            
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id || _db.is_dao_account(_caller_account), "caller account (${a}) not the owner or active operator or DAO", ("a", _caller_account.name));
+            
+            const actor_object& actor = _db.get< actor_object, by_nfa_id >( _caller.id );
+            const actor_talents_object& talents_obj = _db.get<actor_talents_object, by_actor>(actor.id);
+            auto itlt = talents_obj.talents.find(talent_rule_id);
+            FC_ASSERT(itlt != talents_obj.talents.end(), "${a}身上没有这个天赋（#${i}）", ("a", actor.name)("i", talent_rule_id));
+
+            auto now = _db.head_block_time();
+            _db.modify(talents_obj, [&](actor_talents_object& obj) {
+                obj.talents[talent_rule_id] = num;
+                obj.last_update = now;
+            });
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+    }
+    //=============================================================================
     void contract_nfa_handler::inject_material_from(nfa_id_type from, nfa_id_type to, double amount, const string& symbol_name, bool enable_logger)
     {
         try

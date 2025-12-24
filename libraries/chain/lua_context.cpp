@@ -340,6 +340,8 @@ namespace taiyi { namespace chain {
         //nfa handler - actor
         registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
         registerFunction("talk_to_actor", &contract_nfa_handler::talk_to_actor);
+        registerFunction("get_actor_talent_trigger_number", &contract_nfa_handler::get_actor_talent_trigger_number);
+        registerFunction("set_actor_talent_trigger_number", &contract_nfa_handler::set_actor_talent_trigger_number);
 
         registerFunction<contract_nfa_handler, void(int64_t to, double, const string&, bool)>("transfer_to", [](contract_nfa_handler &handler, int64_t to, double amount, const string& symbol, bool enable_logger = false) {
             handler.transfer_from(handler._caller.id, to, amount, symbol, enable_logger);
@@ -405,6 +407,13 @@ namespace taiyi { namespace chain {
         registerMember("charm_max", &contract_actor_core_attributes::charm_max);
         registerMember("mood", &contract_actor_core_attributes::mood);
         registerMember("mood_max", &contract_actor_core_attributes::mood_max);
+        
+        //actor talent rule info
+        registerMember("id", &contract_actor_talent_rule_info::id);
+        registerMember("main_contract", &contract_actor_talent_rule_info::main_contract);
+        registerMember("title", &contract_actor_talent_rule_info::title);
+        registerMember("description", &contract_actor_talent_rule_info::description);
+        registerMember("init_attribute_amount_modifier", &contract_actor_talent_rule_info::init_attribute_amount_modifier);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)
