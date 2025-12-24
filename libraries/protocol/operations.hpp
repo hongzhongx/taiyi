@@ -76,21 +76,20 @@ namespace taiyi { namespace protocol {
         actor_born_operation,               //42
         actor_talent_trigger_operation,     //43
         actor_movement_operation,           //44
-        actor_grown_operation,              //45
-        actor_talk_operation,               //46
+        actor_talk_operation,               //45
     
-        zone_create_operation,              //47
-        zone_type_change_operation,         //48
-        zone_connect_operation,             //49
+        zone_create_operation,              //46
+        zone_type_change_operation,         //47
+        zone_connect_operation,             //48
 
-        narrate_log_operation,              //50
+        narrate_log_operation,              //49
     
-        shutdown_siming_operation,          //51
+        shutdown_siming_operation,          //50
     
-        create_proposal_operation,          //52
-        update_proposal_votes_operation,    //53
-        remove_proposal_operation,          //54
-        proposal_execute_operation          //55
+        create_proposal_operation,          //51
+        update_proposal_votes_operation,    //52
+        remove_proposal_operation,          //53
+        proposal_execute_operation          //54
     
     > operation;
 

@@ -282,26 +282,6 @@ namespace taiyi { namespace protocol {
         int64_t                     nfa;
     };
 
-    struct actor_grown_operation : public virtual_operation
-    {
-        actor_grown_operation() {}
-        actor_grown_operation( const account_name_type& a, const string& n, const int64_t& nf, const uint32_t& y, const uint32_t& m, const uint32_t& d, const uint32_t& _tod, const uint32_t& t, const uint32_t& ag, const int32_t& h)
-            : owner(a), name(n), nfa(nf), years(y), months(m), days(d), tod(_tod), times(t), age(ag), health(h) {}
-        
-        account_name_type           owner;
-        string                      name;
-        int64_t                     nfa;
-
-        uint32_t                    years;
-        uint32_t                    months;
-        uint32_t                    days;
-        uint32_t                    tod;
-        uint32_t                    times;
-
-        uint32_t                    age;
-        int32_t                     health;
-    };
-
     struct narrate_log_operation : public virtual_operation
     {
         narrate_log_operation() {}
@@ -454,7 +434,6 @@ FC_REFLECT( taiyi::protocol::actor_create_operation, (creator)(family_name)(last
 FC_REFLECT( taiyi::protocol::actor_born_operation, (owner)(name)(zone)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_talent_trigger_operation, (owner)(name)(nfa)(tid)(title)(desc)(age) )
 FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(to_zone)(nfa) )
-FC_REFLECT( taiyi::protocol::actor_grown_operation, (owner)(name)(nfa)(years)(months)(days)(tod)(times)(age)(health) )
 FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(days)(tod)(times)(log) )
 FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_days)(v_tod)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content)(favor_delta_actor)(favor_delta_target) )
 FC_REFLECT( taiyi::protocol::zone_create_operation, (creator)(name)(nfa) )
