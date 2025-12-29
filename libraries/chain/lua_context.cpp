@@ -338,7 +338,9 @@ namespace taiyi { namespace chain {
         registerFunction("create_nfa_to_account", &contract_nfa_handler::create_nfa_to_account);
         
         //nfa handler - actor
+        registerFunction("get_actor_relation_info", &contract_nfa_handler::get_actor_relation_info);
         registerFunction("modify_actor_attributes", &contract_nfa_handler::modify_actor_attributes);
+        registerFunction("modify_actor_relation_values", &contract_nfa_handler::modify_actor_relation_values);
         registerFunction("talk_to_actor", &contract_nfa_handler::talk_to_actor);
         registerFunction("get_actor_talent_trigger_number", &contract_nfa_handler::get_actor_talent_trigger_number);
         registerFunction("set_actor_talent_trigger_number", &contract_nfa_handler::set_actor_talent_trigger_number);
@@ -414,6 +416,12 @@ namespace taiyi { namespace chain {
         registerMember("title", &contract_actor_talent_rule_info::title);
         registerMember("description", &contract_actor_talent_rule_info::description);
         registerMember("init_attribute_amount_modifier", &contract_actor_talent_rule_info::init_attribute_amount_modifier);
+        
+        //actor relation info
+        registerMember("actor_name", &contract_actor_relation_info::actor_name);
+        registerMember("target_actor_name", &contract_actor_relation_info::target_actor_name);
+        registerMember("favor", &contract_actor_relation_info::favor);
+        registerMember("favor_level", &contract_actor_relation_info::favor_level);
     }
     //=============================================================================
     bool LuaContext::new_sandbox(string spacename, const char *condition, size_t condition_size)

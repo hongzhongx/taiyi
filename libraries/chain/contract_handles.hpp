@@ -153,6 +153,17 @@ namespace taiyi { namespace chain {
         
         contract_actor_talent_rule_info(const actor_talent_rule_object& rule, database& db);
     };
+    
+    struct contract_actor_relation_info
+    {
+        string              actor_name;
+        string              target_actor_name;
+        
+        int32_t             favor = 0;      //好感度
+        int                 favor_level;    //-6 to +6, 13 levels
+        
+        contract_actor_relation_info(const actor_relation_object& rel, database& db);
+    };
 
     //=========================================================================
     //NFA绑定合约被调用的角度来处理事务，隐含了发起这个调用相关的NFA对象
@@ -192,6 +203,8 @@ namespace taiyi { namespace chain {
         int get_actor_talent_trigger_number(int64_t talent_rule_id);
         void set_actor_talent_trigger_number(int64_t talent_rule_id, int num);
         void modify_actor_attributes(const lua_map& values, const lua_map& max_values);
+        void modify_actor_relation_values(const string& target_actor_name, const lua_map& values);
+        contract_actor_relation_info get_actor_relation_info(const string& target_actor_name);
         void talk_to_actor(const string& target_actor_name, const string& something);
 
         //以下是不直接暴露到合约的辅助函数

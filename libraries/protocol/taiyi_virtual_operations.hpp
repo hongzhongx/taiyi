@@ -286,8 +286,8 @@ namespace taiyi { namespace protocol {
     struct actor_talk_operation : public virtual_operation
     {
         actor_talk_operation() {}
-        actor_talk_operation( const uint32_t& vy, const uint32_t& vm, const uint32_t& vd, const uint32_t& tod, const uint32_t& vt, const account_name_type& ao, const int64_t& anfa, const string& an, const account_name_type& to, const int64_t& tnfa, const string& tn, const string& c, const int& fdm, const int& fdt)
-            : v_years(vy), v_months(vm), v_days(vd), v_tod(tod), v_times(vt), actor_owner(ao), actor_nfa(anfa), actor_name(an), target_owner(to), target_nfa(tnfa), target_name(tn), content(c), favor_delta_actor(fdm), favor_delta_target(fdt) {}
+        actor_talk_operation( const uint32_t& vy, const uint32_t& vm, const uint32_t& vd, const uint32_t& tod, const uint32_t& vt, const account_name_type& ao, const int64_t& anfa, const string& an, const account_name_type& to, const int64_t& tnfa, const string& tn, const string& c)
+            : v_years(vy), v_months(vm), v_days(vd), v_tod(tod), v_times(vt), actor_owner(ao), actor_nfa(anfa), actor_name(an), target_owner(to), target_nfa(tnfa), target_name(tn), content(c) {}
         
         uint32_t                    v_years;
         uint32_t                    v_months;
@@ -303,8 +303,6 @@ namespace taiyi { namespace protocol {
         string                      target_name;
         
         string                      content;
-        int                         favor_delta_actor;
-        int                         favor_delta_target;
     };
     
     struct zone_create_operation : public virtual_operation
@@ -417,7 +415,7 @@ FC_REFLECT( taiyi::protocol::actor_create_operation, (creator)(family_name)(last
 FC_REFLECT( taiyi::protocol::actor_born_operation, (owner)(name)(zone)(nfa) )
 FC_REFLECT( taiyi::protocol::actor_movement_operation, (owner)(name)(from_zone)(to_zone)(nfa) )
 FC_REFLECT( taiyi::protocol::narrate_log_operation, (narrator)(nfa)(years)(months)(days)(tod)(times)(log) )
-FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_days)(v_tod)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content)(favor_delta_actor)(favor_delta_target) )
+FC_REFLECT( taiyi::protocol::actor_talk_operation, (v_years)(v_months)(v_days)(v_tod)(v_times)(actor_owner)(actor_nfa)(actor_name)(target_owner)(target_nfa)(target_name)(content) )
 FC_REFLECT( taiyi::protocol::zone_create_operation, (creator)(name)(nfa) )
 FC_REFLECT( taiyi::protocol::zone_type_change_operation, (creator)(name)(nfa)(type) )
 FC_REFLECT( taiyi::protocol::zone_connect_operation, (account)(zone1)(zone1_nfa)(zone2)(zone2_nfa) )

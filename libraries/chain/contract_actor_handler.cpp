@@ -61,5 +61,13 @@ namespace taiyi { namespace chain {
     {
         main_contract = db.get<contract_object, by_id>(rule.main_contract).name;
     }
+    //=========================================================================
+    contract_actor_relation_info::contract_actor_relation_info(const actor_relation_object& rel, database& db)
+    : favor(rel.favor)
+    {
+        actor_name = db.get<actor_object, by_id>(rel.actor).name;
+        target_actor_name = db.get<actor_object, by_id>(rel.target).name;
+        favor_level = rel.get_favor_level();
+    }
 
 } } // namespace taiyi::chain

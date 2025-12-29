@@ -857,6 +857,87 @@ namespace taiyi { namespace chain {
         }
     }
     //=============================================================================
+    contract_actor_relation_info contract_nfa_handler::get_actor_relation_info(const string& target_actor_name)
+    {
+        try
+        {
+            _db.add_contract_handler_exe_point(1);
+            
+            const actor_object* actor_me_ptr = _db.find< actor_object, by_nfa_id >( _caller.id );
+            FC_ASSERT( actor_me_ptr != nullptr, "current nfa (#${i}) is not an actor", ("i", _caller.id));
+            const actor_object* actor_target_ptr = _db.find< actor_object, by_name >( target_actor_name );
+            FC_ASSERT( actor_target_ptr != nullptr, "actor named ${n} is not exist", ("n", target_actor_name));
+                        
+            const auto* relation_me_to_target = _db.find< actor_relation_object, by_actor_target >( boost::make_tuple(actor_me_ptr->id, actor_target_ptr->id) );
+            FC_ASSERT( relation_me_to_target != nullptr, "${a}和${b}还没有什么关系", ("a", actor_me_ptr->name)("b", target_actor_name));
+            
+            return contract_actor_relation_info(*relation_me_to_target, _db);
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.what());
+        }
+    }
+    //=============================================================================
+    void contract_nfa_handler::modify_actor_relation_values(const string& target_actor_name, const lua_map& values)
+    {
+        try
+        {
+            _db.add_contract_handler_exe_point(2);
+            
+            FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id || _db.is_dao_account(_caller_account), "caller account (${a}) not the owner or active operator or DAO", ("a", _caller_account.name));
+
+            auto now = _db.head_block_time();
+
+            static string favor_key     = "favor";
+            
+            const actor_object* actor_me_ptr = _db.find< actor_object, by_nfa_id >( _caller.id );
+            FC_ASSERT( actor_me_ptr != nullptr, "current nfa (#${i}) is not an actor", ("i", _caller.id));
+            FC_ASSERT( actor_me_ptr->born == true, "actor ${a} is not born.", ("a", actor_me_ptr->name));
+            
+            const actor_object* actor_target_ptr = _db.find< actor_object, by_name >( target_actor_name );
+            FC_ASSERT( actor_target_ptr != nullptr, "actor named ${n} is not exist", ("n", target_actor_name));
+            FC_ASSERT( actor_target_ptr->born == true, "actor ${a} is not born.", ("a", target_actor_name));
+                        
+            _db.prepare_actor_relations(*actor_me_ptr, *actor_target_ptr);
+            
+            _db.add_contract_handler_exe_point(1);
+
+            const auto& relation_me_to_target = _db.get< actor_relation_object, by_actor_target >( boost::make_tuple(actor_me_ptr->id, actor_target_ptr->id) );
+            
+            //values
+            for (auto itr = values.begin(); itr != values.end(); itr++)
+            {
+                lua_types key = itr->first.cast_to_lua_types();
+                if (key.which() == lua_types::tag<lua_string>::value) {
+                    auto k = key.get<lua_string>().v;
+                    if( k == favor_key) {
+                        FC_ASSERT(itr->second.which() == lua_types::tag<lua_int>::value, "favor value type invalid (must be int)");
+                        auto v = itr->second.get<lua_int>().v;
+                        if(v != 0) {
+                            _db.modify(relation_me_to_target, [&]( actor_relation_object& obj ) {
+                                obj.favor = v;
+                                obj.last_update = now;
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.to_string());
+        }
+        catch (std::exception e)
+        {
+            LUA_C_ERR_THROW(_context.mState, e.what());
+        }
+    }
+    //=============================================================================
     void contract_nfa_handler::talk_to_actor(const string& target_actor_name, const string& something)
     {
         try
@@ -865,84 +946,42 @@ namespace taiyi { namespace chain {
             
             FC_ASSERT(_caller.owner_account == _caller_account.id || _caller.active_account == _caller_account.id, "caller account (${a}) not the owner or active operator", ("a", _caller_account.name));
 
-            auto now = _db.head_block_time();
+            const actor_object* actor_me_ptr = _db.find< actor_object, by_nfa_id >( _caller.id );
+            FC_ASSERT( actor_me_ptr != nullptr, "current nfa (#${i}) is not an actor", ("i", _caller.id));
+            FC_ASSERT( actor_me_ptr->born == true, "actor ${a} is not born.", ("a", actor_me_ptr->name));
             
-            const actor_object& actor_me = _db.get< actor_object, by_nfa_id >( _caller.id );
-            FC_ASSERT( actor_me.born == true, "actor ${a} is not born.", ("a", actor_me.name));
+            const actor_object* actor_target_ptr = _db.find< actor_object, by_name >( target_actor_name );
+            FC_ASSERT( actor_target_ptr != nullptr, "actor named ${n} is not exist", ("n", target_actor_name));
+            FC_ASSERT( actor_target_ptr->born == true, "actor ${a} is not born.", ("a", target_actor_name));
+                        
+            _db.prepare_actor_relations(*actor_me_ptr, *actor_target_ptr);
             
-            const actor_object& actor_target = _db.get< actor_object, by_name >( target_actor_name );
-            FC_ASSERT( actor_target.born == true, "actor ${a} is not born.", ("a", actor_target.name));
-            
-            FC_ASSERT( actor_me.location == actor_target.location, "talk to actor not on the same zone location.");
-            
-            _db.prepare_actor_relations(actor_me, actor_target);
-            
-            _db.add_contract_handler_exe_point(3);
+            _db.add_contract_handler_exe_point(2);
 
             //处理说话人
-            int favor_delta_me = 0;
             {
-                const auto& relation_me_to_target = _db.get< actor_relation_object, by_actor_target >( boost::make_tuple(actor_me.id, actor_target.id) );
-                
                 //以nfa视角回调nfa函数：on_actor_talking(target_actor_name, something)
                 //该函数返回一个整数作为好感度变化值
                 lua_map param;
-                param[lua_key(lua_int(1))] = lua_types(lua_string(actor_target.name));
+                param[lua_key(lua_int(1))] = lua_types(lua_string(actor_target_ptr->name));
                 param[lua_key(lua_int(2))] = lua_types(lua_string(something));
-                lua_map result = _ch.call_nfa_function_with_caller(_caller_account, actor_me.nfa_id, "on_actor_talking", param, false);
-                
-                if (result.size() > 0) {
-                    FC_ASSERT(result.size() == 1, "on_actor_talking should return one sigle integer.");
-                    auto _itr = result.find(lua_types(lua_int(1)));
-                    FC_ASSERT(_itr != result.end(), "on_actor_talking should return one sigle integer.");
-                    FC_ASSERT(_itr->second.which() == lua_types::tag<lua_int>::value, "on_actor_talking should return one sigle integer.");
-                    favor_delta_me = _itr->second.get<lua_int>().v;
-                }
-                
-                if (favor_delta_me != 0) {
-                    _db.modify(relation_me_to_target, [&]( actor_relation_object& rel ) {
-                        rel.favor = std::min(30000, rel.favor + favor_delta_me);
-                        rel.last_update = now;
-                        //if(actor_me.name == s_debug_actor && rel.favor > 10000)
-                        //    wlog("${y}年${m}月，${a}对${b}的好感达到${c}。", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_me.name)("b", actor_target.name)("c", rel.favor));
-                    });
-                }
+                _ch.call_nfa_function_with_caller(_caller_account, actor_me_ptr->nfa_id, "on_actor_talking", param, false);
             }
             
             //处理听话人
-            int favor_delta_target = 0;
             {
-                const auto& relation_target_to_me = _db.get< actor_relation_object, by_actor_target >( boost::make_tuple(actor_target.id, actor_me.id) );
-
                 //以nfa视角回调nfa函数：on_actor_listening(from_actor_name, something)
                 //该函数返回一个整数作为好感度变化值
                 lua_map param;
-                param[lua_key(lua_int(1))] = lua_types(lua_string(actor_me.name));
+                param[lua_key(lua_int(1))] = lua_types(lua_string(actor_me_ptr->name));
                 param[lua_key(lua_int(2))] = lua_types(lua_string(something));
-                lua_map result = _ch.call_nfa_function_with_caller(_db.get_account(TAIYI_DANUO_ACCOUNT), actor_target.nfa_id, "on_actor_listening", param, false);
-
-                if (result.size() > 0) {
-                    FC_ASSERT(result.size() == 1, "on_actor_listening should return one sigle integer.");
-                    auto _itr = result.find(lua_types(lua_int(1)));
-                    FC_ASSERT(_itr != result.end(), "on_actor_listening should return one sigle integer.");
-                    FC_ASSERT(_itr->second.which() == lua_types::tag<lua_int>::value, "on_actor_listening should return one sigle integer.");
-                    favor_delta_target = _itr->second.get<lua_int>().v;
-                }
-                
-                if (favor_delta_target != 0) {
-                    _db.modify(relation_target_to_me, [&]( actor_relation_object& rel ) {
-                        rel.favor = std::min(30000, rel.favor + favor_delta_target);
-                        rel.last_update = now;
-                        //if(actor_target.name == s_debug_actor && rel.favor > 10000)
-                        //    wlog("${y}年${m}月，${a}对${b}的好感达到${c}。", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_target.name)("b", actor_me.name)("c", rel.favor));
-                    });
-                }
+                _ch.call_nfa_function_with_caller(_db.get_account(TAIYI_DAO_ACCOUNT), actor_target_ptr->nfa_id, "on_actor_listening", param, false);
             }
             
             const auto& tiandao = _db.get_tiandao_properties();
             const auto& actor_me_owner = _db.get<account_object, by_id>(_caller.owner_account);
-            const auto& actor_target_owner = _db.get<account_object, by_id>(_db.get<nfa_object, by_id>( actor_target.nfa_id).owner_account);
-            _db.push_virtual_operation( actor_talk_operation( tiandao.v_years, tiandao.v_months, tiandao.v_days, tiandao.v_timeonday, tiandao.v_times, actor_me_owner.name, actor_me.nfa_id, actor_me.name, actor_target_owner.name, actor_target.nfa_id, actor_target.name, something, favor_delta_me, favor_delta_target ) );
+            const auto& actor_target_owner = _db.get<account_object, by_id>(_db.get<nfa_object, by_id>( actor_target_ptr->nfa_id).owner_account);
+            _db.push_virtual_operation( actor_talk_operation( tiandao.v_years, tiandao.v_months, tiandao.v_days, tiandao.v_timeonday, tiandao.v_times, actor_me_owner.name, actor_me_ptr->nfa_id, actor_me_ptr->name, actor_target_owner.name, actor_target_ptr->nfa_id, actor_target_ptr->name, something ) );
             //if(actor_me.name == s_debug_actor)
             //    wlog("${y}年${m}月，${a}对${b}说道：\"${c}\"", ("y", tiandao.v_years)("m", tiandao.v_months)("a", actor_me.name)("b", actor_target.name)("c", talk_content));
 
