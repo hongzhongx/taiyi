@@ -1985,7 +1985,7 @@ namespace taiyi { namespace chain {
     {
         try
         {
-            FC_ASSERT(db.is_xinsu(caller), "you have no authority to create zone");
+            FC_ASSERT(db.is_xinsu(caller) || caller.name == TAIYI_DAO_ACCOUNT, "you have no authority to create zone");
 
             db.add_contract_handler_exe_point(2);
 
@@ -2699,12 +2699,12 @@ namespace taiyi { namespace chain {
                 return "参与者体内真气不够";
             
             db.participate_cultivation(*cult, nfa, value);
+            return "";
         }
         catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
-        return "";
     }
     //=========================================================================
     string contract_handler::start_cultivation(int64_t cult_id)
@@ -2726,12 +2726,12 @@ namespace taiyi { namespace chain {
                 return "指定修真活动没有任何参与者";
 
             db.start_cultivation(*cult);
+            return "";
         }
         catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
-        return "";
     }
     //=========================================================================
     string contract_handler::stop_and_close_cultivation(int64_t cult_id)
@@ -2757,12 +2757,34 @@ namespace taiyi { namespace chain {
             }
             
             db.remove(*cult);
+            return "";
         }
         catch (const fc::exception& e)
         {
             LUA_C_ERR_THROW(context.mState, e.to_string());
         }
-        return "";
+    }
+    //=========================================================================
+    string contract_handler::update_cultivation(int64_t cult_id)
+    {
+        try
+        {
+            db.add_contract_handler_exe_point(3);
+
+            const auto* cult = db.find<cultivation_object, by_id>(cult_id);
+            if(cult == nullptr)
+                return "指定修真活动不存在";
+            const auto& manager_nfa = db.get<nfa_object, by_id>(cult->manager_nfa_id);
+            if(manager_nfa.owner_account != caller.id && manager_nfa.active_account != caller.id)
+                return "无权操作修真活动";
+                        
+            db.update_cultivation(*cult);
+            return "";
+        }
+        catch (const fc::exception& e)
+        {
+            LUA_C_ERR_THROW(context.mState, e.to_string());
+        }
     }
     //=========================================================================
     bool contract_handler::is_cultivation_exist(int64_t cult_id)

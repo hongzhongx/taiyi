@@ -82,6 +82,8 @@ namespace taiyi { namespace chain {
         modify(cult, [&](cultivation_object& obj) {
             obj.participants.clear();
             obj.start_time = std::numeric_limits<uint32_t>::max();
+            obj.last_update_time = obj.start_time;
+            obj.qi_accumulated = 0;
         });
 
         if(total_cultivation_qi.amount > 0) {
@@ -121,95 +123,69 @@ namespace taiyi { namespace chain {
         
         modify(cult, [&](cultivation_object& obj) {
             obj.start_time = head_block_num();
+            obj.last_update_time = obj.start_time;
+            obj.qi_accumulated = 0;
         });
     }
     //=========================================================================
     void database::stop_cultivation(const cultivation_object& cult)
     {
-        FC_ASSERT(cult.start_time != std::numeric_limits<uint32_t>::max(), "cultivation have not started");
+        update_cultivation(cult);
         
         auto now = head_block_num();
-        FC_ASSERT(cult.start_time < now, "invalid start time");
-        uint32_t t = now - cult.start_time;
-        t = std::min<uint32_t>(t, TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM);
+        int64_t rv = cult.qi_accumulated;
         
-        if(t > 0) {
-            //calculate reward qi
-            auto hblock_id = head_block_id();
-            uint32_t p = hasher::hash( hblock_id._hash[4] + cult.id ) % TAIYI_100_PERCENT;
-            uint64_t k = 0;
-            for (const auto& p : cult.participants)
-                k += get<nfa_object, by_id>(p).cultivation_value;
-            int64_t rv = k * p * t / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT;
+        //检查基金池
+        const reward_fund_object& rf = get< reward_fund_object, by_name >( TAIYI_CULTIVATION_REWARD_FUND_NAME );
+        if(rf.reward_qi_balance.amount < rv)
+            rv = rf.reward_qi_balance.amount.value;
             
-            //检查基金池
-            const reward_fund_object& rf = get< reward_fund_object, by_name >( TAIYI_CULTIVATION_REWARD_FUND_NAME );
-            if(rf.reward_qi_balance.amount < rv)
-                rv = rf.reward_qi_balance.amount.value;
-            
-            if(rv > 0) {
-                //reward to each beneficiary with its share
-                reward_cultivation_operation vop;
-                const nfa_object* nfa_b = 0;
-                int64_t rv_left = rv;
-                for (const auto& b : cult.beneficiary_map) {
-                    nfa_b = find<nfa_object, by_id>(b.first);
-                    asset rn = asset(rv * b.second / TAIYI_100_PERCENT, QI_SYMBOL);
-                    
-                    vop.account = get<account_object, by_id>(nfa_b->owner_account).name;
-                    vop.nfa = nfa_b->id;
-                    vop.qi = rn;
-                    pre_push_virtual_operation( vop );
-
-                    adjust_nfa_balance(*nfa_b, rn);
-
-#ifdef IS_TEST_NET
-                    //测试网络修真可以起死回生
-                    auto hbn = head_block_num();
-                    const auto* test_actor = find< actor_object, by_nfa_id >( nfa_b->id );
-                    if( test_actor != nullptr &&
-                       (test_actor->health_max <= 0 || (hbn > 1601345 && test_actor->health_max <= 10) )
-                       ) {
-                        modify(*test_actor, [&](actor_object& obj) {
-                            obj.health_max = 100;
-                            obj.health = obj.health_max;
-                        });
-                    }
-#endif
-
-                    post_push_virtual_operation( vop );
-                    
-                    rv_left -= rn.amount.value;
-                }
-                if (rv_left > 0) {
-                    //整数误差多出来的奖励给最后一个受益者
-                    asset rn = asset(rv_left, QI_SYMBOL);
-                    vop.account = get<account_object, by_id>(nfa_b->owner_account).name;
-                    vop.nfa = nfa_b->id;
-                    vop.qi = rn;
-                    pre_push_virtual_operation( vop );
-                    adjust_nfa_balance(*nfa_b, rn);
-                    post_push_virtual_operation( vop );
-                }
+        if(rv > 0) {
+            //reward to each beneficiary with its share
+            reward_cultivation_operation vop;
+            const nfa_object* nfa_b = 0;
+            int64_t rv_left = rv;
+            for (const auto& b : cult.beneficiary_map) {
+                nfa_b = find<nfa_object, by_id>(b.first);
+                asset rn = asset(rv * b.second / TAIYI_100_PERCENT, QI_SYMBOL);
                 
-                //更新修真基金池
-                modify(rf, [&](reward_fund_object& rfo) {
-                    rfo.reward_qi_balance.amount -= rv;
-                });
+                adjust_nfa_balance(*nfa_b, rn);
+
+                vop.account = get<account_object, by_id>(nfa_b->owner_account).name;
+                vop.nfa = nfa_b->id;
+                vop.qi = rn;
+                push_virtual_operation( vop );
                 
-                //更新统计真气
-                modify(get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
-                    obj.pending_rewarded_qi.amount -= rv;
-                    obj.total_qi.amount += rv;
-                });
+                rv_left -= rn.amount.value;
             }
+            if (rv_left > 0) {
+                //整数误差多出来的奖励给最后一个受益者
+                asset rn = asset(rv_left, QI_SYMBOL);
+                vop.account = get<account_object, by_id>(nfa_b->owner_account).name;
+                vop.nfa = nfa_b->id;
+                vop.qi = rn;
+                pre_push_virtual_operation( vop );
+                adjust_nfa_balance(*nfa_b, rn);
+                post_push_virtual_operation( vop );
+            }
+            
+            //更新修真基金池
+            modify(rf, [&](reward_fund_object& rfo) {
+                rfo.reward_qi_balance.amount -= rv;
+            });
+            
+            //更新统计真气
+            modify(get_dynamic_global_properties(), [&](dynamic_global_property_object& obj) {
+                obj.pending_rewarded_qi.amount -= rv;
+                obj.total_qi.amount += rv;
+            });
         }
         
         //关闭并解散修真对象
         dissolve_cultivation(cult);
     }
     //=========================================================================
-    void database::process_cultivations()
+    void database::clean_cultivations()
     {
         auto now = head_block_num();
         std::set<const cultivation_object*> removed;
@@ -235,7 +211,51 @@ namespace taiyi { namespace chain {
         }
 
         for (const auto* p : removed)
-            remove(*p);
+            remove(*p);        
+    }
+    //=========================================================================
+    void database::update_cultivation(const cultivation_object& cult)
+    {
+        FC_ASSERT(cult.start_time != std::numeric_limits<uint32_t>::max(), "cultivation have not started");
+        
+        auto now = head_block_num();
+        FC_ASSERT(cult.start_time < now, "invalid start time");
+        if(cult.last_update_time >= now)
+            return;
+        
+        uint32_t dt = now - cult.last_update_time;
+        dt = std::min<uint32_t>(dt, TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM);
+        
+        /*
+         修真获得真气上限和区域灵气浓度正相关，修真投入的所有真气、参与实体各自五行材料和区域五行相互的生克程度影响修真效率
+         */
+        
+        // 所在区域灵气浓度
+        const zone_object& zone = get<zone_object, by_id>(get<actor_object, by_nfa_id>(cult.manager_nfa_id).location);
+        int64_t zone_energy_N = calculate_zone_spiritual_energy(zone);
+        
+        // 各个实体投入的所有真气，修真效率
+        uint64_t k = 0; // 投入真气总量
+        int64_t E = 0; // 修真效率
+        const nfa_material_object& zone_mat = get<nfa_material_object, by_nfa_id>(zone.nfa_id); //区域材质
+        for (const auto& p : cult.participants) {
+            const auto& nfa = get<nfa_object, by_id>(p);
+            k += nfa.cultivation_value;
+            
+            const auto& nfa_mat = get<nfa_material_object, by_nfa_id>(p); //各个实体材质
+            // TODO
+        }
+
+        auto hblock_id = head_block_id();
+        uint32_t p = hasher::hash( hblock_id._hash[4] + cult.id ) % TAIYI_100_PERCENT;
+        int64_t rv = zone_energy_N * k * p * dt / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT;
+                
+        if(rv > 0) {
+            modify(cult, [&](cultivation_object& obj) {
+                obj.qi_accumulated += rv;
+                obj.last_update_time = now;
+            });
+        }
     }
 
 } } //taiyi::chain

@@ -348,6 +348,7 @@ namespace taiyi { namespace chain {
         string participate_cultivation(int64_t cult_id, int64_t nfa_id, uint64_t value);
         string start_cultivation(int64_t cult_id);
         string stop_and_close_cultivation(int64_t cult_id);
+        string update_cultivation(int64_t cult_id);
         bool is_cultivation_exist(int64_t cult_id);
 
         //以下是不直接暴露到合约的辅助函数

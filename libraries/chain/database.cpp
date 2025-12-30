@@ -1734,7 +1734,7 @@ namespace taiyi { namespace chain {
         process_tiandao();
         process_nfa_tick();
         
-        process_cultivations();
+        clean_cultivations(); // TODO: 放到一个定期维护的过程中，而不是每个块都调用
 
         process_hardforks();
         

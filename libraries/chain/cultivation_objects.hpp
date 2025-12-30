@@ -24,13 +24,16 @@ namespace taiyi { namespace chain {
 
         id_type                         id;
 
-        nfa_id_type                     manager_nfa_id = nfa_id_type::max(); ///修真的启动者和管理者
-        t_flat_map<nfa_id_type, uint>   beneficiary_map; ///修真受益人以及对应的分配比例，比例总合必须等于 TAIYI_100_PERCENT
-        std::set<nfa_id_type>           participants; /// 修真参与者
+        nfa_id_type                     manager_nfa_id = nfa_id_type::max(); /// 修真的启动者和管理者
+        t_flat_map<nfa_id_type, uint>   beneficiary_map;/// 修真受益人以及对应的分配比例，比例总合必须等于 TAIYI_100_PERCENT
+        std::set<nfa_id_type>           participants;   /// 修真参与者
 
         uint32_t                        create_time = std::numeric_limits<uint32_t>::max();
-        uint32_t                        start_deadline = std::numeric_limits<uint32_t>::max(); //如果在截止时间之前还未开始，则自动释放修真对象
+        uint32_t                        start_deadline = std::numeric_limits<uint32_t>::max(); /// 如果在截止时间之前还未开始，则自动释放修真对象
         uint32_t                        start_time = std::numeric_limits<uint32_t>::max();
+        uint32_t                        last_update_time = std::numeric_limits<uint32_t>::max();
+        
+        int64_t                         qi_accumulated = 0; /// 累积的真气计量
     };
 
     struct by_start_deadline;
@@ -67,5 +70,5 @@ namespace taiyi { namespace chain {
 namespace mira {
 } // mira
 
-FC_REFLECT( taiyi::chain::cultivation_object, (id)(manager_nfa_id)(beneficiary_map)(participants)(create_time)(start_deadline)(start_time) )
+FC_REFLECT( taiyi::chain::cultivation_object, (id)(manager_nfa_id)(beneficiary_map)(participants)(create_time)(start_deadline)(start_time)(last_update_time)(qi_accumulated) )
 CHAINBASE_SET_INDEX_TYPE(taiyi::chain::cultivation_object, taiyi::chain::cultivation_index)

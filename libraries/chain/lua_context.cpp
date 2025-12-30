@@ -274,7 +274,8 @@ namespace taiyi { namespace chain {
         registerFunction("participate_cultivation", &contract_handler::participate_cultivation);
         registerFunction("start_cultivation", &contract_handler::start_cultivation);
         registerFunction("stop_and_close_cultivation", &contract_handler::stop_and_close_cultivation);
-        registerFunction("is_cultivation_exist", &contract_handler::is_cultivation_exist);        
+        registerFunction("update_cultivation", &contract_handler::update_cultivation);
+        registerFunction("is_cultivation_exist", &contract_handler::is_cultivation_exist);
         registerFunction("create_named_contract", &contract_handler::create_named_contract);
         registerFunction("create_proposal", &contract_handler::create_proposal);
         registerFunction("update_proposal_votes", &contract_handler::update_proposal_votes);

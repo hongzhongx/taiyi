@@ -165,6 +165,30 @@ namespace taiyi { namespace chain {
         return tiandao.zone_moving_difficulty_map[(int)zone.type];
     }
     //=============================================================================
+    // 区域灵气浓度N，由区域的五行材质决定
+    int64_t database::calculate_zone_spiritual_energy( const zone_object& zone ) const
+    {
+        const auto& nfa_material = get<nfa_material_object, by_nfa_id>(zone.nfa_id);
+
+        // 金木织药食，分别对应金木水火土 (Metal, Wood, Water, Fire, Earth)
+        // 设计公式：Ni = sum(E_k) + mu * sum(E_k * E_next(k))
+        // 相生顺序：木生火，火生土，土生金，金生水，水生木 (Wood -> Fire -> Earth -> Metal -> Water -> Wood)
+        
+        int64_t Ew = nfa_material.wood.amount.value;    // Wood (木)
+        int64_t Ef = nfa_material.herb.amount.value;    // Fire (火)
+        int64_t Ee = nfa_material.food.amount.value;    // Earth (土)
+        int64_t Em = nfa_material.gold.amount.value;    // Metal (金)
+        int64_t Ea = nfa_material.fabric.amount.value;  // Water (水)
+
+        int64_t base_qi = Ew + Ef + Ee + Em + Ea;
+        
+        // 相生共鸣增益 mu = 0.5
+        int64_t mu = TAIYI_1_PERCENT * 50;
+        int64_t resonance_gain = Ew * Ef + Ef * Ee + Ee * Em + Em * Ea + Ea * Ew;
+        
+        return base_qi + (int64_t)(mu * resonance_gain / TAIYI_100_PERCENT);
+    }
+    //=============================================================================
     void database::process_tiandao()
     {
         uint32_t bn = head_block_num();

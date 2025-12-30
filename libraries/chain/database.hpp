@@ -358,6 +358,7 @@ namespace taiyi { namespace chain {
         const zone_object*  find_zone( const std::string& name ) const;
         bool is_contract_allowed_by_zone(const contract_object& contract, const zone_id_type& zone_id) const;
         int calculate_moving_days_to_zone( const zone_object& zone );
+        int64_t calculate_zone_spiritual_energy( const zone_object& zone ) const;
         void process_tiandao();
         
         zone_id_type get_contract_run_zone() const { return _contract_run_zone; }
@@ -368,8 +369,9 @@ namespace taiyi { namespace chain {
         void participate_cultivation(const cultivation_object& cult, const nfa_object& nfa, uint64_t value);
         void start_cultivation(const cultivation_object& cult);
         void stop_cultivation(const cultivation_object& cult);
+        void update_cultivation(const cultivation_object& cult);
         void dissolve_cultivation(const cultivation_object& cult);
-        void process_cultivations();
+        void clean_cultivations();
 
         //************ database_init.cpp ************//
 
