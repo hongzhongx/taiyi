@@ -232,23 +232,78 @@ namespace taiyi { namespace chain {
         
         // 所在区域灵气浓度
         const zone_object& zone = get<zone_object, by_id>(get<actor_object, by_nfa_id>(cult.manager_nfa_id).location);
-        int64_t zone_energy_N = calculate_zone_spiritual_energy(zone);
+        int64_t N = calculate_zone_spiritual_energy(zone);
         
         // 各个实体投入的所有真气，修真效率
-        uint64_t k = 0; // 投入真气总量
-        int64_t E = 0; // 修真效率
-        const nfa_material_object& zone_mat = get<nfa_material_object, by_nfa_id>(zone.nfa_id); //区域材质
+        uint64_t Q = 0; // 投入真气总量
+        int64_t Pw = 0;
+        int64_t Pf = 0;
+        int64_t Pe = 0;
+        int64_t Pm = 0;
+        int64_t Pa = 0;
         for (const auto& p : cult.participants) {
             const auto& nfa = get<nfa_object, by_id>(p);
-            k += nfa.cultivation_value;
+            Q += nfa.cultivation_value;
             
             const auto& nfa_mat = get<nfa_material_object, by_nfa_id>(p); //各个实体材质
-            // TODO
+            Pw += nfa_mat.wood.amount.value;  // 木
+            Pf += nfa_mat.herb.amount.value;  // 火
+            Pe += nfa_mat.food.amount.value;  // 土
+            Pm += nfa_mat.gold.amount.value;  // 金
+            Pa += nfa_mat.fabric.amount.value;// 水
         }
+
+        int64_t E = TAIYI_100_PERCENT; // 基础效率 100%
+        int64_t Total_P = Pw + Pf + Pe + Pm + Pa;
+        if (Total_P > 0) {
+            // 1. 参与实体内部相互之间的生克 (Internal Harmony)
+            // 相生：木生火，火生土，土生金，金生水，水生木 (Wood -> Fire -> Earth -> Metal -> Water -> Wood)
+            int64_t HI_gen = Pw * Pf + Pf * Pe + Pe * Pm + Pm * Pa + Pa * Pw;
+            // 相克：木克土，土克水，水克火，火克金，金克木 (Wood -> Earth -> Water -> Fire -> Metal -> Wood)
+            int64_t HI_ovc = Pw * Pe + Pe * Pa + Pa * Pf + Pf * Pm + Pm * Pw;
+            
+            int64_t HI_bonus = 0;
+            if (Total_P * Total_P / 5 > 0) {
+                if (HI_gen > HI_ovc)
+                    HI_bonus = (HI_gen - HI_ovc) * (TAIYI_100_PERCENT / 2) / (Total_P * Total_P / 5);
+                else if (HI_ovc > HI_gen)
+                    HI_bonus = -((HI_ovc - HI_gen) * (TAIYI_100_PERCENT / 2) / (Total_P * Total_P / 5));
+            }
+            E += HI_bonus;
+
+            // 2. 实体与环境生克 (Environmental Harmony)
+            const nfa_material_object& zone_mat = get<nfa_material_object, by_nfa_id>(zone.nfa_id); //区域材质
+            int64_t Zw = zone_mat.wood.amount.value;
+            int64_t Zf = zone_mat.herb.amount.value;
+            int64_t Ze = zone_mat.food.amount.value;
+            int64_t Zm = zone_mat.gold.amount.value;
+            int64_t Za = zone_mat.fabric.amount.value;
+            int64_t Total_Z = Zw + Zf + Ze + Zm + Za;
+            
+            if (Total_Z > 0) {
+                // 环境生实体 (Zone generates Participant)
+                int64_t HE_gen = Zw * Pf + Zf * Pe + Ze * Pm + Zm * Pa + Za * Pw;
+                // 环境克实体 (Zone overcomes Participant)
+                int64_t HE_ovc = Zw * Pe + Ze * Pa + Za * Pf + Zf * Pm + Zm * Pw;
+                
+                int64_t HE_bonus = 0;
+                if (Total_Z * Total_P / 5 > 0) {
+                    if (HE_gen > HE_ovc)
+                        HE_bonus = (HE_gen - HE_ovc) * (TAIYI_100_PERCENT / 2) / (Total_Z * Total_P / 5);
+                    else if (HE_ovc > HE_gen)
+                        HE_bonus = -((HE_ovc - HE_gen) * (TAIYI_100_PERCENT / 2) / (Total_Z * Total_P / 5));
+                }
+                E += HE_bonus;
+            }
+        }
+        
+        // 确保效率不为负，有最低限度
+        E = std::max<int64_t>(E, TAIYI_1_PERCENT * 10);
 
         auto hblock_id = head_block_id();
         uint32_t p = hasher::hash( hblock_id._hash[4] + cult.id ) % TAIYI_100_PERCENT;
-        int64_t rv = zone_energy_N * k * p * dt / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT;
+        
+        int64_t rv = N * Q * p * dt * E / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT / TAIYI_100_PERCENT;
                 
         if(rv > 0) {
             modify(cult, [&](cultivation_object& obj) {
