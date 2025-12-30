@@ -171,8 +171,7 @@ namespace taiyi { namespace chain {
         const auto& nfa_material = get<nfa_material_object, by_nfa_id>(zone.nfa_id);
 
         // 金木织药食，分别对应金木水火土 (Metal, Wood, Water, Fire, Earth)
-        // 设计公式：Ni = sum(E_k) + mu * sum(E_k * E_next(k))
-        // 相生顺序：木生火，火生土，土生金，金生水，水生木 (Wood -> Fire -> Earth -> Metal -> Water -> Wood)
+        // 设计公式：Ni = sum(E_k) + mu * (sum(E_k * E_next_g(k)) - sum(E_k * E_next_l(k)))
         
         int64_t Ew = nfa_material.wood.amount.value;    // Wood (木)
         int64_t Ef = nfa_material.herb.amount.value;    // Fire (火)
@@ -182,11 +181,16 @@ namespace taiyi { namespace chain {
 
         int64_t base_qi = Ew + Ef + Ee + Em + Ea;
         
-        // 相生共鸣增益 mu = 0.5
+        // 共鸣增益 mu = 0.5
         int64_t mu = TAIYI_1_PERCENT * 50;
+        
+        // 相生：木生火，火生土，土生金，金生水，水生木 (Wood -> Fire -> Earth -> Metal -> Water -> Wood)
         int64_t resonance_gain = Ew * Ef + Ef * Ee + Ee * Em + Em * Ea + Ea * Ew;
         
-        return base_qi + (int64_t)(mu * resonance_gain / TAIYI_100_PERCENT);
+        // 相克：木克土，土克水，水克火，火克金，金克木 (Wood -> Earth -> Water -> Fire -> Metal -> Wood)
+        int64_t suppression_loss = Ew * Ee + Ee * Ea + Ea * Ef + Ef * Em + Em * Ew;
+
+        return base_qi + (int64_t)(mu * (resonance_gain - suppression_loss) / TAIYI_100_PERCENT);
     }
     //=============================================================================
     void database::process_tiandao()
