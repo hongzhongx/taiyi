@@ -190,7 +190,12 @@ namespace taiyi { namespace chain {
         // 相克：木克土，土克水，水克火，火克金，金克木 (Wood -> Earth -> Water -> Fire -> Metal -> Wood)
         int64_t suppression_loss = Ew * Ee + Ee * Ea + Ea * Ef + Ef * Em + Em * Ew;
 
-        return base_qi + (int64_t)(mu * (resonance_gain - suppression_loss) / TAIYI_100_PERCENT);
+        if (base_qi > 0) {
+            //N = baseQ * (1 + bonus)
+            return base_qi + mu * (resonance_gain - suppression_loss) * 5 / TAIYI_100_PERCENT / base_qi;
+        }
+        else
+            return 0;
     }
     //=============================================================================
     void database::process_tiandao()

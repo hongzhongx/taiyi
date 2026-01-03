@@ -278,7 +278,7 @@ namespace taiyi { namespace chain {
                 message = FORMAT_MESSAGE("&YEL&${y}年${m}月${d}日${tod}&NOR&，${str}", ("y", tiandao.v_years)("m", tiandao.v_months)("d", tiandao.v_days)("tod", s_todstr[tiandao.v_timeonday])("str", message));
             }
                         
-            wlog(message); //for dubug
+            wlog(message); //for debug
                         
             nfa_id_type affected_nfa = nfa_id_type::max();
             account_name_type affected_account;

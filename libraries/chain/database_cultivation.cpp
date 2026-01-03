@@ -132,7 +132,6 @@ namespace taiyi { namespace chain {
     {
         update_cultivation(cult);
         
-        auto now = head_block_num();
         int64_t rv = cult.qi_accumulated;
         
         //检查基金池
@@ -219,7 +218,7 @@ namespace taiyi { namespace chain {
         FC_ASSERT(cult.start_time != std::numeric_limits<uint32_t>::max(), "cultivation have not started");
         
         auto now = head_block_num();
-        FC_ASSERT(cult.start_time < now, "invalid start time");
+        FC_ASSERT(cult.start_time <= now, "invalid start time");
         if(cult.last_update_time >= now)
             return;
         
@@ -263,11 +262,11 @@ namespace taiyi { namespace chain {
             int64_t HI_ovc = Pw * Pe + Pe * Pa + Pa * Pf + Pf * Pm + Pm * Pw;
             
             int64_t HI_bonus = 0;
-            if (Total_P * Total_P / 5 > 0) {
+            if (Total_P * Total_P > 0) {
                 if (HI_gen > HI_ovc)
-                    HI_bonus = (HI_gen - HI_ovc) * (TAIYI_100_PERCENT / 2) / (Total_P * Total_P / 5);
+                    HI_bonus = (HI_gen - HI_ovc) * (TAIYI_100_PERCENT / 2) * 5 / (Total_P * Total_P);
                 else if (HI_ovc > HI_gen)
-                    HI_bonus = -((HI_ovc - HI_gen) * (TAIYI_100_PERCENT / 2) / (Total_P * Total_P / 5));
+                    HI_bonus = -((HI_ovc - HI_gen) * (TAIYI_100_PERCENT / 2) * 5 / (Total_P * Total_P));
             }
             E += HI_bonus;
 
@@ -287,11 +286,11 @@ namespace taiyi { namespace chain {
                 int64_t HE_ovc = Zw * Pe + Ze * Pa + Za * Pf + Zf * Pm + Zm * Pw;
                 
                 int64_t HE_bonus = 0;
-                if (Total_Z * Total_P / 5 > 0) {
+                if (Total_Z * Total_P > 0) {
                     if (HE_gen > HE_ovc)
-                        HE_bonus = (HE_gen - HE_ovc) * (TAIYI_100_PERCENT / 2) / (Total_Z * Total_P / 5);
+                        HE_bonus = (HE_gen - HE_ovc) * (TAIYI_100_PERCENT / 2) * 5 / (Total_Z * Total_P);
                     else if (HE_ovc > HE_gen)
-                        HE_bonus = -((HE_ovc - HE_gen) * (TAIYI_100_PERCENT / 2) / (Total_Z * Total_P / 5));
+                        HE_bonus = -((HE_ovc - HE_gen) * (TAIYI_100_PERCENT / 2) * 5 / (Total_Z * Total_P));
                 }
                 E += HE_bonus;
             }
@@ -303,7 +302,8 @@ namespace taiyi { namespace chain {
         auto hblock_id = head_block_id();
         uint32_t p = hasher::hash( hblock_id._hash[4] + cult.id ) % TAIYI_100_PERCENT;
         
-        int64_t rv = N * Q * p * dt * E / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT / TAIYI_100_PERCENT;
+        int64_t rv = (N + Q) * p * dt * E / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT / TAIYI_100_PERCENT;
+        wlog("rv=${rv}, N=${N}, Q=${Q}, p=${p}, dt=${dt}, E=${E}", ("rv", rv)("N", N)("Q", Q)("p", p)("dt", dt)("E", E));
                 
         if(rv > 0) {
             modify(cult, [&](cultivation_object& obj) {
