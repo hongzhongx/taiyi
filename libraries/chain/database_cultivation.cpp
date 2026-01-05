@@ -303,7 +303,7 @@ namespace taiyi { namespace chain {
         uint32_t p = hasher::hash( hblock_id._hash[4] + cult.id ) % TAIYI_100_PERCENT;
         
         int64_t rv = (N + Q) * p * dt * E / TAIYI_CULTIVATION_MAX_TIME_BLOCK_NUM / TAIYI_100_PERCENT / TAIYI_100_PERCENT;
-        wlog("rv=${rv}, N=${N}, Q=${Q}, p=${p}, dt=${dt}, E=${E}", ("rv", rv)("N", N)("Q", Q)("p", p)("dt", dt)("E", E));
+        //wlog("rv=${rv}, N=${N}, Q=${Q}, p=${p}, dt=${dt}, E=${E}", ("rv", rv)("N", N)("Q", Q)("p", p)("dt", dt)("E", E));
                 
         if(rv > 0) {
             modify(cult, [&](cultivation_object& obj) {

@@ -977,7 +977,8 @@ namespace taiyi { namespace chain {
             FC_ASSERT(contract_code.lua_code_b.size()>0);
 
             contract_base_info cbi(db, context, contract_owner, contract.name, current_cbi->caller, string(contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, 0, contract, current_ch->result, context, current_ch->is_in_eval);
+            auto current_cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
+            contract_handler ch(db, current_ch->caller, current_cnh ? &current_cnh->_caller : 0, contract, current_ch->result, context, current_ch->is_in_eval);
             contract_nfa_handler cnh(current_ch->caller, *nfa, context, db, ch);
             
             //sandbox
@@ -1112,7 +1113,8 @@ namespace taiyi { namespace chain {
             FC_ASSERT(contract_code.lua_code_b.size()>0);
 
             contract_base_info cbi(db, context, contract_owner, contract.name, current_cbi->caller, string(contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(db, current_ch->caller, 0, contract, current_ch->result, context, false);
+            auto current_cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
+            contract_handler ch(db, current_ch->caller, current_cnh ? &current_cnh->_caller : 0, contract, current_ch->result, context, false);
             contract_nfa_handler cnh(current_ch->caller, *nfa, context, db, ch);
             
             bool new_sandbox = false;
@@ -1228,7 +1230,8 @@ namespace taiyi { namespace chain {
             FC_ASSERT(contract_code.lua_code_b.size() > 0);
 
             contract_base_info cbi(db, context, contract_owner, contract.name, caller_.name, string(contract.creation_date), current_cbi->invoker_contract_name);
-            contract_handler ch(db, caller_, 0, contract, current_ch->result, context, current_ch->is_in_eval);
+            auto current_cnh = context.readVariable<contract_nfa_handler*>(current_contract_name, "nfa_helper");
+            contract_handler ch(db, caller_, current_cnh ? &current_cnh->_caller : 0, contract, current_ch->result, context, current_ch->is_in_eval);
             contract_nfa_handler cnh(caller_, *nfa, context, db, ch);
 
             //sandbox
