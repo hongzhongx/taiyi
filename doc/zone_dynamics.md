@@ -93,8 +93,10 @@ $$N_i = \underbrace{\sum_{k \in \{w,f,e,m,a\}} E_{i,k}}_{\text{基础灵蕴}} + 
      定义阻力系数 $\eta_{ij}$：
      $$\eta_{ij} = \beta \cdot (E_i + E_j)$$
      则该连接路径上所有五行属性的实际流转量 $\Delta X'$ 为：
-     $$\Delta X'_{i \to j} = \frac{\Delta X_{i \to j}}{1 + \eta_{ij}}$$
-     (其中 $X \in \{w, f, e, m, a\}$，$ \Delta X$ 为规则1-4计算出的原始变化量。$\beta$ 为粘性系数)
+
+$$\Delta X'_{i \to j} = \frac{\Delta X_{i \to j}}{1 + \eta_{ij}}$$
+
+(其中 $X \in \{w, f, e, m, a\}$， $\Delta X$ 为规则1-4计算出的原始变化量。 $\beta$ 为粘性系数)
 
 ## 第四部分：灵脉与羁绊系统 (Meridian Stability)
 

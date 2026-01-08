@@ -1,3 +1,5 @@
+<p align="right"><a href="./README_en.md">English Version</a></p>
+
 <h1 align='center'>太乙（Taiyi）</h1>
 
 <br>
@@ -32,27 +34,15 @@
 
 ## 文档
 
-### 世界观和文化背景
+* 设计理念：[太乙：一个用于去中心化自治世界的点对点网络](./doc/whitepaper_cn.md)（[English](./doc/whitepaper_en.md)）
+* 《大傩世界》建设和实践：[https://github.com/hongzhongx/taiyi-contracts](https://github.com/hongzhongx/taiyi-contracts)
+* 智能游戏脚本（SGS）：[SGS APIs帮助](./doc/sgs_api.md)
+* 改进建议：[Taiyi Improvement Proposals——TIPs](https://github.com/hongzhongx/TIPs)
 
-* 太乙宇宙观：原本见[《太乙宇宙内篇》](./doc/yuzhou.md)，现代白话解读见[《太乙宇宙多维结构——五部十八界》](./doc/yuzhou_explain.md)，其中阐述了太乙第一定律——太乙因果律
-* 真气守恒定律：也称太乙第二定律，详见[《先天真炁守恒论》](./doc/zhenqishouheng.md)
-* 演化概论I：阐述了太乙宇宙中各种生灵之间的演化，详见[《太乙宇宙演化概论I》](./doc/yanhua_explain.md)
-* 演化概论II：阐述了太乙宇宙中修真体系的演化，详见[《太乙宇宙演化概论II》](./doc/kejixiuzhen_explain.md)
-
-### 技术和工具
-
-* 太乙改进建议集（Taiyi Improvement Proposals——TIPs）：<https://github.com/hongzhongx/TIPs>
-* 建设实践：大傩建设和实践报告，详见[https://github.com/hongzhongx/taiyi-contracts](https://github.com/hongzhongx/taiyi-contracts)
-* 智能游戏脚本（SGS）：[https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf](https://github.com/hongzhongx/taiyi-contracts/blob/main/doc/sgs-whitepaper.pdf) (*暂缺*)
-
-### 沟通和交流
+## 沟通和交流
 
 * 前期交流社区（Discord）：[https://discord.gg/g4f84UEGCD](https://discord.gg/g4f84UEGCD)。理想情况下，社区将由太乙网络本身承载，详见[坐忘道项目](https://)
 * 几个相关项目的Github论坛：在[TIPs论坛](https://github.com/hongzhongx/TIPs/discussions)、[太乙网络项目论坛](https://github.com/hongzhongx/taiyi/discussions/)和[合约应用实践论坛](https://github.com/hongzhongx/taiyi-contracts/discussions)中打开一个主题贴来讨论各种改进建议
-
-### 白皮书
-
-* [太乙：一个用于去中心化自治世界的点对点网络](./doc/report_cn.pdf)（[English](./doc/report_en.pdf)）
 
 ## 特色
 
@@ -103,9 +93,9 @@
 
 启动一个P2P节点（目前需要2GB内存）：
 
-    docker run \
-        -d -p 2025:2025 -p 8090:8090 --name taiyin-default \
-        zuowangdaox/taiyi
+    docker run
+    -d -p 2025:2025 -p 8090:8090 --name taiyin-default
+    zuowangdaox/taiyi
 
     docker logs -f taiyin-default  # follow along
 
@@ -113,10 +103,10 @@
 
 启动一个提供*所有*可查询数据的节点（例如用来支撑一个内容网站前端，目前需要14GB的内存，这个内存量在不断增长中）：
 
-    docker run \
-        --env USE_WAY_TOO_MUCH_RAM=1 --env USE_FULL_WEB_NODE=1 \
-        -d -p 2025:2025 -p 8090:8090 --name taiyin-full \
-        zuowangdaox/taiyi
+    docker run
+    --env USE_WAY_TOO_MUCH_RAM=1 --env USE_FULL_WEB_NODE=1
+    -d -p 2025:2025 -p 8090:8090 --name taiyin-full
+    zuowangdaox/taiyi
 
     docker logs -f taiyin-full
 
@@ -124,17 +114,17 @@
 
 启动一个提供*所有*可查询数据的测试网络节点（例如用来支撑一个内容网站前端，目前需要4GB的内存，这个内存量在不断增长中）：
 
-    docker run \
-        --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1 \
-        --env REQUIRED_PARTICIPATION=0 --env TAIYI_SEED_NODES="47.109.49.30:2025" \
-        -d -p 2025:2025 -p 8090:8090 --name taiyin-full \
-        zuowangdaox/taiyi
+    docker run
+    --env IS_TESTNET=1 --env USE_FULL_WEB_NODE=1
+    --env REQUIRED_PARTICIPATION=0 --env TAIYI_SEED_NODES="47.109.49.30:2025"
+    -d -p 2025:2025 -p 8090:8090 --name taiyin-full
+    zuowangdaox/taiyi
 
     docker logs -f taiyin-full
 
 ## 使用玄牝之门（xuanpin）
 
-为了和节点服务程序`太阴（taiyin）`交互，这里提供了一个基础的客户端程序，叫做`玄牝（xuanpin）`。这个客户端程序自带文档，可以通过help命令查看。玄牝所连接到的节点，必须启用了`account_by_key_api`和`baiyujing_api`两个插件，而且是通过`webserver-ws-endpoint`参数配置了能接受WebSocket连接的。
+为了和节点服务程序 `太阴（taiyin）`交互，这里提供了一个基础的客户端程序，叫做 `玄牝（xuanpin）`。这个客户端程序自带文档，可以通过help命令查看。玄牝所连接到的节点，必须启用了 `account_by_key_api`和 `baiyujing_api`两个插件，而且是通过 `webserver-ws-endpoint`参数配置了能接受WebSocket连接的。
 
 ## 测试
 
@@ -144,14 +134,14 @@
 
 ## 配置文件说明
 
-首次启动程序`taiyin`可以自动生成默认的数据目录和配置文件，这些文件默认存放在目录`siming_node_data_dir`中。由于默认配置下没有指明任何种子节点，太阴程序什么都不会做，因此你只能强行关闭（杀掉）`taiyin`进程。如果你要修改配置，这里有两个用于Docker镜像的配置示例可供参考（ [共识节点](contrib/config-for-docker.ini)和[全节点](contrib/fullnode.config.ini) ）。默认的配置包含了所有的选项，一些选项会根据Docker的配置来改变（一些镜像中使用的选项可以由命令行来设置）。
+首次启动程序 `taiyin`可以自动生成默认的数据目录和配置文件，这些文件默认存放在目录 `siming_node_data_dir`中。由于默认配置下没有指明任何种子节点，太阴程序什么都不会做，因此你只能强行关闭（杀掉）`taiyin`进程。如果你要修改配置，这里有两个用于Docker镜像的配置示例可供参考（ [共识节点](contrib/config-for-docker.ini)和[全节点](contrib/fullnode.config.ini) ）。默认的配置包含了所有的选项，一些选项会根据Docker的配置来改变（一些镜像中使用的选项可以由命令行来设置）。
 
 ## 种子节点
 
 这里有个列表列出了一些种子节点，你可以用这些节点来开始加入网络。
 [doc/seednodes.txt](doc/seednodes.txt).
 
-这个文件已经被打包到了Docker的镜像中。在启动`doker run`时，容器环境变量`TAIYI_SEED_NODES`可以以空白分割的种子节点（包括端口号）信息来覆盖设置这个。
+这个文件已经被打包到了Docker的镜像中。在启动 `doker run`时，容器环境变量 `TAIYI_SEED_NODES`可以以空白分割的种子节点（包括端口号）信息来覆盖设置这个。
 
 ## 环境变量
 
@@ -161,13 +151,13 @@
 * `USE_FULL_WEB_NODE` - 如果设置为true，默认配置文件将打开完全API访问选项和启动一些相关的插件。
 * `USE_NGINX_FRONTEND` - 如果设置为true，将在太乙节点外层启用一个NGINX反向代理，这个代理会先处理接收到的WebSocket太乙请求。这也会启动一个自定义的健康检查，在路径'/health'下将列出你的节点离当前网络最新的块还差多长时间。如果离同步最新的块差距在60秒钟以内，这个健康检查会返回'200'代码。
 * `USE_MULTICORE_READONLY` - 如果设置为true，太乙系统将会启动多人读取模式，这在多核系统上能提供更好性能。所有的读取请求将被多个只读节点处理，而所有写请求被自动转发到一个单一的‘写’节点。NGINX对只读节点请求进行负载均衡处理，每个CPU核平均处理4个请求。目前这个设计还处在实验阶段，在某些API调用的情况下还有问题，这些问题有待未来的开发来解决。
-* `HOME` - 设置你要太乙系统存储数据文件的路径（包括块数据、状态数据和配置文件等等）。默认情况下，这个路径是`/var/lib/taiyi`，这个路径在docker容器中也要存在。如果需要使用另外的载入位置（比如内存磁盘，或者另外一个磁盘驱动器），你可以设置这个变量来指向你的docker容器上的映射卷。
+* `HOME` - 设置你要太乙系统存储数据文件的路径（包括块数据、状态数据和配置文件等等）。默认情况下，这个路径是 `/var/lib/taiyi`，这个路径在docker容器中也要存在。如果需要使用另外的载入位置（比如内存磁盘，或者另外一个磁盘驱动器），你可以设置这个变量来指向你的docker容器上的映射卷。
 * `IS_TESTNET` - 如果设置为true，则使用适配当前测试网络的节点程序。
 * `REQUIRED_PARTICIPATION` - 节点参与率，在某些测试网络环境下，节点的参与率并不高，因此在测试网络环境下可以设置为0。
 
 ## 系统需求说明
 
-对于一个全功能的Web用太乙节点，目前需要至少110GB的磁盘空间，而区块数据本身只占27GB多。强烈建议在一个快速磁盘系统上运行太乙系统，比如SSD硬盘或者干脆将状态文件放进内存磁盘，在命令行上可以使用`--state-storage-dir=/path`选项来设置这些位置。对一个全功能Web服务型节点，其状态数据至少有16GB大，一个种子节点（p2p模式）一般消耗低至4G的内存和24GB的状态数据文件空间，基本上当前的单核CPU都能满足性能要求。注意太乙系统一直在持续增长中，以上数字只是我假想的截止到2025年11月的实测，然而你可能会发现运行全节点一般都需要更多的磁盘空间。未来我们会持续不断地优化太乙系统使用的磁盘空间。
+对于一个全功能的Web用太乙节点，目前需要至少110GB的磁盘空间，而区块数据本身只占27GB多。强烈建议在一个快速磁盘系统上运行太乙系统，比如SSD硬盘或者干脆将状态文件放进内存磁盘，在命令行上可以使用 `--state-storage-dir=/path`选项来设置这些位置。对一个全功能Web服务型节点，其状态数据至少有16GB大，一个种子节点（p2p模式）一般消耗低至4G的内存和24GB的状态数据文件空间，基本上当前的单核CPU都能满足性能要求。注意太乙系统一直在持续增长中，以上数字只是我假想的截止到2025年11月的实测，然而你可能会发现运行全节点一般都需要更多的磁盘空间。未来我们会持续不断地优化太乙系统使用的磁盘空间。
 
 在Linux系统上，初始同步或者重演（replay）太乙节点可以使用如下的虚拟内存（Virtual Memory）设置。当然，通常情况下是不需要这样做的。
 
