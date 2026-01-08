@@ -623,8 +623,8 @@ namespace tyme::util {
         } else if (jd >= f2) {
             d = floor(shuo_low(floor((jd + pc - 2451551) / 29.5306) * PI_2) + 0.5);
             const int from = static_cast<int>((jd - f2) / 29.5306);
-            const string_view view = SB;
-            if (const string_view n = view.substr(from, 1); "1" == n) {
+            const string view = SB;
+            if (const string n = view.substr(from, 1); "1" == n) {
                 d += 1;
             } else if ("2" == n) {
                 d -= 1;
@@ -659,8 +659,8 @@ namespace tyme::util {
         } else if (jd >= f2) {
             d = floor(qi_low(floor((jd + pc - 2451259) / 365.2422 * 24) * M_PI / 12) + 0.5);
             const int from = static_cast<int>((jd - f2) / 365.2422 * 24);
-            const string_view view = QB;
-            if (const string_view n = view.substr(from, 1); "1" == n) {
+            const string view = QB;
+            if (const string n = view.substr(from, 1); "1" == n) {
                 d += 1;
             } else if ("2" == n) {
                 d -= 1;

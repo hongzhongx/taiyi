@@ -6,7 +6,6 @@ file(GLOB SOURCES "./*.cpp")
 file(GLOB HEADERS "./*.h")
 
 ADD_LIBRARY(tyme
-    SHARED
     ${SOURCES}
     ${HEADERS} )
 

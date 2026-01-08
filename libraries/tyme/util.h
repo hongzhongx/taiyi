@@ -3,9 +3,8 @@
 #include <string>
 #include <vector>
 
-using namespace std;
-
 namespace tyme { namespace util {
+    using namespace std;
     class ShouXingUtil {
     public:
         static const double PI_2;
