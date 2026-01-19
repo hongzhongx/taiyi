@@ -274,7 +274,6 @@ namespace taiyi { namespace chain {
                 push_virtual_operation( tiandao_time_change_operation( TAIYI_DANUO_ACCOUNT, yn, mn, tn ) );
             }
             else {
-                FC_ASSERT(tiandao.v_times <= tn, "virtual time number (${tn}) bigger than now (${tnn}).", ("tn", tiandao.v_times)("tnn", tn));
                 if(tn > tiandao.v_times) {
                     //next time
 
