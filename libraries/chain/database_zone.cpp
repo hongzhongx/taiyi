@@ -201,26 +201,27 @@ namespace taiyi { namespace chain {
     void database::process_tiandao()
     {
         uint32_t bn = head_block_num();
+        
+        uint32_t days = bn / TAIYI_VDAY_BLOCK_NUM;
+        static const tyme::JulianDay s_start_day = tyme::SolarDay::from_ymd(2, 1, 1).get_julian_day(); //注意年月日参数是 1 based，使用时要调整到 0 based
+        tyme::SolarDay sday = s_start_day.next(days).get_solar_day();;
 
         //one day means one virtual month
-        uint32_t yn = bn / (TAIYI_VMONTH_BLOCK_NUM * 12);
-        bn -= yn * (TAIYI_VMONTH_BLOCK_NUM * 12);
-        uint32_t mn = bn / TAIYI_VMONTH_BLOCK_NUM;
-        bn -= mn * TAIYI_VMONTH_BLOCK_NUM;
-        uint32_t dn = bn / TAIYI_VDAY_BLOCK_NUM;
-        bn -= dn * TAIYI_VDAY_BLOCK_NUM;
-        uint32_t tod = bn / (TAIYI_VDAY_BLOCK_NUM/4); //time on a day, 0=凌晨；1=上午；2=下午；3=夜晚
+        int yn = sday.get_year() - 1;
+        int mn = sday.get_month();
+        int dn = sday.get_day();
+        uint32_t tod = (bn / (TAIYI_VDAY_BLOCK_NUM/4)) % 4; //time on a day, 0=凌晨；1=上午；2=下午；3=夜晚
         //wlog("${y}年${m}月${d}日tod=${tod}, bn=${bn}", ("y", yn)("m", mn)("d", dn)("tod", tod)("bn", bn));
                 
-        //solar term number，注意虚拟公历中每个月都是30天
-        uint32_t tn = tyme::SolarDay::from_ymd(yn+2, mn+1, dn+1).get_term().get_index();
-        tn = (tn + 21) % 24; //序号0由冬至对齐到春分
+        //solar term number
+        uint32_t tn = sday.get_term().get_index();
+        tn = (tn + 21) % 24; //序号调整：序号0由冬至对齐到春分
         
         const auto& tiandao = get_tiandao_properties();
         FC_ASSERT(tiandao.v_years <= yn, "virtual year number (${tn}) bigger than now (${yn}).", ("tn", tiandao.v_years)("yn", yn));
         if(yn > tiandao.v_years) {
             //next year
-            FC_ASSERT(mn == 0 && tn == 0, "both virtual month number (${mn}) and time number (${tn}) must be zero!", ("mn", mn)("tn", tn));
+            FC_ASSERT(mn == 1, "start virtual month number (${mn}) must be 1!", ("mn", mn));
             
             //统计活人
             uint32_t live_num = 0;
@@ -261,7 +262,7 @@ namespace taiyi { namespace chain {
             FC_ASSERT(tiandao.v_months <= mn, "virtual month number (${tn}) bigger than now (${mn}).", ("tn", tiandao.v_months)("mn", mn));
             if(mn > tiandao.v_months) {
                 //next month
-                FC_ASSERT(dn == 0, "virtual day number (${dn}) must be zero!", ("dn", dn));
+                FC_ASSERT(dn == 1, "start virtual day number (${dn}) must be 1!", ("dn", dn));
 
                 modify(tiandao, [&]( tiandao_property_object& t ) {
                     t.v_months = mn;

@@ -81,12 +81,12 @@ namespace taiyi { namespace chain {
         int64_t     decay;
         int64_t     falsity;
         
-        uint32_t    v_years;
-        uint32_t    v_months;
-        uint32_t    v_days;         //当月第几日
-        uint32_t    v_timeonday;    //当天什么时候
+        uint32_t    v_years = 1;    //年，>=1
+        uint32_t    v_months = 1;   //月，>=1
+        uint32_t    v_days = 1;     //当月第几日，>=1
+        uint32_t    v_timeonday = 0;//当天什么时候
         
-        uint32_t    v_times; //same as solar term number
+        uint32_t    v_times = 0;    //same as solar term number
 
         time_point_sec    next_npc_born_time;
         

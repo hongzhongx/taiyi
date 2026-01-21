@@ -116,6 +116,161 @@ namespace tyme {
     };
 
     /**
+     * @brief 年
+     */
+    class YearUnit : public AbstractCulture {
+    public:
+        ~YearUnit() override = default;
+
+        explicit YearUnit(const int year) : AbstractCulture() {
+            this->year = year;
+        }
+
+        /**
+         * @brief 年
+         * @return 年
+         */
+        int get_year() const;
+    protected:
+        /**
+         * @brief 年
+         */
+        int year;
+    };
+
+    /**
+     * @brief 月
+     */
+    class MonthUnit : public YearUnit {
+    public:
+        ~MonthUnit() override = default;
+
+        explicit MonthUnit(const int year, const int month) : YearUnit(year) {
+            this->month = month;
+        }
+
+        /**
+         * @brief 月
+         * @return 月
+         */
+        int get_month() const;
+    protected:
+        /**
+         * @brief 月
+         */
+        int month;
+    };
+
+    /**
+     * @brief 日
+     */
+    class DayUnit : public MonthUnit {
+    public:
+        ~DayUnit() override = default;
+
+        explicit DayUnit(const int year, const int month, const int day) : MonthUnit(year, month) {
+            this->day = day;
+        }
+
+        /**
+         * @brief 日
+         * @return 日
+         */
+        int get_day() const;
+    protected:
+        /**
+         * @brief 日
+         */
+        int day;
+    };
+
+    /**
+     * @brief 周
+     */
+    class WeekUnit : public MonthUnit {
+    public:
+        ~WeekUnit() override = default;
+
+        explicit WeekUnit(const int year, const int month, const int index, const int start) : MonthUnit(year, month) {
+            this->index = index;
+            this->start = start;
+        }
+
+        static void validate(int index, int start);
+
+        /**
+         * @brief 索引
+         * @return 索引，0-5
+         */
+        int get_index() const;
+
+        /**
+         * @brief 起始星期
+         * @return 起始星期，1234560分别代表星期一至星期天
+         */
+        int get_start() const;
+    protected:
+        /**
+         * @brief 索引，0-5
+         */
+        int index;
+
+        /**
+         * @brief 起始星期，1234560分别代表星期一至星期天
+         */
+        int start;
+    };
+
+    /**
+     * @brief 秒
+     */
+    class SecondUnit : public DayUnit {
+    public:
+        ~SecondUnit() override = default;
+
+        explicit SecondUnit(const int year, const int month, const int day, const int hour, const int minute, const int second) : DayUnit(year, month, day) {
+            this->hour = hour;
+            this->minute = minute;
+            this->second = second;
+        }
+
+        static void validate(int hour, int minute, int second);
+
+        /**
+         * @brief 时
+         * @return 时
+         */
+        int get_hour() const;
+
+        /**
+         * @brief 分
+         * @return 分
+         */
+        int get_minute() const;
+
+        /**
+         * @brief 秒
+         * @return 秒
+         */
+        int get_second() const;
+    protected:
+        /**
+         * @brief 时
+         */
+        int hour;
+
+        /**
+         * @brief 分
+         */
+        int minute;
+
+        /**
+         * @brief 秒
+         */
+        int second;
+    };
+
+    /**
      * @brief 可轮回的Tyme
      */
     class LoopTyme : public AbstractCulture {
@@ -178,10 +333,10 @@ namespace tyme {
 
         /**
          * @brief 转换为不超范围的索引
-         * @param index 索引
+         * @param i 索引
          * @return 索引，从0开始
          */
-        int index_of(int index) const;
+        int index_of(int i) const;
 
         /**
          * @brief 推移后的索引
@@ -547,6 +702,7 @@ namespace tyme {
      * @brief 七曜（七政、七纬、七耀）
      */
     class SevenStar;
+
     /**
      * @brief 星期
      */
@@ -607,6 +763,7 @@ namespace tyme {
      * @brief 地支
      */
     class EarthBranch;
+
     /**
      * @brief 生肖
      */
@@ -641,6 +798,7 @@ namespace tyme {
      * @brief 神兽
      */
     class Beast;
+
     /**
      * @brief 宫
      */
@@ -1897,20 +2055,30 @@ namespace tyme {
     class KitchenGodSteed;
 
     /**
+     * @brief 农历日
+     */
+    class LunarDay;
+
+    /**
      * @brief 农历月
      */
     class LunarMonth;
 
     /**
+     * @brief 农历周
+     */
+    class LunarWeek;
+
+    /**
      * @brief 农历年
      */
-    class LunarYear : public AbstractCulture {
+    class LunarYear : public YearUnit {
     public:
         ~LunarYear() override = default;
 
         static vector<vector<int> > LEAP;
 
-        explicit LunarYear(const int year) : AbstractCulture() {
+        explicit LunarYear(const int year) : YearUnit(year) {
             static once_flag flag;
             call_once(flag, [] {
                 string chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@";
@@ -1946,25 +2114,17 @@ namespace tyme {
                     LEAP.push_back(l);
                 }
             });
-            if (year < -1 || year > 9999) {
-                throw invalid_argument("illegal lunar year: " + std::to_string(year));
-            }
-            this->year = year;
+            validate(year);
         }
 
-        LunarYear(const LunarYear &other) {
-            year = other.year;
+        LunarYear(const LunarYear &other) : YearUnit(other.year) {
         }
 
         LunarYear &operator=(const LunarYear &other);
 
-        static LunarYear from_year(int year);
+        static void validate(int year);
 
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
+        static LunarYear from_year(int year);
 
         /**
          * @brief 干支
@@ -2029,12 +2189,6 @@ namespace tyme {
          * @return 农历月列表
          */
         vector<LunarMonth> get_months() const;
-
-    protected:
-        /**
-         * @brief 年
-         */
-        int year;
     };
 
     /**
@@ -2137,67 +2291,28 @@ namespace tyme {
          */
         double cursory_julian_day = 0;
 
-        void init_by_year(int year, int offset);
+        void init_by_year(int y, int offset);
     };
 
     /**
      * @brief 农历月
      */
-    class LunarMonth : public AbstractCulture {
+    class LunarMonth : public MonthUnit {
     public:
         ~LunarMonth() override = default;
 
         static const vector<string> NAMES;
 
-        LunarMonth(const LunarMonth &other): year(other.year), month(other.month), leap(other.leap), day_count(other.day_count), index_in_year(other.index_in_year), first_julian_day(other.first_julian_day) {
+        LunarMonth(const LunarMonth &other): MonthUnit(other.year, other.month), leap(other.leap) {
         }
 
         LunarMonth &operator=(const LunarMonth &other);
 
-        explicit LunarMonth(const int year, const int month) : AbstractCulture(), year(LunarYear::from_year(year)), first_julian_day(0) {
-            if (month == 0 || month > 12 || month < -12) {
-                throw invalid_argument(&"illegal lunar month: "[month]);
-            }
-            const int m = abs(month);
-            const bool leap = month < 0;
-            const int current_leap_month = this->year.get_leap_month();
-            if (leap && m != current_leap_month) {
-                throw invalid_argument("illegal leap month " + std::to_string(m) + " in lunar year" + std::to_string(year));
-            }
-
-            // 冬至
-            const double dong_zhi_jd = SolarTerm::from_index(year, 0).get_cursory_julian_day();
-
-            // 冬至前的初一，今年首朔的日月黄经差
-            double w = ShouXingUtil::calc_shuo(dong_zhi_jd);
-            if (w > dong_zhi_jd) {
-                w -= 29.53;
-            }
-
-            // 正常情况正月初一为第3个朔日，但有些特殊的
-            int offset = 2;
-            if (year > 8 && year < 24) {
-                offset = 1;
-            } else if (LunarYear::from_year(year - 1).get_leap_month() > 10 && year != 239 && year != 240) {
-                offset = 3;
-            }
-
-            // 位于当年的索引
-            int index = m - 1;
-            if (leap || (current_leap_month > 0 && m > current_leap_month)) {
-                index += 1;
-            }
-            this->index_in_year = index;
-
-            // 本月初一
-            w += 29.5306 * (offset + index);
-            const double first_day = ShouXingUtil::calc_shuo(w);
-            this->first_julian_day = JulianDay::from_julian_day(JulianDay::J2000 + first_day);
-            // 本月天数 = 下月初一 - 本月初一
-            this->day_count = static_cast<int>(ShouXingUtil::calc_shuo(w + 29.5306) - first_day);
-            this->month = m;
-            this->leap = leap;
+        explicit LunarMonth(const int year, const int month) : MonthUnit(year, abs(month)), leap(month < 0) {
+            validate(year, month);
         }
+
+        static void validate(int year, int month);
 
         static LunarMonth from_ym(int year, int month);
 
@@ -2206,18 +2321,6 @@ namespace tyme {
          * @return 农历年
          */
         LunarYear get_lunar_year() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
 
         /**
          * @brief 月
@@ -2298,64 +2401,48 @@ namespace tyme {
          */
         MinorRen get_minor_ren() const;
 
+        /**
+         * @brief 本月的农历周列表
+         * @param start 星期几作为一周的开始，1234560分别代表星期一至星期天
+         * @return 农历周列表
+         */
+        vector<LunarWeek> get_weeks(int start) const;
+
+        /**
+         * @brief 本月的农历日列表
+         * @return 农历日列表
+         */
+        vector<LunarDay> get_days() const;
+
+        /**
+         * @brief 初一
+         * @return 农历日
+         */
+        LunarDay get_first_day() const;
+
     protected:
-        /**
-         * @brief 农历年
-         */
-        LunarYear year;
-
-        /**
-         * @brief 月
-         */
-        int month;
-
         /**
          * @brief 是否闰月
          */
         bool leap;
 
-        /**
-         * @brief 天数
-         */
-        int day_count;
-
-        /**
-         * @brief 位于当年的索引，0-12
-         */
-        int index_in_year;
-
-        /**
-         * @brief 初一的儒略日
-         */
-        JulianDay first_julian_day;
+        double get_new_moon() const;
     };
-
-    /**
-     * @brief 农历日
-     */
-    class LunarDay;
 
     /**
      * @brief 农历周
      */
-    class LunarWeek : public AbstractCulture {
+    class LunarWeek : public WeekUnit {
     public:
         ~LunarWeek() override = default;
 
         static const vector<string> NAMES;
 
-        explicit LunarWeek(const int year, const int month, const int index, const int start) : AbstractCulture(), month(LunarMonth::from_ym(year, month)), start(Week::from_index(start)) {
-            if (index < 0 || index > 5) {
-                throw invalid_argument("illegal lunar week index: " + std::to_string(index));
-            }
-            if (start < 0 || start > 6) {
-                throw invalid_argument("illegal lunar week start: " + std::to_string(start));
-            }
-            if (index >= this->month.get_week_count(start)) {
-                throw invalid_argument("illegal lunar week index: " + std::to_string(index) + " in month: " + this->month.to_string());
-            }
-            this->index = index;
+        explicit LunarWeek(const int year, const int month, const int index, const int start) : WeekUnit(year, month, index, start) {
+            validate(year, month, index, start);
         }
+
+        static void validate(int year, int month, int index, int start);
 
         static LunarWeek from_ym(int year, int month, int index, int start);
 
@@ -2364,30 +2451,6 @@ namespace tyme {
          * @return 农历月
          */
         LunarMonth get_lunar_month() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
-
-        /**
-         * @brief 索引，0-5
-         * @return 索引
-         */
-        int get_index() const;
-
-        /**
-         * @brief 起始星期
-         * @return 星期
-         */
-        Week get_start() const;
 
         string get_name() const override;
 
@@ -2408,22 +2471,6 @@ namespace tyme {
          * @return 农历日列表
          */
         vector<LunarDay> get_days() const;
-
-    protected:
-        /**
-         * @brief 公历月
-         */
-        LunarMonth month;
-
-        /**
-         * @brief 索引，0-5
-         */
-        int index;
-
-        /**
-         * @brief 起始星期
-         */
-        Week start;
     };
 
     /**
@@ -2448,17 +2495,17 @@ namespace tyme {
     /**
      * @brief 农历日
      */
-    class LunarDay : public AbstractCulture {
+    class LunarDay : public DayUnit {
     public:
         ~LunarDay() override = default;
 
         static const vector<string> NAMES;
 
-        explicit LunarDay(const int year, const int month, const int day) : AbstractCulture(), month(LunarMonth::from_ym(year, month)), day(day) {
-            if (day < 1 || day > this->month.get_day_count()) {
-                throw invalid_argument("illegal day " + std::to_string(day) + " in " + this->month.to_string());
-            }
+        explicit LunarDay(const int year, const int month, const int day) : DayUnit(year, month, day) {
+            validate(year, month, day);
         }
+
+        static void validate(int year, int month, int day);
 
         static LunarDay from_ymd(int year, int month, int day);
 
@@ -2467,24 +2514,6 @@ namespace tyme {
          * @return 农历月
          */
         LunarMonth get_lunar_month() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
-
-        /**
-         * @brief 日
-         * @return 日
-         */
-        int get_day() const;
 
         string get_name() const override;
 
@@ -2621,23 +2650,7 @@ namespace tyme {
          * @return 三柱
          */
         ThreePillars get_three_pillars() const;
-
-    protected:
-        /**
-         * @brief 农历月
-         */
-        LunarMonth month;
-
-        /**
-         * @brief 日
-         */
-        int day;
     };
-
-    /**
-     * @brief 公历时刻
-     */
-    class SolarTime;
 
     /**
      * @brief 干支时辰
@@ -2688,7 +2701,7 @@ namespace tyme {
     /**
      * @brief 农历时辰
      */
-    class LunarHour : public AbstractCulture {
+    class LunarHour : public SecondUnit {
     public:
         ~LunarHour() override = default;
 
@@ -2697,20 +2710,11 @@ namespace tyme {
          */
         static EightCharProvider *provider;
 
-        explicit LunarHour(const int year, const int month, const int day, const int hour, const int minute, const int second) : AbstractCulture(), day(LunarDay::from_ymd(year, month, day)) {
-            if (hour < 0 || hour > 23) {
-                throw invalid_argument("illegal hour: " + std::to_string(hour));
-            }
-            if (minute < 0 || minute > 59) {
-                throw invalid_argument("illegal minute: " + std::to_string(minute));
-            }
-            if (second < 0 || second > 59) {
-                throw invalid_argument("illegal second: " + std::to_string(second));
-            }
-            this->hour = hour;
-            this->minute = minute;
-            this->second = second;
+        explicit LunarHour(const int year, const int month, const int day, const int hour, const int minute, const int second) : SecondUnit(year, month, day, hour, minute, second) {
+            validate(year, month, day, hour, minute, second);
         }
+
+        static void validate(int year, int month, int day, int hour, int minute, int second);
 
         static LunarHour from_ymd_hms(int year, int month, int day, int hour, int minute, int second);
 
@@ -2719,42 +2723,6 @@ namespace tyme {
          * @return 农历日
          */
         LunarDay get_lunar_day() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
-
-        /**
-         * @brief 日
-         * @return 日
-         */
-        int get_day() const;
-
-        /**
-         * @brief 时
-         * @return 时
-         */
-        int get_hour() const;
-
-        /**
-         * @brief 分
-         * @return 分
-         */
-        int get_minute() const;
-
-        /**
-         * @brief 秒
-         * @return 秒
-         */
-        int get_second() const;
 
         string get_name() const override;
 
@@ -2835,27 +2803,6 @@ namespace tyme {
          * @return 八字
          */
         EightChar get_eight_char() const;
-
-    protected:
-        /**
-         * @brief 农历日
-         */
-        LunarDay day;
-
-        /**
-         * @brief 时
-         */
-        int hour;
-
-        /**
-         * @brief 分
-         */
-        int minute;
-
-        /**
-         * @brief 秒
-         */
-        int second;
     };
 
     /**
@@ -2910,24 +2857,17 @@ namespace tyme {
     /**
      * @brief 公历年
      */
-    class SolarYear : public AbstractCulture {
+    class SolarYear : public YearUnit {
     public:
         ~SolarYear() override = default;
 
-        explicit SolarYear(const int year) : AbstractCulture() {
-            if (year < 1 || year > 9999) {
-                throw invalid_argument("illegal solar year: " + std::to_string(year));
-            }
-            this->year = year;
+        explicit SolarYear(const int year) : YearUnit(year) {
+            validate(year);
         }
 
-        static SolarYear from_year(int year);
+        static void validate(int year);
 
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
+        static SolarYear from_year(int year);
 
         /**
          * @brief 天数（1582年355天，平年365天，闰年366天）
@@ -2962,29 +2902,23 @@ namespace tyme {
          * @return 半年列表
          */
         vector<SolarHalfYear> get_half_years() const;
-
-    protected:
-        /**
-         * @brief 年
-         */
-        int year;
     };
 
     /**
      * @brief 公历半年
      */
-    class SolarHalfYear : public AbstractCulture {
+    class SolarHalfYear : public YearUnit {
     public:
         ~SolarHalfYear() override = default;
 
         static const vector<string> NAMES;
 
-        explicit SolarHalfYear(const int year, const int index) : AbstractCulture(), year(SolarYear::from_year(year)) {
-            if (index < 0 || index > 1) {
-                throw invalid_argument("illegal solar half year index: " + std::to_string(index));
-            }
+        explicit SolarHalfYear(const int year, const int index) : YearUnit(year) {
+            validate(year, index);
             this->index = index;
         }
+
+        static void validate(int year, int index);
 
         static SolarHalfYear from_index(int year, int index);
 
@@ -2993,12 +2927,6 @@ namespace tyme {
          * @return 公历年
          */
         SolarYear get_solar_year() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
 
         /**
          * @brief 索引
@@ -3026,11 +2954,6 @@ namespace tyme {
 
     protected:
         /**
-         * @brief 年
-         */
-        SolarYear year;
-
-        /**
          * @brief 索引，0-1
          */
         int index;
@@ -3039,18 +2962,18 @@ namespace tyme {
     /**
      * @brief 公历季度
      */
-    class SolarSeason : public AbstractCulture {
+    class SolarSeason : public YearUnit {
     public:
         ~SolarSeason() override = default;
 
         static const vector<string> NAMES;
 
-        explicit SolarSeason(const int year, const int index) : AbstractCulture(), year(SolarYear::from_year(year)) {
-            if (index < 0 || index > 3) {
-                throw invalid_argument("illegal solar season index: " + std::to_string(index));
-            }
+        explicit SolarSeason(const int year, const int index) : YearUnit(year) {
+            validate(year, index);
             this->index = index;
         }
+
+        static void validate(int year, int index);
 
         static SolarSeason from_index(int year, int index);
 
@@ -3059,12 +2982,6 @@ namespace tyme {
          * @return 公历年
          */
         SolarYear get_solar_year() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
 
         /**
          * @brief 索引
@@ -3086,37 +3003,26 @@ namespace tyme {
 
     protected:
         /**
-         * @brief 年
-         */
-        SolarYear year;
-
-        /**
          * @brief 索引，0-3
          */
         int index;
     };
 
     /**
-     * @brief 公历日
-     */
-    class SolarDay;
-
-    /**
      * @brief 公历月
      */
-    class SolarMonth : public AbstractCulture {
+    class SolarMonth : public MonthUnit {
     public:
         ~SolarMonth() override = default;
 
         static const vector<string> NAMES;
         static const int DAYS[];
 
-        explicit SolarMonth(const int year, const int month) : AbstractCulture(), year(SolarYear::from_year(year)) {
-            if (month < 1 || month > 12) {
-                throw invalid_argument("illegal solar month: " + std::to_string(month));
-            }
-            this->month = month;
+        explicit SolarMonth(const int year, const int month) : MonthUnit(year, month) {
+            validate(year, month);
         }
+
+        static void validate(int year, int month);
 
         static SolarMonth from_ym(int year, int month);
 
@@ -3125,18 +3031,6 @@ namespace tyme {
          * @return 公历年
          */
         SolarYear get_solar_year() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
 
         /**
          * @brief 天数（1582年10月只有21天)
@@ -3182,16 +3076,11 @@ namespace tyme {
          */
         vector<SolarDay> get_days() const;
 
-    protected:
         /**
-         * @brief 年
+         * @brief 本月第1天
+         * @return 公历日
          */
-        SolarYear year;
-
-        /**
-         * @brief 月
-         */
-        int month;
+        SolarDay get_first_day() const;
     };
 
     /**
@@ -3212,25 +3101,17 @@ namespace tyme {
     /**
      * @brief 公历日
      */
-    class SolarDay : public AbstractCulture {
+    class SolarDay : public DayUnit {
     public:
         ~SolarDay() override = default;
 
         static const vector<string> NAMES;
 
-        explicit SolarDay(const int year, const int month, const int day) : AbstractCulture(), month(SolarMonth::from_ym(year, month)) {
-            if (day < 1) {
-                throw invalid_argument("illegal solar day: " + std::to_string(year) + "-" + std::to_string(month) + "-" + std::to_string(day));
-            }
-            if (1582 == year && 10 == month) {
-                if ((day > 4 && day < 15) || day > 31) {
-                    throw invalid_argument("illegal solar day: " + std::to_string(year) + "-" + std::to_string(month) + "-" + std::to_string(day));
-                }
-            } else if (day > this->month.get_day_count()) {
-                throw invalid_argument("illegal solar day: " + std::to_string(year) + "-" + std::to_string(month) + "-" + std::to_string(day));
-            }
-            this->day = day;
+        explicit SolarDay(const int year, const int month, const int day) : DayUnit(year, month, day) {
+            validate(year, month, day);
         }
+
+        static void validate(int year, int month, int day);
 
         static SolarDay from_ymd(int year, int month, int day);
 
@@ -3239,24 +3120,6 @@ namespace tyme {
          * @return 公历月
          */
         SolarMonth get_solar_month() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
-
-        /**
-         * @brief 日
-         * @return 日
-         */
-        int get_day() const;
 
         /**
          * @brief 星期
@@ -3401,40 +3264,22 @@ namespace tyme {
          * @return 月相
          */
         Phase get_phase() const;
-
-    protected:
-        /**
-         * @brief 公历月
-         */
-        SolarMonth month;
-
-        /**
-         * @brief 日
-         */
-        int day;
     };
 
     /**
      * @brief 公历周
      */
-    class SolarWeek : public AbstractCulture {
+    class SolarWeek : public WeekUnit {
     public:
         ~SolarWeek() override = default;
 
         static const vector<string> NAMES;
 
-        explicit SolarWeek(const int year, const int month, const int index, const int start) : AbstractCulture(), month(SolarMonth::from_ym(year, month)), start(Week::from_index(start)) {
-            if (index < 0 || index > 5) {
-                throw invalid_argument("illegal solar week index: " + std::to_string(index));
-            }
-            if (start < 0 || start > 6) {
-                throw invalid_argument("illegal solar week start: " + std::to_string(start));
-            }
-            if (index >= this->month.get_week_count(start)) {
-                throw invalid_argument("illegal solar week index: " + std::to_string(index) + " in month: " + this->month.to_string());
-            }
-            this->index = index;
+        explicit SolarWeek(const int year, const int month, const int index, const int start) : WeekUnit(year, month, index, start) {
+            validate(year, month, index, start);
         }
+
+        static void validate(int year, int month, int index, int start);
 
         static SolarWeek from_ym(int year, int month, int index, int start);
 
@@ -3445,34 +3290,10 @@ namespace tyme {
         SolarMonth get_solar_month() const;
 
         /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
-
-        /**
-         * @brief 索引，0-5
-         * @return 索引
-         */
-        int get_index() const;
-
-        /**
          * @brief 位于当年的索引
          * @return 索引
          */
         int get_index_in_year() const;
-
-        /**
-         * @brief 起始星期
-         * @return 星期
-         */
-        Week get_start() const;
 
         string get_name() const override;
 
@@ -3493,55 +3314,25 @@ namespace tyme {
          * @return 公历日列表
          */
         vector<SolarDay> get_days() const;
-
-    protected:
-        /**
-         * @brief 公历月
-         */
-        SolarMonth month;
-
-        /**
-         * @brief 索引，0-5
-         */
-        int index;
-
-        /**
-         * @brief 起始星期
-         */
-        Week start;
     };
-
-    /**
-     * @brief 干支时辰
-     */
-    class SixtyCycleHour;
 
     /**
      * @brief 公历时刻
      */
-    class SolarTime : public AbstractCulture {
+    class SolarTime : public SecondUnit {
     public:
         ~SolarTime() override = default;
 
-        SolarTime(const SolarTime &other): day(other.day), hour(other.hour), minute(other.minute), second(other.second) {
+        SolarTime(const SolarTime &other) : SecondUnit(other.year, other.month, other.day, other.hour, other.minute, other.second) {
         }
 
         SolarTime &operator=(const SolarTime &other);
 
-        explicit SolarTime(const int year, const int month, const int day, const int hour, const int minute, const int second) : AbstractCulture(), day(SolarDay::from_ymd(year, month, day)) {
-            if (hour < 0 || hour > 23) {
-                throw invalid_argument("illegal hour: " + std::to_string(hour));
-            }
-            if (minute < 0 || minute > 59) {
-                throw invalid_argument("illegal minute: " + std::to_string(minute));
-            }
-            if (second < 0 || second > 59) {
-                throw invalid_argument("illegal second: " + std::to_string(second));
-            }
-            this->hour = hour;
-            this->minute = minute;
-            this->second = second;
+        explicit SolarTime(const int year, const int month, const int day, const int hour, const int minute, const int second) : SecondUnit(year, month, day, hour, minute, second) {
+            validate(year, month, day, hour, minute, second);
         }
+
+        static void validate(int year, int month, int day, int hour, int minute, int second);
 
         static SolarTime from_ymd_hms(int year, int month, int day, int hour, int minute, int second);
 
@@ -3550,42 +3341,6 @@ namespace tyme {
          * @return 公历日
          */
         SolarDay get_solar_day() const;
-
-        /**
-         * @brief 年
-         * @return 年
-         */
-        int get_year() const;
-
-        /**
-         * @brief 月
-         * @return 月
-         */
-        int get_month() const;
-
-        /**
-         * @brief 日
-         * @return 日
-         */
-        int get_day() const;
-
-        /**
-         * @brief 时
-         * @return 时
-         */
-        int get_hour() const;
-
-        /**
-         * @brief 分
-         * @return 分
-         */
-        int get_minute() const;
-
-        /**
-         * @brief 秒
-         * @return 秒
-         */
-        int get_second() const;
 
         string get_name() const override;
 
@@ -3651,27 +3406,6 @@ namespace tyme {
          * @return 月相
          */
         Phase get_phase() const;
-
-    protected:
-        /**
-         * @brief 公历日
-         */
-        SolarDay day;
-
-        /**
-         * @brief 时
-         */
-        int hour;
-
-        /**
-         * @brief 分
-         */
-        int minute;
-
-        /**
-         * @brief 秒
-         */
-        int second;
     };
 
     /**
@@ -3981,10 +3715,6 @@ namespace tyme {
         PengZuEarthBranch peng_zu_earth_branch;
     };
 
-    /**
-     * @brief 干支时辰
-     */
-    class SixtyCycleHour;
     /**
      * @brief 干支日（立春换年，节令换月）
      */
@@ -4728,9 +4458,9 @@ namespace tyme {
         ChildLimitInfo info;
 
     private:
-        bool get_forward(const EightChar &eight_char, Gender gender);
+        bool get_forward(const EightChar &ec, Gender g);
 
-        ChildLimitInfo get_info(const SolarTime &birth_time, bool forward);
+        ChildLimitInfo get_info(const SolarTime &birth_time, bool f);
     };
 
     /**
